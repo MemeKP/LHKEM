@@ -1,0 +1,37 @@
+name: lhkem
+services:
+  mongo:
+    image: mongo:7
+    container_name: mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-root}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-password}
+      MONGO_INITDB_DATABASE: lhkem
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - lhkem-net
+ 
+  backend:
+    container_name: backend
+    build: ./backend
+    environment:
+      MONGO_URL: mongodb://root:password@mongo:27017/lhkem?authSource=admin
+      NODE_ENV: production
+      PORT: ${PORT:-3000}
+    ports:
+      - "${PORT:-3000}:3000"
+    depends_on:
+      - mongo
+    networks:
+      - lhkem-net
+
+volumes:
+  mongo-data:
+    driver: local
+
+networks:
+  lhkem-net:
+    driver: bridge

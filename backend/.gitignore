@@ -4,10 +4,10 @@
 /build
 
 # Docker
-docker*
-Docker*
-docker-compose*.yml
-*.dockerignore
+# docker*
+# Docker*
+# docker-compose*.yml
+# *.dockerignore
 
 # Logs
 logs
