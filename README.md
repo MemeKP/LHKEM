@@ -43,5 +43,5 @@ If you see the lhkem database, MongoDB is working correctly :)
 
 ### MongoDB Atlas 
 <div align="center">
-  <img src="https://ik.imagekit.io/496kiwiBird/messageImage_1766259677689.jpg?updatedAt=1766410315497" width="auto">
+  <img src="https://ik.imagekit.io/496kiwiBird/Screenshot%202025-12-22%20204455.png?updatedAt=1766411152205" width="auto">
 </div>
