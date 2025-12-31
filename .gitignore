@@ -51,3 +51,16 @@ coverage/
 *.temp
 .cache/
 backend/dist/tsconfig.build.tsbuildinfo
+backend/dist/tsconfig.build.tsbuildinfo
+frontend/ProjectResource/P4 _ LHKEM (PBL).txt
+frontend/ProjectResource/P4 _ LHKEM (Proposal).txt
+frontend/ProjectResource/P4 _ LHKEM (SRS).txt
+frontend/ProjectResource/FigmaDesign/Footer.png
+frontend/ProjectResource/FigmaDesign/Home.png
+frontend/ProjectResource/FigmaDesign/login.png
+frontend/ProjectResource/FigmaDesign/map.png
+frontend/ProjectResource/FigmaDesign/Nav.png
+frontend/ProjectResource/FigmaDesign/OTP-verification.png
+frontend/ProjectResource/FigmaDesign/register.png
+frontend/ProjectResource/FigmaDesign/workshop.png
+frontend/ProjectResource/FigmaDesign/WorkShopEnrollPopup.png
