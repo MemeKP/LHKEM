@@ -46,3 +46,8 @@ If you see the lhkem database, MongoDB is working correctly :)
 <div align="center">
   <img src="https://ik.imagekit.io/496kiwiBird/Screenshot%202025-12-22%20204455.png?updatedAt=1766411152205" width="auto">
 </div>
+
+
+FrontEnd Setup
+- frontend/README.md (for frontend development)
+- frontend/mocks/README.md (for mock data and API simulation)

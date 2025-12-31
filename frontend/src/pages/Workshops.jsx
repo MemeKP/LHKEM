@@ -1,12 +1,15 @@
 import { useState } from 'react';
-import { Search, Star } from 'lucide-react';
+import { Search, Star, MapPin, Clock, Users as UsersIcon } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
+import workshopData from '../data/workshops';
+import WorkshopModal from '../components/WorkshopModal';
 
 const Workshops = () => {
   const { t } = useTranslation();
   const [selectedCategory, setSelectedCategory] = useState('ทั้งหมด');
   const [searchQuery, setSearchQuery] = useState('');
   const [priceRange, setPriceRange] = useState([]);
+  const [activeWorkshop, setActiveWorkshop] = useState(null);
 
   const categories = [
     { id: 'all', name: 'ทั้งหมด', color: 'orange' },
@@ -22,45 +25,6 @@ const Workshops = () => {
     { id: 'high', label: '฿ 1,000+ บาท' }
   ];
 
-  const workshops = [
-    {
-      id: 1,
-      title: 'ย้อมผ้าครามธรรมชาติ',
-      category: 'ผ้าและสิ่งทอ',
-      location: 'บ้านคราม',
-      price: 800,
-      rating: 4.8,
-      image: 'gradient-1'
-    },
-    {
-      id: 2,
-      title: 'เวิร์กช็อปทำเกษตรอินทรีย์',
-      category: 'เซรามิค',
-      location: 'เรื่อนดิน',
-      price: 0,
-      rating: 4.8,
-      image: 'gradient-2'
-    },
-    {
-      id: 3,
-      title: 'ทำอาหารท้องถิ่น',
-      category: 'อาหาร',
-      location: 'ครัวแม่ศรี',
-      price: 750,
-      rating: 5.0,
-      image: 'gradient-3'
-    },
-    {
-      id: 4,
-      title: 'Drip Coffee Workshop',
-      category: 'อาหาร',
-      location: 'Slow Bar Coffee',
-      price: 650,
-      rating: 4.7,
-      image: 'gradient-4'
-    }
-  ];
-
   const handlePriceRangeChange = (rangeId) => {
     setPriceRange(prev => 
       prev.includes(rangeId) 
@@ -69,15 +33,10 @@ const Workshops = () => {
     );
   };
 
-  const getGradientClass = (gradient) => {
-    const gradients = {
-      'gradient-1': 'from-orange-400 to-pink-500',
-      'gradient-2': 'from-green-400 to-teal-500',
-      'gradient-3': 'from-purple-400 to-indigo-500',
-      'gradient-4': 'from-blue-400 to-cyan-500'
-    };
-    return gradients[gradient] || 'from-gray-400 to-gray-500';
-  };
+  const handleOpenModal = (workshop) => setActiveWorkshop(workshop);
+  const handleCloseModal = () => setActiveWorkshop(null);
+
+  const workshops = workshopData;
 
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn">
@@ -163,46 +122,65 @@ const Workshops = () => {
           </aside>
 
           <main className="flex-1">
-            <div className="mb-6 animate-slideUp">
+            <div className="mb-6 animate-slideUp flex items-center justify-between">
               <p className="text-sm" style={{ color: '#4b5563' }}>
                 {t('workshops.results')}: {workshops.length}
               </p>
+              <p className="text-sm text-gray-400">*ข้อมูลจากตัวอย่างในระบบ</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 animate-stagger">
               {workshops.map((workshop) => (
                 <div
                   key={workshop.id}
-                  className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all transform hover:scale-105"
+                  className="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-all"
                 >
-                  <div className={`h-48 bg-gradient-to-br ${getGradientClass(workshop.image)} relative`}>
-                    <div className="absolute top-3 right-3 bg-white px-2 py-1 rounded-full flex items-center space-x-1">
-                      <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                      <span className="text-sm font-medium text-gray-900">{workshop.rating}</span>
+                  <div className={`h-44 bg-gradient-to-br ${workshop.gradient || 'from-gray-200 to-gray-300'} relative`}>
+                    <div className="absolute top-4 left-4 bg-white/80 text-gray-800 text-xs font-semibold px-3 py-1 rounded-full">
+                      {workshop.badge}
+                    </div>
+                    <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-white/90 text-sm">
+                        <Star className="h-4 w-4 text-yellow-300" />
+                        <span>{workshop.rating}</span>
+                      </div>
+                      <span className="text-xs text-white/80">{workshop.level}</span>
                     </div>
                   </div>
                   
-                  <div className="p-5">
-                    <div className="mb-2">
-                      <span className="inline-block text-xs font-medium px-2 py-1 rounded" style={{ backgroundColor: '#ffedd5', color: '#ea580c' }}>
-                        {workshop.category}
-                      </span>
+                  <div className="p-6 space-y-4">
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <MapPin className="h-4 w-4 text-red-400" />
+                      {workshop.location}
                     </div>
-                    
-                    <h3 className="font-bold mb-2" style={{ color: '#111827' }}>{workshop.title}</h3>
-                    <p className="text-sm mb-4" style={{ color: '#4b5563' }}>{workshop.location}</p>
-                    
+                    <div>
+                      <h3 className="text-lg font-semibold" style={{ color: '#111827' }}>{workshop.title}</h3>
+                      <p className="text-sm text-gray-600">{workshop.shortDescription}</p>
+                    </div>
+
+                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-4 w-4 text-gray-400" />
+                        {workshop.duration}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <UsersIcon className="h-4 w-4 text-gray-400" />
+                        {t('workshops.seatsLeft')}: {workshop.seatsLeft}
+                      </div>
+                    </div>
+
                     <div className="flex items-center justify-between">
                       <div>
-                        <span className="font-bold text-lg" style={{ color: '#ea580c' }}>
+                        <span className="font-bold text-xl text-orange-500">
                           {workshop.price === 0 ? t('workshops.free') : `฿${workshop.price}`}
                         </span>
-                        {workshop.price > 0 && (
-                          <span className="text-sm ml-1" style={{ color: '#6b7280' }}>/คน</span>
-                        )}
+                        <span className="text-sm ml-1 text-gray-500">{t('workshops.perPerson')}</span>
                       </div>
-                      <button className="text-white px-4 py-2 rounded-lg text-sm font-medium transition-all transform hover:scale-105" style={{ backgroundColor: '#111827' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1f2937'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#111827'}>
-                        {t('workshops.viewDetails')}
+                      <button
+                        className="px-5 py-2 bg-gray-900 text-white rounded-full text-sm font-semibold hover:bg-gray-800 transition"
+                        onClick={() => handleOpenModal(workshop)}
+                      >
+                        {t('workshops.enrollNow')}
                       </button>
                     </div>
                   </div>
@@ -224,6 +202,8 @@ const Workshops = () => {
           </main>
         </div>
       </div>
+
+      <WorkshopModal workshop={activeWorkshop} isOpen={!!activeWorkshop} onClose={handleCloseModal} />
     </div>
   );
 };
