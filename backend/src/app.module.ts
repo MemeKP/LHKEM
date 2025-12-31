@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from './users/users.module';
 import { ConfigModule } from '@nestjs/config';
+import { CommunitiesModule } from './communities/communities.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { ConfigModule } from '@nestjs/config';
       process.env.MONGO_URL!,
     ),
     UsersModule,
+    CommunitiesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
