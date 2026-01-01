@@ -1,0 +1,218 @@
+{
+  "nav": {
+    "home": "Home",
+    "workshops": "Workshops",
+    "map": "Map",
+    "about": "About Us",
+    "login": "Login",
+    "register": "Register",
+    "dashboard": "Dashboard",
+    "shopDashboard": "Shop Dashboard",
+    "shopProfile": "Shop Management",
+    "communityDashboard": "Community Dashboard",
+    "adminDashboard": "Admin Dashboard",
+    "settings": "Settings",
+    "logout": "Logout",
+    "signedInAs": "Signed in as",
+    "roleTourist": "Tourist",
+    "roleShop": "Shop Owner",
+    "roleCommunityAdmin": "Community Admin",
+    "rolePlatformAdmin": "Platform Admin",
+    "logoTitle": "Loeng Him Kaw",
+    "logoSubtitle": "Community"
+  },
+  "hero": {
+    "badge": "Eco-Tourism Community, Chiang Mai",
+    "title": "Experience Slow Life",
+    "subtitle": "at Loeng Him Kaw",
+    "description": "Discover learning experiences and various activities in Loeng Him Kaw community",
+    "viewWorkshops": "View All Workshops",
+    "exploreMap": "Explore Community Map"
+  },
+  "stats": {
+    "workshops": "Workshops",
+    "locations": "Locations",
+    "visitors": "Visitors"
+  },
+  "about": {
+    "badge": "About Community",
+    "title": "Loeng Him Kaw",
+    "subtitle": "Community of Happiness",
+    "description": "\"Loeng Him Kaw\" is a small community by the Kaw River in San Kamphaeng District, Chiang Mai Province, where artisans and artists gather...",
+    "readMore": "Read Our Story"
+  },
+  "workshopSection": {
+    "badge": "Featured Workshops",
+    "title": "Popular Workshops",
+    "description": "Choose your favorite workshop and start learning new experiences",
+    "viewAll": "View all workshops",
+    "viewDetails": "View details",
+    "enroll": "Enroll now"
+  },
+  "explore": {
+    "badge": "Explore",
+    "title": "Explore for Tourists",
+    "description": "Discover tourist attractions, shops, and various activities in Loeng Him Kaw community with convenient navigation maps",
+    "viewMap": "View Community Map"
+  },
+  "map": {
+    "title": "Explore Loeng Him Kaw",
+    "discover": "Discover Places",
+    "viewRoute": "View Route"
+  },
+  "workshops": {
+    "title": "All Workshops",
+    "description": "Discover workshops across categories and communities",
+    "searchPlaceholder": "Search workshops e.g. natural dye, pottery...",
+    "categories": "Categories",
+    "priceRange": "Price range",
+    "all": "All",
+    "free": "Free",
+    "results": "Results",
+    "viewDetails": "View details",
+    "duration": "Duration",
+    "hostedBy": "Hosted by",
+    "seatsLeft": "Seats left",
+    "perPerson": "/person",
+    "enrollNow": "Enroll now",
+    "modal": {
+      "scheduleTitle": "Schedule",
+      "learnTitle": "What you'll learn",
+      "locationTitle": "Location",
+      "cta": "Book / Contact",
+      "hostedBy": "Hosted by",
+      "duration": "Duration",
+      "seatsLeftLabel": "Seats remaining",
+      "mapNote": "Google Map area"
+    }
+  },
+  "homeHighlight": {
+    "badge": "About the community",
+    "title": "Loeng Him Kaw, a joyful community",
+    "description": "\"Loeng Him Kaw\" is a riverside neighborhood in San Kamphaeng, Chiang Mai where artisans and makers live and work together.",
+    "button": "Read our story",
+    "cards": {
+      "eco": "Eco-friendly",
+      "culture": "Culture immersion",
+      "craft": "Local craftmanship",
+      "slowlife": "Slow Life"
+    },
+    "cardsDescriptions": {
+      "eco": "Every activity uses natural, chemical-free materials",
+      "culture": "Learn from local masters who preserve traditional crafts",
+      "craft": "100% of income goes back to community entrepreneurs",
+      "slowlife": "Pause, unwind, and spend time on the things you love"
+    }
+  },
+  "auth": {
+    "welcomeTitle": "Welcome to",
+    "communityName": "Loeng Him Kaw",
+    "welcomeDescription": "Login to book workshops and discover various activities within the community",
+    "loginTitle": "Login",
+    "loginDescription": "Enter your email and password to login",
+    "registerTitle": "Register",
+    "registerDescription": "Fill in your information and details to create an account",
+    "otpTitle": "Verify OTP Code",
+    "otpDescription": "Enter the verification code sent to your email to confirm registration",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "province": "Province",
+    "phone": "Phone Number",
+    "otp": "OTP Code",
+    "forgotPassword": "Forgot Password?",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?",
+    "loginButton": "Login",
+    "registerButton": "Register",
+    "verifyButton": "Verify Code",
+    "resendOtp": "Resend?"
+  },
+  "dashboard": {
+    "title": "My Dashboard",
+    "welcome": "Welcome",
+    "loading": "Loading data...",
+    "stats": {
+      "total": "Total Workshops",
+      "upcoming": "Upcoming",
+      "completed": "Completed"
+    },
+    "tabs": {
+      "upcoming": "Upcoming",
+      "past": "Past",
+      "all": "All"
+    },
+    "status": {
+      "confirmed": "Confirmed",
+      "pending": "Pending",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "payment": {
+      "label": "Payment",
+      "paid": "Paid",
+      "pending": "Pending"
+    },
+    "participants": "people",
+    "enrolled": "Enrolled on",
+    "totalPrice": "Total Price",
+    "viewDetails": "View Details",
+    "noEnrollments": {
+      "title": "No Workshop Bookings Yet",
+      "description": "Start exploring and booking workshops that interest you",
+      "button": "Explore Workshops"
+    }
+  },
+  "settings": {
+    "title": "Account Settings",
+    "description": "Manage your personal information and account settings",
+    "back": "Back",
+    "saveChanges": "Save Changes",
+    "updatePassword": "Update Password",
+    "tabs": {
+      "profile": "Profile",
+      "password": "Change Password"
+    },
+    "fields": {
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "emailNote": "Email cannot be changed",
+      "phone": "Phone Number",
+      "shopName": "Shop Name",
+      "communityName": "Community Name",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm New Password",
+      "passwordRequirement": "Password must be at least 6 characters"
+    },
+    "roles": {
+      "tourist": "Tourist",
+      "shop": "Shop Owner",
+      "communityAdmin": "Community Admin",
+      "platformAdmin": "Platform Admin"
+    },
+    "messages": {
+      "updateSuccess": "Profile updated successfully",
+      "updateError": "Failed to update profile",
+      "passwordSuccess": "Password changed successfully",
+      "passwordError": "Failed to change password",
+      "passwordMismatch": "Passwords do not match",
+      "passwordTooShort": "Password must be at least 6 characters"
+    }
+  },
+  "footer": {
+    "description": "An eco-tourism community that blends local culture, art, and learning",
+    "menu": "Menu",
+    "contact": "Contact Us",
+    "followUs": "Follow Us"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "close": "Close"
+  }
+}
