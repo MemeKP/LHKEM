@@ -2,7 +2,7 @@ import { ConflictException, Injectable, InternalServerErrorException, NotFoundEx
 import { CreateCommunityDto } from './dto/create-community.dto';
 import { UpdateCommunityDto } from './dto/update-community.dto';
 import { Community, CommunityDocument } from './schemas/community.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
@@ -37,7 +37,7 @@ export class CommunitiesService {
   async findAll(): Promise<Community[]> {
     return this.communityModel.find()
       // .populate('shops')
-      // .populate('events')
+      .populate('events')
       // .populate('workshops')
       .exec();
   }
@@ -45,7 +45,7 @@ export class CommunitiesService {
   async findOne(id: string): Promise<Community> {
     const community = await this.communityModel.findById(id)
       // .populate('shops')
-      // .populate('events')
+      .populate('events')
       // .populate('workshops')
       .exec();
 
@@ -55,6 +55,24 @@ export class CommunitiesService {
 
     return community;
   }
+
+  async findByIdOrSlug(identifier: string): Promise<Community> {
+    if (Types.ObjectId.isValid(identifier)) {
+        const doc = await this.communityModel.findById(identifier).exec();
+        if (doc) return doc; 
+    }
+    const decodedSlug = decodeURIComponent(identifier); 
+    const community = await this.communityModel.findOne({ 
+        $or: [{ slug: decodedSlug }, { name: decodedSlug }] 
+    }).exec();
+
+    if (!community) {
+        throw new NotFoundException('Community not found');
+    }
+
+    return community;
+}
+
   update(id: number, updateCommunityDto: UpdateCommunityDto) {
     return `This action updates a #${id} community`;
   }
@@ -63,14 +81,15 @@ export class CommunitiesService {
     try {
       const res = await this.communityModel.findByIdAndDelete(id).exec();
       if (!res) {
-        throw new NotFoundException(`Product with ID ${id} not found`)
+        throw new NotFoundException(`Community with ID ${id} not found`)
       }
       return { message: `This action removes a #${id} community` };
     } catch (error) {
-      throw new InternalServerErrorException('Something wrong during deletion!')
+      throw new InternalServerErrorException('Something wrong during deletion!' + error)
     }
-
   }
+
+  
 }
 
 function generateSlug(name: string): string {

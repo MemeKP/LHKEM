@@ -118,11 +118,11 @@ CommunitySchema.index({ 'location.coordinates.lat': 1, 'location.coordinates.lng
 //     foreignField: 'community'
 // })
 
-// CommunitySchema.virtual('events', {
-//     ref: 'Event',
-//     localField: '_id',
-//     foreignField: 'community'
-// })
+CommunitySchema.virtual('events', {
+    ref: 'Event',
+    localField: '_id',
+    foreignField: 'community'
+})
 
 // CommunitySchema.virtual('workshops', {
 //     ref: 'WorkShop',
@@ -130,8 +130,8 @@ CommunitySchema.index({ 'location.coordinates.lat': 1, 'location.coordinates.lng
 //     foreignField: 'community'
 // })
 
-// CommunitySchema.virtual('admin', {
-//     ref: 'CommunityAdmin',
-//     localField: '_id',
-//     foreignField: 'community'
-// })
+CommunitySchema.virtual('admin', {
+    ref: 'Admin',
+    localField: '_id',
+    foreignField: 'community'
+})

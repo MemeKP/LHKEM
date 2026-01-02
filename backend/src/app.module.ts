@@ -5,6 +5,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from './users/users.module';
 import { ConfigModule } from '@nestjs/config';
 import { CommunitiesModule } from './communities/communities.module';
+import { EventsModule } from './events/events.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -16,6 +18,8 @@ import { CommunitiesModule } from './communities/communities.module';
     ),
     UsersModule,
     CommunitiesModule,
+    EventsModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],

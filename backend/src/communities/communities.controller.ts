@@ -5,7 +5,7 @@ import { UpdateCommunityDto } from './dto/update-community.dto';
 
 @Controller('communities')
 export class CommunitiesController {
-  constructor(private readonly communitiesService: CommunitiesService) {}
+  constructor(private readonly communitiesService: CommunitiesService) { }
 
   @Post()
   create(@Body() createCommunityDto: CreateCommunityDto) {
@@ -17,9 +17,9 @@ export class CommunitiesController {
     return this.communitiesService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.communitiesService.findOne(id);
+  @Get(':idOrSlug')
+  findOne(@Param('idOrSlug') idOrSlug: string) {
+    return this.communitiesService.findByIdOrSlug(idOrSlug);
   }
 
   @Patch(':id')
@@ -31,4 +31,5 @@ export class CommunitiesController {
   remove(@Param('id') id: string) {
     return this.communitiesService.remove(id);
   }
+
 }
