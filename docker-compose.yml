@@ -18,6 +18,7 @@ services:
     container_name: backend
     build: ./backend
     environment:
+      JWT_SECRET: super-secret-key
       MONGO_URL: mongodb://root:password@mongo:27017/lhkem?authSource=admin
       NODE_ENV: production
       PORT: ${PORT:-3000}
