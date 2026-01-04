@@ -35,14 +35,16 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await api.post('/auth/login', { email, password });
-      const { user: userData, token: authToken } = response.data;
+      const { access_token } = response.data;
 
-      setUser(userData);
-      setToken(authToken);
-      localStorage.setItem('token', authToken);
-      localStorage.setItem('user', JSON.stringify(userData));
+      setToken(access_token);
+      localStorage.setItem('token', access_token);
 
-      return { success: true, user: userData };
+      const me = await api.get('/users/me');
+      setUser(me.data);
+      localStorage.setItem('user', JSON.stringify(me.data));
+
+      return { success: true, user: me.data };
     } catch (error) {
       return {
         success: false,
@@ -53,15 +55,9 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const response = await api.post('/auth/register', userData);
-      const { user: newUser, token: authToken } = response.data;
-
-      setUser(newUser);
-      setToken(authToken);
-      localStorage.setItem('token', authToken);
-      localStorage.setItem('user', JSON.stringify(newUser));
-
-      return { success: true, user: newUser };
+      await api.post('/users/register', userData);
+      const loginResult = await login(userData.email, userData.password);
+      return loginResult;
     } catch (error) {
       return {
         success: false,
@@ -76,7 +72,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     
-    api.post('/auth/logout').catch(() => {});
+    // no-op on backend
   };
 
   const updateUser = async (updates) => {

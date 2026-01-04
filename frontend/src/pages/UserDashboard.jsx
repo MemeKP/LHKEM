@@ -6,11 +6,10 @@ import { useTranslation } from '../hooks/useTranslation';
 import api from '../services/api';
 
 const UserDashboard = () => {
-  const { user, isAuthenticated, loading } = useAuth();
+  const { user, loading } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [enrollments, setEnrollments] = useState([]);
-  const [loadingEnrollments, setLoadingEnrollments] = useState(true);
   const [activeTab, setActiveTab] = useState('upcoming');
 
 
@@ -22,8 +21,6 @@ const UserDashboard = () => {
           setEnrollments(response.data.enrollments || []);
         } catch (error) {
           console.error('Failed to fetch enrollments:', error);
-        } finally {
-          setLoadingEnrollments(false);
         }
       }
     };
@@ -119,7 +116,7 @@ const UserDashboard = () => {
 
   const filteredEnrollments = filterEnrollments();
 
-  if (loading || loadingEnrollments) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

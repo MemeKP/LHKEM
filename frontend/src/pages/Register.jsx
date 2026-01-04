@@ -2,28 +2,40 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
+import { useAuth } from '../hooks/useAuth';
 
 const Register = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { register } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     firstname: '',
     lastname: '',
-    province: '',
     phone: '',
     password: '',
     confirmPassword: ''
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
       alert(t('common.error'));
       return;
     }
-    console.log('Register:', formData);
-    navigate('/verify-otp');
+    const payload = {
+      email: formData.email,
+      firstname: formData.firstname,
+      lastname: formData.lastname,
+      phone: formData.phone,
+      password: formData.password,
+    };
+    const res = await register(payload);
+    if (res.success) {
+      navigate('/dashboard');
+    } else {
+      alert(res.message || t('common.error'));
+    }
   };
 
   const handleChange = (e) => {
@@ -117,21 +129,6 @@ const Register = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t('auth.province')}
-              </label>
-              <input
-                type="text"
-                name="province"
-                value={formData.province}
-                onChange={handleChange}
-                placeholder="เชียงใหม่"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
                 {t('auth.phone')}
               </label>
               <input
@@ -139,7 +136,7 @@ const Register = () => {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                placeholder="0123456789012345678"
+                placeholder="0812345678"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 required
               />
