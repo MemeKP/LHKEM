@@ -1,50 +1,50 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit, Trash2, Eye, Users, DollarSign, TrendingUp, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from '../hooks/useTranslation';
-import api from '../services/api';
+// Frontend-only prototype: use localStorage instead of API
 
 const ShopDashboard = () => {
   const { user } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [workshops, setWorkshops] = useState([]);
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const initialDraft = JSON.parse(localStorage.getItem('shopDraft') || '{}');
+  const initialWorkshops = Array.isArray(initialDraft.workshops) ? initialDraft.workshops : [];
+  const [workshops, setWorkshops] = useState(initialWorkshops);
   const [activeTab, setActiveTab] = useState('all');
 
   useEffect(() => {
-    fetchData();
-  }, [user]);
-
-  const fetchData = async () => {
-    if (!user?.shopId) return;
-
-    try {
-      const [workshopsRes, statsRes] = await Promise.all([
-        api.get(`/shops/${user.shopId}/workshops`),
-        api.get(`/shops/${user.shopId}/stats`)
-      ]);
-
-      setWorkshops(workshopsRes.data.workshops || []);
-      setStats(statsRes.data.stats);
-    } catch (error) {
-      console.error('Failed to fetch data:', error);
-    } finally {
-      setLoading(false);
+    const hasSetup = localStorage.getItem('shopHasSetup') === 'true';
+    if (!user?.shopId && !hasSetup) {
+      navigate('/shop/create');
+      return;
     }
-  };
+  }, [user, navigate]);
 
+  // no-op for prototype
+
+  const stats = useMemo(() => {
+    const active = workshops.filter(w => w.status === 'ACTIVE');
+    return {
+      totalWorkshops: workshops.length,
+      activeWorkshops: active.length,
+      totalBookings: workshops.reduce((sum, w) => sum + (w.seatsBooked || 0), 0),
+      totalRevenue: workshops.reduce((sum, w) => sum + ((w.seatsBooked || 0) * (w.price || 0)), 0),
+      averageRating: 0,
+      pendingApprovals: workshops.filter(w => w.status === 'PENDING').length
+    };
+  }, [workshops]);
   const handleDeleteWorkshop = async (id) => {
     if (!confirm(t('shopDashboard.confirmDelete'))) return;
 
-    try {
-      await api.delete(`/workshops/${id}`);
-      setWorkshops(workshops.filter(w => w.id !== id));
-    } catch (error) {
-      console.error('Failed to delete workshop:', error);
-    }
+    const draft = JSON.parse(localStorage.getItem('shopDraft') || '{}');
+    const updated = {
+      ...draft,
+      workshops: (draft.workshops || []).filter(w => w.id !== id)
+    };
+    localStorage.setItem('shopDraft', JSON.stringify(updated));
+    setWorkshops(updated.workshops);
   };
 
   const getStatusBadge = (status) => {
@@ -74,16 +74,7 @@ const ShopDashboard = () => {
     return true;
   });
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">{t('common.loading')}</p>
-        </div>
-      </div>
-    );
-  }
+  // always render directly in prototype
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -220,18 +211,22 @@ const ShopDashboard = () => {
                           </div>
                           <div>
                             <p className="text-gray-500">{t('shopDashboard.duration')}</p>
-                            <p className="font-semibold text-gray-900">{workshop.duration}</p>
+                            <p className="font-semibold text-gray-900">
+                              {workshop.duration || `${workshop.date || '-'} ${workshop.time || ''}`}
+                            </p>
                           </div>
                           <div>
                             <p className="text-gray-500">{t('shopDashboard.rating')}</p>
-                            <p className="font-semibold text-gray-900">⭐ {workshop.rating.toFixed(1)}</p>
+                            <p className="font-semibold text-gray-900">
+                              {workshop.rating ? `⭐ ${Number(workshop.rating).toFixed(1)}` : '—'}
+                            </p>
                           </div>
                         </div>
                       </div>
 
                       <div className="flex flex-col gap-2 ml-4">
                         <button
-                          onClick={() => navigate(`/workshops/${workshop.id}`)}
+                          onClick={() => navigate(`/shop/workshops/${workshop.id}`)}
                           className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                           title={t('shopDashboard.view')}
                         >

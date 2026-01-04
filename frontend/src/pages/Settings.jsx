@@ -68,7 +68,7 @@ const Settings = () => {
       } else {
         setMessage({ type: 'error', text: result.message || t('settings.messages.updateError') });
       }
-    } catch (error) {
+    } catch {
       setMessage({ type: 'error', text: t('settings.messages.updateError') });
     } finally {
       setLoading(false);
@@ -99,7 +99,7 @@ const Settings = () => {
         confirmPassword: ''
       });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-    } catch (error) {
+    } catch {
       setMessage({ type: 'error', text: t('settings.messages.passwordError') });
     } finally {
       setLoading(false);

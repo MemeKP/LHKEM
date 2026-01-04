@@ -33,10 +33,10 @@ const Navbar = () => {
   };
 
   const getUserDisplayName = () => {
-    if (user?.firstName) {
-      return `${user.firstName} ${user.lastName || ''}`;
-    }
-    return user?.email?.split('@')[0] || 'User';
+    const first =
+      (user && (user.firstName || user.firstname)) ||
+      null;
+    return first || (user?.email?.split('@')[0] || 'User');
   };
 
   const getRoleSpecificMenuItems = () => {

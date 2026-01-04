@@ -15,6 +15,9 @@ import UserDashboard from './pages/UserDashboard';
 import Settings from './pages/Settings';
 import ShopDashboard from './pages/ShopDashboard';
 import ShopProfile from './pages/ShopProfile';
+import ShopCreate from './pages/ShopCreate';
+import ShopWorkshopCreate from './pages/ShopWorkshopCreate';
+import ShopWorkshopDetail from './pages/ShopWorkshopDetail';
 import CommunityAdminDashboard from './pages/CommunityAdminDashboard';
 
 function App() {
@@ -43,6 +46,11 @@ function App() {
               } />
               
               {/* Shop Owner Routes */}
+              <Route path="shop/create" element={
+                <ProtectedRoute>
+                  <ShopCreate />
+                </ProtectedRoute>
+              } />
               <Route path="shop/dashboard" element={
                 <ProtectedRoute>
                   <ShopDashboard />
@@ -51,6 +59,16 @@ function App() {
               <Route path="shop/profile" element={
                 <ProtectedRoute>
                   <ShopProfile />
+                </ProtectedRoute>
+              } />
+              <Route path="shop/workshops/create" element={
+                <ProtectedRoute>
+                  <ShopWorkshopCreate />
+                </ProtectedRoute>
+              } />
+              <Route path="shop/workshops/:id" element={
+                <ProtectedRoute>
+                  <ShopWorkshopDetail />
                 </ProtectedRoute>
               } />
               

@@ -33,21 +33,20 @@ const ShopProfile = () => {
   });
 
   useEffect(() => {
-    fetchShopData();
-  }, [user]);
-
-  const fetchShopData = async () => {
-    if (!user?.shopId) return;
-
-    try {
-      const response = await api.get(`/shops/${user.shopId}`);
-      setShopData(response.data.shop);
-    } catch (error) {
-      console.error('Failed to fetch shop:', error);
-    } finally {
+    if (!user?.shopId) {
       setLoading(false);
+      return;
     }
-  };
+    const run = async () => {
+      try {
+        const response = await api.get(`/shops/${user.shopId}`);
+        setShopData(response.data.shop);
+      } finally {
+        setLoading(false);
+      }
+    };
+    run();
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -78,7 +77,7 @@ const ShopProfile = () => {
       await api.put(`/shops/${user.shopId}`, shopData);
       setMessage({ type: 'success', text: t('shopProfile.saveSuccess') });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-    } catch (error) {
+    } catch {
       setMessage({ type: 'error', text: t('shopProfile.saveError') });
     } finally {
       setSaving(false);

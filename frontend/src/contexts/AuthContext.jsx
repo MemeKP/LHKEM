@@ -1,12 +1,18 @@
-import { createContext, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../services/api';
-
-export const AuthContext = createContext();
+import { AuthContext } from './AuthContextBase';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
+
+  const logout = () => {
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  };
 
   useEffect(() => {
     const initAuth = async () => {
@@ -21,8 +27,7 @@ export const AuthProvider = ({ children }) => {
           const response = await api.get('/auth/me');
           setUser(response.data.user);
           localStorage.setItem('user', JSON.stringify(response.data.user));
-        } catch (error) {
-          console.error('Auth verification failed:', error);
+        } catch {
           logout();
         }
       }
@@ -64,15 +69,6 @@ export const AuthProvider = ({ children }) => {
         message: error.response?.data?.message || 'Registration failed'
       };
     }
-  };
-
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    
-    // no-op on backend
   };
 
   const updateUser = async (updates) => {

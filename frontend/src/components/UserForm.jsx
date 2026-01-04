@@ -1,22 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { X } from 'lucide-react';
 
 const UserForm = ({ user, onSubmit, onClose }) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
+  const [formData, setFormData] = useState(() => ({
+    name: user?.name || '',
+    email: user?.email || '',
     password: '',
-  });
-
-  useEffect(() => {
-    if (user) {
-      setFormData({
-        name: user.name || '',
-        email: user.email || '',
-        password: '',
-      });
-    }
-  }, [user]);
+  }));
 
   const handleSubmit = (e) => {
     e.preventDefault();

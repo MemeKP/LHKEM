@@ -31,7 +31,7 @@ const Login = () => {
       } else {
         setError(result.message || 'Login failed');
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
