@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, Eye, Users, DollarSign, TrendingUp, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Users, DollarSign, Clock, CheckCircle, XCircle, AlertCircle, Camera, Settings as SettingsIcon } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from '../hooks/useTranslation';
 // Frontend-only prototype: use localStorage instead of API
@@ -13,6 +13,17 @@ const ShopDashboard = () => {
   const initialWorkshops = Array.isArray(initialDraft.workshops) ? initialDraft.workshops : [];
   const [workshops, setWorkshops] = useState(initialWorkshops);
   const [activeTab, setActiveTab] = useState('all');
+  const [showSettings, setShowSettings] = useState(false);
+  const [profile, setProfile] = useState({
+    name: initialDraft.name || '',
+    description: initialDraft.description || '',
+    openTime: initialDraft.openTime || '',
+    closeTime: initialDraft.closeTime || '',
+    contactLinks: initialDraft.contactLinks || { phone: '', line: '' , facebook: '', website: ''},
+    location: initialDraft.location || { address: '' },
+    iconUrl: initialDraft.iconUrl || '',
+    coverUrl: initialDraft.coverUrl || '',
+  });
 
   useEffect(() => {
     const hasSetup = localStorage.getItem('shopHasSetup') === 'true';
@@ -47,6 +58,35 @@ const ShopDashboard = () => {
     setWorkshops(updated.workshops);
   };
 
+  const handleProfileChange = (e) => {
+    const { name, value } = e.target;
+    if (name.includes('.')) {
+      const [parent, child] = name.split('.');
+      setProfile(prev => ({
+        ...prev,
+        [parent]: { ...(prev[parent]||{}), [child]: value }
+      }));
+    } else {
+      setProfile(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleImagePick = (key, file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setProfile(prev => ({ ...prev, [key]: reader.result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const saveProfile = () => {
+    const draft = JSON.parse(localStorage.getItem('shopDraft') || '{}');
+    const updated = { ...draft, ...profile };
+    localStorage.setItem('shopDraft', JSON.stringify(updated));
+    setShowSettings(false);
+  };
+
   const getStatusBadge = (status) => {
     const config = {
       PENDING: { bg: 'bg-yellow-100', text: 'text-yellow-700', icon: Clock, label: t('shopDashboard.status.pending') },
@@ -77,25 +117,102 @@ const ShopDashboard = () => {
   // always render directly in prototype
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 py-8 animate-fadeIn">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">{t('shopDashboard.title')}</h1>
-            <p className="text-gray-600 mt-1">{t('shopDashboard.subtitle')}</p>
+        <div className="mb-6">
+          <div className="relative rounded-xl overflow-hidden animate-slideDown">
+            <div className="aspect-[16/6] w-full bg-gray-200">
+              {profile.coverUrl && (
+                <img src={profile.coverUrl} alt="cover" className="w-full h-full object-cover" />
+              )}
+            </div>
           </div>
-          <button
-            onClick={() => navigate('/shop/workshops/create')}
-            className="flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition-colors"
-          >
-            <Plus className="h-5 w-5" />
-            {t('shopDashboard.createWorkshop')}
-          </button>
+          <div className="flex items-center justify-between mt-4 animate-slideUp">
+            <div className="flex items-center gap-4">
+              <div className="h-24 w-24 rounded-full bg-white shadow ring-2 ring-white overflow-hidden flex items-center justify-center text-orange-600 text-3xl font-bold">
+                {profile.iconUrl ? <img src={profile.iconUrl} alt="icon" className="h-full w-full object-cover" /> : (profile.name?.charAt(0) || 'S')}
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">{profile.name || t('shopDashboard.title')}</h1>
+                <p className="text-gray-600">{profile.description}</p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowSettings(s => !s)}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700"
+              >
+                <SettingsIcon className="h-4 w-4" />
+                {t('shopDashboard.manageProfile')}
+              </button>
+              <button
+                onClick={() => navigate('/shop/workshops/create')}
+                className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
+              >
+                <Plus className="h-4 w-4" />
+                {t('shopDashboard.createWorkshop')}
+              </button>
+            </div>
+          </div>
         </div>
 
+        {showSettings && (
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-8 animate-scaleIn">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="md:col-span-2 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">ชื่อร้าน</label>
+                  <input name="name" value={profile.name} onChange={handleProfileChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">คำอธิบาย</label>
+                  <textarea name="description" value={profile.description} onChange={handleProfileChange} rows={3} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">เปิด</label>
+                    <input name="openTime" value={profile.openTime} onChange={handleProfileChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">ปิด</label>
+                    <input name="closeTime" value={profile.closeTime} onChange={handleProfileChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">ภาพหน้าปก</label>
+                  <div className="aspect-[16/9] w-full bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+                    {profile.coverUrl ? <img src={profile.coverUrl} alt="cover" className="w-full h-full object-cover" /> : <div className="text-gray-400">ตัวอย่างภาพ</div>}
+                  </div>
+                  <label className="mt-2 inline-flex items-center px-3 py-2 bg-gray-800 text-white rounded-lg cursor-pointer hover:bg-gray-700">
+                    <Camera className="h-4 w-4 mr-2" />
+                    อัปโหลด
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImagePick('coverUrl', e.target.files?.[0])} />
+                  </label>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Icon ร้าน</label>
+                  <div className="h-20 w-20 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center text-orange-600 text-2xl font-bold">
+                    {profile.iconUrl ? <img src={profile.iconUrl} alt="icon" className="h-full w-full object-cover" /> : (profile.name?.charAt(0) || 'S')}
+                  </div>
+                  <label className="mt-2 inline-flex items-center px-3 py-2 bg-gray-800 text-white rounded-lg cursor-pointer hover:bg-gray-700">
+                    <Camera className="h-4 w-4 mr-2" />
+                    อัปโหลด
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImagePick('iconUrl', e.target.files?.[0])} />
+                  </label>
+                </div>
+                <div className="flex justify-end">
+                  <button onClick={saveProfile} className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600">บันทึก</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-stagger">
+            <div className="bg-white rounded-lg shadow-sm p-6 animate-scaleIn">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">{t('shopDashboard.stats.totalWorkshops')}</p>
@@ -107,7 +224,7 @@ const ShopDashboard = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-lg shadow-sm p-6 animate-scaleIn">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">{t('shopDashboard.stats.activeWorkshops')}</p>
@@ -119,7 +236,7 @@ const ShopDashboard = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-lg shadow-sm p-6 animate-scaleIn">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">{t('shopDashboard.stats.totalBookings')}</p>
@@ -131,7 +248,7 @@ const ShopDashboard = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-lg shadow-sm p-6 animate-scaleIn">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">{t('shopDashboard.stats.totalRevenue')}</p>
@@ -183,69 +300,52 @@ const ShopDashboard = () => {
                 </button>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-stagger">
                 {filteredWorkshops.map((workshop) => (
-                  <div
-                    key={workshop.id}
-                    className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-semibold text-gray-900">{workshop.title}</h3>
-                          {getStatusBadge(workshop.status)}
+                  <div key={workshop.id} className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 animate-scaleIn transition-transform hover:scale-[1.01]">
+                    <div className="relative aspect-video bg-gray-100">
+                      {workshop.imageUrl && (
+                        <img src={workshop.imageUrl} alt={workshop.title} className="w-full h-full object-cover" />
+                      )}
+                      <div className="absolute top-3 left-3 px-2 py-1 bg-white rounded-full text-xs font-semibold shadow">
+                        {workshop.rating ? Number(workshop.rating).toFixed(1) : '4.9'}
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs text-orange-600">งานช่าง</span>
+                        {getStatusBadge(workshop.status)}
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900">{workshop.title}</h3>
+                      <p className="text-gray-600 text-sm mt-1">
+                        {workshop.description}
+                      </p>
+                      <div className="flex items-center gap-4 text-sm text-gray-700 mt-3">
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-4 w-4" />
+                          <span>{workshop.duration ? `${workshop.duration} นาที` : '3 ชม.'}</span>
                         </div>
-                        
-                        <p className="text-gray-600 text-sm mb-4">{workshop.description}</p>
-                        
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                          <div>
-                            <p className="text-gray-500">{t('shopDashboard.price')}</p>
-                            <p className="font-semibold text-gray-900">฿{workshop.price}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-500">{t('shopDashboard.seats')}</p>
-                            <p className="font-semibold text-gray-900">
-                              {workshop.seatsBooked}/{workshop.seatLimit}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-gray-500">{t('shopDashboard.duration')}</p>
-                            <p className="font-semibold text-gray-900">
-                              {workshop.duration || `${workshop.date || '-'} ${workshop.time || ''}`}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-gray-500">{t('shopDashboard.rating')}</p>
-                            <p className="font-semibold text-gray-900">
-                              {workshop.rating ? `⭐ ${Number(workshop.rating).toFixed(1)}` : '—'}
-                            </p>
-                          </div>
+                        <div className="flex items-center gap-1">
+                          <Users className="h-4 w-4" />
+                          <span>สูงสุด {workshop.seatLimit || 8} คน</span>
                         </div>
                       </div>
-
-                      <div className="flex flex-col gap-2 ml-4">
-                        <button
-                          onClick={() => navigate(`/shop/workshops/${workshop.id}`)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title={t('shopDashboard.view')}
-                        >
-                          <Eye className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => navigate(`/shop/workshops/${workshop.id}/edit`)}
-                          className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                          title={t('shopDashboard.edit')}
-                        >
-                          <Edit className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteWorkshop(workshop.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title={t('shopDashboard.delete')}
-                        >
-                          <Trash2 className="h-5 w-5" />
-                        </button>
+                      <div className="mt-4 flex items-center justify-between">
+                        <div className="text-orange-600 font-bold">฿{workshop.price || 880}</div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => navigate(`/shop/workshops/${workshop.id}`)}
+                            className="px-3 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 text-sm"
+                          >
+                            {t('shopDashboard.view')}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteWorkshop(workshop.id)}
+                            className="px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 text-sm"
+                          >
+                            {t('shopDashboard.delete')}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>

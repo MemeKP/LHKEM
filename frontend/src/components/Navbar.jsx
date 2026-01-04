@@ -45,7 +45,6 @@ const Navbar = () => {
     if (role === 'SHOP_OWNER') {
       return [
         { to: '/shop/dashboard', icon: LayoutDashboard, label: t('nav.shopDashboard') },
-        { to: '/shop/profile', icon: Store, label: t('nav.shopProfile') },
         { to: '/settings', icon: Settings, label: t('nav.settings') }
       ];
     }
@@ -162,7 +161,7 @@ const Navbar = () => {
                 </button>
                 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 animate-slideDown">
                     <div className="px-4 py-2 border-b border-gray-200">
                       <p className="text-xs text-gray-500">{t('nav.signedInAs')}</p>
                       <p className="text-sm font-semibold text-gray-900 truncate">{user?.email}</p>

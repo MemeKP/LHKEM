@@ -18,14 +18,14 @@
     "roleShop": "Shop Owner",
     "roleCommunityAdmin": "Community Admin",
     "rolePlatformAdmin": "Platform Admin",
-    "logoTitle": "Loeng Him Kaw",
+    "logoTitle": "Loang Him Kao",
     "logoSubtitle": "Community"
   },
   "hero": {
     "badge": "Eco-Tourism Community, Chiang Mai",
     "title": "Experience Slow Life",
-    "subtitle": "at Loeng Him Kaw",
-    "description": "Discover learning experiences and various activities in Loeng Him Kaw community",
+    "subtitle": "at Loang Him Kao",
+    "description": "Discover learning experiences and various activities in Loang Him Kao community",
     "viewWorkshops": "View All Workshops",
     "exploreMap": "Explore Community Map"
   },
@@ -36,9 +36,9 @@
   },
   "about": {
     "badge": "About Community",
-    "title": "Loeng Him Kaw",
+    "title": "Loang Him Kao",
     "subtitle": "Community of Happiness",
-    "description": "\"Loeng Him Kaw\" is a small community by the Kaw River in San Kamphaeng District, Chiang Mai Province, where artisans and artists gather...",
+    "description": "\"Loang Him Kao\" is a small community by the Kaw River in San Kamphaeng District, Chiang Mai Province, where artisans and artists gather...",
     "readMore": "Read Our Story"
   },
   "workshopSection": {
@@ -52,11 +52,11 @@
   "explore": {
     "badge": "Explore",
     "title": "Explore for Tourists",
-    "description": "Discover tourist attractions, shops, and various activities in Loeng Him Kaw community with convenient navigation maps",
+    "description": "Discover tourist attractions, shops, and various activities in Loang Him Kao community with convenient navigation maps",
     "viewMap": "View Community Map"
   },
   "map": {
-    "title": "Explore Loeng Him Kaw",
+    "title": "Explore Loang Him Kao",
     "discover": "Discover Places",
     "viewRoute": "View Route"
   },
@@ -88,8 +88,8 @@
   },
   "homeHighlight": {
     "badge": "About the community",
-    "title": "Loeng Him Kaw, a joyful community",
-    "description": "\"Loeng Him Kaw\" is a riverside neighborhood in San Kamphaeng, Chiang Mai where artisans and makers live and work together.",
+    "title": "Loang Him Kao, a joyful community",
+    "description": "\"Loang Him Kao\" is a riverside neighborhood in San Kamphaeng, Chiang Mai where artisans and makers live and work together.",
     "button": "Read our story",
     "cards": {
       "eco": "Eco-friendly",
@@ -106,7 +106,7 @@
   },
   "auth": {
     "welcomeTitle": "Welcome to",
-    "communityName": "Loeng Him Kaw",
+    "communityName": "Loang Him Kao",
     "welcomeDescription": "Login to book workshops and discover various activities within the community",
     "loginTitle": "Login",
     "loginDescription": "Enter your email and password to login",
@@ -214,5 +214,83 @@
     "error": "An error occurred",
     "success": "Success",
     "close": "Close"
+  },
+  "shopDashboard": {
+    "title": "Shop Dashboard",
+    "subtitle": "Manage your workshops and activities",
+    "createWorkshop": "Create New Workshop",
+    "manageProfile": "Manage Shop Profile",
+    "stats": {
+      "totalWorkshops": "Total Workshops",
+      "activeWorkshops": "Active Workshops",
+      "totalBookings": "Total Bookings",
+      "totalRevenue": "Total Revenue"
+    },
+    "tabs": {
+      "all": "All",
+      "active": "Active",
+      "pending": "Pending Approval",
+      "closed": "Closed"
+    },
+    "status": {
+      "pending": "Pending",
+      "active": "Active",
+      "closed": "Closed",
+      "cancelled": "Cancelled",
+      "rejected": "Rejected"
+    },
+    "price": "Price",
+    "seats": "Seats",
+    "duration": "Duration",
+    "rating": "Rating",
+    "view": "View",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirmDelete": "Are you sure you want to delete this workshop?",
+    "noWorkshops": {
+      "title": "No Workshops Yet",
+      "description": "Start by creating your first workshop"
+    }
+  },
+  "shopWorkshopDetail": {
+    "back": "Back to Shop Dashboard",
+    "imagePlaceholder": "Workshop Image",
+    "edit": "Edit Details",
+    "price": "Price",
+    "perPerson": "per person",
+    "views": "Views",
+    "totalEnrollments": "Total Enrollments",
+    "seatsLeft": "Seats Left",
+    "notifyTitle": "Notify Participants",
+    "notifyDesc": "Use this to inform changes or share additional information",
+    "notifyButton": "Send Notification to Participants",
+    "enrollmentListTitle": "Enrollment List",
+    "table": {
+      "index": "No.",
+      "name": "Name",
+      "contact": "Phone/Email",
+      "date": "Enrollment Date",
+      "status": "Status"
+    },
+    "manageTitle": "Manage Workshop",
+    "manageOpen": "Open Enrollment",
+    "manageClose": "Close Enrollment",
+    "manageCancel": "Cancel Workshop",
+    "editTitle": "Edit Workshop",
+    "form": {
+      "title": "Workshop Title",
+      "imageLabel": "Workshop Image",
+      "noImage": "No image yet",
+      "upload": "Upload Image",
+      "description": "Description",
+      "date": "Date",
+      "time": "Time",
+      "location": "Location",
+      "seatLimit": "Seat Limit",
+      "priceBaht": "Price (Baht)",
+      "categoriesLabel": "Workshop Atmosphere (optional)",
+      "save": "Save Changes",
+      "cancel": "Cancel"
+    }
   }
 }

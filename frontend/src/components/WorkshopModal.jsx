@@ -4,7 +4,7 @@ import { useTranslation } from '../hooks/useTranslation';
 import { useAuth } from '../hooks/useAuth';
 
 const SectionCard = ({ icon, title, children }) => (
-  <div className="rounded-3xl border border-gray-100 bg-white shadow-sm p-5 space-y-4">
+  <div className="rounded-3xl border border-gray-100 bg-white shadow-sm p-5 space-y-4 animate-scaleIn">
     <div className="flex items-center gap-2 text-gray-900 font-semibold">
       {icon}
       <span>{title}</span>
@@ -41,7 +41,7 @@ const WorkshopModal = ({ workshop, isOpen, onClose }) => {
           <X className="h-5 w-5" />
         </button>
 
-        <div className="p-6 space-y-5 max-h-[85vh] overflow-y-auto">
+        <div className="p-6 space-y-5 max-h-[85vh] overflow-y-auto animate-stagger">
           <div className="rounded-[28px] border border-gray-100 bg-white shadow-sm p-5 space-y-4">
             <div className="flex items-start justify-between gap-4">
               <div>

@@ -15,6 +15,7 @@ const ShopWorkshopCreate = () => {
     location: '',
     seatLimit: '',
     price: '',
+    imageUrl: '',
     categories: []
   });
 
@@ -30,6 +31,15 @@ const ShopWorkshopCreate = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleImagePick = (file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setForm(prev => ({ ...prev, imageUrl: reader.result }));
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = (e) => {
@@ -74,6 +84,20 @@ const ShopWorkshopCreate = () => {
         )}
 
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm p-6 space-y-6">
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-gray-700">ภาพประกอบ Workshop (ตัวเลือก)</label>
+            <div className="relative aspect-video w-full bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+              {form.imageUrl ? (
+                <img src={form.imageUrl} alt="workshop" className="w-full h-full object-cover" />
+              ) : (
+                <div className="text-gray-400">ยังไม่มีภาพ</div>
+              )}
+            </div>
+            <label className="inline-flex items-center px-4 py-2 bg-gray-800 text-white rounded-lg cursor-pointer hover:bg-gray-700 w-fit">
+              อัปโหลดภาพ
+              <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImagePick(e.target.files?.[0])} />
+            </label>
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">ชื่อ Workshop</label>
             <input

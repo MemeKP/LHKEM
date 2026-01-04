@@ -13,6 +13,8 @@ const ShopCreate = () => {
     description: '',
     openTime: '',
     closeTime: '',
+    iconUrl: '',
+    coverUrl: '',
     location: {
       address: '',
       lat: 0,
@@ -26,6 +28,15 @@ const ShopCreate = () => {
     },
     images: []
   });
+
+  const handleImagePick = (key, file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setShopData(prev => ({ ...prev, [key]: reader.result }));
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -87,6 +98,54 @@ const ShopCreate = () => {
         )}
 
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm p-6 space-y-6">
+          <div className="space-y-4">
+            <label className="block text-sm font-medium text-gray-700">ภาพหน้าปกร้าน (พื้นหลัง)</label>
+            <div className="aspect-[16/6] w-full bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+              {shopData.coverUrl ? (
+                <img src={shopData.coverUrl} alt="shop cover" className="w-full h-full object-cover" />
+              ) : (
+                <div className="text-gray-400">ตัวอย่างภาพพื้นหลัง</div>
+              )}
+            </div>
+            <div>
+              <label className="inline-flex items-center px-4 py-2 bg-gray-800 text-white rounded-lg cursor-pointer hover:bg-gray-700">
+                <Camera className="h-4 w-4 mr-2" />
+                อัปโหลดภาพพื้นหลัง
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleImagePick('coverUrl', e.target.files?.[0])}
+                />
+              </label>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <label className="block text-sm font-medium text-gray-700">Icon ร้าน (โปรไฟล์)</label>
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="h-24 w-24 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-3xl font-bold overflow-hidden">
+                  {shopData.iconUrl ? (
+                    <img src={shopData.iconUrl} alt="shop icon" className="h-full w-full object-cover" />
+                  ) : (
+                    (shopData.name?.charAt(0) || 'S')
+                  )}
+                </div>
+              </div>
+              <label className="inline-flex items-center px-4 py-2 bg-gray-800 text-white rounded-lg cursor-pointer hover:bg-gray-700">
+                <Camera className="h-4 w-4 mr-2" />
+                อัปโหลด Icon
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleImagePick('iconUrl', e.target.files?.[0])}
+                />
+              </label>
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">ชื่อร้าน</label>
             <input

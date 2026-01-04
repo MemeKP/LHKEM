@@ -19,7 +19,7 @@
     "roleCommunityAdmin": "ผู้ดูแลชุมชน",
     "rolePlatformAdmin": "ผู้ดูแลระบบ",
     "logoTitle": "โหล่งฮิมคาว",
-    "logoSubtitle": "Loeng Him Kaw"
+    "logoSubtitle": "Loang Him Kao"
   },
   "hero": {
     "badge": "ชุมชนท่องเที่ยวเชิงนิเวศ เชียงใหม่",
@@ -219,6 +219,7 @@
     "title": "แดชบอร์ดร้านค้า",
     "subtitle": "จัดการเวิร์กช็อปและกิจกรรมของคุณ",
     "createWorkshop": "สร้างเวิร์กช็อปใหม่",
+    "manageProfile": "จัดการโปรไฟล์ร้านค้า",
     "stats": {
       "totalWorkshops": "เวิร์กช็อปทั้งหมด",
       "activeWorkshops": "เวิร์กช็อปที่เปิดอยู่",
@@ -249,6 +250,47 @@
     "noWorkshops": {
       "title": "ยังไม่มีเวิร์กช็อป",
       "description": "เริ่มสร้างเวิร์กช็อปแรกของคุณเลย"
+    }
+  },
+  "shopWorkshopDetail": {
+    "back": "กลับแดชบอร์ดร้าน",
+    "imagePlaceholder": "รูปภาพ Workshop",
+    "edit": "แก้ไขรายละเอียด",
+    "price": "ราคา",
+    "perPerson": "ต่อคน",
+    "views": "ยอดดู",
+    "totalEnrollments": "ผู้จองทั้งหมด",
+    "seatsLeft": "ที่นั่งคงเหลือ",
+    "notifyTitle": "แจ้งผู้ลงทะเบียน",
+    "notifyDesc": "ใช้แจ้งเตือนกรณีมีการเปลี่ยนแปลงหรือแจ้งข้อมูลเพิ่มเติม",
+    "notifyButton": "ส่งแจ้งเตือนผู้ลงทะเบียน",
+    "enrollmentListTitle": "รายชื่อผู้ลงทะเบียน",
+    "table": {
+      "index": "ลำดับ",
+      "name": "ชื่อ",
+      "contact": "เบอร์/อีเมล",
+      "date": "วันที่ลงทะเบียน",
+      "status": "สถานะ"
+    },
+    "manageTitle": "จัดการ Workshop",
+    "manageOpen": "เปิดรับ Workshop",
+    "manageClose": "ปิดรับสมัคร",
+    "manageCancel": "ยกเลิก Workshop",
+    "editTitle": "แก้ไข Workshop",
+    "form": {
+      "title": "ชื่อ Workshop",
+      "imageLabel": "รูปภาพ Workshop",
+      "noImage": "ยังไม่มีภาพ",
+      "upload": "อัปโหลดภาพ",
+      "description": "คำอธิบาย",
+      "date": "วัน",
+      "time": "เวลา",
+      "location": "สถานที่",
+      "seatLimit": "จำนวนที่นั่ง",
+      "priceBaht": "ราคา (บาท)",
+      "categoriesLabel": "บรรยากาศ Workshop (ตัวเลือก)",
+      "save": "บันทึกการแก้ไข",
+      "cancel": "ยกเลิก"
     }
   },
   "communityAdmin": {
