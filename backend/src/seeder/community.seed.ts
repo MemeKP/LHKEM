@@ -52,7 +52,10 @@ export async function seedCommunity(
     },
 
     contact_info: {
-      facebook: 'โหล่งฮิมคาว',
+      facebook: {
+        name: 'โหล่งฮิมคาว',
+        link: 'https://www.facebook.com/LoangHimKao',
+      },
     },
   });
 

@@ -72,9 +72,9 @@ export class Community {
     location: {
         full_address: string;
         house_no?: string;
-        village?: string;      
+        village?: string;
         moo?: string;
-        alley?: string;         
+        alley?: string;
         road?: string;
         province: string;
         district?: string;
@@ -90,19 +90,29 @@ export class Community {
         type: {
             phone: String,
             email: String,
-            facebook: String,
-            line: String,
-            website: String
+            facebook: {
+                name: String, 
+                link: String  
+            },
+            line: {
+                name: String,
+                link: String
+            },
+            ig: {
+                name: String,
+                link: String
+            },
+            website: String 
         },
         required: true,
         _id: false
-
     })
     contact_info: {
         phone?: string;
         email?: string;
-        facebook?: string;
-        line?: string;
+        facebook?: { name: string; link: string };
+        line?: { name: string; link: string };
+        ig?: {name:string, link:string};
         website?: string;
     }
 
