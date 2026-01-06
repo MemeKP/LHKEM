@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Link, useNavigate, useOutletContext, useParams } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useOutletContext } from 'react-router-dom';
 import { MapPin, Calendar, Heart, Leaf, Users, Palette, HomeIcon, List, BookXIcon, Box, BoxesIcon, Sparkle, SparklesIcon, Clock, Users as UsersIcon, Star } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import workshopData from '../data/workshops';
@@ -17,11 +17,10 @@ const fetchPopularWorkshops = async (communityId) => {
 const Home = () => {
   const { t } = useTranslation();
   const { community } = useOutletContext()
-  const { slug } = useParams()
-  const navigate = useNavigate()
   const highlights = community.cultural_highlights || []
+  const workshopCount = community.workshops?.length || 0;
 
-  // ไว้แมชไอคอนกับชื่อไฮไลท แก้ได้ถ้าไม่ชอบ
+  // ไว้แมชไอคอนกับชื่อไฮไลท
   const getIcon = (title) => {
     if (!title) return <Star className="h-4 w-4 text-yellow-300" />
     const text = title.toLowerCase()
@@ -46,12 +45,30 @@ const Home = () => {
     initialData: []
   })
 
+  /*
   const stats = [
     { number: '15+', label: t('stats.workshops') },
     { number: '20+', label: t('stats.locations') },
     { number: '100%', label: 'Eco-Friendly' }
-  ];
+  ];*/
+  const stats = [
+  { 
+    number: workshopCount > 0 ? `${workshopCount}+` : '0', 
+    label: t('stats.workshops') 
+  },
+  { 
+    // ส่วน locations ตอนนี้ยังไม่มี collection ร้านค้าแยก
+    number: '1', 
+    label: t('stats.locations') 
+  },
+  { 
+    // ให้ static เหมือนกันหมด
+    number: '100%', 
+    label: 'Eco-Friendly' 
+  }
+];
 
+/*
   const highlightFeatures = [
     {
       key: 'eco',
@@ -69,7 +86,7 @@ const Home = () => {
       key: 'slowlife',
       icon: <SparklesIcon className="h-5 w-5 text-yellow-500" />
     }
-  ];
+  ];*/
 
   const workshopCards = workshopData.slice(0, 3);
   const [activeWorkshop, setActiveWorkshop] = useState(null);
@@ -89,22 +106,21 @@ const Home = () => {
               </div>
               <h1 className="text-4xl md:text-5xl font-extrabold leading-tight mb-4">
                 {t('hero.title')} <br className="hidden md:block" />
-                {t('hero.subtitle')}
+                {community.name}
               </h1>
-              <p className="text-lg text-white/80 mb-8">
-                เรียนรู้เกษตรอินทรีย์ ศิลปะพื้นบ้าน และวัฒนธรรมท้องถิ่น
-                ผ่านเวิร์กช็อปและกิจกรรมที่หลากหลาย ท่ามกลางธรรมชาติที่สวยงาม
+              <p className="text-lg text-white/80 mb-8 line-clamp-2">
+                {community.hero_section.description}
               </p>
               <div className="flex flex-col sm:flex-row justify-center gap-4">
                 <Link
-                  to="/workshops"
+                  to={`/${community.slug}/workshops`}
                   className="inline-flex items-center justify-center gap-2 bg-orange-400 hover:bg-orange-500 text-white font-semibold px-8 py-3 rounded-full shadow-lg transition"
                 >
                   <BoxesIcon className="h-5 w-5" />
                   {t('hero.viewWorkshops')}
                 </Link>
                 <Link
-                  to="/map"
+                  to={`/${community.slug}/map`}
                   className="inline-flex items-center justify-center gap-2 border border-white/40 text-white px-8 py-3 rounded-full hover:bg-white/10 transition"
                 >
                   <MapPin className="h-5 w-5" />
@@ -140,7 +156,7 @@ const Home = () => {
               {/* {t('homeHighlight.description')} */}
             </p>
             <Link
-              to="/about"
+              to={`/${community.slug}/about`}
               className="inline-flex items-center justify-center gap-2 bg-[#0f2f3a] text-white px-6 py-3 rounded-full hover:bg-[#112f3d] transition shadow-lg"
             >
               {t('homeHighlight.button')}
@@ -242,7 +258,7 @@ const Home = () => {
             </div>)}
 
           <div className="text-center mt-10">
-            <Link to="/workshops" className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-gray-200 rounded-full text-gray-700 hover:border-gray-400 transition">
+            <Link to={`/${community.slug}/workshops`} className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-gray-200 rounded-full text-gray-700 hover:border-gray-400 transition">
               {t('workshopSection.viewAll')}
               <span>→</span>
             </Link>
@@ -261,7 +277,7 @@ const Home = () => {
             Interactive Map Component (Coming Soon)
           </div>
           <Link
-            to="/map"
+            to={`/${community.slug}/map`}
             className="inline-flex items-center justify-center gap-2 bg-orange-400 text-white px-8 py-3 rounded-full font-semibold hover:bg-orange-500 transition"
           >
             <MapPin className="h-5 w-5" />

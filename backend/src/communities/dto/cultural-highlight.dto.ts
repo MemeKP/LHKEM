@@ -6,5 +6,13 @@ export class CulturalHighlightDto {
 
   @IsOptional()
   @IsString()
+  title_en?: string;
+
+  @IsOptional()
+  @IsString()
   desc?: string;
+
+  @IsOptional()
+  @IsString()
+  desc_en?: string;
 }

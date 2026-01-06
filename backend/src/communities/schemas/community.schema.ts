@@ -14,29 +14,46 @@ export class Community {
     @Prop({ required: true, trim: true })
     name: string;
 
+    @Prop({ trim: true })
+    name_en: string; 
+
+    @Prop({ trim: true })
+    abbreviation: string;
+
     @Prop({ required: true, type: String })
     history: string;
+
+    @Prop({ type: String })
+    history_en: string;
 
     @Prop({
         type: {
             title: String,
+            title_en: String,
             description: String,
+            description_en: String,
             _id: false
         }
     })
     hero_section?: {
         title: string;
+        title_en?: string;
         description: string;
+        description_en?: string;
     };
 
     @Prop([{
         title: { type: String, required: true },
+        title_en: { type: String },
         desc: { type: String },
+        desc_en: { type: String },
         _id: false
     }])
     cultural_highlights: {
         title: string;
+        title_en?: string;
         desc: string;
+        desc_en?: string;
     }[]
 
     @Prop({ type: [String], default: [] })
@@ -48,14 +65,19 @@ export class Community {
     @Prop({
         type: {
             full_address: { type: String, required: true },
+            full_address_en: { type: String },
             house_no: { type: String },
             village: { type: String },
             moo: { type: String },
             alley: { type: String },
             road: { type: String },
+            road_en: { type: String },
             province: { type: String, required: true },
+            province_en: { type: String },
             district: { type: String },
+            district_en: { type: String },
             sub_district: { type: String },
+            sub_district_en: { type: String },
             postal_code: { type: String },
             coordinates: {
                 type: {
@@ -71,14 +93,19 @@ export class Community {
     })
     location: {
         full_address: string;
+        full_address_en?: string;
         house_no?: string;
         village?: string;
         moo?: string;
         alley?: string;
         road?: string;
+        road_en?: string;
         province: string;
+        province_en?: string;
         district?: string;
+        district_en?: string;
         sub_district?: string;
+        sub_district_en?: string;
         postal_code?: string;
         coordinates: {
             lat: number;
@@ -116,7 +143,7 @@ export class Community {
         website?: string;
     }
 
-    @Prop({ type: String })
+    @Prop({ type: String, unique: true })
     slug: string;
 
     @Prop({ type: Date })

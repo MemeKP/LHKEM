@@ -4,7 +4,7 @@ import { Menu, X, Globe, User, Settings, LogOut, LayoutDashboard, Store, Users, 
 import { useTranslation } from '../hooks/useTranslation';
 import { useAuth } from '../hooks/useAuth';
 
-const Navbar = () => {
+const Navbar = ({ community }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { language, toggleLanguage, t } = useTranslation();
@@ -12,8 +12,15 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const userMenuRef = useRef(null);
-  
-  const isActive = (path) => location.pathname === path;
+
+  // const isActive = (path) => location.pathname === path;
+  const isActive = (path) => {
+    const fullPath = path === '' ? `/${community.slug}` : `/${community.slug}/${path}`;
+    if (path === '') {
+      return location.pathname === fullPath || location.pathname === `${fullPath}/`;
+    }
+    return location.pathname.startsWith(fullPath);
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -21,7 +28,6 @@ const Navbar = () => {
         setIsUserMenuOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
@@ -41,7 +47,7 @@ const Navbar = () => {
 
   const getRoleSpecificMenuItems = () => {
     const role = user?.role;
-    
+
     if (role === 'SHOP_OWNER') {
       return [
         { to: '/shop/dashboard', icon: LayoutDashboard, label: t('nav.shopDashboard') },
@@ -49,21 +55,21 @@ const Navbar = () => {
         { to: '/settings', icon: Settings, label: t('nav.settings') }
       ];
     }
-    
+
     if (role === 'COMMUNITY_ADMIN') {
       return [
         { to: '/community/dashboard', icon: LayoutDashboard, label: t('nav.communityDashboard') },
         { to: '/settings', icon: Settings, label: t('nav.settings') }
       ];
     }
-    
+
     if (role === 'PLATFORM_ADMIN') {
       return [
         { to: '/admin/dashboard', icon: Shield, label: t('nav.adminDashboard') },
         { to: '/settings', icon: Settings, label: t('nav.settings') }
       ];
     }
-    
+
     // Default for TOURIST
     return [
       { to: '/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
@@ -75,21 +81,22 @@ const Navbar = () => {
     <nav className="bg-white shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link to="/" className="flex items-center space-x-2">
+          <Link to={`/${community.slug}`} className="flex items-center space-x-2">
             <div className="p-2 rounded-full" style={{ backgroundColor: '#111827' }}>
+              {/* !!!! */}
               <span className="text-white font-bold text-sm">LHK</span>
             </div>
             <div className="flex flex-col">
-              <span className="font-semibold text-sm" style={{ color: '#111827' }}>{t('nav.logoTitle')}</span>
+              <span className="font-semibold text-sm" style={{ color: '#111827' }}>{community.name}</span>
               <span className="text-xs" style={{ color: '#6b7280' }}>{t('nav.logoSubtitle')}</span>
             </div>
           </Link>
 
           <div className="hidden md:flex items-center space-x-8">
             <Link
-              to="/"
+              to={`/${community.slug}`}
               className={`font-medium transition-colors border-b-2 pb-1 ${isActive('/') ? '' : 'border-transparent'}`}
-              style={{ 
+              style={{
                 color: isActive('/') ? '#111827' : '#4b5563',
                 borderColor: isActive('/') ? '#ea580c' : 'transparent'
               }}
@@ -98,10 +105,11 @@ const Navbar = () => {
             >
               {t('nav.home')}
             </Link>
+
             <Link
-              to="/workshops"
+              to={`/${community.slug}/workshops`}
               className={`font-medium transition-colors border-b-2 pb-1 ${isActive('/workshops') ? '' : 'border-transparent'}`}
-              style={{ 
+              style={{
                 color: isActive('/workshops') ? '#111827' : '#4b5563',
                 borderColor: isActive('/workshops') ? '#ea580c' : 'transparent'
               }}
@@ -113,7 +121,7 @@ const Navbar = () => {
             <Link
               to="/map"
               className={`font-medium transition-colors border-b-2 pb-1 ${isActive('/map') ? '' : 'border-transparent'}`}
-              style={{ 
+              style={{
                 color: isActive('/map') ? '#111827' : '#4b5563',
                 borderColor: isActive('/map') ? '#ea580c' : 'transparent'
               }}
@@ -125,7 +133,7 @@ const Navbar = () => {
             <Link
               to="/about"
               className={`font-medium transition-colors border-b-2 pb-1 ${isActive('/about') ? '' : 'border-transparent'}`}
-              style={{ 
+              style={{
                 color: isActive('/about') ? '#111827' : '#4b5563',
                 borderColor: isActive('/about') ? '#ea580c' : 'transparent'
               }}
@@ -147,7 +155,7 @@ const Navbar = () => {
               <Globe className="h-4 w-4" />
               <span className="text-sm font-medium">{language} / {language === 'TH' ? 'EN' : 'TH'}</span>
             </button>
-            
+
             {isAuthenticated ? (
               <div className="relative" ref={userMenuRef}>
                 <button
@@ -160,7 +168,7 @@ const Navbar = () => {
                   <User className="h-5 w-5" />
                   <span>{getUserDisplayName()}</span>
                 </button>
-                
+
                 {isUserMenuOpen && (
                   <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                     <div className="px-4 py-2 border-b border-gray-200">
@@ -173,7 +181,7 @@ const Navbar = () => {
                         {user?.role === 'TOURIST' && t('nav.roleTourist')}
                       </p>
                     </div>
-                    
+
                     {getRoleSpecificMenuItems().map((item, index) => {
                       const Icon = item.icon;
                       return (
@@ -197,7 +205,7 @@ const Navbar = () => {
                         </Link>
                       );
                     })}
-                    
+
                     <div className="border-t border-gray-200 my-2"></div>
                     <button
                       onClick={handleLogout}
@@ -250,7 +258,7 @@ const Navbar = () => {
             <Link
               to="/"
               className={`block font-medium transition-colors ${isActive('/') ? 'border-l-4 pl-3' : 'pl-4'}`}
-              style={{ 
+              style={{
                 color: isActive('/') ? '#ea580c' : '#111827',
                 borderColor: isActive('/') ? '#ea580c' : 'transparent'
               }}
@@ -263,7 +271,7 @@ const Navbar = () => {
             <Link
               to="/workshops"
               className={`block font-medium transition-colors ${isActive('/workshops') ? 'border-l-4 pl-3' : 'pl-4'}`}
-              style={{ 
+              style={{
                 color: isActive('/workshops') ? '#ea580c' : '#4b5563',
                 borderColor: isActive('/workshops') ? '#ea580c' : 'transparent'
               }}
@@ -276,7 +284,7 @@ const Navbar = () => {
             <Link
               to="/map"
               className={`block font-medium transition-colors ${isActive('/map') ? 'border-l-4 pl-3' : 'pl-4'}`}
-              style={{ 
+              style={{
                 color: isActive('/map') ? '#ea580c' : '#4b5563',
                 borderColor: isActive('/map') ? '#ea580c' : 'transparent'
               }}
@@ -289,7 +297,7 @@ const Navbar = () => {
             <Link
               to="/about"
               className={`block font-medium transition-colors ${isActive('/about') ? 'border-l-4 pl-3' : 'pl-4'}`}
-              style={{ 
+              style={{
                 color: isActive('/about') ? '#ea580c' : '#4b5563',
                 borderColor: isActive('/about') ? '#ea580c' : 'transparent'
               }}
@@ -308,7 +316,7 @@ const Navbar = () => {
                 <Globe className="h-4 w-4" />
                 <span className="text-sm font-medium">{language} / {language === 'TH' ? 'EN' : 'TH'}</span>
               </button>
-              
+
               {isAuthenticated ? (
                 <>
                   <div className="pl-4 py-2 font-medium" style={{ color: '#111827' }}>

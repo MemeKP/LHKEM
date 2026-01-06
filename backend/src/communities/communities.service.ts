@@ -4,6 +4,7 @@ import { UpdateCommunityDto } from './dto/update-community.dto';
 import { Community, CommunityDocument } from './schemas/community.schema';
 import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
+import { translate } from 'google-translate-api-x';
 
 @Injectable()
 export class CommunitiesService {
@@ -13,7 +14,6 @@ export class CommunitiesService {
 
   async create(createCommunityDto: CreateCommunityDto) {
     const { name } = createCommunityDto;
-
     const existing = await this.communityModel.findOne({ name });
     if (existing) {
       throw new ConflictException('This community already exist.')
@@ -21,10 +21,13 @@ export class CommunitiesService {
     const baseSlug = generateSlug(name)
     let slug = baseSlug
     let count = 1
-
     while (await this.communityModel.exists({ slug })) {
       slug = `${baseSlug}-${count}`
       count++;
+    }
+
+    if (createCommunityDto.name && createCommunityDto.name_en) {
+      createCommunityDto.name_en = await this.autoTranslate(createCommunityDto.name)
     }
 
     const community = new this.communityModel({
@@ -73,8 +76,17 @@ export class CommunitiesService {
     return community;
   }
 
-  update(id: number, updateCommunityDto: UpdateCommunityDto) {
-    return `This action updates a #${id} community`;
+  async update(id: string, updateCommunityDto: UpdateCommunityDto) {
+    const finalDto = await this.fillEnglishFields(updateCommunityDto);
+    const updatedCommunity = await this.communityModel.findByIdAndUpdate(
+      id,
+      finalDto,
+      { new: true, runValidators: true }
+    );
+    if (!updatedCommunity) {
+      throw new NotFoundException(`Community #${id} not found`);
+    }
+    return updatedCommunity;
   }
 
   async remove(id: string): Promise<{ message: string }> {
@@ -116,8 +128,8 @@ export class CommunitiesService {
       return {
         location: community.location,
         // workshops: community.workshops ?? [],
-        shops: [],      // placeholder
-        landmarks: []   // placeholder
+        shops: [],
+        landmarks: []
       };
     } catch (error) {
       throw new NotFoundException('Map not found' + error)
@@ -137,6 +149,52 @@ export class CommunitiesService {
     }
   }
 
+  private async autoTranslate(text: string): Promise<string> {
+    if (!text) return '';
+    try {
+      // แปลจากไทยไปอิ้ง
+      const res = await translate(text, { from: 'th', to: 'en' });
+      return res.text;
+    } catch (error) {
+      console.error('Translation failed:', error);
+      return text; // ถ้าแปลพังให้คืนค่าเดิมกลับไป (ดีกว่าค่าว่าง)
+    }
+  }
+
+  private async fillEnglishFields<T extends CreateCommunityDto | UpdateCommunityDto>(dto: T): Promise<T> {
+    if (dto.name && !dto.name_en) dto.name_en = await this.autoTranslate(dto.name);
+    if (dto.history && !dto.history_en) dto.history_en = await this.autoTranslate(dto.history);
+
+    if (dto.hero_section) {
+      if (dto.hero_section.title && !dto.hero_section.title_en) {
+        dto.hero_section.title_en = await this.autoTranslate(dto.hero_section.title);
+      }
+      if (dto.hero_section.description && !dto.hero_section.description_en) {
+        dto.hero_section.description_en = await this.autoTranslate(dto.hero_section.description);
+      }
+    }
+
+    if (dto.location) {
+      const loc = dto.location;
+      if (loc.province && !loc.province_en) loc.province_en = await this.autoTranslate(loc.province);
+      if (loc.district && !loc.district_en) loc.district_en = await this.autoTranslate(loc.district);
+      if (loc.sub_district && !loc.sub_district_en) loc.sub_district_en = await this.autoTranslate(loc.sub_district);
+      if (loc.road && !loc.road_en) loc.road_en = await this.autoTranslate(loc.road);
+      if (loc.full_address && !loc.full_address_en) loc.full_address_en = await this.autoTranslate(loc.full_address);
+    }
+
+    if (dto.cultural_highlights && Array.isArray(dto.cultural_highlights)) {
+      dto.cultural_highlights = await Promise.all(
+        dto.cultural_highlights.map(async (item) => {
+          if (item.title && !item.title_en) item.title_en = await this.autoTranslate(item.title);
+          if (item.desc && !item.desc_en) item.desc_en = await this.autoTranslate(item.desc);
+          return item;
+        })
+      );
+    }
+    return dto;
+  }
+
 }
 
 function generateSlug(name: string): string {
@@ -147,4 +205,6 @@ function generateSlug(name: string): string {
     .replace(/[^\u0E00-\u0E7Fa-z0-9\s-]/g, '')
     .replace(/\s+/g, '-');
 }
+
+
 
