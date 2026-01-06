@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe } from '@nestjs/common';
 import { CommunitiesService } from './communities.service';
 import { CreateCommunityDto } from './dto/create-community.dto';
 import { UpdateCommunityDto } from './dto/update-community.dto';
@@ -20,6 +20,21 @@ export class CommunitiesController {
   @Get(':idOrSlug')
   findOne(@Param('idOrSlug') idOrSlug: string) {
     return this.communitiesService.findByIdOrSlug(idOrSlug);
+  }
+
+  @Get(':id/media')
+  getMedia(@Param('id') id:string){
+    return this.communitiesService.getMedia(id);
+  }
+
+  @Get(':id/map')
+  getMapData(@Param('id') id:string){
+    return this.communitiesService.getMapData(id);
+  }
+
+  @Get(':id/workshops')
+  getWorkshopsPreview(@Param('id') id:string, @Query('limit', new ParseIntPipe({optional:true})) limit: number = 3,){
+    return this.communitiesService.getWorkshopsPreview(id, limit);
   }
 
   @Patch(':id')

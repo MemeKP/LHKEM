@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Facebook, Instagram, Mail, Phone } from 'lucide-react';
 
-const Footer = () => {
+const Footer = ({community}) => {
   return (
     <footer className="bg-gray-50 border-t border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -50,7 +50,8 @@ const Footer = () => {
               <li className="flex items-start space-x-2">
                 <span className="text-gray-600 text-sm">📍</span>
                 <span className="text-gray-600 text-sm">
-                  บ้านมอญ ซอย 11 ต.สันกลาง อ.สันกำแพง จ.เชียงใหม่ 50130
+                  {/* บ้านมอญ ซอย 11 ต.สันกลาง อ.สันกำแพง จ.เชียงใหม่ 50130 */}
+                  {community.location.address} {}
                 </span>
               </li>
               <li className="flex items-center space-x-2">

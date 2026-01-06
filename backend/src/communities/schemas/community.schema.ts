@@ -7,8 +7,8 @@ export type CommunityDocument = Community & Document;
     collection: 'communities',
     timestamps: true,
     versionKey: false,
-    toJSON: {virtuals: true},
-    toObject: {virtuals: true}
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
 })
 export class Community {
     @Prop({ required: true, trim: true })
@@ -37,7 +37,7 @@ export class Community {
     cultural_highlights: {
         title: string;
         desc: string;
-    }
+    }[]
 
     @Prop({ type: [String], default: [] })
     images: string[];
@@ -47,7 +47,12 @@ export class Community {
 
     @Prop({
         type: {
-            address: { type: String, required: true },
+            full_address: { type: String, required: true },
+            house_no: { type: String },
+            village: { type: String },
+            moo: { type: String },
+            alley: { type: String },
+            road: { type: String },
             province: { type: String, required: true },
             district: { type: String },
             sub_district: { type: String },
@@ -65,7 +70,12 @@ export class Community {
         required: true
     })
     location: {
-        address: string;
+        full_address: string;
+        house_no?: string;
+        village?: string;      
+        moo?: string;
+        alley?: string;         
+        road?: string;
         province: string;
         district?: string;
         sub_district?: string;
@@ -86,7 +96,7 @@ export class Community {
         },
         required: true,
         _id: false
-        
+
     })
     contact_info: {
         phone?: string;
@@ -124,11 +134,11 @@ CommunitySchema.virtual('events', {
     foreignField: 'community'
 })
 
-// CommunitySchema.virtual('workshops', {
-//     ref: 'WorkShop',
-//     localField: '_id',
-//     foreignField: 'community'
-// })
+CommunitySchema.virtual('workshops', {
+    ref: 'WorkShop',
+    localField: '_id',
+    foreignField: 'community'
+})
 
 CommunitySchema.virtual('admin', {
     ref: 'Admin',

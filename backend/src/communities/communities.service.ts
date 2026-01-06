@@ -58,20 +58,20 @@ export class CommunitiesService {
 
   async findByIdOrSlug(identifier: string): Promise<Community> {
     if (Types.ObjectId.isValid(identifier)) {
-        const doc = await this.communityModel.findById(identifier).exec();
-        if (doc) return doc; 
+      const doc = await this.communityModel.findById(identifier).exec();
+      if (doc) return doc;
     }
-    const decodedSlug = decodeURIComponent(identifier); 
-    const community = await this.communityModel.findOne({ 
-        $or: [{ slug: decodedSlug }, { name: decodedSlug }] 
+    const decodedSlug = decodeURIComponent(identifier);
+    const community = await this.communityModel.findOne({
+      $or: [{ slug: decodedSlug }, { name: decodedSlug }]
     }).exec();
 
     if (!community) {
-        throw new NotFoundException('Community not found');
+      throw new NotFoundException('Community not found');
     }
 
     return community;
-}
+  }
 
   update(id: number, updateCommunityDto: UpdateCommunityDto) {
     return `This action updates a #${id} community`;
@@ -89,13 +89,61 @@ export class CommunitiesService {
     }
   }
 
-  
+  async getMedia(id: string) {
+    try {
+      return this.communityModel
+        .findById(id)
+        .select('images videos')
+        .lean()
+    } catch (error) {
+      throw new NotFoundException('Images or vedios not found' + error)
+    }
+  }
+
+  async getMapData(id: string) {
+    try {
+      const community = await this.communityModel
+        .findById(id)
+        .select('location')
+        .populate({
+          path: 'workshops',
+          select: 'name location',
+          options: { limit: 50 }
+        })
+        .lean();
+
+      if (!community) return null;
+      return {
+        location: community.location,
+        // workshops: community.workshops ?? [],
+        shops: [],      // placeholder
+        landmarks: []   // placeholder
+      };
+    } catch (error) {
+      throw new NotFoundException('Map not found' + error)
+    }
+  }
+
+  async getWorkshopsPreview(id: string, limit: number) {
+    try {
+      return await this.communityModel
+        .findById(id)
+        .populate({
+          path: 'workshops',
+          options: { limit: limit, sort: { created_at: -1 } }
+        }).exec() || []
+    } catch (error) {
+      throw new NotFoundException('This community has no workshop' + error)
+    }
+  }
+
 }
 
 function generateSlug(name: string): string {
   return name
     .toLowerCase()
     .trim()
+    .replace(/\s+/g, '-')
     .replace(/[^\u0E00-\u0E7Fa-z0-9\s-]/g, '')
     .replace(/\s+/g, '-');
 }

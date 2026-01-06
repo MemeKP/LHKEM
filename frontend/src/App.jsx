@@ -23,7 +23,7 @@ function App() {
       <AuthProvider>
         <Router>
           <Routes>
-            <Route path="/" element={<MainLayout />}>
+            <Route path="/:slug" element={<MainLayout />}>
               <Route index element={<Home />} />
               <Route path="users" element={<Users />} />
               <Route path="map" element={<Map />} />
