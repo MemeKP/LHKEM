@@ -5,8 +5,11 @@ import { useQuery, } from '@tanstack/react-query';
 import axios from 'axios';
 
 const fetchComm = async (slug) => {
+  // If no slug, get first community as default
   if (!slug) {
-    return null;
+    const res = await axios.get('/api/communities');
+    const communities = res.data;
+    return Array.isArray(communities) && communities.length > 0 ? communities[0] : null;
   }
   const res = await axios.get(`/api/communities/${slug}`);
   return res.data;
@@ -16,13 +19,13 @@ const MainLayout = () => {
   const { slug } = useParams();
   
   const { data: community, isLoading, isError } = useQuery({
-    queryKey: ['community', slug],
+    queryKey: ['community', slug || 'default'],
     queryFn: () => fetchComm(slug),
-    enabled: !!slug,
   });
-  if (isLoading) return <div>Loading...</div>
-  if (isError) return <div>Somethig wrong in this page</div>
-  if (!community) return <div>Community not found</div>
+  
+  if (isLoading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>
+  if (isError) return <div className="flex items-center justify-center min-h-screen">Something wrong in this page</div>
+  if (!community) return <div className="flex items-center justify-center min-h-screen">Community not found</div>
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">

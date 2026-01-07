@@ -1,17 +1,21 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Globe, User, Settings, LogOut, LayoutDashboard, Store, Users, Shield } from 'lucide-react';
+import { Menu, X, Globe, User, Settings, LogOut, LayoutDashboard, Store, Users, Shield, ChevronDown } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useAuth } from '../hooks/useAuth';
+import axios from 'axios';
 
 const Navbar = ({ community }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isCommunityMenuOpen, setIsCommunityMenuOpen] = useState(false);
+  const [communities, setCommunities] = useState([]);
   const { language, toggleLanguage, t } = useTranslation();
   const { user, isAuthenticated, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const userMenuRef = useRef(null);
+  const communityMenuRef = useRef(null);
 
   // const isActive = (path) => location.pathname === path;
   const isActive = (path) => {
@@ -27,9 +31,24 @@ const Navbar = ({ community }) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setIsUserMenuOpen(false);
       }
+      if (communityMenuRef.current && !communityMenuRef.current.contains(event.target)) {
+        setIsCommunityMenuOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const fetchCommunities = async () => {
+      try {
+        const response = await axios.get('/api/communities');
+        setCommunities(response.data);
+      } catch (error) {
+        console.error('Failed to fetch communities:', error);
+      }
+    };
+    fetchCommunities();
   }, []);
 
   const handleLogout = () => {
@@ -57,7 +76,7 @@ const Navbar = ({ community }) => {
 
     if (role === 'COMMUNITY_ADMIN') {
       return [
-        { to: '/community/dashboard', icon: LayoutDashboard, label: t('nav.communityDashboard') },
+        { to: '/community-admin/dashboard', icon: LayoutDashboard, label: t('nav.communityDashboard') },
         { to: '/settings', icon: Settings, label: t('nav.settings') }
       ];
     }
@@ -80,9 +99,8 @@ const Navbar = ({ community }) => {
     <nav className="bg-white shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link to={`/${community.slug}`} className="flex items-center space-x-2">
+          <Link to={`/`} className="flex items-center space-x-2"> 
             <div className="p-2 rounded-full" style={{ backgroundColor: '#111827' }}>
-              {/* !!!! */}
               <span className="text-white font-bold text-sm">LHK</span>
             </div>
             <div className="flex flex-col">
@@ -93,7 +111,7 @@ const Navbar = ({ community }) => {
 
           <div className="hidden md:flex items-center space-x-8">
             <Link
-              to={`/${community.slug}`}
+              to={`/`}
               className={`font-medium transition-colors border-b-2 pb-1 ${isActive('/') ? '' : 'border-transparent'}`}
               style={{
                 color: isActive('/') ? '#111827' : '#4b5563',
@@ -105,8 +123,64 @@ const Navbar = ({ community }) => {
               {t('nav.home')}
             </Link>
 
+            {communities.length > 1 && (
+              <div className="relative" ref={communityMenuRef}>
+                <button
+                  onClick={() => setIsCommunityMenuOpen(!isCommunityMenuOpen)}
+                  className={`font-medium transition-colors border-b-2 pb-1 ${isCommunityMenuOpen ? '' : 'border-transparent'}`}
+                  style={{
+                    color: isCommunityMenuOpen ? '#111827' : '#4b5563',
+                    borderColor: isCommunityMenuOpen ? '#ea580c' : 'transparent'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#ea580c'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = isCommunityMenuOpen ? '#111827' : '#4b5563'}
+                >
+                  {t('nav.communities') || 'ชุมชน'}
+                </button>
+
+                {isCommunityMenuOpen && (
+                  <div className="absolute left-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 animate-slideDown">
+                    <div className="px-4 py-2 border-b border-gray-200">
+                      <p className="text-xs font-semibold text-gray-500">{t('nav.selectCommunity') || 'เลือกชุมชน'}</p>
+                    </div>
+                    {communities.map((comm) => (
+                      <Link
+                        key={comm._id}
+                        to={`/`}
+                        onClick={() => {
+                          setIsCommunityMenuOpen(false);
+                          window.location.reload();
+                        }}
+                        className={`block px-4 py-2.5 transition-colors ${
+                          comm._id === community._id ? 'bg-orange-50' : ''
+                        }`}
+                        style={{ 
+                          color: comm._id === community._id ? '#ea580c' : '#374151'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (comm._id !== community._id) {
+                            e.currentTarget.style.backgroundColor = '#f3f4f6';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (comm._id !== community._id) {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                          }
+                        }}
+                      >
+                        <div className="font-medium">{comm.name}</div>
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          {comm.location?.province || ''} {comm.location?.district || ''}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             <Link
-              to={`/${community.slug}/workshops`}
+              to="/workshops"
               className={`font-medium transition-colors border-b-2 pb-1 ${isActive('/workshops') ? '' : 'border-transparent'}`}
               style={{
                 color: isActive('/workshops') ? '#111827' : '#4b5563',

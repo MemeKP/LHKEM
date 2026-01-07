@@ -13,12 +13,18 @@ import Register from './pages/Register';
 import VerifyOTP from './pages/VerifyOTP';
 import UserDashboard from './pages/UserDashboard';
 import Settings from './pages/Settings';
-import ShopDashboard from './pages/ShopDashboard';
-import ShopProfile from './pages/ShopProfile';
-import ShopCreate from './pages/ShopCreate';
-import ShopWorkshopCreate from './pages/ShopWorkshopCreate';
-import ShopWorkshopDetail from './pages/ShopWorkshopDetail';
-import CommunityAdminDashboard from './pages/CommunityAdminDashboard';
+import ShopDashboard from './pages/ShopOwnerPages/ShopDashboard';
+import ShopProfile from './pages/ShopOwnerPages/ShopProfile';
+import ShopCreate from './pages/ShopOwnerPages/ShopCreate';
+import ShopWorkshopCreate from './pages/ShopOwnerPages/ShopWorkshopCreate';
+import ShopWorkshopDetail from './pages/ShopOwnerPages/ShopWorkshopDetail';
+import OldCommunityDashboard from './pages/CommunityPages/OldCommunityDashboard';
+import CommunityAdminDashboard from './pages/CommunityPages/CommunityAdminDashboard';
+import EventCreateForm from './pages/CommunityPages/EventCreateForm';
+import EventList from './pages/CommunityPages/EventList';
+import EventDetailPage from './pages/CommunityPages/EventDetailPage';
+import WorkshopPendingList from './pages/CommunityPages/WorkshopPendingList';
+import WorkshopApprovalPage from './pages/CommunityPages/WorkshopApprovalPage';
 
 function App() {
   return (
@@ -26,7 +32,7 @@ function App() {
       <AuthProvider>
         <Router>
           <Routes>
-            <Route path="/:slug" element={<MainLayout />}>
+            <Route path="/" element={<MainLayout />}>
               <Route index element={<Home />} />
               <Route path="users" element={<Users />} />
               <Route path="map" element={<Map />} />
@@ -73,9 +79,46 @@ function App() {
               } />
               
               {/* Community Admin Routes */}
+              {/* Old Dashboard - เชื่อมกับ API (เพื่อนทำไว้) */}
               <Route path="community/dashboard" element={
                 <ProtectedRoute>
+                  <OldCommunityDashboard />
+                </ProtectedRoute>
+              } />
+              {/* New Dashboard - UI Only */}
+              <Route path="community-admin/dashboard" element={
+                <ProtectedRoute>
                   <CommunityAdminDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="community-admin/events" element={
+                <ProtectedRoute>
+                  <EventList />
+                </ProtectedRoute>
+              } />
+              <Route path="community-admin/events/create" element={
+                <ProtectedRoute>
+                  <EventCreateForm />
+                </ProtectedRoute>
+              } />
+              <Route path="community-admin/events/:id" element={
+                <ProtectedRoute>
+                  <EventDetailPage />
+                </ProtectedRoute>
+              } />
+              <Route path="community-admin/events/:id/edit" element={
+                <ProtectedRoute>
+                  <EventCreateForm />
+                </ProtectedRoute>
+              } />
+              <Route path="community-admin/workshops/pending" element={
+                <ProtectedRoute>
+                  <WorkshopPendingList />
+                </ProtectedRoute>
+              } />
+              <Route path="community-admin/workshops/:id" element={
+                <ProtectedRoute>
+                  <WorkshopApprovalPage />
                 </ProtectedRoute>
               } />
             </Route>

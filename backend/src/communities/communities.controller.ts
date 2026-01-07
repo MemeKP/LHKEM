@@ -39,7 +39,7 @@ export class CommunitiesController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateCommunityDto: UpdateCommunityDto) {
-    return this.communitiesService.update(+id, updateCommunityDto);
+    return this.communitiesService.update(id, updateCommunityDto);
   }
 
   @Delete(':id')
