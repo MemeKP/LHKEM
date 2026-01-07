@@ -84,7 +84,9 @@
       "duration": "Duration",
       "seatsLeftLabel": "Seats remaining",
       "mapNote": "Google Map area"
-    }
+    },
+    "noData": "No workshops available at the moment",
+    "loading": "Loading popular workshops..."
   },
   "homeHighlight": {
     "badge": "About the community",
@@ -207,7 +209,11 @@
     "description": "An eco-tourism community that blends local culture, art, and learning",
     "menu": "Menu",
     "contact": "Contact Us",
-    "followUs": "Follow Us"
+    "followUs": "Follow Us",
+    "home": "Home",
+    "allWorkshops": "All Workshops",
+    "communityMap": "Community Map",
+    "about": "About"
   },
   "common": {
     "loading": "Loading...",

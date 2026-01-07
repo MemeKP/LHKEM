@@ -3,11 +3,12 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Globe, User, Settings, LogOut, LayoutDashboard, Store, Users, Shield } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useAuth } from '../hooks/useAuth';
+import { getLogo } from '../utils/getLogo';
 
 const Navbar = ({ community }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const { language, toggleLanguage, t } = useTranslation();
+  const { language, toggleLanguage, t, ct} = useTranslation();
   const { user, isAuthenticated, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -82,13 +83,14 @@ const Navbar = ({ community }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link to={`/${community.slug}`} className="flex items-center space-x-2">
-            <div className="p-2 rounded-full" style={{ backgroundColor: '#111827' }}>
-              {/* !!!! */}
-              <span className="text-white font-bold text-sm">LHK</span>
+            <div className="bg-gray-900 p-2 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-sm">
+                {getLogo(community)}
+              </span>
             </div>
             <div className="flex flex-col">
-              <span className="font-semibold text-sm" style={{ color: '#111827' }}>{community.name}</span>
-              <span className="text-xs" style={{ color: '#6b7280' }}>{t('nav.logoSubtitle')}</span>
+              <span className="font-semibold text-sm" style={{ color: '#111827' }}>{ct(community.name, community.name_en)}</span>
+              <span className="text-xs" style={{ color: '#6b7280' }}>{ct(community.name, community.name_en)}</span>
             </div>
           </Link>
 

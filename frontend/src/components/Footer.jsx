@@ -1,61 +1,54 @@
 import { Link } from 'react-router-dom';
 import { Facebook, Instagram, Mail, MapPin, Phone } from 'lucide-react';
 import { SiFacebook, SiInstagram, SiLine } from '@icons-pack/react-simple-icons';
-
-// helper ช่วยดึงอักษรย่อ 2 ตัวแรก
-/*const getInitials = (name) => {
-  if (!name) return "?";
-  const vowels = ['เ', 'แ', 'โ', 'ใ', 'ไ', 'โ'];
-  if (vowels.includes(name.charAt(0))) {
-    return name.substring(1, 3);
-  }
-  return name.charAt(0);
-};*/
+import { getLogo } from '../utils/getLogo';
+import { useTranslation } from '../hooks/useTranslation';
 
 const Footer = ({ community }) => {
+  const { t, ct } = useTranslation();
+
   return (
     <footer className="bg-gray-50 border-t border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="col-span-1 md:col-span-1">
             <div className="flex items-center space-x-2 mb-4">
-              <div className="bg-gray-900 p-2 rounded-full">
+              {/* <div className="bg-gray-900 p-2 rounded-full">
                 <span className="text-white font-bold text-sm">LHK</span>
-              </div>
-
-              {/* <div className="bg-gray-900 p-2 rounded-full min-w-[40px] flex items-center justify-center">
-                <span className="text-white font-bold text-xs uppercase">
-                  {getInitials(community.name)}
-                </span>
               </div> */}
-              <span className="text-gray-900 font-semibold">{community.name}</span>
+              <div className="bg-gray-900 p-2 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-sm">
+                  {getLogo(community)}
+                </span>
+              </div>
+              <span className="text-gray-900 font-semibold">{ct(community.name, community.name_en)}</span>
             </div>
             <p className="text-gray-600 text-sm leading-relaxed line-clamp-2">
-              {community.hero_section.description}
+              {ct(community.hero_section.description, community.hero_section.description_en)}
             </p>
           </div>
 
           <div>
-            <h3 className="text-gray-900 font-semibold mb-4">เมนูผลิต</h3>
+            <h3 className="text-gray-900 font-semibold mb-4">{t('footer.menu')}</h3>
             <ul className="space-y-2">
               <li>
                 <Link to={`/${community.slug}`} className="text-gray-600 hover:text-orange-600 text-sm transition-colors">
-                  หน้าแรก
+                  {t('footer.home')}
                 </Link>
               </li>
               <li>
                 <Link to={`/${community.slug}/workshops`} className="text-gray-600 hover:text-orange-600 text-sm transition-colors">
-                  เวิร์กช็อปทั้งหมด
+                  {t('footer.allWorkshops')}
                 </Link>
               </li>
               <li>
                 <Link to={`/${community.slug}/map`} className="text-gray-600 hover:text-orange-600 text-sm transition-colors">
-                  แผนที่ชุมชน
+                  {t('footer.communityMap')}
                 </Link>
               </li>
               <li>
                 <Link to={`/${community.slug}/about`} className="text-gray-600 hover:text-orange-600 text-sm transition-colors">
-                  เกี่ยวกับ{community.name}
+                  {t('footer.about')} {ct(community.name, community.name_en)}
                 </Link>
               </li>
             </ul>
@@ -86,14 +79,14 @@ const Footer = ({ community }) => {
             </ul>
           </div> */}
           <div>
-            <h3 className="text-gray-900 font-semibold mb-4">ติดต่อเรา</h3>
+            <h3 className="text-gray-900 font-semibold mb-4">{t('footer.contact')}</h3>
             <ul className="space-y-3">
 
               {community.location?.full_address && (
                 <li className="flex items-start space-x-2">
                   <MapPin className="h-4 w-4 text-gray-600 mt-1 flex-shrink-0" />
                   <span className="text-gray-600 text-sm break-words">
-                    {community.location.full_address}
+                    {ct(community.location.full_address, community.location.full_address_en)}
                   </span>
                 </li>
               )}
@@ -174,7 +167,7 @@ const Footer = ({ community }) => {
             </div>
           </div> */}
           <div>
-            <h3 className="text-gray-900 font-semibold mb-4">ติดตามเรา</h3>
+            <h3 className="text-gray-900 font-semibold mb-4">{t('footer.followUs')}</h3>
             <div className="flex space-x-4">
               {community.contact_info?.facebook?.link && (
                 <a
@@ -223,8 +216,7 @@ const Footer = ({ community }) => {
         </div> */}
         <div className="border-t border-gray-200 mt-8 pt-8 text-center">
           <p className="text-gray-500 text-sm">
-            {/* ใช้ new Date().getFullYear() ให้ปีอัปเดตเป็นปัจจุบันตลอด */}
-            © {new Date().getFullYear()} {community.name || 'Community'}. All rights reserved.
+            © {new Date().getFullYear()} {ct(community.name, community.name_en) || 'Community'}. All rights reserved.
           </p>
         </div>
       </div>

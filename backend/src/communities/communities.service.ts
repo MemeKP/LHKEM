@@ -18,18 +18,16 @@ export class CommunitiesService {
     if (existing) {
       throw new ConflictException('This community already exist.')
     }
-    const baseSlug = generateSlug(name)
-    let slug = baseSlug
-    let count = 1
+    await this.fillEnglishFields(createCommunityDto);
+    const nameForSlug = createCommunityDto.name_en || createCommunityDto.name;
+    const baseSlug = generateSlug(nameForSlug);
+
+    let slug = baseSlug;
+    let count = 1;
     while (await this.communityModel.exists({ slug })) {
-      slug = `${baseSlug}-${count}`
+      slug = `${baseSlug}-${count}`;
       count++;
     }
-
-    if (createCommunityDto.name && createCommunityDto.name_en) {
-      createCommunityDto.name_en = await this.autoTranslate(createCommunityDto.name)
-    }
-
     const community = new this.communityModel({
       ...createCommunityDto,
       slug,
@@ -72,7 +70,6 @@ export class CommunitiesService {
     if (!community) {
       throw new NotFoundException('Community not found');
     }
-
     return community;
   }
 
@@ -162,35 +159,37 @@ export class CommunitiesService {
   }
 
   private async fillEnglishFields<T extends CreateCommunityDto | UpdateCommunityDto>(dto: T): Promise<T> {
-    if (dto.name && !dto.name_en) dto.name_en = await this.autoTranslate(dto.name);
-    if (dto.history && !dto.history_en) dto.history_en = await this.autoTranslate(dto.history);
+    if (!dto) return dto;
+    const safeTranslate = async (text: string | undefined | null, currentEn: string | undefined | null): Promise<string | undefined> => {
+      if (text && typeof text === 'string' && !currentEn) {
+        return await this.autoTranslate(text);
+      }
+      return currentEn ?? undefined;
+    };
+    if ('name' in dto) dto['name_en'] = await safeTranslate(dto['name'], dto['name_en']);
+    if ('history' in dto) dto['history_en'] = await safeTranslate(dto['history'], dto['history_en']);
 
-    if (dto.hero_section) {
-      if (dto.hero_section.title && !dto.hero_section.title_en) {
-        dto.hero_section.title_en = await this.autoTranslate(dto.hero_section.title);
-      }
-      if (dto.hero_section.description && !dto.hero_section.description_en) {
-        dto.hero_section.description_en = await this.autoTranslate(dto.hero_section.description);
-      }
+    if (dto['hero_section']) {
+      const hero = dto['hero_section'];
+      hero.title_en = await safeTranslate(hero.title, hero.title_en);
+      hero.description_en = await safeTranslate(hero.description, hero.description_en);
     }
 
-    if (dto.location) {
-      const loc = dto.location;
-      if (loc.province && !loc.province_en) loc.province_en = await this.autoTranslate(loc.province);
-      if (loc.district && !loc.district_en) loc.district_en = await this.autoTranslate(loc.district);
-      if (loc.sub_district && !loc.sub_district_en) loc.sub_district_en = await this.autoTranslate(loc.sub_district);
-      if (loc.road && !loc.road_en) loc.road_en = await this.autoTranslate(loc.road);
-      if (loc.full_address && !loc.full_address_en) loc.full_address_en = await this.autoTranslate(loc.full_address);
+    if (dto['location']) {
+      const loc = dto['location'];
+      loc.province_en = await safeTranslate(loc.province, loc.province_en);
+      loc.district_en = await safeTranslate(loc.district, loc.district_en);
+      loc.sub_district_en = await safeTranslate(loc.sub_district, loc.sub_district_en);
+      loc.full_address_en = await safeTranslate(loc.full_address, loc.full_address_en);
     }
 
-    if (dto.cultural_highlights && Array.isArray(dto.cultural_highlights)) {
-      dto.cultural_highlights = await Promise.all(
-        dto.cultural_highlights.map(async (item) => {
-          if (item.title && !item.title_en) item.title_en = await this.autoTranslate(item.title);
-          if (item.desc && !item.desc_en) item.desc_en = await this.autoTranslate(item.desc);
-          return item;
-        })
-      );
+    if (dto['cultural_highlights'] && Array.isArray(dto['cultural_highlights'])) {
+      for (const item of dto['cultural_highlights']) {
+        if (item) {
+          item.title_en = await safeTranslate(item.title, item.title_en);
+          item.desc_en = await safeTranslate(item.desc, item.desc_en);
+        }
+      }
     }
     return dto;
   }
