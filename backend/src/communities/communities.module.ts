@@ -7,7 +7,8 @@ import { Community, CommunitySchema } from './schemas/community.schema';
 @Module({
   imports: [
     MongooseModule.forFeature([
-      { name: Community.name, schema: CommunitySchema }
+      { name: Community.name, schema: CommunitySchema },
+      // { name: Workshop.name, schema: WorkshopSchema },
     ])
   ],
   controllers: [CommunitiesController],

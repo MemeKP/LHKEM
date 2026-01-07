@@ -10,18 +10,33 @@ export class CoordinatesDto {
 
 export class LocationDto {
   @IsString()
-  address: string;
-
-  @IsString()
-  province: string;
+  full_address: string;
 
   @IsOptional()
   @IsString()
-  district?: string;
+  full_address_en?: string;
+
+  @IsOptional() @IsString() house_no?: string;
+  @IsOptional() @IsString() village?: string;
+  @IsOptional() @IsString() moo?: string;
+  @IsOptional() @IsString() alley?: string;
+  @IsOptional() @IsString() road?: string;
+  @IsOptional() @IsString() road_en?: string;
+
+  @IsString()
+  province: string;
+  @IsOptional() @IsString() province_en?: string;
+
+  @IsOptional() @IsString() district?: string;
+  @IsOptional() @IsString() district_en?: string;
 
   @IsOptional()
   @IsString()
   sub_district?: string;
+  
+  @IsOptional() 
+  @IsString() 
+  sub_district_en?: string;
 
   @IsOptional()
   @IsString()

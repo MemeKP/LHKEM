@@ -1,4 +1,6 @@
-import { IsOptional, IsString, IsEmail } from 'class-validator';
+import { IsOptional, IsString, IsEmail, ValidateNested } from 'class-validator';
+import { SocialLinkDto } from './social-link.dto';
+import { Type } from 'class-transformer';
 
 export class ContactInfoDto {
   @IsOptional()
@@ -10,12 +12,19 @@ export class ContactInfoDto {
   email?: string;
 
   @IsOptional()
-  @IsString()
-  facebook?: string;
+  @ValidateNested()
+  @Type(() => SocialLinkDto)
+  facebook?: SocialLinkDto;
 
   @IsOptional()
-  @IsString()
-  line?: string;
+  @ValidateNested()
+  @Type(() => SocialLinkDto)
+  line?: SocialLinkDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => SocialLinkDto)
+  ig?: SocialLinkDto;
 
   @IsOptional()
   @IsString()

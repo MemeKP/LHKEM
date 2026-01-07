@@ -15,8 +15,20 @@ export class CreateCommunityDto {
     @IsString()
     name: string;
 
+    @IsOptional()
+    @IsString()
+    name_en?: string;
+
+    @IsOptional()
+    @IsString()
+    title_en?: string;
+
     @IsString()
     history: string;
+
+    @IsOptional()
+    @IsString()
+    history_en?: string;
 
     @IsOptional()
     @ValidateNested()
