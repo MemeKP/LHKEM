@@ -4,10 +4,13 @@ import { Menu, X, Globe, User, Settings, LogOut, LayoutDashboard, Store, Users, 
 import { useTranslation } from '../hooks/useTranslation';
 import { useAuth } from '../hooks/useAuth';
 import { getLogo } from '../utils/getLogo';
+import axios from 'axios';
 
 const Navbar = ({ community }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isCommunityMenuOpen, setIsCommunityMenuOpen] = useState(false);
+  const [communities, setCommunities] = useState([]);
   const { language, toggleLanguage, t, ct} = useTranslation();
   const { user, isAuthenticated, logout } = useAuth();
   const location = useLocation();
@@ -97,7 +100,7 @@ const Navbar = ({ community }) => {
     <nav className="bg-white shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link to={`/${community.slug}`} className="flex items-center space-x-2">
+          <Link to={`/`} className="flex items-center space-x-2" >
             <div className="bg-gray-900 p-2 rounded-full flex items-center justify-center">
               <span className="text-white font-bold text-sm">
                 {getLogo(community)}
@@ -111,14 +114,14 @@ const Navbar = ({ community }) => {
 
           <div className="hidden md:flex items-center space-x-8">
             <Link
-              to={`/`}
-              className={`font-medium transition-colors border-b-2 pb-1 ${isActive('/') ? '' : 'border-transparent'}`}
+              to={`/${community.slug}`}
+              className={`font-medium transition-colors border-b-2 pb-1 ${isActive('') ? '' : 'border-transparent'}`}
               style={{
-                color: isActive('/') ? '#111827' : '#4b5563',
-                borderColor: isActive('/') ? '#ea580c' : 'transparent'
+                color: isActive('') ? '#111827' : '#4b5563',
+                borderColor: isActive('') ? '#ea580c' : 'transparent'
               }}
               onMouseEnter={(e) => e.currentTarget.style.color = '#ea580c'}
-              onMouseLeave={(e) => e.currentTarget.style.color = isActive('/') ? '#111827' : '#4b5563'}
+              onMouseLeave={(e) => e.currentTarget.style.color = isActive('') ? '#111827' : '#4b5563'}
             >
               {t('nav.home')}
             </Link>
@@ -146,10 +149,9 @@ const Navbar = ({ community }) => {
                     {communities.map((comm) => (
                       <Link
                         key={comm._id}
-                        to={`/`}
+                        to={`/${comm.slug}`}
                         onClick={() => {
                           setIsCommunityMenuOpen(false);
-                          window.location.reload();
                         }}
                         className={`block px-4 py-2.5 transition-colors ${
                           comm._id === community._id ? 'bg-orange-50' : ''
@@ -180,38 +182,38 @@ const Navbar = ({ community }) => {
             )}
 
             <Link
-              to="/workshops"
-              className={`font-medium transition-colors border-b-2 pb-1 ${isActive('/workshops') ? '' : 'border-transparent'}`}
+              to={`/${community.slug}/workshops`}
+              className={`font-medium transition-colors border-b-2 pb-1 ${isActive('workshops') ? '' : 'border-transparent'}`}
               style={{
-                color: isActive('/workshops') ? '#111827' : '#4b5563',
-                borderColor: isActive('/workshops') ? '#ea580c' : 'transparent'
+                color: isActive('workshops') ? '#111827' : '#4b5563',
+                borderColor: isActive('workshops') ? '#ea580c' : 'transparent'
               }}
               onMouseEnter={(e) => e.currentTarget.style.color = '#ea580c'}
-              onMouseLeave={(e) => e.currentTarget.style.color = isActive('/workshops') ? '#111827' : '#4b5563'}
+              onMouseLeave={(e) => e.currentTarget.style.color = isActive('workshops') ? '#111827' : '#4b5563'}
             >
               {t('nav.workshops')}
             </Link>
             <Link
-              to="/map"
-              className={`font-medium transition-colors border-b-2 pb-1 ${isActive('/map') ? '' : 'border-transparent'}`}
+              to={`/${community.slug}/map`}
+              className={`font-medium transition-colors border-b-2 pb-1 ${isActive('map') ? '' : 'border-transparent'}`}
               style={{
-                color: isActive('/map') ? '#111827' : '#4b5563',
-                borderColor: isActive('/map') ? '#ea580c' : 'transparent'
+                color: isActive('map') ? '#111827' : '#4b5563',
+                borderColor: isActive('map') ? '#ea580c' : 'transparent'
               }}
               onMouseEnter={(e) => e.currentTarget.style.color = '#ea580c'}
-              onMouseLeave={(e) => e.currentTarget.style.color = isActive('/map') ? '#111827' : '#4b5563'}
+              onMouseLeave={(e) => e.currentTarget.style.color = isActive('map') ? '#111827' : '#4b5563'}
             >
               {t('nav.map')}
             </Link>
             <Link
-              to="/about"
-              className={`font-medium transition-colors border-b-2 pb-1 ${isActive('/about') ? '' : 'border-transparent'}`}
+              to={`/${community.slug}/about`}
+              className={`font-medium transition-colors border-b-2 pb-1 ${isActive('about') ? '' : 'border-transparent'}`}
               style={{
-                color: isActive('/about') ? '#111827' : '#4b5563',
-                borderColor: isActive('/about') ? '#ea580c' : 'transparent'
+                color: isActive('about') ? '#111827' : '#4b5563',
+                borderColor: isActive('about') ? '#ea580c' : 'transparent'
               }}
               onMouseEnter={(e) => e.currentTarget.style.color = '#ea580c'}
-              onMouseLeave={(e) => e.currentTarget.style.color = isActive('/about') ? '#111827' : '#4b5563'}
+              onMouseLeave={(e) => e.currentTarget.style.color = isActive('about') ? '#111827' : '#4b5563'}
             >
               {t('nav.about')}
             </Link>

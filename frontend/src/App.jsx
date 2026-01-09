@@ -2,8 +2,10 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
-import MainLayout from './layouts/MainLayout';
-import Home from './pages/Home';
+import CommunityLayout from './layouts/CommunityLayout';
+import SimpleLayout from './layouts/SimpleLayout';
+import Landing from './pages/Landing';
+import CommunityHome from './pages/CommunityHome';
 import Users from './pages/Users';
 import Map from './pages/Map';
 import Workshops from './pages/Workshops';
@@ -32,14 +34,23 @@ function App() {
       <AuthProvider>
         <Router>
           <Routes>
-            <Route path="/" element={<MainLayout />}>
-              <Route index element={<Home />} />
+            {/* Landing Page - With SimpleLayout (Navbar but no community menus) */}
+            <Route path="/" element={<SimpleLayout />}>
+              <Route index element={<Landing />} />
+            </Route>
+            
+            {/* Community Routes - With CommunityLayout */}
+            <Route path="/:slug" element={<CommunityLayout />}>
+              <Route index element={<CommunityHome />} />
               <Route path="users" element={<Users />} />
               <Route path="map" element={<Map />} />
               <Route path="workshops" element={<Workshops />} />
               <Route path="workshops/:id" element={<WorkshopDetail />} />
-              
-              {/* User Routes */}
+              <Route path="about" element={<div className="p-8 text-center">About Page - Coming Soon</div>} />
+            </Route>
+            
+            {/* User/Admin Routes - With SimpleLayout */}
+            <Route path="/" element={<SimpleLayout />}>
               <Route path="dashboard" element={
                 <ProtectedRoute>
                   <UserDashboard />
