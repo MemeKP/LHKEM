@@ -15,6 +15,7 @@ export async function seedCommunity(
   const seedData = await communityModel.create({
     _id: COMMUNITY_ID,
     name: 'โหล่งฮิมคาว',
+    name_en: 'Loeng Him Kaw',
     slug: 'loeng-him-kaw',
 
     history:

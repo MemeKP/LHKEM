@@ -15,11 +15,10 @@ const fetchPopularWorkshops = async (communityId) => {
 }
 
 const Home = () => {
-  const { t } = useTranslation();
+  const { t, ct } = useTranslation();
   const { community } = useOutletContext()
   const highlights = community.cultural_highlights || []
   const workshopCount = community.workshops?.length || 0;
-
   // ไว้แมชไอคอนกับชื่อไฮไลท
   const getIcon = (title) => {
     if (!title) return <Star className="h-4 w-4 text-yellow-300" />
@@ -106,10 +105,10 @@ const Home = () => {
               </div>
               <h1 className="text-4xl md:text-5xl font-extrabold leading-tight mb-4">
                 {t('hero.title')} <br className="hidden md:block" />
-                {community.name}
+                {ct(community.name, community.name_en)}
               </h1>
               <p className="text-lg text-white/80 mb-8 line-clamp-2">
-                {community.hero_section.description}
+              {ct(community.hero_section.description, community.hero_section.description_en)}
               </p>
               <div className="flex flex-col sm:flex-row justify-center gap-4">
                 <Link
@@ -148,11 +147,11 @@ const Home = () => {
               {t('homeHighlight.badge')}
             </span>
             <h2 className="text-3xl md:text-4xl font-extrabold text-[#0f2f3a] mb-4 leading-tight">
-              {community.name}
+              {ct(community.name, community.name_en)}
               {/* {t('homeHighlight.title')} */}
             </h2>
             <p className="text-gray-600 mb-8 text-lg leading-relaxed line-clamp-4">
-              {community.history}
+              {ct(community.history, community.history_en)}
               {/* {t('homeHighlight.description')} */}
             </p>
             <Link
@@ -177,11 +176,11 @@ const Home = () => {
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
                       {/* {t(`homeHighlight.cards.${feature.key}`)} */}
-                      {feature.title}
+                      {ct(feature.title, feature.title_en)}
                     </h3>
                     <p className="text-sm text-gray-500">
                       {/* {t(`homeHighlight.cardsDescriptions.${feature.key}`)} */}
-                      {feature.desc}
+                      {ct(feature.desc, feature.desc_en)}
                     </p>
                   </div>
                 ))}
@@ -200,10 +199,10 @@ const Home = () => {
           </div>
 
           {isLoading ? (
-            <div className="text-center py-20 text-gray-400">Loading popular workshops...</div>
+            <div className="text-center py-20 text-gray-400">{t('workshops.loading')}</div>
           ) : workshops.length === 0 ? (
             <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed">
-              ยังไม่มีเวิร์กช็อปในขณะนี้
+              {t('workshops.noData')}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -224,16 +223,17 @@ const Home = () => {
                   <div className="p-6 space-y-4">
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                       <MapPin className="h-4 w-4 text-red-400" />
-                      {card.location}
+                      {ct(card.location, card.location_en)}
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{card.title}</h3>
-                      <p className="text-sm text-gray-600">{card.shortDescription}</p>
+                      <h3 className="text-lg font-semibold text-gray-900">{ct(card.title, card.title_en)}</h3>
+                      <p className="text-sm text-gray-600">{ct(card.shortDescription, card.shortDescription_en)}</p>
                     </div>
                     <div className="flex items-center gap-4 text-sm text-gray-500">
                       <div className="flex items-center gap-1">
                         <Clock className="h-4 w-4 text-gray-400" />
                         {card.duration}
+                        {/* {ct(card.duration, card.duration_en)} */}
                       </div>
                       <div className="flex items-center gap-1">
                         <UsersIcon className="h-4 w-4 text-gray-400" />

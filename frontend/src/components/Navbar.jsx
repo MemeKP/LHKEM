@@ -3,14 +3,12 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Globe, User, Settings, LogOut, LayoutDashboard, Store, Users, Shield, ChevronDown } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useAuth } from '../hooks/useAuth';
-import axios from 'axios';
+import { getLogo } from '../utils/getLogo';
 
 const Navbar = ({ community }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isCommunityMenuOpen, setIsCommunityMenuOpen] = useState(false);
-  const [communities, setCommunities] = useState([]);
-  const { language, toggleLanguage, t } = useTranslation();
+  const { language, toggleLanguage, t, ct} = useTranslation();
   const { user, isAuthenticated, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -99,13 +97,15 @@ const Navbar = ({ community }) => {
     <nav className="bg-white shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link to={`/`} className="flex items-center space-x-2"> 
-            <div className="p-2 rounded-full" style={{ backgroundColor: '#111827' }}>
-              <span className="text-white font-bold text-sm">LHK</span>
+          <Link to={`/${community.slug}`} className="flex items-center space-x-2">
+            <div className="bg-gray-900 p-2 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-sm">
+                {getLogo(community)}
+              </span>
             </div>
             <div className="flex flex-col">
-              <span className="font-semibold text-sm" style={{ color: '#111827' }}>{community.name}</span>
-              <span className="text-xs" style={{ color: '#6b7280' }}>{t('nav.logoSubtitle')}</span>
+              <span className="font-semibold text-sm" style={{ color: '#111827' }}>{ct(community.name, community.name_en)}</span>
+              <span className="text-xs" style={{ color: '#6b7280' }}>{ct(community.name, community.name_en)}</span>
             </div>
           </Link>
 
