@@ -2,16 +2,10 @@ import { Outlet, useParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useQuery, } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '../services/api';
 
 const fetchComm = async (slug) => {
-  // If no slug, get first community as default
-  if (!slug) {
-    const res = await axios.get('/api/communities');
-    const communities = res.data;
-    return Array.isArray(communities) && communities.length > 0 ? communities[0] : null;
-  }
-  const res = await axios.get(`/api/communities/${slug}`);
+  const res = await api.get(`/api/communities/${slug}`);
   return res.data;
 }
 

@@ -3,7 +3,7 @@ import { CommunitiesService } from './communities.service';
 import { CreateCommunityDto } from './dto/create-community.dto';
 import { UpdateCommunityDto } from './dto/update-community.dto';
 
-@Controller('communities')
+@Controller('api/communities')
 export class CommunitiesController {
   constructor(private readonly communitiesService: CommunitiesService) { }
 
@@ -35,6 +35,21 @@ export class CommunitiesController {
   @Get(':id/workshops')
   getWorkshopsPreview(@Param('id') id:string, @Query('limit', new ParseIntPipe({optional:true})) limit: number = 3,){
     return this.communitiesService.getWorkshopsPreview(id, limit);
+  }
+
+  @Get(':id/dashboard')
+  getDashboardStats(@Param('id') id: string) {
+    return this.communitiesService.getDashboardStats(id);
+  }
+
+  @Get(':id/shops')
+  getShops(@Param('id') id: string) {
+    return this.communitiesService.getShops(id);
+  }
+
+  @Get(':id/stats')
+  getChartStats(@Param('id') id: string) {
+    return this.communitiesService.getChartStats(id);
   }
 
   @Patch(':id')

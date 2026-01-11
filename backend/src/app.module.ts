@@ -8,6 +8,9 @@ import { CommunitiesModule } from './communities/communities.module';
 import { EventsModule } from './events/events.module';
 import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
+import { WorkshopsModule } from './workshops/workshops.module';
+import { ShopsModule } from './shops/shops.module';
+import { WorkshopregistrationsModule } from './workshopregistrations/workshopregistrations.module';
 
 @Module({
   imports: [
@@ -22,6 +25,9 @@ import { AuthModule } from './auth/auth.module';
     EventsModule,
     AdminModule,
     AuthModule,
+    WorkshopsModule,
+    ShopsModule,
+    WorkshopregistrationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

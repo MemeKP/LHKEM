@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Users, Calendar, ArrowRight, Sparkles } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -22,7 +21,6 @@ const Landing = () => {
   const navigate = useNavigate();
   const { t, language } = useTranslation();
 
-  // TODO: Fetch communities from API
   const { data: communities = [], isLoading } = useQuery({
     queryKey: ['communities'],
     queryFn: fetchCommunities,

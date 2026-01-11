@@ -19,6 +19,7 @@ const CommunityHome = () => {
   const { community } = useOutletContext()
   const highlights = community.cultural_highlights || []
   const workshopCount = community.workshops?.length || 0;
+
   // ไว้แมชไอคอนกับชื่อไฮไลท
   const getIcon = (title) => {
     if (!title) return <Star className="h-4 w-4 text-yellow-300" />
@@ -44,12 +45,6 @@ const CommunityHome = () => {
     initialData: []
   })
 
-  /*
-  const stats = [
-    { number: '15+', label: t('stats.workshops') },
-    { number: '20+', label: t('stats.locations') },
-    { number: '100%', label: 'Eco-Friendly' }
-  ];*/
   const stats = [
   { 
     number: workshopCount > 0 ? `${workshopCount}+` : '0', 
@@ -66,26 +61,6 @@ const CommunityHome = () => {
     label: 'Eco-Friendly' 
   }
 ];
-
-/*
-  const highlightFeatures = [
-    {
-      key: 'eco',
-      icon: <Leaf className="h-5 w-5 text-green-600" />
-    },
-    {
-      key: 'culture',
-      icon: <Heart className="h-5 w-5 text-rose-500" />
-    },
-    {
-      key: 'craft',
-      icon: <Palette className="h-5 w-5 text-indigo-500" />
-    },
-    {
-      key: 'slowlife',
-      icon: <SparklesIcon className="h-5 w-5 text-yellow-500" />
-    }
-  ];*/
 
   const workshopCards = workshopData.slice(0, 3);
   const [activeWorkshop, setActiveWorkshop] = useState(null);
@@ -148,11 +123,9 @@ const CommunityHome = () => {
             </span>
             <h2 className="text-3xl md:text-4xl font-extrabold text-[#0f2f3a] mb-4 leading-tight">
               {ct(community.name, community.name_en)}
-              {/* {t('homeHighlight.title')} */}
             </h2>
             <p className="text-gray-600 mb-8 text-lg leading-relaxed line-clamp-4">
               {ct(community.history, community.history_en)}
-              {/* {t('homeHighlight.description')} */}
             </p>
             <Link
               to={`/${community.slug}/about`}
@@ -172,14 +145,11 @@ const CommunityHome = () => {
                   <div key={index} className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition">
                     <div className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center mb-4">
                       {getIcon(feature.title)}
-                      {/* {feature.icon} */}
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      {/* {t(`homeHighlight.cards.${feature.key}`)} */}
                       {ct(feature.title, feature.title_en)}
                     </h3>
                     <p className="text-sm text-gray-500">
-                      {/* {t(`homeHighlight.cardsDescriptions.${feature.key}`)} */}
                       {ct(feature.desc, feature.desc_en)}
                     </p>
                   </div>
@@ -233,7 +203,6 @@ const CommunityHome = () => {
                       <div className="flex items-center gap-1">
                         <Clock className="h-4 w-4 text-gray-400" />
                         {card.duration}
-                        {/* {ct(card.duration, card.duration_en)} */}
                       </div>
                       <div className="flex items-center gap-1">
                         <UsersIcon className="h-4 w-4 text-gray-400" />

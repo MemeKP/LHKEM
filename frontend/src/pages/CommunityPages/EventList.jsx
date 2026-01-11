@@ -16,7 +16,7 @@ const EventList = () => {
   const [filterStatus, setFilterStatus] = useState('all');
 
   // TODO: Fetch from API - GET /api/events?community_id=xxx
-  // Mock data for Events
+  // Mock data for Events  
   const events = [
     {
       id: '1',

@@ -5,11 +5,18 @@ import { Community, CommunityDocument } from './schemas/community.schema';
 import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { translate } from 'google-translate-api-x';
+import { ChartResponse, MonthlyStat, ParticipantsResult, RevenueResult } from './dto/types.dto';
+import { Workshop } from 'src/workshops/schemas/workshop.schema';
+import { Shop } from 'src/shops/schemas/shop.schema';
+import { Workshopregistration } from 'src/workshopregistrations/schemas/workshopregistration.schema';
 
 @Injectable()
 export class CommunitiesService {
   constructor(
     @InjectModel(Community.name) private communityModel: Model<CommunityDocument>,
+    @InjectModel(Workshop.name) private workshopModel: Model<Workshop>,
+    @InjectModel(Shop.name) private shopModel: Model<Shop>,
+    @InjectModel(Workshopregistration.name) private registrationModel: Model<Workshopregistration>,
   ) { }
 
   async create(createCommunityDto: CreateCommunityDto) {
@@ -146,6 +153,71 @@ export class CommunitiesService {
     }
   }
 
+  async getDashboardStats(id: string) {
+    const community = await this.communityModel.findById(id);
+    if (!community) throw new NotFoundException('Community not found');
+    const communityId = community._id;
+
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+    const workshops = await this.workshopModel.find({ community: communityId }).select('_id');
+    const workshopIds = workshops.map(w => w._id);
+
+    const [
+      totalShops,
+      totalWorkshops,
+      pendingApprovals,
+      participantsAgg,
+      revenueAgg
+    ] = await Promise.all([
+      this.shopModel.countDocuments({ community: communityId }),
+      this.workshopModel.countDocuments({ community: communityId }),
+      this.workshopModel.countDocuments({ community: communityId, status: 'pending' }),
+
+      this.registrationModel.aggregate<ParticipantsResult>([
+        {
+          $match: {
+            workshop: { $in: workshopIds },
+            status: { $in: ['confirmed', 'completed'] }
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            totalParticipants: { $sum: 1 }
+          }
+        }
+      ]),
+
+      this.registrationModel.aggregate<RevenueResult>([
+        {
+          $match: {
+            workshop: { $in: workshopIds },
+            status: { $in: ['paid', 'completed', 'confirmed'] },
+            createdAt: { $gte: startOfMonth, $lte: endOfMonth }
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            totalRevenue: { $sum: '$totalPrice' }
+          }
+        }
+      ]),
+    ]);
+    const totalParticipants = participantsAgg.length > 0 ? participantsAgg[0].totalParticipants : 0;
+    const monthlyRevenue = revenueAgg.length > 0 ? revenueAgg[0].totalRevenue : 0;
+    return {
+      totalShops,
+      totalWorkshops,
+      pendingApprovals,
+      totalParticipants,
+      monthlyRevenue
+    };
+  }
+
   private async autoTranslate(text: string): Promise<string> {
     if (!text) return '';
     try {
@@ -192,6 +264,80 @@ export class CommunitiesService {
       }
     }
     return dto;
+  }
+
+  async getShops(id: string) {
+    const community = await this.communityModel.findById(id);
+    if (!community) throw new NotFoundException('Community not found');
+
+    const shops = await this.shopModel
+      .find({ community: community._id }) //!!!!! schema ของ shop กับ workshop ยังไม่มี
+      .sort({ createdAt: -1 })
+      .exec();
+
+    return shops;
+  }
+
+  async getChartStats(id: string): Promise<ChartResponse> {
+    const community = await this.communityModel.findById(id)
+    if (!community) throw new NotFoundException('Community not found');
+
+    const workshops = await this.workshopModel.find({ community: community._id }).select('_id'); // !!!!!
+    const workshopIds = workshops.map(w => w._id);
+
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+    sixMonthsAgo.setDate(1);
+    sixMonthsAgo.setHours(0, 0, 0, 0);
+
+    const stats = await this.registrationModel.aggregate<MonthlyStat>([
+      {
+        $match: {
+          workshop: { $in: workshopIds },
+          status: { $in: ['confirmed', 'completed', 'paid'] },
+          createdAt: { $gte: sixMonthsAgo }
+        }
+      },
+      {
+        $group: {
+          _id: { $month: '$createdAt' },
+          revenue: { $sum: '$totalPrice' },
+          participants: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { _id: 1 }
+      }
+    ]);
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    const formattedRevenue: { name: string; value: number }[] = [];
+    const formattedParticipants: { name: string; value: number }[] = [];
+
+    for (let i = 0; i < 6; i++) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - (5 - i)); // ไล่จากอดีต -> ปัจจุบัน
+      const monthIndex = d.getMonth() + 1; // 1-12
+      const monthName = monthNames[d.getMonth()]; 
+
+      const foundStat = stats.find(s => s._id === monthIndex);
+
+      formattedRevenue.push({
+        name: monthName,
+        value: foundStat ? foundStat.revenue : 0
+      });
+
+      formattedParticipants.push({
+        name: monthName,
+        value: foundStat ? foundStat.participants : 0
+      });
+    }
+
+    return {
+      revenueByMonth: formattedRevenue,
+      participantsByMonth: formattedParticipants
+    };
   }
 
 }
