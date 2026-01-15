@@ -79,8 +79,7 @@ const CommunityHome = () => {
                 <span>{t('hero.badge')}</span>
               </div>
               <h1 className="text-4xl md:text-5xl font-extrabold leading-tight mb-4">
-                {t('hero.title')} <br className="hidden md:block" />
-                {ct(community.name, community.name_en)}
+                {ct(community.hero_section.title, community.hero_section.title_en)}
               </h1>
               <p className="text-lg text-white/80 mb-8 line-clamp-2">
               {ct(community.hero_section.description, community.hero_section.description_en)}

@@ -1,8 +1,21 @@
 import { Model, Types } from 'mongoose';
 import { CommunityDocument } from '../communities/schemas/community.schema';
+import { CommunitiesService } from 'src/communities/communities.service';
+import { LocationData } from 'src/communities/dto/types.dto';
 
+function getEnglishLocation(location: LocationData): LocationData {
+  return {
+    ...location,
+    full_address_en: 'Ban Mon, Soi 11, San Klang, San Kamphaeng, Chiang Mai 50130',
+    alley_en: 'Soi 11',
+    sub_district_en: 'San Klang',
+    district_en: 'San Kamphaeng',
+    province_en: 'Chiang Mai',
+  };
+}
 export async function seedCommunity(
-  communityModel: Model<CommunityDocument>
+  communityModel: Model<CommunityDocument>,
+  communityService: CommunitiesService,
 ) {
   const COMMUNITY_ID = new Types.ObjectId('6952c7d7a6db8eb05e1908ed');
 
@@ -12,8 +25,7 @@ export async function seedCommunity(
     return exists;
   }
 
-  const seedData = await communityModel.create({
-    _id: COMMUNITY_ID,
+  const thaiData = {
     name: 'โหล่งฮิมคาว',
     name_en: 'Loeng Him Kaw',
     slug: 'loeng-him-kaw',
@@ -58,15 +70,38 @@ export async function seedCommunity(
         link: 'https://www.facebook.com/LoangHimKao',
       },
     },
+  }
+
+  const [history_en, hero_title_en, hero_desc_en] = await Promise.all([
+    communityService.autoTranslate(thaiData.history),
+    communityService.autoTranslate(thaiData.hero_section.title),
+    communityService.autoTranslate(thaiData.hero_section.description),
+  ]);
+
+  const cultural_en = await Promise.all(
+    thaiData.cultural_highlights.map(async (ch) => ({
+      ...ch,
+      title_en: await communityService.autoTranslate(ch.title),
+      desc_en: await communityService.autoTranslate(ch.desc),
+    }))
+  );
+
+  const seedData = await communityModel.create({
+    _id: COMMUNITY_ID,
+    ...thaiData,
+    location: getEnglishLocation(thaiData.location),
+    history_en,
+    hero_section: { ...thaiData.hero_section, title_en: hero_title_en, description_en: hero_desc_en },
+    cultural_highlights: cultural_en,
   });
 
   const community = await communityModel.findByIdAndUpdate(
     COMMUNITY_ID,
-    { $set: seedData }, 
-    { 
-      new: true,   
-      upsert: true, 
-      setDefaultsOnInsert: true 
+    { $set: seedData },
+    {
+      new: true,
+      upsert: true,
+      setDefaultsOnInsert: true
     }
   );
 

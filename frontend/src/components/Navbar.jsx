@@ -43,7 +43,7 @@ const Navbar = ({ community }) => {
   useEffect(() => {
     const fetchCommunities = async () => {
       try {
-        const response = await axios.get('/api/communities');
+        const response = await axios.get('/communities');
         setCommunities(response.data);
       } catch (error) {
         console.error('Failed to fetch communities:', error);

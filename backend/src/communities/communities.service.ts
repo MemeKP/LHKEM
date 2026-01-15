@@ -218,7 +218,7 @@ export class CommunitiesService {
     };
   }
 
-  private async autoTranslate(text: string): Promise<string> {
+  public async autoTranslate(text: string): Promise<string> {
     if (!text) return '';
     try {
       // แปลจากไทยไปอิ้ง
