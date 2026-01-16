@@ -16,8 +16,6 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const from = location.state?.from || '/dashboard';
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -27,7 +25,36 @@ const Login = () => {
       const result = await login(formData.email, formData.password);
       
       if (result.success) {
-        navigate(from, { replace: true });
+        // Redirect based on user role
+        const userRole = result.user?.role;
+        const from = location.state?.from?.pathname;
+        let redirectPath;
+        
+        if (userRole === 'COMMUNITY_ADMIN') {
+          // Community Admin always goes to their dashboard
+          redirectPath = '/community-admin/dashboard';
+        } else if (userRole === 'SHOP_OWNER') {
+          // Shop Owner always goes to their shop dashboard
+          redirectPath = '/shop/dashboard';
+        } else if (userRole === 'PLATFORM_ADMIN') {
+          // Platform Admin goes to admin dashboard
+          redirectPath = '/admin/dashboard';
+        } else {
+          // Tourist/User: return to previous page if it was public, otherwise go to landing
+          // Protected routes that require auth should redirect to landing page
+          const protectedPaths = ['/dashboard', '/settings', '/community-admin', '/shop', '/admin'];
+          const isProtectedPath = from && protectedPaths.some(path => from.startsWith(path));
+          
+          if (from && !isProtectedPath) {
+            // Return to the public page they were viewing
+            redirectPath = from;
+          } else {
+            // Go to landing page for protected or undefined paths
+            redirectPath = '/';
+          }
+        }
+        
+        navigate(redirectPath, { replace: true });
       } else {
         setError(result.message || 'Login failed');
       }

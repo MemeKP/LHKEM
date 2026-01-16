@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, MapPin, Users, DollarSign, Save, Upload, X } from 'lucide-react';
+import { Calendar, MapPin, Users, DollarSign, Save, Upload, X, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { useTranslation } from '../../hooks/useTranslation';
 
 /**
  * Event Create Form - ใช้ Backend API ที่มีอยู่แล้ว
@@ -24,8 +25,10 @@ import { useAuth } from '../../hooks/useAuth';
 
 const EventCreateForm = () => {
   const { user } = useAuth();
+  const { ct } = useTranslation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [imagePreview, setImagePreview] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
     title_en: '',
@@ -75,19 +78,30 @@ const EventCreateForm = () => {
     }
   };
 
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-[#FAF8F3] py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">สร้างกิจกรรมของชุมชน</h1>
-          <p className="text-gray-600 mt-1">กรอกข้อมูลกิจกรรมพิเศษหรือเทศกาลของชุมชน</p>
+          <h1 className="text-3xl font-bold text-gray-800">{ct('สร้างกิจกรรมของชุมชน', 'Create Community Event')}</h1>
+          <p className="text-gray-600 text-sm mt-1">{ct('กรอกข้อมูลกิจกรรมพิเศษหรือเทศกาลของชุมชน', 'Fill in information for special events or community festivals')}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">ข้อมูลพื้นฐาน</h2>
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">{ct('ข้อมูลพื้นฐาน', 'Basic Information')}</h2>
             
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -152,21 +166,43 @@ const EventCreateForm = () => {
             </div>
           </div>
 
-          {/* Image Upload - TODO: รอ Backend Image Upload API */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">รูปภาพกิจกรรม</h2>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-              <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600 mb-2">อัปโหลดรูปภาพกิจกรรม</p>
-              <p className="text-sm text-gray-500">TODO: รอ Backend Image Upload API</p>
+          {/* Image Upload */}
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <ImageIcon className="h-5 w-5 text-orange-500" />
+              {ct('รูปภาพกิจกรรม', 'Event Images')}
+            </h2>
+            <div className="border-2 border-dashed border-orange-200 rounded-xl p-8 text-center bg-orange-50">
+              {imagePreview ? (
+                <div className="relative">
+                  <img src={imagePreview} alt="Preview" className="max-h-64 mx-auto rounded-lg" />
+                  <button
+                    type="button"
+                    onClick={() => setImagePreview(null)}
+                    className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <Upload className="h-12 w-12 text-orange-400 mx-auto mb-4" />
+                  <p className="text-gray-700 font-medium mb-2">{ct('คลิกเพื่ออัพโหลดรูปภาพ', 'Click to upload image')}</p>
+                  <p className="text-sm text-gray-500 mb-4">{ct('รองรับไฟล์ JPG, PNG ขนาดไม่เกิน 5MB', 'Supports JPG, PNG up to 5MB')}</p>
+                  <label className="inline-block px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg cursor-pointer transition">
+                    {ct('เลือกไฟล์', 'Choose File')}
+                    <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                  </label>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Date & Time */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
               <Calendar className="h-5 w-5 text-orange-500" />
-              วันและเวลา
+              {ct('วันและเวลา', 'Date & Time')}
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -201,10 +237,10 @@ const EventCreateForm = () => {
           </div>
 
           {/* Location */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
               <MapPin className="h-5 w-5 text-orange-500" />
-              สถานที่
+              {ct('สถานที่', 'Location')}
             </h2>
             
             <div className="space-y-4">
@@ -223,18 +259,24 @@ const EventCreateForm = () => {
                 />
               </div>
 
-              {/* Map Picker - TODO: รอ Map Integration */}
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-gray-50">
-                <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-2">เลือกตำแหน่งบนแผนที่</p>
-                <p className="text-sm text-gray-500">TODO: Map Picker Component</p>
+              {/* Map Picker */}
+              <div className="border-2 border-dashed border-green-200 rounded-xl p-8 text-center bg-green-50">
+                <MapPin className="h-12 w-12 text-green-500 mx-auto mb-4" />
+                <p className="text-gray-700 font-medium mb-2">{ct('เลือกตำแหน่งบนแผนที่', 'Select location on map')}</p>
+                <button
+                  type="button"
+                  className="px-4 py-2 bg-white border border-green-300 text-green-600 rounded-lg hover:bg-green-50 transition font-medium text-sm"
+                >
+                  {ct('เปิดแผนที่', 'Open Map')}
+                </button>
+                <p className="text-xs text-gray-500 mt-3">{ct('คลิกเพื่อเลือกตำแหน่งที่แม่นยำบนแผนที่', 'Click to select precise location on map')}</p>
               </div>
             </div>
           </div>
 
           {/* Capacity & Pricing */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">จำนวนและค่าใช้จ่าย</h2>
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">{ct('จำนวนและค่าใช้จ่าย', 'Capacity & Pricing')}</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -274,8 +316,8 @@ const EventCreateForm = () => {
           </div>
 
           {/* Settings */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">การตั้งค่า</h2>
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">{ct('การตั้งค่า', 'Settings')}</h2>
             
             <div className="space-y-4">
               <div>
@@ -325,14 +367,14 @@ const EventCreateForm = () => {
             <button
               type="button"
               onClick={() => navigate('/community-admin/dashboard')}
-              className="px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-6 py-2.5 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
             >
               ยกเลิก
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save className="h-5 w-5" />
               {loading ? 'กำลังบันทึก...' : 'บันทึกกิจกรรม'}

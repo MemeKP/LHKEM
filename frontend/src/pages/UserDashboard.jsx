@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, MapPin, Users, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight } from 'lucide-react';
+import { Calendar, MapPin, Users, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, Ticket } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from '../hooks/useTranslation';
 import api from '../services/api';
+import ETicketModal from '../components/ETicketModal';
 
 const UserDashboard = () => {
   const { user, loading } = useAuth();
-  const { t } = useTranslation();
+  const { t, ct } = useTranslation();
   const navigate = useNavigate();
   const [enrollments, setEnrollments] = useState([]);
   const [activeTab, setActiveTab] = useState('upcoming');
+  const [workshopBookings, setWorkshopBookings] = useState([]);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [showETicket, setShowETicket] = useState(false);
 
 
   useEffect(() => {
@@ -26,7 +30,29 @@ const UserDashboard = () => {
     };
 
     fetchEnrollments();
+    
+    // Load workshop bookings from localStorage
+    const bookings = JSON.parse(localStorage.getItem('workshopBookings') || '[]');
+    setWorkshopBookings(bookings);
   }, [user]);
+  
+  // Find booking for a specific enrollment
+  const findBookingForEnrollment = (enrollment) => {
+    return workshopBookings.find(booking => 
+      booking.workshop.title === enrollment.workshopTitle ||
+      booking.workshop.id === enrollment.workshopId
+    );
+  };
+  
+  const handleViewETicket = (booking) => {
+    setSelectedBooking(booking);
+    setShowETicket(true);
+  };
+  
+  const handleCloseETicket = () => {
+    setShowETicket(false);
+    setSelectedBooking(null);
+  };
 
   const getStatusBadge = (status) => {
     const statusConfig = {
@@ -257,11 +283,22 @@ const UserDashboard = () => {
                             ฿{enrollment.totalPrice}
                           </p>
                         </div>
-                        <button
-                          className="px-4 py-2 text-sm font-medium text-orange-600 border border-orange-600 rounded-lg hover:bg-orange-50 transition-colors"
-                        >
-                          {t('dashboard.viewDetails')}
-                        </button>
+                        <div className="flex gap-2">
+                          {findBookingForEnrollment(enrollment) && (
+                            <button
+                              onClick={() => handleViewETicket(findBookingForEnrollment(enrollment))}
+                              className="px-4 py-2 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors flex items-center gap-2"
+                            >
+                              <Ticket className="h-4 w-4" />
+                              {ct('ดู E-Ticket', 'View E-Ticket')}
+                            </button>
+                          )}
+                          <button
+                            className="px-4 py-2 text-sm font-medium text-orange-600 border border-orange-600 rounded-lg hover:bg-orange-50 transition-colors"
+                          >
+                            {t('dashboard.viewDetails')}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -271,6 +308,12 @@ const UserDashboard = () => {
           </div>
         </div>
       </div>
+      
+      <ETicketModal 
+        booking={selectedBooking}
+        isOpen={showETicket}
+        onClose={handleCloseETicket}
+      />
     </div>
   );
 };

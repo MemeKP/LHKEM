@@ -82,8 +82,8 @@ const ShopCreate = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#FAF8F3] py-8 animate-fadeIn">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
           สร้างโปรไฟล์ร้านของคุณ
         </h1>
@@ -97,7 +97,7 @@ const ShopCreate = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-8 animate-slideUp bg-white rounded-xl shadow-sm p-6 space-y-6 border border-gray-100">
           <div className="space-y-4">
             <label className="block text-sm font-medium text-gray-700">ภาพหน้าปกร้าน (พื้นหลัง)</label>
             <div className="aspect-[16/6] w-full bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">

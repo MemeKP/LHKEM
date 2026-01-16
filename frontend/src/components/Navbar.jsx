@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Globe, User, Settings, LogOut, LayoutDashboard, Store, Users, Shield, ChevronDown } from 'lucide-react';
+import { Menu, X, Globe, User, Settings, LogOut, LayoutDashboard, Store, Users, Shield, ChevronDown, Info, Cog } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useAuth } from '../hooks/useAuth';
 import { getLogo } from '../utils/getLogo';
@@ -77,8 +77,10 @@ const Navbar = ({ community }) => {
 
     if (role === 'COMMUNITY_ADMIN') {
       return [
-        { to: '/community-admin/dashboard', icon: LayoutDashboard, label: t('nav.communityDashboard') },
-        { to: '/settings', icon: Settings, label: t('nav.settings') }
+        { to: '/community-admin/dashboard', icon: LayoutDashboard, label: ct('จัดการข้อมูลชุมชน', 'Manage Community') },
+        { to: '/community-admin/info', icon: Info, label: ct('ดูแดชบอร์ด', 'View Dashboard') },
+        { to: '/community-admin/settings', icon: Cog, label: ct('ตั้งค่าชุมชน', 'Community Settings') },
+        { to: '/settings', icon: Settings, label: ct('(เป็นส่วนตัวรับเฉพาะนี้ Platform)', 'Account Settings') }
       ];
     }
 
@@ -125,62 +127,19 @@ const Navbar = ({ community }) => {
             >
               {t('nav.home')}
             </Link>
-
-            {communities.length > 1 && (
-              <div className="relative" ref={communityMenuRef}>
-                <button
-                  onClick={() => setIsCommunityMenuOpen(!isCommunityMenuOpen)}
-                  className={`font-medium transition-colors border-b-2 pb-1 ${isCommunityMenuOpen ? '' : 'border-transparent'}`}
-                  style={{
-                    color: isCommunityMenuOpen ? '#111827' : '#4b5563',
-                    borderColor: isCommunityMenuOpen ? '#ea580c' : 'transparent'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#ea580c'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = isCommunityMenuOpen ? '#111827' : '#4b5563'}
-                >
-                  {t('nav.communities') || 'ชุมชน'}
-                </button>
-
-                {isCommunityMenuOpen && (
-                  <div className="absolute left-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 animate-slideDown">
-                    <div className="px-4 py-2 border-b border-gray-200">
-                      <p className="text-xs font-semibold text-gray-500">{t('nav.selectCommunity') || 'เลือกชุมชน'}</p>
-                    </div>
-                    {communities.map((comm) => (
-                      <Link
-                        key={comm._id}
-                        to={`/${comm.slug}`}
-                        onClick={() => {
-                          setIsCommunityMenuOpen(false);
-                        }}
-                        className={`block px-4 py-2.5 transition-colors ${
-                          comm._id === community._id ? 'bg-orange-50' : ''
-                        }`}
-                        style={{ 
-                          color: comm._id === community._id ? '#ea580c' : '#374151'
-                        }}
-                        onMouseEnter={(e) => {
-                          if (comm._id !== community._id) {
-                            e.currentTarget.style.backgroundColor = '#f3f4f6';
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (comm._id !== community._id) {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                          }
-                        }}
-                      >
-                        <div className="font-medium">{comm.name}</div>
-                        <div className="text-xs text-gray-500 mt-0.5">
-                          {comm.location?.province || ''} {comm.location?.district || ''}
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
+            
+            <Link
+              to={`/${community.slug}/shops`}
+              className={`font-medium transition-colors border-b-2 pb-1 ${isActive('shops') ? '' : 'border-transparent'}`}
+              style={{
+                color: isActive('shops') ? '#111827' : '#4b5563',
+                borderColor: isActive('shops') ? '#ea580c' : 'transparent'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.color = '#ea580c'}
+              onMouseLeave={(e) => e.currentTarget.style.color = isActive('shops') ? '#111827' : '#4b5563'}
+            >
+              {t('nav.shops')}
+            </Link>
             <Link
               to={`/${community.slug}/workshops`}
               className={`font-medium transition-colors border-b-2 pb-1 ${isActive('workshops') ? '' : 'border-transparent'}`}
@@ -193,6 +152,7 @@ const Navbar = ({ community }) => {
             >
               {t('nav.workshops')}
             </Link>
+            
             <Link
               to={`/${community.slug}/map`}
               className={`font-medium transition-colors border-b-2 pb-1 ${isActive('map') ? '' : 'border-transparent'}`}

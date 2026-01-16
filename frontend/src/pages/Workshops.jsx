@@ -3,6 +3,7 @@ import { Search, Star, MapPin, Clock, Users as UsersIcon } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import workshopData from '../data/workshops';
 import WorkshopModal from '../components/WorkshopModal';
+import ETicketModal from '../components/ETicketModal';
 
 const Workshops = () => {
   const { t } = useTranslation();
@@ -10,6 +11,8 @@ const Workshops = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [priceRange, setPriceRange] = useState([]);
   const [activeWorkshop, setActiveWorkshop] = useState(null);
+  const [currentBooking, setCurrentBooking] = useState(null);
+  const [showETicket, setShowETicket] = useState(false);
 
   const categories = [
     { id: 'all', name: 'ทั้งหมด', color: 'orange' },
@@ -35,6 +38,16 @@ const Workshops = () => {
 
   const handleOpenModal = (workshop) => setActiveWorkshop(workshop);
   const handleCloseModal = () => setActiveWorkshop(null);
+  
+  const handleBookingSuccess = (booking) => {
+    setCurrentBooking(booking);
+    setShowETicket(true);
+  };
+  
+  const handleCloseETicket = () => {
+    setShowETicket(false);
+    setCurrentBooking(null);
+  };
 
   const workshops = workshopData;
 
@@ -203,7 +216,17 @@ const Workshops = () => {
         </div>
       </div>
 
-      <WorkshopModal workshop={activeWorkshop} isOpen={!!activeWorkshop} onClose={handleCloseModal} />
+      <WorkshopModal 
+        workshop={activeWorkshop} 
+        isOpen={!!activeWorkshop} 
+        onClose={handleCloseModal}
+        onBookingSuccess={handleBookingSuccess}
+      />
+      <ETicketModal 
+        booking={currentBooking}
+        isOpen={showETicket}
+        onClose={handleCloseETicket}
+      />
     </div>
   );
 };
