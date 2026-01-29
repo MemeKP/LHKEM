@@ -18,10 +18,16 @@ export class ShopsService {
   ) {}
 
   async create(userId: string, dto: CreateShopDto) {
-  const exists = await this.shopModel.findOne({ userId });
+  const userObjectId = new Types.ObjectId(userId);
+  const communityObjectId = new Types.ObjectId(dto.communityId);
+
+  const exists = await this.shopModel.findOne({
+  userId: userObjectId,
+});
   if (exists) {
     throw new BadRequestException('User already has a shop');
   }
+  
 
   return this.shopModel.create({
     shopName: dto.shopName,
@@ -29,7 +35,7 @@ export class ShopsService {
     picture: dto.picture,
     openTime: dto.openTime,
     contact: dto.contact,
-    userId,
+    userId: userObjectId,
     communityId: new Types.ObjectId(dto.communityId),
     status: 'PENDING',
   });
@@ -37,7 +43,11 @@ export class ShopsService {
 
 
   async findMyShop(userId: string) {
-    const shop = await this.shopModel.findOne({ userId });
+    const userObjectId = new Types.ObjectId(userId);
+
+    const shop = await this.shopModel.findOne({
+    userId: userObjectId,
+    });
     if (!shop) throw new NotFoundException('Shop not found');
     return shop;
   }
@@ -70,7 +80,11 @@ export class ShopsService {
 }
 
   async findActiveShopByUser(userId: string) {
-  const shop = await this.shopModel.findOne({ userId });
+  const userObjectId = new Types.ObjectId(userId);
+
+  const shop = await this.shopModel.findOne({
+  userId: userObjectId,
+});
 
   if (!shop) {
     throw new NotFoundException('Shop not found');

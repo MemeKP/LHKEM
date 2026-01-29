@@ -20,6 +20,7 @@ import { UserRole } from '../common/enums/user-role.enum';
 export class ShopController {
   constructor(private readonly shopService: ShopsService) {}
 
+  //create shop
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SHOP)
   @Post()
@@ -27,6 +28,7 @@ export class ShopController {
     return this.shopService.create(req.user.userId, dto);
   }
 
+  //get my shop
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SHOP)
   @Get('me')
@@ -34,6 +36,7 @@ export class ShopController {
     return this.shopService.findMyShop(req.user.userId);
   }
 
+  //update shop
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SHOP)
   @Put(':id')
@@ -45,6 +48,7 @@ export class ShopController {
     return this.shopService.update(id, req.user.userId, dto);
   }
 
+  //get public shop info
   @Get(':id')
   findPublic(@Param('id') id: string) {
     return this.shopService.findPublic(id);
@@ -55,7 +59,7 @@ export class ShopController {
     return this.shopService.findByCommunity(id);
   }
 
-  // shop.controller.ts
+
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Get('/community/:id/pending')
