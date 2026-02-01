@@ -31,18 +31,28 @@ const Login = () => {
         let redirectPath;
         
         if (userRole === 'COMMUNITY_ADMIN') {
-          // Community Admin always goes to their dashboard
-          redirectPath = '/community-admin/dashboard';
+          // Community Admin: return to previous page if public, otherwise dashboard
+          const protectedPaths = ['/dashboard', '/settings', '/shop', '/platform-admin'];
+          const isProtectedPath = from && protectedPaths.some(path => from.startsWith(path));
+          redirectPath = (from && !isProtectedPath) ? from : '/community-admin/dashboard';
         } else if (userRole === 'SHOP_OWNER') {
-          // Shop Owner always goes to their shop dashboard
-          redirectPath = '/shop/dashboard';
+          // Shop Owner: return to previous page if public, otherwise shop dashboard
+          const protectedPaths = ['/dashboard', '/settings', '/platform-admin', '/community-admin'];
+          const isProtectedPath = from && protectedPaths.some(path => from.startsWith(path));
+          // If on community page, stay there; otherwise go to shop dashboard
+          if (from && !isProtectedPath) {
+            redirectPath = from;
+          } else {
+            redirectPath = '/loeng-him-kaw/shop/dashboard'; // Default community
+          }
         } else if (userRole === 'PLATFORM_ADMIN') {
-          // Platform Admin goes to admin dashboard
-          redirectPath = '/admin/dashboard';
+          // Platform Admin: return to previous page if public, otherwise admin dashboard
+          const protectedPaths = ['/dashboard', '/settings', '/shop', '/community-admin'];
+          const isProtectedPath = from && protectedPaths.some(path => from.startsWith(path));
+          redirectPath = (from && !isProtectedPath) ? from : '/platform-admin/dashboard';
         } else {
           // Tourist/User: return to previous page if it was public, otherwise go to landing
-          // Protected routes that require auth should redirect to landing page
-          const protectedPaths = ['/dashboard', '/settings', '/community-admin', '/shop', '/admin'];
+          const protectedPaths = ['/dashboard', '/settings', '/community-admin', '/shop', '/platform-admin'];
           const isProtectedPath = from && protectedPaths.some(path => from.startsWith(path));
           
           if (from && !isProtectedPath) {
