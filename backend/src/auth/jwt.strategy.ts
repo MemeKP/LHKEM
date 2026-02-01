@@ -18,16 +18,18 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    // payload = สิ่งที่คุณ sign ตอน login
-    // เช่น { sub: userId, role: 'TOURIST' }
+  const user = await this.usersService.findById(payload.sub);
 
-    const user = await this.usersService.findById(payload.sub);
-
-    if (!user) {
-      throw new UnauthorizedException('User not found');
-    }
-
-    // สิ่งที่ return จะถูกแนบเข้า req.user
-    return user;
+  if (!user) {
+    throw new UnauthorizedException('User not found');
   }
+
+  // ✅ normalize req.user ให้ชัด
+  return {
+    userId: user._id.toString(), // ⭐ ใช้ field นี้เป็นหลัก
+    role: user.role,
+    email: user.email,           // (optional)
+  };
+}
+
 }
