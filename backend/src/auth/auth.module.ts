@@ -7,6 +7,8 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
 import { UsersModule } from '../users/users.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { CommunityAdmin, CommunityAdminSchema } from 'src/community-admin/schemas/community-admin.schema';
 
 @Module({
   imports: [
@@ -20,6 +22,9 @@ import { UsersModule } from '../users/users.module';
         signOptions: { expiresIn: '7d' },
       }),
     }),
+    MongooseModule.forFeature([
+      { name: CommunityAdmin.name, schema: CommunityAdminSchema },
+    ]),
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

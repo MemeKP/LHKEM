@@ -6,11 +6,11 @@ import { UsersModule } from './users/users.module';
 import { ConfigModule } from '@nestjs/config';
 import { CommunitiesModule } from './communities/communities.module';
 import { EventsModule } from './events/events.module';
-import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
 import { WorkshopsModule } from './workshops/workshops.module';
 import { ShopsModule } from './shops/shops.module';
 import { WorkshopregistrationsModule } from './workshopregistrations/workshopregistrations.module';
+import { CommunityAdminModule } from './community-admin/community-admin.module';
 
 @Module({
   imports: [
@@ -23,11 +23,11 @@ import { WorkshopregistrationsModule } from './workshopregistrations/workshopreg
     UsersModule,
     CommunitiesModule,
     EventsModule,
-    AdminModule,
     AuthModule,
     WorkshopsModule,
     ShopsModule,
     WorkshopregistrationsModule,
+    CommunityAdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],

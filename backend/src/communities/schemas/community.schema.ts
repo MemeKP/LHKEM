@@ -158,12 +158,12 @@ export const CommunitySchema = SchemaFactory.createForClass(Community);
 CommunitySchema.index({ slug: 1 }, { unique: true })
 CommunitySchema.index({ 'location.coordinates.lat': 1, 'location.coordinates.lng': 1 });
 
-// relation จาก COMMUNITY_ADMIN, EVENTS, USERS, SHOP, WORKSHOP table ที่จะอ้างอิงมาหา (รอสร้าง)
-// CommunitySchema.virtual('shops', {
-//     ref: 'Shop',
-//     localField: '_id',
-//     foreignField: 'community'
-// })
+// relation จาก COMMUNITY_ADMIN, EVENTS, USERS, SHOP, WORKSHOP table ที่จะอ้างอิงมาหา
+CommunitySchema.virtual('shops', {
+    ref: 'Shop',
+    localField: '_id',
+    foreignField: 'community'
+})
 
 CommunitySchema.virtual('events', {
     ref: 'Event',
