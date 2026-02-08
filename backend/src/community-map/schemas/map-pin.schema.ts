@@ -3,9 +3,7 @@ import { Document, Types } from 'mongoose';
 
 export enum PinType {
   SHOP = 'SHOP',
-  WORKSHOP = 'Workshop',
-  EVENT = 'EVENT',
-  LANDMARK = 'LANDMARK',
+  
 }
 
 @Schema({ timestamps: true })

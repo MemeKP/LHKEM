@@ -30,7 +30,7 @@ export class CommunityMapController {
    * GET community map + pins
    * ใช้ฝั่ง user ดูแผนที่
    */
-  @Get('/api/communities/:communityId/map')
+  @Get('/api/communities/:communityId/communitymap')
   async getCommunityMap(
     @Param('communityId') communityId: string,
   ) {

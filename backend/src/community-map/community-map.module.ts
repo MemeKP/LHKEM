@@ -15,9 +15,7 @@ import { EventSchema } from 'src/events/schemas/event.schema';
     MongooseModule.forFeature([
       { name: CommunityMap.name, schema: CommunityMapSchema },
       { name: MapPin.name, schema: MapPinSchema },
-      { name: 'Workshop', schema: WorkshopSchema }, 
       { name: 'Shop', schema: ShopSchema },
-      { name: 'Event', schema: EventSchema },
     ]),
   ],
   providers: [CommunityMapService],

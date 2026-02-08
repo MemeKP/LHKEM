@@ -77,12 +77,6 @@ async getPinDetail(pinId: string) {
     case 'SHOP':
       return { type: 'SHOP', refId: pin.refId };
 
-    case 'Workshop':
-      return { type: 'Workshop', refId: pin.refId };
-
-    case 'EVENT':
-      return { type: 'EVENT', refId: pin.refId };
-
     default:
       return pin;
   }
