@@ -43,9 +43,45 @@ export class CommunityMapService {
 
     return {
       map_image: map.imageUrl,
-      pins,
+      pins: pins.map(p => ({
+      id: p._id,
+      x: p.positionX,
+      y: p.positionY,
+      shopId: p.ownerShop,
+    })),
     };
   }
+
+  // =========================
+// PUBLIC – PIN DETAIL
+// =========================
+async getPinDetail(pinId: string) {
+  const pin = await this.mapPinModel
+    .findById(pinId)
+    .populate({
+      path: 'ownerShop',
+      select: 'shopName description openTime',
+    });
+
+  if (!pin) {
+    throw new NotFoundException('Pin not found');
+  }
+
+  if (pin.status !== MapPinStatus.APPROVED) {
+    throw new NotFoundException('Pin not available');
+  }
+
+  const shop: any = pin.ownerShop;
+
+  return {
+    pinId: pin._id,
+    shopId: shop._id,
+    shopName: shop.shopName,
+    description: shop.description,
+    openTime: shop.openTime,
+  };
+}
+
 
   // =========================
   // SHOP

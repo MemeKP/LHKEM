@@ -20,6 +20,8 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from 'src/common/enums/user-role.enum';
+import { BadRequestException } from '@nestjs/common';
+
 
 @Controller()
 export class CommunityMapController {
@@ -36,6 +38,14 @@ export class CommunityMapController {
   ) {
     return this.communityMapService.getCommunityMap(communityId);
   }
+  // public pin detail (for map click)
+@Get('/api/map-pins/:pinId/detail')
+async getPinDetail(
+  @Param('pinId') pinId: string,
+) {
+  return this.communityMapService.getPinDetail(pinId);
+}
+
 
   // =========================
   // SHOP
@@ -64,6 +74,10 @@ export class CommunityMapController {
     @Param('communityId') communityId: string,
     @UploadedFile() file: Multer.File,
   ) {
+    if (!file) {
+  throw new BadRequestException('Map image is required');
+}
+
     return this.communityMapService.uploadMap(
       communityId,
       `/uploads/maps/${file.filename}`,
