@@ -101,7 +101,7 @@ async getPinDetail(pinId: string) {
     return this.mapPinModel.findOneAndUpdate(
       { ownerShop: shop._id },
       {
-        ownerShop: shop._id,
+        shop_objectId: shop._id,
         communityId: shop.communityId,
         positionX: dto.position_x,
         positionY: dto.position_y,
