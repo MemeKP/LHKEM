@@ -7,7 +7,7 @@ import { CommunityMapSchema } from './schemas/community-map.schema';
 import { CommunityMap } from './schemas/community-map.schema';
 import { MapPin } from './schemas/map-pin.schema';
 import { WorkshopSchema } from 'src/workshops/schemas/workshop.schema';
-import { ShopSchema } from 'src/shops/schemas/shop.schema';
+import { Shop, ShopSchema } from 'src/shops/schemas/shop.schema';
 import { EventSchema } from 'src/events/schemas/event.schema';
 
 @Module({
@@ -15,7 +15,7 @@ import { EventSchema } from 'src/events/schemas/event.schema';
     MongooseModule.forFeature([
       { name: CommunityMap.name, schema: CommunityMapSchema },
       { name: MapPin.name, schema: MapPinSchema },
-      { name: 'Shop', schema: ShopSchema },
+      {name : Shop.name, schema: ShopSchema},
     ]),
   ],
   providers: [CommunityMapService],
