@@ -1,15 +1,24 @@
+// src/community-map/schemas/map-pin.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
-export enum PinType {
-  SHOP = 'SHOP',
-  WORKSHOP = 'Workshop',
-  EVENT = 'EVENT',
-  LANDMARK = 'LANDMARK',
+export enum MapPinStatus {
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
 }
 
 @Schema({ timestamps: true })
 export class MapPin extends Document {
+  // 1 shop = 1 pin
+  @Prop({
+    type: Types.ObjectId,
+    ref: 'Shop',
+    required: true,
+    unique: true,
+  })
+  ownerShop: Types.ObjectId;
+
   @Prop({
     type: Types.ObjectId,
     ref: 'Community',
@@ -18,24 +27,27 @@ export class MapPin extends Document {
   })
   communityId: Types.ObjectId;
 
-  @Prop({
-    type: String,
-    enum: PinType,
-    required: true,
-  })
-  type: PinType;
-
   @Prop({ required: true })
-  refId: Types.ObjectId; // ชี้ไป shop / workshop / event
-
-  @Prop({ required: true })
-  label: string;
-
-  @Prop({ required: true, min: 0, max: 100 })
   positionX: number;
 
-  @Prop({ required: true, min: 0, max: 100 })
+  @Prop({ required: true })
   positionY: number;
+
+  @Prop({
+    enum: MapPinStatus,
+    default: MapPinStatus.PENDING,
+    index: true,
+  })
+  status: MapPinStatus;
+
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  createdBy: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'User' })
+  approvedBy?: Types.ObjectId;
+
+  @Prop()
+  approvedAt?: Date;
 }
 
 export const MapPinSchema = SchemaFactory.createForClass(MapPin);

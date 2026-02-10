@@ -1,3 +1,4 @@
+// src/community-map/community-map.controller.ts
 import {
   Body,
   Controller,
@@ -6,14 +7,20 @@ import {
   Param,
   Post,
   Put,
+  Req,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Multer } from 'multer';
 import { CommunityMapService } from './community-map.service';
 import { CreateMapPinDto } from './dto/create-map-pin.dto';
-import { UpdateMapPinDto } from './dto/update-map-pin.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { UserRole } from 'src/common/enums/user-role.enum';
+import { BadRequestException } from '@nestjs/common';
 
 
 @Controller()
@@ -22,90 +29,83 @@ export class CommunityMapController {
     private readonly communityMapService: CommunityMapService,
   ) {}
 
-  // =====================================================
-  // USER SIDE
-  // =====================================================
-
-  /**
-   * GET community map + pins
-   * ใช้ฝั่ง user ดูแผนที่
-   */
-  @Get('/api/communities/:communityId/map')
+  // =========================
+  // PUBLIC
+  // =========================
+  @Get('/api/communities/:communityId/communitymap')
   async getCommunityMap(
     @Param('communityId') communityId: string,
   ) {
     return this.communityMapService.getCommunityMap(communityId);
   }
+  // public pin detail (for map click)
+@Get('/api/map-pins/:pinId/detail')
+async getPinDetail(
+  @Param('pinId') pinId: string,
+) {
+  return this.communityMapService.getPinDetail(pinId);
+}
 
-  /**
-   * GET pin detail
-   * ใช้ตอน user คลิกหมุด
-   */
-  @Get('/api/map/pins/:pinId')
-  async getPinDetail(
-    @Param('pinId') pinId: string,
+
+  // =========================
+  // SHOP
+  // =========================
+  @Post('/api/shops/map-pin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SHOP)
+  async createOrUpdateShopPin(
+    @Req() req,
+    @Body() dto: CreateMapPinDto,
   ) {
-    return this.communityMapService.getPinDetail(pinId);
+    return this.communityMapService.createOrUpdateShopPin(
+      req.user.userId,
+      dto,
+    );
   }
 
-  // =====================================================
-  // ADMIN SIDE
-  // =====================================================
-
-  /**
-   * Upload / Update community map image
-   * multipart/form-data
-   * key = file
-   */
+  // =========================
+  // COMMUNITY ADMIN
+  // =========================
   @Post('/api/admin/communities/:communityId/map')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @UseInterceptors(FileInterceptor('file'))
   async uploadCommunityMap(
     @Param('communityId') communityId: string,
     @UploadedFile() file: Multer.File,
   ) {
-    const imageUrl = `/uploads/maps/${file.filename}`;
+    if (!file) {
+  throw new BadRequestException('Map image is required');
+}
 
     return this.communityMapService.uploadMap(
       communityId,
-      imageUrl,
+      `/uploads/maps/${file.filename}`,
     );
   }
 
-  /**
-   * Create new pin on map
-   */
-  @Post('/api/admin/communities/:communityId/map/pins')
-  async createMapPin(
+  @Get('/api/admin/communities/:communityId/map-pins/pending')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async getPendingPins(
     @Param('communityId') communityId: string,
-    @Body() dto: CreateMapPinDto,
   ) {
-    return this.communityMapService.createPin(
+    return this.communityMapService.getPendingPins(
       communityId,
-      dto,
     );
   }
 
-  /**
-   * Update pin position (drag & drop)
-   */
-  @Put('/api/admin/map/pins/:pinId')
-  async updateMapPin(
-    @Param('pinId') pinId: string,
-    @Body() dto: UpdateMapPinDto,
-  ) {
-    return this.communityMapService.updatePin(
-      pinId,
-      dto,
-    );
+  @Put('/api/admin/map-pins/:pinId/approve')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async approvePin(@Param('pinId') pinId: string) {
+    return this.communityMapService.approvePin(pinId);
   }
 
-  /**
-   * Delete pin
-   */
-  @Delete('/api/admin/map/pins/:pinId')
-  async deleteMapPin(
-    @Param('pinId') pinId: string,
-  ) {
+  @Delete('/api/admin/map-pins/:pinId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async deletePin(@Param('pinId') pinId: string) {
     return this.communityMapService.deletePin(pinId);
   }
 }

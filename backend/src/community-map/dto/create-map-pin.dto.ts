@@ -1,23 +1,7 @@
-import {
-  IsEnum,
-  IsMongoId,
-  IsNumber,
-  IsString,
-  Max,
-  Min,
-} from 'class-validator';
-import { PinType } from '../schemas/map-pin.schema';
+// src/community-map/dto/create-map-pin.dto.ts
+import { IsNumber, Max, Min } from 'class-validator';
 
 export class CreateMapPinDto {
-  @IsEnum(PinType)
-  type: PinType;
-
-  @IsMongoId()
-  ref_id: string;
-
-  @IsString()
-  label: string;
-
   @IsNumber()
   @Min(0)
   @Max(100)
