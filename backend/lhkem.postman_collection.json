@@ -1,0 +1,192 @@
+{
+	"info": {
+		"_postman_id": "b7fe26aa-94a3-4607-ab0c-2d04379e2f5c",
+		"name": "lhkem",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "45510683"
+	},
+	"item": [
+		{
+			"name": "communities",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"user_id\": \"000\",\r\n  \"firstname\": \"eiei\",\r\n  \"lastname\": \"ieie\",\r\n  \"password\": \"12345678\",\r\n  \"email\": \"e@example.com\",\r\n  \"phone\": \"11111111111\"\r\n}"
+				},
+				"url": {
+					"raw": "http://localhost:3000/communities",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"communities"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "community",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"โหล่งฮิมคาวชุมชนแห่งความสุข\",\r\n  \"history\": \"โหล่งฮิมคาว มีที่ตั้งอยู่ที่บ้านมอญ ตำบลสันกลาง อำเภอสันกำแพง จังหวัดเชียงใหม่คำว่า “โหล่ง” แปลว่า ย่าน ชุมชน หรือที่พื้นที่ว่างกว้าง ส่วนคำว่า “ฮิมคาว” คือ ริมคาว ซึ่ง “คาว” มาจากแม่น้ำคาว ทำให้ความหมายของโหล่งฮิมคาวคือชุมชนริมแม่น้ำคาว ชัชวาลย์ ทองดีเลิศ ประธานชุมชนโหล่งฮิมคาวและเป็นผู้ก่อตั้งโฮงเฮียนสืบสานภูมิปัญญาล้านนา เล่าว่า “จุดเริ่มต้นของชุมชนนี้ต้องย้อนกลับไปตั้งแต่ปี พ.ศ. 2529 สมัยรัฐบาลชาติชายตอนนั้นพื้นที่แถวนี้เป็นเพียงพื้นที่ป่าและนาเปล่า ๆ สำหรับเลี้ยงควายทั่วพื้นที่เป็นดินลูกรัง และถูกทิ้งให้รกร้าง ทำให้เกิดแนวคิดที่อยากจะสร้างพื้นที่สีเขียวจึงชักชวนเพื่อนคนที่รู้จักและรักในธรรมชาติ ศิลปะและวัฒนธรรม มาร่วมกันสร้างหมู่บ้าน และกลายเป็นชุมชนยอดฮิตของผู้ที่สนใจในงานฝีมือ วิถีชีวิต และวัฒนธรรมล้านนา”\",\r\n  \"hero_section\": {\r\n    \"title\": \"สัมผัสวิถี Slow Life ที่โหล่งฮิมคาว\",\r\n    \"description\": \"เริ่มต้นเรียนรู้งานหัตถกรรมพื้นบ้าน ย้อมผ้าครามธรรมชาติ ปั้นดิน ทำอาหารล้านนา กับช่างฝีมือในชุมชนริมแม่น้ำคาว สันกำแพง\"\r\n  },\r\n  \"cultural_highlights\": [\r\n    {\r\n        \"title\": \"เป็นมิตรกับสิ่งแวดล้อม\",\r\n        \"desc\": \"รักษาธรรมชาติอย่างยั่งยืน\"\r\n    },\r\n    {\r\n        \"title\": \"สืบสานวัฒนธรรม\",\r\n        \"desc\": \"เรียนรู้จากช่างฝีมือท้องถิ่นที่สืบทอดกันมาหลายชั่วอายุ\"\r\n    },\r\n    {\r\n        \"title\": \"ชุมชนเข้มแข็ง\",\r\n        \"desc\": \"รายได้ 100% กลับสู่ผู้ประกอบการในชุมชน\"\r\n    },\r\n    {\r\n        \"title\": \"Slow Life\",\r\n        \"desc\": \"หยุดพัก ผ่อนคลายและใช้เวลากับสิ่งที่ตัวเองรัก\"\r\n    }\r\n  ],\r\n  \"images\": [\r\n    \"https://ik.imagekit.io/496kiwiBird/lhkem/lhkem-profile.jpg?updatedAt=1767021132963\"\r\n  ],\r\n  \"videos\": [],\r\n  \"location\": {\r\n    \"address\": \"อ.สันกำแพง\",\r\n    \"province\": \"เชียงใหม่\",\r\n    \"coordinates\": {\r\n      \"lat\": 18.785231894713643, \r\n      \"lng\": 99.0477199711643\r\n    }\r\n  },\r\n  \"contact_info\": {\r\n    \"facebook\": \"โหล่งฮิมคาว\"\r\n  }\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/communities",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"communities"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "community",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/api/communities/695e99db7de3fed77f9bfb3f",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"communities",
+						"695e99db7de3fed77f9bfb3f"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "community",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/api/communities/695e9cde1a35d9d148027445",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"communities",
+						"695e9cde1a35d9d148027445"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "comm by slug",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"user_id\": \"000\",\r\n  \"firstname\": \"eiei\",\r\n  \"lastname\": \"ieie\",\r\n  \"password\": \"12345678\",\r\n  \"email\": \"e@example.com\",\r\n  \"phone\": \"11111111111\"\r\n}"
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/communities/loeng-him-kaw",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"communities",
+						"loeng-him-kaw"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "top workshops",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/api/communities/6952c7d7a6db8eb05e1908ed/workshops?limit=3",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"communities",
+						"6952c7d7a6db8eb05e1908ed",
+						"workshops"
+					],
+					"query": [
+						{
+							"key": "limit",
+							"value": "3"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "community",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n        \"hero_section\": {\r\n            \"title\": \"สัมผัสวิถี Slow Life ที่โหล่งฮิมคาว\",\r\n            \"title_en\": \"Experience the Slow Life way at Long Him Khao\",\r\n            \"description\": \"เริ่มต้นเรียนรู้งานหัตถกรรมพื้นบ้าน ย้อมผ้าครามธรรมชาติ ปั้นดิน ทำอาหารล้านนา กับช่างฝีมือในชุมชนริมแม่น้ำคาว สันกำแพง\",\r\n            \"description_en\": \"Start learning about local handicrafts. Dyeing natural indigo cloth, sculpting clay, making Lanna food with artisans in the community along the Khao River, San Kamphaeng\"\r\n        }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/communities/695e9cde1a35d9d148027445",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"communities",
+						"695e9cde1a35d9d148027445"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

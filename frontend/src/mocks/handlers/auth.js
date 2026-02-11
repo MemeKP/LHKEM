@@ -65,7 +65,7 @@ export const authHandlers = [
   http.post(`${API_BASE}/auth/verify-otp`, async ({ request }) => {
     await delay(300);
     
-    const { email, otp } = await request.json();
+    const { otp } = await request.json();
     
     if (otp === '123456') {
       return HttpResponse.json({

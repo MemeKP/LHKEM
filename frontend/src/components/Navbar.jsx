@@ -1,29 +1,55 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Globe, User, Settings, LogOut, LayoutDashboard, Store, Users, Shield } from 'lucide-react';
+import { Menu, X, Globe, User, Settings, LogOut, LayoutDashboard, Store, Users, Shield, ChevronDown } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useAuth } from '../hooks/useAuth';
+import { getLogo } from '../utils/getLogo';
+import axios from 'axios';
 
-const Navbar = () => {
+const Navbar = ({ community }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const { language, toggleLanguage, t } = useTranslation();
+  const [isCommunityMenuOpen, setIsCommunityMenuOpen] = useState(false);
+  const [communities, setCommunities] = useState([]);
+  const { language, toggleLanguage, t, ct} = useTranslation();
   const { user, isAuthenticated, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const userMenuRef = useRef(null);
-  
-  const isActive = (path) => location.pathname === path;
+  const communityMenuRef = useRef(null);
+
+  // const isActive = (path) => location.pathname === path;
+  const isActive = (path) => {
+    const fullPath = path === '' ? `/${community.slug}` : `/${community.slug}/${path}`;
+    if (path === '') {
+      return location.pathname === fullPath || location.pathname === `${fullPath}/`;
+    }
+    return location.pathname.startsWith(fullPath);
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setIsUserMenuOpen(false);
       }
+      if (communityMenuRef.current && !communityMenuRef.current.contains(event.target)) {
+        setIsCommunityMenuOpen(false);
+      }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const fetchCommunities = async () => {
+      try {
+        const response = await axios.get('/communities');
+        setCommunities(response.data);
+      } catch (error) {
+        console.error('Failed to fetch communities:', error);
+      }
+    };
+    fetchCommunities();
   }, []);
 
   const handleLogout = () => {
@@ -33,37 +59,36 @@ const Navbar = () => {
   };
 
   const getUserDisplayName = () => {
-    if (user?.firstName) {
-      return `${user.firstName} ${user.lastName || ''}`;
-    }
-    return user?.email?.split('@')[0] || 'User';
+    const first =
+      (user && (user.firstName || user.firstname)) ||
+      null;
+    return first || (user?.email?.split('@')[0] || 'User');
   };
 
   const getRoleSpecificMenuItems = () => {
     const role = user?.role;
-    
+
     if (role === 'SHOP_OWNER') {
       return [
         { to: '/shop/dashboard', icon: LayoutDashboard, label: t('nav.shopDashboard') },
-        { to: '/shop/profile', icon: Store, label: t('nav.shopProfile') },
         { to: '/settings', icon: Settings, label: t('nav.settings') }
       ];
     }
-    
+
     if (role === 'COMMUNITY_ADMIN') {
       return [
-        { to: '/community/dashboard', icon: LayoutDashboard, label: t('nav.communityDashboard') },
+        { to: '/community-admin/dashboard', icon: LayoutDashboard, label: t('nav.communityDashboard') },
         { to: '/settings', icon: Settings, label: t('nav.settings') }
       ];
     }
-    
+
     if (role === 'PLATFORM_ADMIN') {
       return [
         { to: '/admin/dashboard', icon: Shield, label: t('nav.adminDashboard') },
         { to: '/settings', icon: Settings, label: t('nav.settings') }
       ];
     }
-    
+
     // Default for TOURIST
     return [
       { to: '/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
@@ -75,62 +100,120 @@ const Navbar = () => {
     <nav className="bg-white shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="p-2 rounded-full" style={{ backgroundColor: '#111827' }}>
-              <span className="text-white font-bold text-sm">LHK</span>
+          <Link to={`/`} className="flex items-center space-x-2" >
+            <div className="bg-gray-900 p-2 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-sm">
+                {getLogo(community)}
+              </span>
             </div>
             <div className="flex flex-col">
-              <span className="font-semibold text-sm" style={{ color: '#111827' }}>{t('nav.logoTitle')}</span>
-              <span className="text-xs" style={{ color: '#6b7280' }}>{t('nav.logoSubtitle')}</span>
+              <span className="font-semibold text-sm" style={{ color: '#111827' }}>{ct(community.name, community.name_en)}</span>
+              <span className="text-xs" style={{ color: '#6b7280' }}>{ct(community.name, community.name_en)}</span>
             </div>
           </Link>
 
           <div className="hidden md:flex items-center space-x-8">
             <Link
-              to="/"
-              className={`font-medium transition-colors border-b-2 pb-1 ${isActive('/') ? '' : 'border-transparent'}`}
-              style={{ 
-                color: isActive('/') ? '#111827' : '#4b5563',
-                borderColor: isActive('/') ? '#ea580c' : 'transparent'
+              to={`/${community.slug}`}
+              className={`font-medium transition-colors border-b-2 pb-1 ${isActive('') ? '' : 'border-transparent'}`}
+              style={{
+                color: isActive('') ? '#111827' : '#4b5563',
+                borderColor: isActive('') ? '#ea580c' : 'transparent'
               }}
               onMouseEnter={(e) => e.currentTarget.style.color = '#ea580c'}
-              onMouseLeave={(e) => e.currentTarget.style.color = isActive('/') ? '#111827' : '#4b5563'}
+              onMouseLeave={(e) => e.currentTarget.style.color = isActive('') ? '#111827' : '#4b5563'}
             >
               {t('nav.home')}
             </Link>
+
+            {communities.length > 1 && (
+              <div className="relative" ref={communityMenuRef}>
+                <button
+                  onClick={() => setIsCommunityMenuOpen(!isCommunityMenuOpen)}
+                  className={`font-medium transition-colors border-b-2 pb-1 ${isCommunityMenuOpen ? '' : 'border-transparent'}`}
+                  style={{
+                    color: isCommunityMenuOpen ? '#111827' : '#4b5563',
+                    borderColor: isCommunityMenuOpen ? '#ea580c' : 'transparent'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#ea580c'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = isCommunityMenuOpen ? '#111827' : '#4b5563'}
+                >
+                  {t('nav.communities') || 'ชุมชน'}
+                </button>
+
+                {isCommunityMenuOpen && (
+                  <div className="absolute left-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 animate-slideDown">
+                    <div className="px-4 py-2 border-b border-gray-200">
+                      <p className="text-xs font-semibold text-gray-500">{t('nav.selectCommunity') || 'เลือกชุมชน'}</p>
+                    </div>
+                    {communities.map((comm) => (
+                      <Link
+                        key={comm._id}
+                        to={`/${comm.slug}`}
+                        onClick={() => {
+                          setIsCommunityMenuOpen(false);
+                        }}
+                        className={`block px-4 py-2.5 transition-colors ${
+                          comm._id === community._id ? 'bg-orange-50' : ''
+                        }`}
+                        style={{ 
+                          color: comm._id === community._id ? '#ea580c' : '#374151'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (comm._id !== community._id) {
+                            e.currentTarget.style.backgroundColor = '#f3f4f6';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (comm._id !== community._id) {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                          }
+                        }}
+                      >
+                        <div className="font-medium">{comm.name}</div>
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          {comm.location?.province || ''} {comm.location?.district || ''}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             <Link
-              to="/workshops"
-              className={`font-medium transition-colors border-b-2 pb-1 ${isActive('/workshops') ? '' : 'border-transparent'}`}
-              style={{ 
-                color: isActive('/workshops') ? '#111827' : '#4b5563',
-                borderColor: isActive('/workshops') ? '#ea580c' : 'transparent'
+              to={`/${community.slug}/workshops`}
+              className={`font-medium transition-colors border-b-2 pb-1 ${isActive('workshops') ? '' : 'border-transparent'}`}
+              style={{
+                color: isActive('workshops') ? '#111827' : '#4b5563',
+                borderColor: isActive('workshops') ? '#ea580c' : 'transparent'
               }}
               onMouseEnter={(e) => e.currentTarget.style.color = '#ea580c'}
-              onMouseLeave={(e) => e.currentTarget.style.color = isActive('/workshops') ? '#111827' : '#4b5563'}
+              onMouseLeave={(e) => e.currentTarget.style.color = isActive('workshops') ? '#111827' : '#4b5563'}
             >
               {t('nav.workshops')}
             </Link>
             <Link
-              to="/map"
-              className={`font-medium transition-colors border-b-2 pb-1 ${isActive('/map') ? '' : 'border-transparent'}`}
-              style={{ 
-                color: isActive('/map') ? '#111827' : '#4b5563',
-                borderColor: isActive('/map') ? '#ea580c' : 'transparent'
+              to={`/${community.slug}/map`}
+              className={`font-medium transition-colors border-b-2 pb-1 ${isActive('map') ? '' : 'border-transparent'}`}
+              style={{
+                color: isActive('map') ? '#111827' : '#4b5563',
+                borderColor: isActive('map') ? '#ea580c' : 'transparent'
               }}
               onMouseEnter={(e) => e.currentTarget.style.color = '#ea580c'}
-              onMouseLeave={(e) => e.currentTarget.style.color = isActive('/map') ? '#111827' : '#4b5563'}
+              onMouseLeave={(e) => e.currentTarget.style.color = isActive('map') ? '#111827' : '#4b5563'}
             >
               {t('nav.map')}
             </Link>
             <Link
-              to="/about"
-              className={`font-medium transition-colors border-b-2 pb-1 ${isActive('/about') ? '' : 'border-transparent'}`}
-              style={{ 
-                color: isActive('/about') ? '#111827' : '#4b5563',
-                borderColor: isActive('/about') ? '#ea580c' : 'transparent'
+              to={`/${community.slug}/about`}
+              className={`font-medium transition-colors border-b-2 pb-1 ${isActive('about') ? '' : 'border-transparent'}`}
+              style={{
+                color: isActive('about') ? '#111827' : '#4b5563',
+                borderColor: isActive('about') ? '#ea580c' : 'transparent'
               }}
               onMouseEnter={(e) => e.currentTarget.style.color = '#ea580c'}
-              onMouseLeave={(e) => e.currentTarget.style.color = isActive('/about') ? '#111827' : '#4b5563'}
+              onMouseLeave={(e) => e.currentTarget.style.color = isActive('about') ? '#111827' : '#4b5563'}
             >
               {t('nav.about')}
             </Link>
@@ -147,7 +230,7 @@ const Navbar = () => {
               <Globe className="h-4 w-4" />
               <span className="text-sm font-medium">{language} / {language === 'TH' ? 'EN' : 'TH'}</span>
             </button>
-            
+
             {isAuthenticated ? (
               <div className="relative" ref={userMenuRef}>
                 <button
@@ -160,9 +243,9 @@ const Navbar = () => {
                   <User className="h-5 w-5" />
                   <span>{getUserDisplayName()}</span>
                 </button>
-                
+
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 animate-slideDown">
                     <div className="px-4 py-2 border-b border-gray-200">
                       <p className="text-xs text-gray-500">{t('nav.signedInAs')}</p>
                       <p className="text-sm font-semibold text-gray-900 truncate">{user?.email}</p>
@@ -173,7 +256,7 @@ const Navbar = () => {
                         {user?.role === 'TOURIST' && t('nav.roleTourist')}
                       </p>
                     </div>
-                    
+
                     {getRoleSpecificMenuItems().map((item, index) => {
                       const Icon = item.icon;
                       return (
@@ -197,7 +280,7 @@ const Navbar = () => {
                         </Link>
                       );
                     })}
-                    
+
                     <div className="border-t border-gray-200 my-2"></div>
                     <button
                       onClick={handleLogout}
@@ -250,7 +333,7 @@ const Navbar = () => {
             <Link
               to="/"
               className={`block font-medium transition-colors ${isActive('/') ? 'border-l-4 pl-3' : 'pl-4'}`}
-              style={{ 
+              style={{
                 color: isActive('/') ? '#ea580c' : '#111827',
                 borderColor: isActive('/') ? '#ea580c' : 'transparent'
               }}
@@ -263,7 +346,7 @@ const Navbar = () => {
             <Link
               to="/workshops"
               className={`block font-medium transition-colors ${isActive('/workshops') ? 'border-l-4 pl-3' : 'pl-4'}`}
-              style={{ 
+              style={{
                 color: isActive('/workshops') ? '#ea580c' : '#4b5563',
                 borderColor: isActive('/workshops') ? '#ea580c' : 'transparent'
               }}
@@ -276,7 +359,7 @@ const Navbar = () => {
             <Link
               to="/map"
               className={`block font-medium transition-colors ${isActive('/map') ? 'border-l-4 pl-3' : 'pl-4'}`}
-              style={{ 
+              style={{
                 color: isActive('/map') ? '#ea580c' : '#4b5563',
                 borderColor: isActive('/map') ? '#ea580c' : 'transparent'
               }}
@@ -289,7 +372,7 @@ const Navbar = () => {
             <Link
               to="/about"
               className={`block font-medium transition-colors ${isActive('/about') ? 'border-l-4 pl-3' : 'pl-4'}`}
-              style={{ 
+              style={{
                 color: isActive('/about') ? '#ea580c' : '#4b5563',
                 borderColor: isActive('/about') ? '#ea580c' : 'transparent'
               }}
@@ -308,7 +391,7 @@ const Navbar = () => {
                 <Globe className="h-4 w-4" />
                 <span className="text-sm font-medium">{language} / {language === 'TH' ? 'EN' : 'TH'}</span>
               </button>
-              
+
               {isAuthenticated ? (
                 <>
                   <div className="pl-4 py-2 font-medium" style={{ color: '#111827' }}>

@@ -25,7 +25,7 @@ export class AuthService {
 
     // 3. สร้าง JWT payload
     const payload = {
-      sub: user.user_id, // ใช้ user_id ตาม SRS
+      sub: user.user_id.toString(), // ใช้ _id จากmongodbแทนuserId แก้ปัญหาหาobjecytIdไม่เจอ
       role: user.role,
     };
 

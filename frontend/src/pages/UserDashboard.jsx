@@ -135,7 +135,7 @@ const UserDashboard = () => {
             {t('dashboard.title')}
           </h1>
           <p className="text-gray-600">
-            {t('dashboard.welcome')}, {user?.firstName || user?.email}
+            {t('dashboard.welcome')}, {user?.firstName || user?.firstname || user?.email}
           </p>
         </div>
 

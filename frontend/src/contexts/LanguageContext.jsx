@@ -1,8 +1,7 @@
-import { createContext, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import th from '../locales/th.json';
 import en from '../locales/en.json';
-
-export const LanguageContext = createContext();
+import { LanguageContext } from './LanguageContextBase';
 
 export const LanguageProvider = ({ children }) => {
   const [language, setLanguage] = useState(() => {
@@ -33,8 +32,15 @@ export const LanguageProvider = ({ children }) => {
     return value || key;
   };
 
+  const ct = (th, en) => {
+    if (language === 'EN') {
+      return en || th
+    }
+    return th;
+  }
+
   return (
-    <LanguageContext.Provider value={{ language, toggleLanguage, t }}>
+    <LanguageContext.Provider value={{ language, toggleLanguage, t , ct}}>
       {children}
     </LanguageContext.Provider>
   );

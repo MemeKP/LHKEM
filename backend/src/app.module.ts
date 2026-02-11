@@ -8,6 +8,10 @@ import { CommunitiesModule } from './communities/communities.module';
 import { EventsModule } from './events/events.module';
 import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
+import { WorkshopsModule } from './workshops/workshops.module';
+import { ShopsModule } from './shops/shops.module';
+import { WorkshopregistrationsModule } from './workshopregistrations/workshopregistrations.module';
+import { CommunityMapModule } from './community-map/community-map.module';
 
 @Module({
   imports: [
@@ -22,6 +26,10 @@ import { AuthModule } from './auth/auth.module';
     EventsModule,
     AdminModule,
     AuthModule,
+    WorkshopsModule,
+    ShopsModule,
+    WorkshopregistrationsModule,
+    CommunityMapModule,
   ],
   controllers: [AppController],
   providers: [AppService],
