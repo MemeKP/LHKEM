@@ -12,6 +12,7 @@ import { ShopsModule } from './shops/shops.module';
 import { WorkshopregistrationsModule } from './workshopregistrations/workshopregistrations.module';
 import { CommunityAdminModule } from './community-admin/community-admin.module';
 import { CommunityMapModule } from './community-map/community-map.module';
+import { PlatformAdminModule } from './platform-admin/platform-admin.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { CommunityMapModule } from './community-map/community-map.module';
     WorkshopregistrationsModule,
     CommunityAdminModule,
     CommunityMapModule,
+    PlatformAdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],

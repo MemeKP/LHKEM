@@ -2,109 +2,150 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, TrendingUp, Heart, Calendar, Plus, MapPin, Store, User as UserIcon, ChevronRight } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
+import api from '../../services/api';
+import { useQuery } from '@tanstack/react-query';
+
+const fetchDashboardData = async () => {
+  const res = await api.get('/api/platform-admin/dashboard')
+  return res.data;
+}
+
+const usePlatformDashboard = () => {
+  return useQuery({
+    queryKey: ['platform-dashboard'],
+    queryFn: fetchDashboardData,
+    refetchInterval: 30000, // re ทุกๆ 30 วิ
+  })
+}
 
 const PlatformDashboard = () => {
+  const { data, isLoading, error } = usePlatformDashboard();
   const { ct } = useTranslation();
   const navigate = useNavigate();
-  const [communities, setCommunities] = useState([]);
-  const [stats, setStats] = useState({
-    totalCommunities: 4,
-    newCommunities: 4,
-    totalParticipants: 161,
-    totalEvents: 74
-  });
-  const [activities, setActivities] = useState([]);
+  // const [communities, setCommunities] = useState([]);
+  // const [stats, setStats] = useState({
+  //   totalCommunities: 4,
+  //   newCommunities: 4,
+  //   totalParticipants: 161,
+  //   totalEvents: 74
+  // });  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#FAF8F3]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+      </div>
+    );
+  }
+  if (error || !data) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#FAF8F3]">
+        <div className="text-center text-red-500">
+          <p>เกิดข้อผิดพลาดในการโหลดข้อมูล</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 text-orange-500 underline"
+          >
+            ลองใหม่
+          </button>
+        </div>
+      </div>
+    );
+  }
+  const { stats, communities, activities } = data;
+  
+  // const [activities, setActivities] = useState([]);
+  // useEffect(() => {
+  //   // Mock data for communities
+  //   const mockCommunities = [
+  //     {
+  //       id: '1',
+  //       name: 'ชุมชนโหล่งฮิมคาว',
+  //       location: 'เชียงใหม่',
+  //       image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400',
+  //       stats: { shops: 25, members: 20 },
+  //       status: 'NEW'
+  //     },
+  //     {
+  //       id: '2',
+  //       name: 'ชุมชนหัตถกรรมท้องถิ่น',
+  //       location: 'ปัว',
+  //       image: 'https://images.unsplash.com/photo-1582719471137-c3967ffb1c42?w=400',
+  //       stats: { shops: 42, members: 13 },
+  //       status: 'NEW'
+  //     },
+  //     {
+  //       id: '3',
+  //       name: 'ชุมชนเกษตรอินทรีย์',
+  //       location: 'ภูเก็ต',
+  //       image: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=400',
+  //       stats: { shops: 75, members: 114 },
+  //       status: null
+  //     },
+  //     {
+  //       id: '4',
+  //       name: 'ชุมชนตลาดท้องถิ่น',
+  //       location: 'เชียงราย',
+  //       image: 'https://images.unsplash.com/photo-1567696911980-2eed69a46042?w=400',
+  //       stats: { shops: 48, members: 75 },
+  //       status: 'NEW'
+  //     }
+  //   ];
 
-  useEffect(() => {
-    // Mock data for communities
-    const mockCommunities = [
-      {
-        id: '1',
-        name: 'ชุมชนโหล่งฮิมคาว',
-        location: 'เชียงใหม่',
-        image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400',
-        stats: { shops: 25, members: 20 },
-        status: 'NEW'
-      },
-      {
-        id: '2',
-        name: 'ชุมชนหัตถกรรมท้องถิ่น',
-        location: 'ปัว',
-        image: 'https://images.unsplash.com/photo-1582719471137-c3967ffb1c42?w=400',
-        stats: { shops: 42, members: 13 },
-        status: 'NEW'
-      },
-      {
-        id: '3',
-        name: 'ชุมชนเกษตรอินทรีย์',
-        location: 'ภูเก็ต',
-        image: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=400',
-        stats: { shops: 75, members: 114 },
-        status: null
-      },
-      {
-        id: '4',
-        name: 'ชุมชนตลาดท้องถิ่น',
-        location: 'เชียงราย',
-        image: 'https://images.unsplash.com/photo-1567696911980-2eed69a46042?w=400',
-        stats: { shops: 48, members: 75 },
-        status: 'NEW'
-      }
-    ];
+  //   const mockActivities = [
+  //     {
+  //       id: 1,
+  //       type: 'shop',
+  //       message: 'ร้านใหม่ได้ เข้าร่วมชุมชนโหล่งฮิมคาว',
+  //       time: '15 นาทีที่แล้ว',
+  //       icon: Store,
+  //       color: 'orange'
+  //     },
+  //     {
+  //       id: 2,
+  //       type: 'workshop',
+  //       message: 'Workshop "การทำเซรามิก" ยกเลิกโดยเจ้าของร้านโหล่งฮิมคาว',
+  //       time: '1 ชั่วโมงที่แล้ว',
+  //       icon: Calendar,
+  //       color: 'green'
+  //     },
+  //     {
+  //       id: 3,
+  //       type: 'event',
+  //       message: 'Event "จะเปิดตัวเมือง" ยกเลิกโดยชุมชนโหล่งฮิมคาว',
+  //       time: '2 ชั่วโมงที่แล้ว',
+  //       icon: Calendar,
+  //       color: 'orange'
+  //     },
+  //     {
+  //       id: 4,
+  //       type: 'member',
+  //       message: 'สมาชิก 5 คน เข้าร่วมชุมชนโหล่งฮิมคาว',
+  //       time: '3 ชั่วโมงที่แล้ว',
+  //       icon: UserIcon,
+  //       color: 'orange'
+  //     },
+  //     {
+  //       id: 5,
+  //       type: 'shop',
+  //       message: 'ร้านใหม่ "ชุมชนท้องถิ่น" ยกเลิกโดยชุมชนโหล่งฮิมคาว',
+  //       time: '3 ชั่วโมงที่แล้ว',
+  //       icon: Store,
+  //       color: 'orange'
+  //     }
+  //   ];
 
-    const mockActivities = [
-      {
-        id: 1,
-        type: 'shop',
-        message: 'ร้านใหม่ได้ เข้าร่วมชุมชนโหล่งฮิมคาว',
-        time: '15 นาทีที่แล้ว',
-        icon: Store,
-        color: 'orange'
-      },
-      {
-        id: 2,
-        type: 'workshop',
-        message: 'Workshop "การทำเซรามิก" ยกเลิกโดยเจ้าของร้านโหล่งฮิมคาว',
-        time: '1 ชั่วโมงที่แล้ว',
-        icon: Calendar,
-        color: 'green'
-      },
-      {
-        id: 3,
-        type: 'event',
-        message: 'Event "จะเปิดตัวเมือง" ยกเลิกโดยชุมชนโหล่งฮิมคาว',
-        time: '2 ชั่วโมงที่แล้ว',
-        icon: Calendar,
-        color: 'orange'
-      },
-      {
-        id: 4,
-        type: 'member',
-        message: 'สมาชิก 5 คน เข้าร่วมชุมชนโหล่งฮิมคาว',
-        time: '3 ชั่วโมงที่แล้ว',
-        icon: UserIcon,
-        color: 'orange'
-      },
-      {
-        id: 5,
-        type: 'shop',
-        message: 'ร้านใหม่ "ชุมชนท้องถิ่น" ยกเลิกโดยชุมชนโหล่งฮิมคาว',
-        time: '3 ชั่วโมงที่แล้ว',
-        icon: Store,
-        color: 'orange'
-      }
-    ];
+  //   setCommunities(mockCommunities);
+  //   setActivities(mockActivities);
+  // }, []);
+console.log('Frontend received:', data);
 
-    setCommunities(mockCommunities);
-    setActivities(mockActivities);
-  }, []);
 
   const StatCard = ({ icon: Icon, value, label, color = 'orange' }) => (
     <div className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between">
         <div>
           <p className={`text-3xl font-bold ${color === 'green' ? 'text-green-600' : 'text-orange-500'}`}>
-            {value}
+            {value.toLocaleString()}
           </p>
           <p className="text-sm text-gray-600 mt-1">{label}</p>
         </div>
