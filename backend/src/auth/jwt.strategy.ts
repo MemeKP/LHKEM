@@ -26,9 +26,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   // ✅ normalize req.user ให้ชัด
   return {
-    userId: user._id.toString(), // ⭐ ใช้ field นี้เป็นหลัก
+    userId: user.user_id, // ⭐ ใช้ user_id เป็นหลัก
     role: user.role,
-    email: user.email,           // (optional)
+    email: user.email,
   };
 }
 

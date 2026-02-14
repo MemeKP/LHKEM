@@ -34,7 +34,16 @@ const Register = () => {
     };
     const res = await register(payload);
     if (res.success) {
-      navigate('/dashboard');
+      // Redirect based on role
+      if (formData.role === 'SHOP_OWNER') {
+        navigate('/loeng-him-kaw/shop/dashboard'); // Default community
+      } else if (formData.role === 'COMMUNITY_ADMIN') {
+        navigate('/community-admin/dashboard');
+      } else if (formData.role === 'PLATFORM_ADMIN') {
+        navigate('/platform-admin/dashboard');
+      } else {
+        navigate('/'); // TOURIST goes to landing page
+      }
     } else {
       alert(res.message || t('common.error'));
     }
@@ -52,7 +61,7 @@ const Register = () => {
       {/* Left Side - Image */}
       <div className="hidden lg:flex lg:w-1/2 relative">
         <img
-          src="/path/to/register-image.jpg"
+          src="/images/login_bg.jpg"
           alt={t('auth.communityName')}
           className="w-full h-full object-cover"
         />

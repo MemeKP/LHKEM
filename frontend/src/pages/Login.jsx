@@ -87,7 +87,7 @@ const Login = () => {
       {/* Left Side - Image */}
       <div className="hidden lg:flex lg:w-1/2 relative">
         <img
-          src="/path/to/login-image.jpg"
+          src="/images/login_bg.jpg"
           alt={t('auth.communityName')}
           className="w-full h-full object-cover"
         />
