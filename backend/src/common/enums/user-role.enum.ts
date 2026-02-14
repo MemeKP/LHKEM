@@ -1,5 +1,6 @@
 export enum UserRole {
   TOURIST = 'TOURIST',
   SHOP = 'SHOP',
-  ADMIN = 'ADMIN',
+  ADMIN = 'COMMUNITY_ADMIN',
+  PLATFORM_ADMIN = 'PLATFORM_ADMIN',
 }
