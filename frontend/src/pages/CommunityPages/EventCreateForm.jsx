@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, MapPin, Users, DollarSign, Save, Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Calendar, MapPin, Users, DollarSign, Save, Upload, X, Image as ImageIcon, Variable } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
+import api from '../../services/api';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 /**
  * Event Create Form - ใช้ Backend API ที่มีอยู่แล้ว
@@ -22,8 +24,29 @@ import { useTranslation } from '../../hooks/useTranslation';
  * - is_pinned (boolean)
  * - images (string) - TODO: รอ Image Upload API
  */
+const createEventAPI = async (payload) => {
+  const response = await api.post('/api/events', payload);
+  return response.data;
+};
+
+const useCreateEvent = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createEventAPI,
+    onSuccess: (data) => {
+      console.log("Event Created for Community:", data.community_id);
+      
+      if (data?.community_id) {
+        queryClient.invalidateQueries({ queryKey: ['events', 'pending'] }); 
+        queryClient.invalidateQueries({ queryKey: ['events', data.community_id] }); 
+      }
+    },
+  });
+};
 
 const EventCreateForm = () => {
+  const { mutateAsync: createEvent } = useCreateEvent();
   const { user } = useAuth();
   const { ct } = useTranslation();
   const navigate = useNavigate();
@@ -52,31 +75,75 @@ const EventCreateForm = () => {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  /*const handleSubmit = async (e) => {
+  e.preventDefault();
+  // setLoading(true);
 
-    try {
-      // TODO: เรียก API - POST /api/events/:community_id/events
-      // ✅ Backend API พร้อมใช้งาน
-      // const response = await api.post(`/api/events/${user.community_id}/events`, {
-      //   ...formData,
-      //   seat_limit: parseInt(formData.seat_limit),
-      //   deposit_amount: formData.deposit_amount ? parseFloat(formData.deposit_amount) : 0,
-      // });
+  if (!formData.start_at || !formData.end_at) {
+    alert("กรุณาระบุวันและเวลา");
+    return;
+  }
+
+  try {
+    await createEvent({
+      data: {
+        ...formData,
+        seat_limit: parseInt(formData.seat_limit),
+        deposit_amount: formData.deposit_amount
+          ? parseFloat(formData.deposit_amount)
+          : 0,
+      },
+    });
+
+    alert('สร้าง Event สำเร็จ!');
+    navigate('/community-admin/dashboard');
+  } catch (error) {
+    console.error('Failed to create event:', error);
+    alert('เกิดข้อผิดพลาดในการสร้าง Event');
+  } finally {
+    setLoading(false);
+  }
+};*/
+
+const handleSubmit = async (e) => {
+  e.preventDefault();  
+  if (!formData.start_at || !formData.end_at) {
+    alert("กรุณาระบุวันและเวลา");
+    return;
+  }
+  try {
+    const payload = {
+      ...formData,
       
-      console.log('Form data to submit:', formData);
+      seat_limit: parseInt(formData.seat_limit) || 1,
+      deposit_amount: formData.deposit_amount ? parseFloat(formData.deposit_amount) : 0,
+
+      start_at: new Date(formData.start_at).toISOString(),
+      end_at: new Date(formData.end_at).toISOString(),
+
+      location: {
+        full_address: formData.location || "ไม่ระบุ",
+        province: "Chiang Mai", // mock ไว้ก่อน รอแมพ
+        coordinates: {
+          lat: 18.7883, // mock ไว้ก่อน รอแมพ
+          lng: 98.9853
+        }
+      },
       
-      // TODO: แสดง success message
-      alert('สร้าง Event สำเร็จ!');
-      navigate('/community-admin/dashboard');
-    } catch (error) {
-      console.error('Failed to create event:', error);
-      alert('เกิดข้อผิดพลาดในการสร้าง Event');
-    } finally {
-      setLoading(false);
-    }
-  };
+      // mock เหมือนกัน
+      images: "https://placehold.co/600x400?text=Event+Image",
+    };
+    console.log("Sending Payload:", payload); 
+
+    await createEvent(payload);
+    alert('สร้าง Event สำเร็จ!');
+    navigate('/community-admin/dashboard');
+  } catch (error) {
+    console.error('Failed to create event:', error);
+    const msg = error?.response?.data?.message;
+    alert(`เกิดข้อผิดพลาด: ${Array.isArray(msg) ? msg.join('\n') : msg}`);
+  }
+};
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];

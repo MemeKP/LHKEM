@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Store, FileText, Users, Eye, AlertCircle, CheckCircle, XCircle, Edit, Plus, List } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useQuery } from '@tanstack/react-query';
+import api from '../../services/api';
 
 /**
  * Admin Dashboard - ศูนย์รวมการจัดการชุมชน (หน้าหลัก)
@@ -14,18 +16,44 @@ import { useTranslation } from '../../hooks/useTranslation';
  * - GET /api/shops/pending?community_id=xxx
  */
 
+ const usePendingData = () => {
+  // shop
+  // workshop
+
+  // event
+  const eventsQuery = useQuery({
+    queryKey: ['events', 'pending'],
+    queryFn: async () => (await api.get('/api/events/pending')).data,
+  });
+
+  return { eventsQuery };
+};
+
 const AdminDashboard = () => {
+  const { eventsQuery } = usePendingData();
   const navigate = useNavigate();
   const { ct } = useTranslation();
   const [activeTab, setActiveTab] = useState('workshops');
 
+  const isLoading = eventsQuery.isLoading;
+
+  if (isLoading) return <div className="p-8 text-center">กำลังโหลดข้อมูล...</div>;
+
+  const pendingEvents = eventsQuery.data || [];
+
+  const pendingCounts = {
+    events: pendingEvents.length,
+    // total: pendingWorkshops.length + pendingEvents.length + pendingShops.length
+  };
+
   // TODO: Fetch from API
+  /*
   const pendingCounts = {
     workshops: 2,
     events: 1,
     shops: 1,
     total: 4
-  };
+  };*/
 
   // Mock data - Workshop รออนุมัติ
   const pendingWorkshops = [
@@ -54,6 +82,7 @@ const AdminDashboard = () => {
   ];
 
   // Mock data - Event รออนุมัติ
+  /*
   const pendingEvents = [
     {
       id: 'e1',
@@ -66,7 +95,7 @@ const AdminDashboard = () => {
       submittedAt: '2024-01-14T09:15:00',
       status: 'รออนุมัติ'
     }
-  ];
+  ];*/
 
   // Mock data - ร้านค้ารออนุมัติ
   const pendingShops = [
@@ -87,10 +116,21 @@ const AdminDashboard = () => {
     { id: 'shops', label: ct('ร้านค้า', 'Shops'), count: pendingCounts.shops, icon: Store }
   ];
 
+  // const getStatusColor = (status) => {
+  //   if (status === 'รออนุมัติ') return 'bg-yellow-100 text-yellow-800';
+  //   if (status === 'อนุมัติแล้ว') return 'bg-green-100 text-green-800';
+  //   return 'bg-red-100 text-red-800';
+  // };
+
+  // Helper สำหรับสี Status
   const getStatusColor = (status) => {
-    if (status === 'รออนุมัติ') return 'bg-yellow-100 text-yellow-800';
-    if (status === 'อนุมัติแล้ว') return 'bg-green-100 text-green-800';
-    return 'bg-red-100 text-red-800';
+    // ปรับตาม enum ของ back (PENDING, APPROVED)
+    switch (status) {
+        case 'PENDING': return 'bg-yellow-100 text-yellow-800';
+        case 'APPROVED': return 'bg-green-100 text-green-800';
+        case 'REJECTED': return 'bg-red-100 text-red-800';
+        default: return 'bg-gray-100 text-gray-800';
+    }
   };
 
   return (

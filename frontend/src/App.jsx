@@ -36,6 +36,12 @@ import EventList from './pages/CommunityPages/EventList';
 import EventDetailPage from './pages/CommunityPages/EventDetailPage';
 import WorkshopPendingList from './pages/CommunityPages/WorkshopPendingList';
 import WorkshopApprovalPage from './pages/CommunityPages/WorkshopApprovalPage';
+import PlatformAdminLayout from './layouts/PlatformAdminLayout';
+import PlatformDashboard from './pages/PlatformAdminPages/PlatformDashboard';
+import PlatformOverview from './pages/PlatformAdminPages/PlatformOverview';
+import PlatformCommunityDetail from './pages/PlatformAdminPages/PlatformCommunityDetail';
+import PlatformCreateCommunity from './pages/PlatformAdminPages/PlatformCreateCommunity';
+import PlatformEditCommunity from './pages/PlatformAdminPages/PlatformEditCommunity';
 
 function App() {
   return (
@@ -46,6 +52,16 @@ function App() {
             {/* Landing Page - With SimpleLayout (Navbar but no community menus) */}
             <Route path="/" element={<SimpleLayout />}>
               <Route index element={<Landing />} />
+              <Route path="dashboard" element={
+                <ProtectedRoute>
+                  <UserDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="settings" element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              } />
             </Route>
             
             {/* Community Routes - With CommunityLayout */}
@@ -58,22 +74,22 @@ function App() {
               <Route path="shops" element={<Shops />} />
               <Route path="shops/:shopId" element={<ShopProfile />} />
               <Route path="about" element={<About />} />
-            </Route>
-            
-            {/* User/Admin Routes - With SimpleLayout */}
-            <Route path="/" element={<SimpleLayout />}>
+              
+              {/* User Dashboard - stays in community layout */}
               <Route path="dashboard" element={
                 <ProtectedRoute>
                   <UserDashboard />
                 </ProtectedRoute>
               } />
+              
+              {/* Settings - stays in community layout */}
               <Route path="settings" element={
                 <ProtectedRoute>
                   <Settings />
                 </ProtectedRoute>
               } />
               
-              {/* Shop Owner Routes */}
+              {/* Shop Owner Routes - in community context */}
               <Route path="shop/create" element={
                 <ProtectedRoute allowedRoles={['SHOP_OWNER']}>
                   <ShopCreate />
@@ -104,14 +120,8 @@ function App() {
                   <ShopWorkshopEdit />
                 </ProtectedRoute>
               } />
-              
-              {/* Community Admin Routes - Old API-connected Dashboard */}
-              <Route path="community/dashboard" element={
-                <ProtectedRoute>
-                  <OldCommunityDashboard />
-                </ProtectedRoute>
-              } />
             </Route>
+            
             
             {/* Community Admin Routes - With AdminLayoutWithNav (Navbar + Footer) */}
             <Route path="/community-admin" element={<AdminLayoutWithNav />}>
@@ -128,6 +138,11 @@ function App() {
               <Route path="settings" element={
                 <ProtectedRoute allowedRoles={['COMMUNITY_ADMIN']}>
                   <AdminCommunitySettings />
+                </ProtectedRoute>
+              } />
+              <Route path="account-settings" element={
+                <ProtectedRoute allowedRoles={['COMMUNITY_ADMIN']}>
+                  <Settings />
                 </ProtectedRoute>
               } />
               <Route path="workshops/:id/approve" element={
@@ -170,6 +185,40 @@ function App() {
               <Route path="workshops/:id" element={
                 <ProtectedRoute allowedRoles={['COMMUNITY_ADMIN']}>
                   <WorkshopApprovalPage />
+                </ProtectedRoute>
+              } />
+            </Route>
+            
+            {/* Platform Admin Routes - With PlatformAdminLayout */}
+            <Route path="/platform-admin" element={<PlatformAdminLayout />}>
+              <Route path="dashboard" element={
+                <ProtectedRoute allowedRoles={['PLATFORM_ADMIN']}>
+                  <PlatformDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="overview" element={
+                <ProtectedRoute allowedRoles={['PLATFORM_ADMIN']}>
+                  <PlatformOverview />
+                </ProtectedRoute>
+              } />
+              <Route path="communities/create" element={
+                <ProtectedRoute allowedRoles={['PLATFORM_ADMIN']}>
+                  <PlatformCreateCommunity />
+                </ProtectedRoute>
+              } />
+              <Route path="communities/:id" element={
+                <ProtectedRoute allowedRoles={['PLATFORM_ADMIN']}>
+                  <PlatformCommunityDetail />
+                </ProtectedRoute>
+              } />
+              <Route path="communities/:id/edit" element={
+                <ProtectedRoute allowedRoles={['PLATFORM_ADMIN']}>
+                  <PlatformEditCommunity />
+                </ProtectedRoute>
+              } />
+              <Route path="settings" element={
+                <ProtectedRoute allowedRoles={['PLATFORM_ADMIN']}>
+                  <Settings />
                 </ProtectedRoute>
               } />
             </Route>

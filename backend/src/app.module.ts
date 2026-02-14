@@ -6,12 +6,13 @@ import { UsersModule } from './users/users.module';
 import { ConfigModule } from '@nestjs/config';
 import { CommunitiesModule } from './communities/communities.module';
 import { EventsModule } from './events/events.module';
-import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
 import { WorkshopsModule } from './workshops/workshops.module';
 import { ShopsModule } from './shops/shops.module';
 import { WorkshopregistrationsModule } from './workshopregistrations/workshopregistrations.module';
+import { CommunityAdminModule } from './community-admin/community-admin.module';
 import { CommunityMapModule } from './community-map/community-map.module';
+import { PlatformAdminModule } from './platform-admin/platform-admin.module';
 
 @Module({
   imports: [
@@ -24,12 +25,13 @@ import { CommunityMapModule } from './community-map/community-map.module';
     UsersModule,
     CommunitiesModule,
     EventsModule,
-    AdminModule,
     AuthModule,
     WorkshopsModule,
     ShopsModule,
     WorkshopregistrationsModule,
+    CommunityAdminModule,
     CommunityMapModule,
+    PlatformAdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],

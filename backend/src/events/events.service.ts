@@ -5,6 +5,13 @@ import { Model, Types } from 'mongoose';
 import { EventDocument, Event as EventSchema } from './schemas/event.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { EventStatus } from './events.types';
+import { User } from 'src/users/schemas/users.schema';
+
+type ParticipantWithUser = {
+  user: Types.ObjectId | User;
+  joined_at: Date;
+  status: string;
+};
 
 @Injectable()
 export class EventsService {
@@ -13,7 +20,7 @@ export class EventsService {
     private readonly eventModel: Model<EventDocument>,
   ) { }
 
-  async create(createEventDto: CreateEventDto, user_id: string, role: 'COMMUNITY_ADMIN', community_id: string): Promise<EventSchema> {
+  async create(createEventDto: CreateEventDto, user_id: string, role: string, community_id: string): Promise<EventSchema> {
     if (createEventDto.end_at < createEventDto.start_at) {
       throw new BadRequestException('End date must be after start date');
     }
@@ -40,8 +47,22 @@ export class EventsService {
     return this.eventModel.find();
   }
 
+  async findAllByCommunity(communityId: string) {
+    return this.eventModel
+      .find({ community_id: new Types.ObjectId(communityId) })
+      .sort({ created_at: -1 }) // เรียงจากใหม่ไปเก่า
+      .exec();
+  }
+
+  async findPending(communityId: string) {
+    return this.eventModel.find({
+      community_id: communityId,
+      status: 'PENDING' // 'DRAFT'
+    }).exec();
+  }
+
   async findOne(id: string): Promise<EventSchema> {
-    const event = await this.eventModel.findById(id).exec();
+    const event = await this.eventModel.findById(id).populate('created_by', 'firstname lastname email').exec();
     if (!event) {
       throw new NotFoundException(`Event with ID ${id} not found`);
     }
@@ -76,5 +97,49 @@ export class EventsService {
     } catch (error) {
       throw new InternalServerErrorException('Something wrong during deletion!' + error)
     }
+  }
+
+  async getParticipants(eventId: string) {
+    const event = await this.eventModel
+      .findById(eventId)
+      .populate({
+        path: 'participants.user',
+        select: 'firstname lastname email phone'
+      })
+      .exec();
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+    return (event.participants as ParticipantWithUser[])
+      .map(p => {
+        if (!p.user || typeof p.user === 'string') return null;
+
+        const user = p.user as User;
+
+        return {
+          id: user.user_id,
+          name: `${user.firstname} ${user.lastname}`,
+          email: user.email,
+          phone: user.phone ?? '-',
+          registered_at: p.joined_at,
+        };
+      })
+      .filter(Boolean);
+  }
+
+  async joinEvent(eventId: string, userId: string) {
+    return this.eventModel.findByIdAndUpdate(
+      eventId,
+      {
+        $push: {
+          participants: {
+            user: new Types.ObjectId(userId),
+            joined_at: new Date()
+          }
+        }
+      },
+      { new: true }
+    );
   }
 }

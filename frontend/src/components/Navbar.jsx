@@ -55,7 +55,17 @@ const Navbar = ({ community }) => {
   const handleLogout = () => {
     logout();
     setIsUserMenuOpen(false);
-    navigate('/');
+    // Stay on current page after logout if it's a public page
+    const currentPath = window.location.pathname;
+    const publicPaths = ['/', '/login', '/register'];
+    const isPublicOrCommunity = publicPaths.includes(currentPath) || 
+                                currentPath.match(/^\/[^\/]+/) && 
+                                !currentPath.match(/^\/(dashboard|settings|platform-admin|community-admin|shop)/);
+    
+    if (!isPublicOrCommunity) {
+      navigate('/');
+    }
+    // Otherwise stay on current page
   };
 
   const getUserDisplayName = () => {
@@ -68,10 +78,15 @@ const Navbar = ({ community }) => {
   const getRoleSpecificMenuItems = () => {
     const role = user?.role;
 
+    // Check if we're in a community context (has slug in URL)
+    // Match /slug or /slug/anything but NOT / or /dashboard or /settings
+    const isInCommunity = window.location.pathname.match(/^\/[^\/]+/) && 
+                          !window.location.pathname.match(/^\/(dashboard|settings|login|register|platform-admin|community-admin)/);
+
     if (role === 'SHOP_OWNER') {
       return [
-        { to: '/shop/dashboard', icon: LayoutDashboard, label: t('nav.shopDashboard') },
-        { to: '/settings', icon: Settings, label: t('nav.settings') }
+        { to: isInCommunity ? 'shop/dashboard' : `/${community?.slug || 'loeng-him-kaw'}/shop/dashboard`, icon: LayoutDashboard, label: t('nav.shopDashboard') },
+        { to: isInCommunity ? 'settings' : '/settings', icon: Settings, label: t('nav.settings') }
       ];
     }
 
@@ -80,21 +95,22 @@ const Navbar = ({ community }) => {
         { to: '/community-admin/dashboard', icon: LayoutDashboard, label: ct('จัดการข้อมูลชุมชน', 'Manage Community') },
         { to: '/community-admin/info', icon: Info, label: ct('ดูแดชบอร์ด', 'View Dashboard') },
         { to: '/community-admin/settings', icon: Cog, label: ct('ตั้งค่าชุมชน', 'Community Settings') },
-        { to: '/settings', icon: Settings, label: ct('(เป็นส่วนตัวรับเฉพาะนี้ Platform)', 'Account Settings') }
+        { to: isInCommunity ? 'settings' : '/settings', icon: Settings, label: ct('ตั้งค่าบัญชี', 'Account Settings') }
       ];
     }
 
     if (role === 'PLATFORM_ADMIN') {
       return [
-        { to: '/admin/dashboard', icon: Shield, label: t('nav.adminDashboard') },
-        { to: '/settings', icon: Settings, label: t('nav.settings') }
+        { to: '/platform-admin/dashboard', icon: LayoutDashboard, label: ct('แดชบอร์ดแพลตฟอร์ม', 'Platform Dashboard') },
+        { to: '/platform-admin/overview', icon: Shield, label: ct('ภาพรวมแพลตฟอร์ม', 'Platform Overview') },
+        { to: '/platform-admin/settings', icon: Settings, label: ct('ตั้งค่า', 'Settings') }
       ];
     }
 
     // Default for TOURIST
     return [
-      { to: '/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
-      { to: '/settings', icon: Settings, label: t('nav.settings') }
+      { to: isInCommunity ? 'dashboard' : '/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
+      { to: isInCommunity ? 'settings' : '/settings', icon: Settings, label: t('nav.settings') }
     ];
   };
 
@@ -259,6 +275,7 @@ const Navbar = ({ community }) => {
               <>
                 <Link
                   to="/login"
+                  state={{ from: location }}
                   className="font-medium transition-colors"
                   style={{ color: '#374151' }}
                   onMouseEnter={(e) => e.currentTarget.style.color = '#111827'}

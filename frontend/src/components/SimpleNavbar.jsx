@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Globe, User, Settings, LogOut, LayoutDashboard, Shield, Info, Cog, Store } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useAuth } from '../hooks/useAuth';
@@ -14,6 +14,7 @@ const SimpleNavbar = () => {
   const { language, toggleLanguage, t } = useTranslation();
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const userMenuRef = useRef(null);
 
   useEffect(() => {
@@ -29,7 +30,17 @@ const SimpleNavbar = () => {
   const handleLogout = () => {
     logout();
     setIsUserMenuOpen(false);
-    navigate('/');
+    // Stay on current page after logout if it's a public page
+    const currentPath = window.location.pathname;
+    const publicPaths = ['/', '/login', '/register'];
+    const isPublicOrCommunity = publicPaths.includes(currentPath) || 
+                                (currentPath.match(/^\/[^\/]+/) && 
+                                !currentPath.match(/^\/(dashboard|settings|platform-admin|community-admin|shop)/));
+    
+    if (!isPublicOrCommunity) {
+      navigate('/');
+    }
+    // Otherwise stay on current page
   };
 
   const getUserDisplayName = () => {
@@ -42,8 +53,11 @@ const SimpleNavbar = () => {
     const { ct } = useTranslation();
 
     if (role === 'SHOP_OWNER') {
+      // For Shop Owner on Landing Page, redirect to their community
+      // TODO: Get actual community slug from user data when backend is ready
+      const communitySlug = 'loeng-him-kaw'; // Default community for now
       return [
-        { to: '/shop/dashboard', icon: LayoutDashboard, label: t('nav.shopDashboard') },
+        { to: `/${communitySlug}/shop/dashboard`, icon: LayoutDashboard, label: t('nav.shopDashboard') },
         { to: '/settings', icon: Settings, label: t('nav.settings') }
       ];
     }
@@ -59,8 +73,9 @@ const SimpleNavbar = () => {
 
     if (role === 'PLATFORM_ADMIN') {
       return [
-        { to: '/admin/dashboard', icon: Shield, label: t('nav.adminDashboard') },
-        { to: '/settings', icon: Settings, label: t('nav.settings') }
+        { to: '/platform-admin/dashboard', icon: LayoutDashboard, label: ct('แดชบอร์ดแพลตฟอร์ม', 'Platform Dashboard') },
+        { to: '/platform-admin/overview', icon: Shield, label: ct('ภาพรวมแพลตฟอร์ม', 'Platform Overview') },
+        { to: '/platform-admin/settings', icon: Settings, label: ct('ตั้งค่า', 'Settings') }
       ];
     }
 
@@ -173,6 +188,7 @@ const SimpleNavbar = () => {
               <div className="flex items-center space-x-2">
                 <Link
                   to="/login"
+                  state={{ from: location }}
                   className="font-medium transition-colors px-4 py-2 rounded-full"
                   style={{ color: '#374151' }}
                   onMouseEnter={(e) => e.currentTarget.style.color = '#111827'}

@@ -40,8 +40,25 @@ export class Event {
     @Prop({ required: true })
     description: string;
 
-    @Prop({ required: true })
-    location: string;
+    @Prop({
+        type: {
+            full_address: { type: String, default: '' },
+            province: { type: String, default: '' },
+            coordinates: {
+                lat: { type: Number, default: 0 },
+                lng: { type: Number, default: 0 }
+            }
+        },
+        _id: false
+    })
+    location: {
+        full_address: string;
+        province: string;
+        coordinates: {
+            lat: number;
+            lng: number;
+        };
+    };
 
     @Prop({ required: true })
     start_at: Date;
@@ -74,6 +91,17 @@ export class Event {
 
     @Prop({ default: false })
     is_pinned: boolean;
+
+    @Prop([{
+        user: { type: Types.ObjectId, ref: 'User' }, 
+        joined_at: { type: Date, default: Date.now }, // วันที่กดเข้าร่วม
+        status: { type: String, default: 'CONFIRMED' } // เผื่อไว้ (เช่น CANCELLED)
+    }])
+    participants: {
+        user: Types.ObjectId;
+        joined_at: Date;
+        status: string;
+    }[];
 }
 
 export const EventSchema = SchemaFactory.createForClass(Event);
