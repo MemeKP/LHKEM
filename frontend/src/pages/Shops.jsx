@@ -212,13 +212,6 @@ const Shops = () => {
                     <Store className="h-16 w-16 text-white/50" />
                   </div>
                   
-                  {/* Shop Icon/Avatar - Circular */}
-                  <div className="absolute bottom-4 left-4">
-                    <div className={`h-16 w-16 rounded-full bg-gradient-to-br ${shop.gradient} border-4 border-white shadow-lg flex items-center justify-center`}>
-                      <Store className="h-8 w-8 text-white" />
-                    </div>
-                  </div>
-                  
                   <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 rounded-full text-xs font-semibold text-gray-700">
                     {ct(shop.category_en, shop.category_en)}
                   </div>

@@ -205,14 +205,6 @@ const Settings = () => {
             {activeTab === 'profile' && (
               <div>
                 <div className="mb-8 flex items-center space-x-4 pb-6 border-b border-gray-200">
-                  <div className="relative">
-                    <div className="h-20 w-20 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-2xl font-bold">
-                      {user?.firstname?.charAt(0)?.toUpperCase() || user?.email?.charAt(0).toUpperCase()}
-                    </div>
-                    <button className="absolute bottom-0 right-0 p-1.5 bg-white rounded-full shadow-lg border border-gray-200 hover:bg-gray-50 transition">
-                      <Camera className="h-3.5 w-3.5 text-gray-600" />
-                    </button>
-                  </div>
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">
                       {user?.firstname} {user?.lastname}

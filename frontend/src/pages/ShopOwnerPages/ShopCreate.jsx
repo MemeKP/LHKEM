@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Save, MapPin, Clock, Phone, Facebook, MessageCircle, Globe, Camera } from 'lucide-react';
-// translations not used in this prototype
+import { useNavigate, useParams } from 'react-router-dom';
+import { MapPin, Clock, Phone, Image as ImageIcon } from 'lucide-react';
 
 const ShopCreate = () => {
   const navigate = useNavigate();
+  const { slug } = useParams();
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   
@@ -73,7 +73,7 @@ const ShopCreate = () => {
       localStorage.setItem('shopDraft', JSON.stringify(draft));
       localStorage.setItem('shopHasSetup', 'true');
       setMessage({ type: 'success', text: 'บันทึกโปรไฟล์ร้านเรียบร้อย' });
-      navigate('/shop/dashboard');
+      navigate(`/${slug}/shop/dashboard`);
     } catch {
       setMessage({ type: 'error', text: 'บันทึกร้านไม่สำเร็จ ลองใหม่อีกครั้ง' });
     } finally {
@@ -82,12 +82,12 @@ const ShopCreate = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF8F3] py-8 animate-fadeIn">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          สร้างโปรไฟล์ร้านของคุณ
-        </h1>
-        <p className="text-gray-600 mb-6">กรอกข้อมูลร้าน เพื่อให้ผู้ใช้รู้จักร้านของคุณมากขึ้น</p>
+    <div className="min-h-screen bg-[#F5EFE7] py-12 animate-fadeIn">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-8 animate-fadeIn">
+          <h1 className="text-3xl md:text-4xl font-bold text-[#2F4F2F] mb-3">สร้างโปรไฟล์ร้านของคุณ</h1>
+          <p className="text-[#6B6B6B] text-base">กรอกข้อมูลร้านของคุณเพื่อเริ่มต้นใช้งาน</p>
+        </div>
 
         {message.text && (
           <div
@@ -97,20 +97,42 @@ const ShopCreate = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-8 animate-slideUp bg-white rounded-xl shadow-sm p-6 space-y-6 border border-gray-100">
-          <div className="space-y-4">
-            <label className="block text-sm font-medium text-gray-700">ภาพหน้าปกร้าน (พื้นหลัง)</label>
-            <div className="aspect-[16/6] w-full bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm p-8 space-y-6 border border-gray-100 animate-slideUp" style={{animationDelay: '0.1s'}}>
+          {/* ชื่อร้าน */}
+          <div className="animate-fadeIn" style={{animationDelay: '0.2s'}}>
+            <label className="block text-sm font-semibold text-[#3D3D3D] mb-2">ชื่อร้าน</label>
+            <input
+              type="text"
+              name="name"
+              value={shopData.name}
+              onChange={handleChange}
+              placeholder="ใส่ชื่อร้านของคุณ"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
+              required
+            />
+            <p className="text-xs text-[#9CA3AF] mt-1">ชื่อร้านจะแสดงในหน้าร้านค้าและ Workshop</p>
+          </div>
+
+          {/* รูปหน้าปก */}
+          <div className="animate-fadeIn" style={{animationDelay: '0.3s'}}>
+            <label className="block text-sm font-semibold text-[#3D3D3D] mb-2">รูปหน้าปก</label>
+            <div className="border-2 border-dashed border-[#E07B39] rounded-xl p-8 bg-[#FFF7ED] hover:bg-[#FFEDD5] transition-colors">
               {shopData.coverUrl ? (
-                <img src={shopData.coverUrl} alt="shop cover" className="w-full h-full object-cover" />
+                <div className="relative aspect-video w-full rounded-lg overflow-hidden">
+                  <img src={shopData.coverUrl} alt="shop cover" className="w-full h-full object-cover" />
+                </div>
               ) : (
-                <div className="text-gray-400">ตัวอย่างภาพพื้นหลัง</div>
+                <div className="text-center">
+                  <ImageIcon className="h-12 w-12 text-[#E07B39] mx-auto mb-3" />
+                  <p className="text-sm text-[#9CA3AF] mb-1">อัปโหลดรูปหน้าปก หรือรูปตัวอย่างร้าน</p>
+                  <p className="text-xs text-[#9CA3AF]">ควรเป็นรูปแนวนอน</p>
+                </div>
               )}
             </div>
-            <div>
-              <label className="inline-flex items-center px-4 py-2 bg-gray-800 text-white rounded-lg cursor-pointer hover:bg-gray-700">
-                <Camera className="h-4 w-4 mr-2" />
-                อัปโหลดภาพพื้นหลัง
+            <div className="mt-3">
+              <label className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-[#E07B39] text-[#E07B39] font-medium rounded-full cursor-pointer hover:bg-[#E07B39] hover:text-white transition-all hover:scale-105 shadow-sm">
+                <ImageIcon className="h-4 w-4" />
+                เลือกรูปภาพ
                 <input
                   type="file"
                   accept="image/*"
@@ -121,136 +143,96 @@ const ShopCreate = () => {
             </div>
           </div>
 
-          <div className="space-y-4">
-            <label className="block text-sm font-medium text-gray-700">Icon ร้าน (โปรไฟล์)</label>
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="h-24 w-24 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-3xl font-bold overflow-hidden">
-                  {shopData.iconUrl ? (
-                    <img src={shopData.iconUrl} alt="shop icon" className="h-full w-full object-cover" />
-                  ) : (
-                    (shopData.name?.charAt(0) || 'S')
-                  )}
-                </div>
-              </div>
-              <label className="inline-flex items-center px-4 py-2 bg-gray-800 text-white rounded-lg cursor-pointer hover:bg-gray-700">
-                <Camera className="h-4 w-4 mr-2" />
-                อัปโหลด Icon
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => handleImagePick('iconUrl', e.target.files?.[0])}
-                />
-              </label>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">ชื่อร้าน</label>
-            <input
-              type="text"
-              name="name"
-              value={shopData.name}
-              onChange={handleChange}
-              placeholder="เช่น บ้านมัดย้อม"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">คำอธิบายร้านของคุณ</label>
-            <input
-              type="text"
+          {/* คำอธิบายร้าน */}
+          <div className="animate-fadeIn" style={{animationDelay: '0.4s'}}>
+            <label className="block text-sm font-semibold text-[#3D3D3D] mb-2">คำอธิบายร้านของคุณ</label>
+            <textarea
               name="description"
               value={shopData.description}
               onChange={handleChange}
-              placeholder="เล่าเรื่องราวร้านของคุณ คร่าวๆ"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              rows="4"
+              placeholder="เล่าเรื่องราวร้านของคุณ เช่น ประวัติ จุดเด่น สินค้าและบริการ"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all resize-none"
             />
+            <p className="text-xs text-[#9CA3AF] mt-1">ไม่ต้องยาวมากก็ได้ แค่ให้ลูกค้ารู้จักร้านของคุณ</p>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">ข้อมูลติดต่อ</label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="relative">
-                <Phone className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                <input
-                  type="tel"
-                  name="contactLinks.phone"
-                  value={shopData.contactLinks.phone}
-                  onChange={handleChange}
-                  placeholder="081-234-5678"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-              <div className="relative">
-                <MessageCircle className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+          {/* ข้อมูลติดต่อ */}
+          <div className="animate-fadeIn" style={{animationDelay: '0.5s'}}>
+            <label className="block text-sm font-semibold text-[#3D3D3D] mb-3">📞 ข้อมูลติดต่อ</label>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs text-[#6B6B6B] mb-1.5">อีเมล</label>
                 <input
                   type="text"
                   name="contactLinks.line"
                   value={shopData.contactLinks.line}
                   onChange={handleChange}
-                  placeholder="@shopline"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  placeholder="mail@example.com"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
                 />
+              </div>
+              <div>
+                <label className="block text-xs text-[#6B6B6B] mb-1.5">📱 เบอร์โทรศัพท์</label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#9CA3AF]" />
+                  <input
+                    type="tel"
+                    name="contactLinks.phone"
+                    value={shopData.contactLinks.phone}
+                    onChange={handleChange}
+                    placeholder="เช่น 081-234-5678"
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
+                  />
+                </div>
               </div>
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">ที่ตั้งหน้าร้าน</label>
+          {/* ตำแหน่งร้าน */}
+          <div className="animate-fadeIn" style={{animationDelay: '0.6s'}}>
+            <label className="block text-sm font-semibold text-[#3D3D3D] mb-3">📍 ตำแหน่งร้าน</label>
+            <div className="bg-[#E8F5E9] border-2 border-dashed border-[#4CAF50] rounded-xl p-6 hover:bg-[#C8E6C9] transition-colors">
+              <div className="text-center">
+                <MapPin className="h-10 w-10 text-[#4CAF50] mx-auto mb-2" />
+                <h3 className="text-lg font-semibold text-[#2F4F2F] mb-4">เลือกตำแหน่งบนแผนที่</h3>
+                <button
+                  type="button"
+                  className="mt-2 px-4 py-2 bg-[#4CAF50] text-white rounded-full text-sm font-medium hover:bg-[#45A049] transition-all hover:scale-105"
+                >
+                  เปิดแผนที่
+                </button>
+              </div>
+            </div>
+            <p className="text-xs text-[#6B6B6B] mt-2">ตำแหน่งจะช่วยให้ลูกค้าหาร้านของคุณได้ง่าย ๆ ที่นี่</p>
+          </div>
+
+          {/* เวลาทำการ */}
+          <div className="animate-fadeIn" style={{animationDelay: '0.7s'}}>
+            <label className="block text-sm font-semibold text-[#3D3D3D] mb-3">🕐 เวลาทำการ</label>
             <div className="relative">
-              <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+              <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#9CA3AF]" />
               <input
                 type="text"
-                name="location.address"
-                value={shopData.location.address}
+                name="openTime"
+                value={shopData.openTime}
                 onChange={handleChange}
-                placeholder="เช่น โหล่งฮิมคาว อ.สันกำแพง จ.เชียงใหม่"
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                placeholder="เช่น 09:00 - 17:00"
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">เวลาทำการ</label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="relative">
-                <Clock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  name="openTime"
-                  value={shopData.openTime}
-                  onChange={handleChange}
-                  placeholder="เช่น 09:00"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-              <div className="relative">
-                <Clock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  name="closeTime"
-                  value={shopData.closeTime}
-                  onChange={handleChange}
-                  placeholder="เช่น 17:00"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-end">
+          {/* Submit Button */}
+          <div className="pt-4 animate-fadeIn" style={{animationDelay: '0.8s'}}>
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-60"
+              className="w-full py-3.5 bg-[#E07B39] hover:bg-[#D66B29] text-white font-semibold rounded-full transition-all disabled:opacity-60 shadow-md hover:shadow-lg hover:scale-[1.02] transform"
             >
-              <Save className="h-5 w-5 mr-2" />
-              บันทึกร้านของฉัน
+              {saving ? 'กำลังบันทึก...' : 'บันทึกร้านของฉัน'}
             </button>
+            <p className="text-center text-xs text-[#6B6B6B] mt-3">ข้อมูลจะถูกบันทึกและแสดงในหน้าร้านค้าทันที</p>
           </div>
         </form>
       </div>

@@ -1,9 +1,12 @@
 import { useState } from 'react';
-import { MapPin, Navigation, Plus, Minus } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { MapPin, Store, Plus, Minus } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 
 const Map = () => {
-  const { t } = useTranslation();
+  const { t, ct } = useTranslation();
+  const { slug } = useParams();
+  const navigate = useNavigate();
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [zoom, setZoom] = useState(1);
   
@@ -12,25 +15,31 @@ const Map = () => {
     {
       id: 1,
       name: 'ร้านเซรามิก',
+      name_en: 'Ceramic Shop',
       category: 'ร้านค้า',
-      distance: '2.5 กม.',
+      category_en: 'Shop',
       description: 'ร้านเซรามิกทำมือ ผลิตภัณฑ์เครื่องปั้นดินเผาคุณภาพสูงจากชุมชน',
+      description_en: 'Handmade ceramic shop with high-quality pottery products from the community',
       position: { top: '30%', left: '35%' }
     },
     {
       id: 2,
       name: 'เรือนไม้',
+      name_en: 'Wooden House',
       category: 'ร้านค้า',
-      distance: '1.8 กม.',
+      category_en: 'Shop',
       description: 'ร้านจำหน่ายผลิตภัณฑ์ไม้แกะสลักและของตกแต่งบ้าน',
+      description_en: 'Shop selling carved wood products and home decorations',
       position: { top: '50%', left: '55%' }
     },
     {
       id: 3,
       name: 'ศูนย์เกษตรอินทรีย์',
+      name_en: 'Organic Farm Center',
       category: 'สถานที่',
-      distance: '3.2 กม.',
+      category_en: 'Place',
       description: 'ศูนย์เรียนรู้และจำหน่ายผลผลิตเกษตรอินทรีย์',
+      description_en: 'Learning center and organic agricultural products sales',
       position: { top: '65%', left: '40%' }
     }
   ];
@@ -134,19 +143,24 @@ const Map = () => {
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <h3 className="font-semibold" style={{ color: '#111827' }}>{location.name}</h3>
-                      <span className="text-xs" style={{ color: '#6b7280' }}>{location.category}</span>
+                      <h3 className="font-semibold" style={{ color: '#111827' }}>{ct(location.name, location.name_en)}</h3>
+                      <span className="text-xs" style={{ color: '#6b7280' }}>{ct(location.category, location.category_en)}</span>
                     </div>
-                    <span className="text-sm font-medium" style={{ color: '#ea580c' }}>{location.distance}</span>
                   </div>
                   
                   <p className="text-sm mb-3" style={{ color: '#4b5563' }}>
-                    {location.description}
+                    {ct(location.description, location.description_en)}
                   </p>
 
-                  <button className="flex items-center space-x-2 font-medium text-sm transition-all transform hover:scale-105" style={{ color: '#ea580c' }} onMouseEnter={(e) => e.currentTarget.style.color = '#c2410c'} onMouseLeave={(e) => e.currentTarget.style.color = '#ea580c'}>
-                    <Navigation className="h-4 w-4" />
-                    <span>{t('map.viewRoute')}</span>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/${slug}/shops/${location.id}`);
+                    }}
+                    className="w-full flex items-center justify-center space-x-2 bg-[#E07B39] hover:bg-[#D66B29] text-white font-medium text-sm py-2.5 px-4 rounded-full transition-all transform hover:scale-105 shadow-sm hover:shadow-md"
+                  >
+                    <Store className="h-4 w-4" />
+                    <span>{ct('เข้าชมร้านค้า', 'Visit Shop')}</span>
                   </button>
                 </div>
               ))}

@@ -196,22 +196,32 @@ const Navbar = ({ community }) => {
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
+            {/* Language Toggle */}
             <button
               onClick={toggleLanguage}
-              className="flex items-center space-x-1 transition-colors"
+              className="flex items-center space-x-2 px-3 py-2 rounded-full transition-colors border border-transparent"
               style={{ color: '#4b5563' }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#111827'}
-              onMouseLeave={(e) => e.currentTarget.style.color = '#4b5563'}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#111827';
+                e.currentTarget.style.borderColor = '#e5e7eb';
+                e.currentTarget.style.backgroundColor = '#f3f4f6';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = '#4b5563';
+                e.currentTarget.style.borderColor = 'transparent';
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
             >
               <Globe className="h-4 w-4" />
               <span className="text-sm font-medium">{language} / {language === 'TH' ? 'EN' : 'TH'}</span>
             </button>
 
+            {/* User Menu */}
             {isAuthenticated ? (
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center space-x-2 font-medium transition-colors px-3 py-2 rounded-lg"
+                  className="flex items-center space-x-2 font-medium transition-colors px-4 py-2 rounded-full"
                   style={{ color: '#374151' }}
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
@@ -221,7 +231,7 @@ const Navbar = ({ community }) => {
                 </button>
 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 animate-slideDown">
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                     <div className="px-4 py-2 border-b border-gray-200">
                       <p className="text-xs text-gray-500">{t('nav.signedInAs')}</p>
                       <p className="text-sm font-semibold text-gray-900 truncate">{user?.email}</p>
@@ -272,11 +282,11 @@ const Navbar = ({ community }) => {
                 )}
               </div>
             ) : (
-              <>
+              <div className="flex items-center space-x-2">
                 <Link
                   to="/login"
                   state={{ from: location }}
-                  className="font-medium transition-colors"
+                  className="font-medium transition-colors px-4 py-2 rounded-full"
                   style={{ color: '#374151' }}
                   onMouseEnter={(e) => e.currentTarget.style.color = '#111827'}
                   onMouseLeave={(e) => e.currentTarget.style.color = '#374151'}
@@ -292,7 +302,7 @@ const Navbar = ({ community }) => {
                 >
                   {t('nav.register')}
                 </Link>
-              </>
+              </div>
             )}
           </div>
 

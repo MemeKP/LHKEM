@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MapPin, Clock, Users, CheckCircle, Calendar, DollarSign, X, Download, Share2, Pause, Edit } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Users, CheckCircle, Calendar, DollarSign, Download, Edit, X, Share2, Pause, Eye, Mail } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
 
 const ShopWorkshopDetail = () => {
-  const { id } = useParams();
+  const { id, slug } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const workshop = useMemo(() => {
@@ -34,19 +34,20 @@ const ShopWorkshopDetail = () => {
   const seatsLeft = Math.max(0, (workshop.seatLimit || 0) - (workshop.seatsBooked || 0));
 
   return (
-    <div className="min-h-screen bg-[#FAF8F3] py-8 animate-fadeIn">
+    <div className="min-h-screen bg-[#F5EFE7] py-12 animate-fadeIn">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <button
-          onClick={() => navigate('/shop/dashboard')}
-          className="mb-6 text-sm text-gray-600 hover:text-orange-600 flex items-center gap-1"
+          onClick={() => navigate(`/${slug}/shop/dashboard`)}
+          className="mb-6 flex items-center gap-2 text-sm text-[#6B6B6B] hover:text-[#E07B39] transition-colors"
         >
-          ← กลับ
+          <ArrowLeft className="h-4 w-4" />
+          กลับ
         </button>
 
         {/* Workshop Preview Modal Card */}
         <div className="bg-white rounded-2xl shadow-lg p-8 mb-6 animate-slideUp border border-gray-100">
           <div className="flex items-start justify-between mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">{workshop.title}</h1>
+            <h1 className="text-3xl font-bold text-[#2F4F2F]">{workshop.title}</h1>
             <button className="text-gray-400 hover:text-gray-600">
               <X className="h-6 w-6" />
             </button>
@@ -91,8 +92,8 @@ const ShopWorkshopDetail = () => {
               </div>
               
               <button 
-                onClick={() => navigate(`/shop/workshops/${id}/edit`)}
-                className="w-full mt-4 px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 font-medium transition-colors"
+                onClick={() => navigate(`/${slug}/shop/workshops/${id}/edit`)}
+                className="w-full mt-4 px-6 py-3 bg-[#E07B39] text-white rounded-full hover:bg-[#D66B29] font-semibold transition-all hover:scale-105 shadow-md"
               >
                 แก้ไขข้อมูล Workshop
               </button>
@@ -107,23 +108,11 @@ const ShopWorkshopDetail = () => {
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">ยอดจอง</p>
-                <p className="text-3xl font-bold text-gray-900">{workshop.seatsBooked || 42} ครั้ง</p>
+                <p className="text-sm text-[#6B6B6B] mb-1">ยอดเข้าดู</p>
+                <p className="text-3xl font-bold text-[#3D3D3D]">{workshop.seatsBooked || 42} ครั้ง</p>
               </div>
-              <div className="p-3 bg-yellow-50 rounded-lg">
-                <DollarSign className="h-6 w-6 text-yellow-600" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">ผู้เข้าร่วม</p>
-                <p className="text-3xl font-bold text-gray-900">{enrollments.length} คน</p>
-              </div>
-              <div className="p-3 bg-green-50 rounded-lg">
-                <Users className="h-6 w-6 text-green-600" />
+              <div className="p-3 bg-[#FFF7ED] rounded-lg">
+                <Eye className="h-6 w-6 text-[#E07B39]" />
               </div>
             </div>
           </div>
@@ -131,11 +120,23 @@ const ShopWorkshopDetail = () => {
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">ที่ว่างคงเหลือ</p>
-                <p className="text-3xl font-bold text-gray-900">เหลือ {seatsLeft} ที่นั่ง</p>
+                <p className="text-sm text-[#6B6B6B] mb-1">ผู้เข้าร่วม</p>
+                <p className="text-3xl font-bold text-[#3D3D3D]">{enrollments.length} คน</p>
               </div>
-              <div className="p-3 bg-orange-50 rounded-lg">
-                <Calendar className="h-6 w-6 text-orange-600" />
+              <div className="p-3 bg-[#E8F5E9] rounded-lg">
+                <Users className="h-6 w-6 text-[#4CAF50]" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-[#6B6B6B] mb-1">ที่ว่างคงเหลือ</p>
+                <p className="text-3xl font-bold text-[#3D3D3D]">เหลือ {seatsLeft} ที่นั่ง</p>
+              </div>
+              <div className="p-3 bg-[#FFF7ED] rounded-lg">
+                <Calendar className="h-6 w-6 text-[#E07B39]" />
               </div>
             </div>
           </div>
@@ -143,7 +144,7 @@ const ShopWorkshopDetail = () => {
 
         {/* Participant List */}
         <div className="bg-white rounded-xl shadow-sm p-6 mb-6 animate-slideUp border border-gray-100">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">รายชื่อผู้ลงทะเบียน</h2>
+          <h2 className="text-xl font-bold text-[#2F4F2F] mb-6">รายชื่อผู้ลงทะเบียน</h2>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -195,13 +196,13 @@ const ShopWorkshopDetail = () => {
             ใช้ปุ่มนี้เพื่อแจ้งเตือนผู้เข้าร่วมเกี่ยวกับข้อมูลสำคัญเพิ่มเติม
           </p>
           <div className="flex flex-wrap gap-3">
-            <button className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors">
-              <Download className="h-4 w-4" />
-              ส่งเอกสารให้ผู้เข้าร่วมทั้งหมด
+            <button className="flex items-center gap-2 px-6 py-3 border border-[#2E7D32] text-[#2E7D32] rounded-full font-semibold hover:bg-[#E8F5E9] transition-colors">
+              <Mail className="h-4 w-4" />
+              ส่งอีเมลถึงผู้ลงทะเบียนทั้งหมด
             </button>
-            <button className="flex items-center gap-2 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors">
-              <Share2 className="h-4 w-4" />
-              ส่งเอกสารให้ผู้เข้าร่วมที่เลือก
+            <button className="flex items-center gap-2 px-6 py-3 border border-[#D1D5DB] text-[#4B5563] rounded-full font-semibold hover:bg-gray-50 transition-colors">
+              <Mail className="h-4 w-4" />
+              ส่งข้อความถึงผู้ลงทะเบียนทั้งหมด
             </button>
           </div>
         </div>
@@ -211,19 +212,19 @@ const ShopWorkshopDetail = () => {
           <h2 className="text-xl font-bold text-gray-900 mb-4">จัดการ Workshop</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <button 
-              onClick={() => navigate(`/shop/workshops/${id}/edit`)}
-              className="flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 font-medium transition-colors"
+              onClick={() => navigate(`/${slug}/shop/workshops/${id}/edit`)}
+              className="flex items-center justify-center gap-2 px-6 py-3 border border-[#2E7D32] text-[#2E7D32] rounded-full font-semibold hover:bg-[#E8F5E9] transition-colors"
             >
               <Edit className="h-4 w-4" />
               แก้ไข Workshop
             </button>
-            <button className="flex items-center justify-center gap-2 px-6 py-3 border border-orange-500 text-orange-600 rounded-lg hover:bg-orange-50 font-medium transition-colors">
-              <X className="h-4 w-4" />
-              ยกเลิก
-            </button>
-            <button className="flex items-center justify-center gap-2 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors">
+            <button className="flex items-center justify-center gap-2 px-6 py-3 border border-[#D8A449] text-[#C1841E] rounded-full font-semibold hover:bg-[#FFF8E6] transition-colors">
               <Pause className="h-4 w-4" />
               ปิดรับ Workshop
+            </button>
+            <button className="flex items-center justify-center gap-2 px-6 py-3 border border-[#D66B5E] text-[#C45045] rounded-full font-semibold hover:bg-[#FDECEC] transition-colors">
+              <X className="h-4 w-4" />
+              ยกเลิก Workshop
             </button>
           </div>
         </div>

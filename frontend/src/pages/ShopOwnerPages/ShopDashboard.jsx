@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Plus, Edit, Trash2, Eye, Users, DollarSign, Clock, CheckCircle, XCircle, AlertCircle, Camera, Settings as SettingsIcon, Bell, Calendar, TrendingUp, Star } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -9,11 +9,11 @@ const ShopDashboard = () => {
   const { user } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { slug } = useParams();
   const initialDraft = JSON.parse(localStorage.getItem('shopDraft') || '{}');
   const initialWorkshops = Array.isArray(initialDraft.workshops) ? initialDraft.workshops : [];
   const [workshops, setWorkshops] = useState(initialWorkshops);
   const [activeTab, setActiveTab] = useState('all');
-  const [showSettings, setShowSettings] = useState(false);
   const [profile, setProfile] = useState({
     name: initialDraft.name || '',
     description: initialDraft.description || '',
@@ -28,7 +28,7 @@ const ShopDashboard = () => {
   useEffect(() => {
     const hasSetup = localStorage.getItem('shopHasSetup') === 'true';
     if (!user?.shopId && !hasSetup) {
-      navigate('/shop/create');
+      navigate(`/${slug}/shop/create`);
       return;
     }
   }, [user, navigate]);
@@ -119,7 +119,7 @@ const ShopDashboard = () => {
   // always render directly in prototype
 
   return (
-    <div className="min-h-screen bg-[#FAF8F3] py-8 animate-fadeIn">
+    <div className="min-h-screen bg-[#F5EFE7] py-8 animate-fadeIn">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
           <div className="relative rounded-xl overflow-hidden animate-slideDown">
@@ -130,124 +130,58 @@ const ShopDashboard = () => {
             </div>
           </div>
           <div className="flex items-center justify-between mt-4 animate-slideUp">
-            <div className="flex items-center gap-4">
-              <div className="h-24 w-24 rounded-full bg-white shadow ring-2 ring-white overflow-hidden flex items-center justify-center text-orange-600 text-3xl font-bold">
-                {profile.iconUrl ? <img src={profile.iconUrl} alt="icon" className="h-full w-full object-cover" /> : (profile.name?.charAt(0) || 'S')}
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">{profile.name || t('shopDashboard.title')}</h1>
-                <p className="text-gray-600">{profile.description}</p>
-              </div>
+            <div>
+              <h1 className="text-3xl font-bold text-[#2F4F2F]">{profile.name || t('shopDashboard.title')}</h1>
+              <p className="text-[#6B6B6B]">{profile.description}</p>
             </div>
             <div className="flex justify-end gap-3">
               <button
-                onClick={() => setShowSettings(s => !s)}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700"
+                onClick={() => navigate(`/${slug}/shop/profile`)}
+                className="flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-[#E07B39] text-[#E07B39] font-medium rounded-full hover:bg-[#E07B39] hover:text-white transition-all hover:scale-105 shadow-sm"
               >
                 <SettingsIcon className="h-4 w-4" />
-                {t('shopDashboard.manageProfile')}
+                แก้ไขข้อมูลร้าน
               </button>
               <button
-                onClick={() => navigate('/shop/workshops/create')}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-sm"
+                onClick={() => navigate(`/${slug}/shop/workshops/create`)}
+                className="flex items-center gap-2 px-5 py-2.5 bg-[#4CAF50] text-white font-medium rounded-full hover:bg-[#45A049] shadow-md hover:shadow-lg transition-all hover:scale-105"
               >
                 <Plus className="h-4 w-4" />
-                {t('shopDashboard.createWorkshop')}
+                สร้าง Workshop ใหม่
               </button>
             </div>
           </div>
         </div>
 
-        {showSettings && (
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-8 animate-scaleIn">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-2 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">ชื่อร้าน</label>
-                  <input name="name" value={profile.name} onChange={handleProfileChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">คำอธิบาย</label>
-                  <textarea name="description" value={profile.description} onChange={handleProfileChange} rows={3} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">เปิด</label>
-                    <input name="openTime" value={profile.openTime} onChange={handleProfileChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">ปิด</label>
-                    <input name="closeTime" value={profile.closeTime} onChange={handleProfileChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" />
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">ภาพหน้าปก</label>
-                  <div className="aspect-[16/9] w-full bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
-                    {profile.coverUrl ? <img src={profile.coverUrl} alt="cover" className="w-full h-full object-cover" /> : <div className="text-gray-400">ตัวอย่างภาพ</div>}
-                  </div>
-                  <label className="mt-2 inline-flex items-center px-3 py-2 bg-gray-800 text-white rounded-lg cursor-pointer hover:bg-gray-700">
-                    <Camera className="h-4 w-4 mr-2" />
-                    อัปโหลด
-                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImagePick('coverUrl', e.target.files?.[0])} />
-                  </label>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Icon ร้าน</label>
-                  <div className="h-20 w-20 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center text-orange-600 text-2xl font-bold">
-                    {profile.iconUrl ? <img src={profile.iconUrl} alt="icon" className="h-full w-full object-cover" /> : (profile.name?.charAt(0) || 'S')}
-                  </div>
-                  <label className="mt-2 inline-flex items-center px-3 py-2 bg-gray-800 text-white rounded-lg cursor-pointer hover:bg-gray-700">
-                    <Camera className="h-4 w-4 mr-2" />
-                    อัปโหลด
-                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImagePick('iconUrl', e.target.files?.[0])} />
-                  </label>
-                </div>
-                <div className="flex justify-end">
-                  <button onClick={saveProfile} className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 shadow-sm">บันทึก</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-stagger">
-            <div className="bg-white rounded-xl shadow-sm p-6 animate-scaleIn border border-gray-100 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Workshop ทั้งหมด</p>
-                  <p className="text-3xl font-bold text-gray-900">{stats.totalWorkshops}</p>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 animate-stagger">
+            <div className="bg-white rounded-xl shadow-sm p-5 animate-fadeIn border border-gray-100 hover:shadow-md transition-all hover:scale-[1.02]" style={{animationDelay: '0.1s'}}>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-[#FFF7ED] rounded-lg">
+                  <Calendar className="h-5 w-5 text-[#E07B39]" />
                 </div>
-                <div className="p-3 bg-yellow-50 rounded-lg">
-                  <Calendar className="h-6 w-6 text-yellow-600" />
-                </div>
+                <p className="text-xs font-semibold text-[#6B6B6B]">Workshop ทั้งหมด</p>
               </div>
+              <p className="text-2xl font-bold text-[#3D3D3D]">{stats.totalWorkshops}</p>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm p-6 animate-scaleIn border border-gray-100 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">ผู้เข้าร่วมทั้งหมด</p>
-                  <p className="text-3xl font-bold text-gray-900">{stats.totalBookings}</p>
+            <div className="bg-white rounded-xl shadow-sm p-5 animate-fadeIn border border-gray-100 hover:shadow-md transition-all hover:scale-[1.02]" style={{animationDelay: '0.2s'}}>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-[#E8F5E9] rounded-lg">
+                  <Users className="h-5 w-5 text-[#4CAF50]" />
                 </div>
-                <div className="p-3 bg-green-50 rounded-lg">
-                  <Users className="h-6 w-6 text-green-600" />
-                </div>
+                <p className="text-xs font-semibold text-[#6B6B6B]">ผู้เข้าร่วมทั้งหมด</p>
               </div>
+              <p className="text-2xl font-bold text-[#3D3D3D]">{stats.totalBookings}</p>
             </div>
-
-            <div className="bg-white rounded-xl shadow-sm p-6 animate-scaleIn border border-gray-100 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Workshop ที่รออนุมัติ</p>
-                  <p className="text-3xl font-bold text-gray-900">{stats.pendingApprovals}</p>
+            <div className="bg-white rounded-xl shadow-sm p-5 animate-fadeIn border border-gray-100 hover:shadow-md transition-all hover:scale-[1.02]" style={{animationDelay: '0.4s'}}>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-[#E3F2FD] rounded-lg">
+                  <TrendingUp className="h-5 w-5 text-[#2196F3]" />
                 </div>
-                <div className="p-3 bg-blue-50 rounded-lg">
-                  <TrendingUp className="h-6 w-6 text-blue-600" />
-                </div>
+                <p className="text-xs font-semibold text-[#6B6B6B]">Workshop ที่รออนุมัติ</p>
               </div>
+              <p className="text-2xl font-bold text-[#3D3D3D]">{stats.pendingApprovals}</p>
             </div>
           </div>
         )}
@@ -256,7 +190,7 @@ const ShopDashboard = () => {
         <div className="mb-8 animate-slideUp">
           <div className="flex items-center gap-2 mb-4">
             <Bell className="h-5 w-5 text-orange-600" />
-            <h2 className="text-lg font-semibold text-gray-900">การแจ้งเตือน</h2>
+            <h2 className="text-lg font-semibold text-[#2F4F2F]">การแจ้งเตือน</h2>
           </div>
           <div className="space-y-3">
             {stats.pendingApprovals > 0 && (
@@ -288,19 +222,19 @@ const ShopDashboard = () => {
         <div className="mb-8 animate-slideUp">
           <div className="flex items-center gap-2 mb-4">
             <Star className="h-5 w-5 text-orange-600" />
-            <h2 className="text-lg font-semibold text-gray-900">ข้อมูลเสริม</h2>
+            <h2 className="text-lg font-semibold text-[#2F4F2F]">ข้อมูลเสริม</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition-shadow">
-              <h3 className="font-semibold text-gray-900 mb-2">กลยุทธ์ของคุณได้ผล!</h3>
-              <p className="text-sm text-gray-600 mb-3">
+              <h3 className="font-semibold text-[#2F4F2F] mb-2">กลยุทธ์ของคุณได้ผล!</h3>
+              <p className="text-sm text-[#6B6B6B] mb-3">
                 การตั้งราคาและคำอธิบายที่ดีจะช่วยให้ Workshop ของคุณดึงดูดผู้เข้าร่วมมากขึ้น
               </p>
             </div>
             <div className="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition-shadow">
-              <h3 className="font-semibold text-gray-900 mb-2">Workshop ที่ได้รับความสนใจสูงสุด</h3>
-              <p className="text-sm text-gray-600 mb-3">
-                {workshops.length > 0 ? workshops[0].title : 'ยังไม่มี Workshop'}
+              <h3 className="font-semibold text-[#2F4F2F] mb-2">เคล็ดลับ</h3>
+              <p className="text-sm text-[#6B6B6B]">
+                ลูกค้ามักจะชอบ Workshop ที่มีรูปภาพสวยและคำอธิบายชัดเจน
               </p>
             </div>
           </div>
@@ -308,7 +242,7 @@ const ShopDashboard = () => {
 
         <div className="bg-white rounded-lg shadow-sm">
           <div className="px-6 pt-6 pb-4">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Workshop ของร้านคุณ</h2>
+            <h2 className="text-xl font-bold text-[#2F4F2F] mb-4">Workshop ของร้านคุณ</h2>
           </div>
           <div className="border-b border-gray-200">
             <div className="flex space-x-8 px-6">
@@ -316,10 +250,10 @@ const ShopDashboard = () => {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  className={`py-4 px-1 border-b-2 font-medium text-sm transition-all ${
                     activeTab === tab
-                      ? 'border-orange-500 text-orange-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'border-[#E07B39] text-[#E07B39]'
+                      : 'border-transparent text-[#6B6B6B] hover:text-[#3D3D3D] hover:border-gray-300'
                   }`}
                 >
                   {t(`shopDashboard.tabs.${tab}`)}
@@ -332,15 +266,15 @@ const ShopDashboard = () => {
             {filteredWorkshops.length === 0 ? (
               <div className="text-center py-12">
                 <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <h3 className="text-lg font-medium text-[#2F4F2F] mb-2">
                   {t('shopDashboard.noWorkshops.title')}
                 </h3>
                 <p className="text-gray-600 mb-6">
                   {t('shopDashboard.noWorkshops.description')}
                 </p>
                 <button
-                  onClick={() => navigate('/shop/workshops/create')}
-                  className="inline-flex items-center px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors"
+                  onClick={() => navigate(`/${slug}/shop/workshops/create`)}
+                  className="inline-flex items-center px-6 py-3 bg-[#4CAF50] text-white font-semibold rounded-full hover:bg-[#45A049] transition-all hover:scale-105 shadow-md"
                 >
                   <Plus className="h-5 w-5 mr-2" />
                   {t('shopDashboard.createWorkshop')}
@@ -359,8 +293,8 @@ const ShopDashboard = () => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-4 mb-2">
                           <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-1">{workshop.title}</h3>
-                            <p className="text-sm text-gray-600 line-clamp-2">{workshop.description || 'ไม่มีคำอธิบาย'}</p>
+                            <h3 className="text-lg font-semibold text-[#2F4F2F] mb-1">{workshop.title}</h3>
+                            <p className="text-sm text-[#6B6B6B] line-clamp-2">{workshop.description || 'ไม่มีคำอธิบาย'}</p>
                           </div>
                           {getStatusBadge(workshop.status)}
                         </div>
@@ -379,17 +313,17 @@ const ShopDashboard = () => {
                           </div>
                         </div>
                         <div className="flex items-center justify-between mt-4">
-                          <div className="text-xl font-bold text-orange-600">฿{workshop.price || 0}</div>
+                          <div className="text-xl font-bold text-[#E07B39]">฿{workshop.price || 0}</div>
                           <div className="flex gap-2">
                             <button
-                              onClick={() => navigate(`/shop/workshops/${workshop.id}`)}
-                              className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 text-sm font-medium transition-colors"
+                              onClick={() => navigate(`/${slug}/shop/workshops/${workshop.id}`)}
+                              className="px-4 py-2 bg-[#E07B39] text-white rounded-full hover:bg-[#D66B29] text-sm font-medium transition-all hover:scale-105 shadow-sm"
                             >
                               ดูรายละเอียด
                             </button>
                             <button
                               onClick={() => handleDeleteWorkshop(workshop.id)}
-                              className="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 text-sm font-medium transition-colors"
+                              className="px-4 py-2 bg-red-50 text-red-600 rounded-full hover:bg-red-100 text-sm font-medium transition-all hover:scale-105"
                             >
                               ลบ
                             </button>

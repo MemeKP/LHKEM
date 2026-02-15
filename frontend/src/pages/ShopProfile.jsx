@@ -112,22 +112,13 @@ const ShopProfile = () => {
             <ArrowLeft className="h-4 w-4" />
             <span>{ct('กลับไปหน้าร้านค้า', 'Back to Shops')}</span>
           </Link>
-          <div className="flex items-center gap-6">
-            {/* Shop Icon */}
-            <div className={`relative h-32 w-32 rounded-2xl bg-gradient-to-br ${mockShop.gradient} overflow-hidden shadow-2xl border-4 border-white`}>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Store className="h-16 w-16 text-white/70" />
-              </div>
+          <div>
+            <div className="inline-block bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold text-white mb-2">
+              {ct(mockShop.category, mockShop.category_en)}
             </div>
-            {/* Shop Name & Category */}
-            <div>
-              <div className="inline-block bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold text-white mb-2">
-                {ct(mockShop.category, mockShop.category_en)}
-              </div>
-              <h1 className="text-3xl md:text-4xl font-bold text-white drop-shadow-lg">
-                {ct(mockShop.name, mockShop.name_en)}
-              </h1>
-            </div>
+            <h1 className="text-3xl md:text-4xl font-bold text-white drop-shadow-lg">
+              {ct(mockShop.name, mockShop.name_en)}
+            </h1>
           </div>
         </div>
       </section>
@@ -137,7 +128,7 @@ const ShopProfile = () => {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Shop Description */}
           <div className="mb-6">
-            <p className="text-lg text-gray-600 leading-relaxed">
+            <p className="text-lg text-[#3D3D3D] leading-relaxed">
               {ct(mockShop.description, mockShop.description_en)}
             </p>
           </div>
@@ -151,10 +142,10 @@ const ShopProfile = () => {
                 <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
                   <MapPin className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-semibold text-gray-900 mb-1">
+                    <p className="text-sm font-semibold text-[#2F4F2F] mb-1">
                       {ct('ที่อยู่', 'Address')}
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-[#6B6B6B]">
                       {ct(mockShop.location.address, mockShop.location.address_en)}
                     </p>
                   </div>
@@ -164,13 +155,13 @@ const ShopProfile = () => {
                 <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
                   <Clock className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-semibold text-gray-900 mb-1">
+                    <p className="text-sm font-semibold text-[#2F4F2F] mb-1">
                       {ct('เวลาทำการ', 'Opening Hours')}
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-[#6B6B6B]">
                       {mockShop.openTime} - {mockShop.closeTime}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-[#9CA3AF] mt-1">
                       {ct(mockShop.openDays, mockShop.openDays_en)}
                     </p>
                   </div>
@@ -180,10 +171,10 @@ const ShopProfile = () => {
                 <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
                   <Phone className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-semibold text-gray-900 mb-1">
+                    <p className="text-sm font-semibold text-[#2F4F2F] mb-1">
                       {ct('โทรศัพท์', 'Phone')}
                     </p>
-                    <a href={`tel:${mockShop.contactLinks.phone}`} className="text-sm text-orange-600 hover:text-orange-700">
+                    <a href={`tel:${mockShop.contactLinks.phone}`} className="text-sm text-[#E07B39] hover:text-[#D66B29]">
                       {mockShop.contactLinks.phone}
                     </a>
                   </div>
@@ -193,7 +184,7 @@ const ShopProfile = () => {
                 <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
                   <Globe className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-semibold text-gray-900 mb-2">
+                    <p className="text-sm font-semibold text-[#2F4F2F] mb-2">
                       {ct('ติดต่อเพิ่มเติม', 'Contact')}
                     </p>
                     <div className="flex gap-3">
@@ -213,7 +204,7 @@ const ShopProfile = () => {
               </div>
 
               {/* Call to Action Button */}
-              <button className="w-full md:w-auto px-8 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-full transition shadow-lg hover:shadow-xl">
+              <button className="w-full md:w-auto px-8 py-3 bg-[#E07B39] hover:bg-[#D66B29] text-white font-semibold rounded-full transition shadow-lg hover:shadow-xl hover:scale-105">
                 {ct('ติดต่อร้าน', 'Contact Shop')}
               </button>
             </div>
@@ -225,13 +216,13 @@ const ShopProfile = () => {
       <section className="py-16 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
-            <span className="inline-block bg-orange-50 text-orange-600 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+            <span className="inline-block bg-[#FFF7ED] text-[#E07B39] px-4 py-2 rounded-full text-sm font-semibold mb-4">
               {ct('กิจกรรมเวิร์กช็อป', 'Workshops')}
             </span>
-            <h2 className="text-3xl font-bold text-gray-900 mb-3">
+            <h2 className="text-3xl font-bold text-[#2F4F2F] mb-3">
               {ct('กิจกรรมเวิร์กช็อปที่เปิดสอน', 'Workshops Offered')}
             </h2>
-            <p className="text-gray-600">
+            <p className="text-[#6B6B6B]">
               {ct('เรียนรู้ทักษะใหม่ๆ จากผู้เชี่ยวชาญของร้าน', 'Learn new skills from our expert instructors')}
             </p>
           </div>
@@ -264,9 +255,9 @@ const ShopProfile = () => {
                       <MapPin className="h-4 w-4 text-red-400" />
                       {ct(workshop.location, workshop.location_en)}
                     </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{ct(workshop.title, workshop.title_en)}</h3>
-                      <p className="text-sm text-gray-600">{ct(workshop.shortDescription, workshop.shortDescription_en)}</p>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-[#2F4F2F]">{ct(workshop.title, workshop.title_en)}</h3>
+                      <p className="text-sm text-[#6B6B6B]">{ct(workshop.shortDescription, workshop.shortDescription_en)}</p>
                     </div>
                     <div className="flex items-center gap-4 text-sm text-gray-500">
                       <div className="flex items-center gap-1">
@@ -279,12 +270,12 @@ const ShopProfile = () => {
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
-                      <p className="text-lg font-semibold text-gray-900">
+                      <p className="text-lg font-semibold text-[#2F4F2F]">
                         {workshop.price === 0 ? t('workshops.free') : `฿${workshop.price}`}
-                        <span className="text-sm text-gray-500 ml-1">{t('workshops.perPerson')}</span>
+                        <span className="text-sm text-[#9CA3AF] ml-1">{t('workshops.perPerson')}</span>
                       </p>
                       <button
-                        className="px-5 py-2 bg-gray-900 text-white rounded-full text-sm font-semibold hover:bg-gray-800 transition"
+                        className="px-5 py-2 bg-[#2F4F2F] text-white rounded-full text-sm font-semibold hover:bg-[#1F3F1F] transition hover:scale-105"
                         onClick={() => handleOpenModal(workshop)}
                       >
                         {t('workshops.enrollNow')}

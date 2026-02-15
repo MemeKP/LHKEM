@@ -17,11 +17,11 @@ const SimpleFooter = () => {
           <div className="col-span-1">
             <div className="flex items-center space-x-2 mb-4">
               <div className="bg-gray-900 p-2 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">LHKEM</span>
+                <span className="text-white font-bold text-sm">LHK</span>
               </div>
               <div className="flex flex-col">
                 <span className="text-sm font-semibold text-gray-900">LHKEM Platform</span>
-                <span className="text-xs text-gray-500">Local Heritage & Knowledge Exchange</span>
+                <span className="text-xs text-gray-500">Loang Him Kao</span>
               </div>
             </div>
             <p className="text-gray-600 text-sm leading-relaxed">

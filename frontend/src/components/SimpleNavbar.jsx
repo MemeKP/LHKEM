@@ -92,11 +92,11 @@ const SimpleNavbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <div className="bg-gray-900 p-2 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-sm">LHKEM</span>
+              <span className="text-white font-bold text-sm">LHK</span>
             </div>
             <div className="flex flex-col">
               <span className="font-semibold text-sm" style={{ color: '#111827' }}>LHKEM Platform</span>
-              <span className="text-xs" style={{ color: '#6b7280' }}>Local Heritage & Knowledge Exchange</span>
+              <span className="text-xs" style={{ color: '#6b7280' }}>Loang Him Kao</span>
             </div>
           </Link>
 
