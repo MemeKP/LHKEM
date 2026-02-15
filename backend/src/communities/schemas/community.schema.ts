@@ -81,11 +81,11 @@ export class Community {
             postal_code: { type: String },
             coordinates: {
                 type: {
-                    lat: { type: Number, required: true },
-                    lng: { type: Number, required: true }
+                    lat: { type: Number, required: false },
+                    lng: { type: Number, required: false }
                 },
                 _id: false,
-                required: true
+                required: false
             }
         },
         _id: false,
@@ -172,7 +172,7 @@ CommunitySchema.virtual('events', {
 })
 
 CommunitySchema.virtual('workshops', {
-    ref: 'WorkShop',
+    ref: 'Workshop',
     localField: '_id',
     foreignField: 'community'
 })

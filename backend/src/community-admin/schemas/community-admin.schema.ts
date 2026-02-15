@@ -10,7 +10,15 @@ export class CommunityAdmin {
   user_id: Types.ObjectId; 
 
   @Prop({ type: Types.ObjectId, ref: 'Community', required: true })
-  community_id: Types.ObjectId; 
+  community_id: Types.ObjectId;
+  
+  @Prop({ type: Boolean, default: false })
+  can_approve_workshop: boolean;
+
+  @Prop({ type: Types.ObjectId, ref: 'User' }) // ใครเป็นคนแต่งตั้ง 
+  assigned_by?: Types.ObjectId;
 }
 
 export const CommunityAdminSchema = SchemaFactory.createForClass(CommunityAdmin);
+
+CommunityAdminSchema.index({ user: 1, community: 1 }, { unique: true });

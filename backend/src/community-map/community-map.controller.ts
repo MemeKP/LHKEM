@@ -72,7 +72,8 @@ async getPinDetail(
   @UseInterceptors(FileInterceptor('file'))
   async uploadCommunityMap(
     @Param('communityId') communityId: string,
-    @UploadedFile() file: Multer.File,
+    // @UploadedFile() file: Multer.File,
+    @UploadedFile() file: Express.Multer.File
   ) {
     if (!file) {
   throw new BadRequestException('Map image is required');

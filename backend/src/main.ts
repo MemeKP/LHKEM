@@ -10,8 +10,12 @@ async function bootstrap() {
     origin: ['http://localhost:5173', process.env.FRONTEND_URL],
     credentials: true,
   });
-  app.useGlobalPipes(new ValidationPipe())
-  console.log(app.getHttpServer());
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: false,
+    transform: true, // ให้ @Transform ใน dto ทำงาน
+    transformOptions: { enableImplicitConversion: true },
+  }))
+  // console.log(app.getHttpServer());
 
   const config = app.get(ConfigService);
   const port = Number(config.get('PORT')) || 3000;

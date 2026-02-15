@@ -1,6 +1,6 @@
 export enum UserRole {
   TOURIST = 'TOURIST',
-  SHOP = 'SHOP',
+  SHOP = 'SHOP_OWNER', //ไม่ใช่ SHOP
   ADMIN = 'COMMUNITY_ADMIN',
   PLATFORM_ADMIN = 'PLATFORM_ADMIN',
 }

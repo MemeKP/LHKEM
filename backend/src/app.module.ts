@@ -13,9 +13,15 @@ import { WorkshopregistrationsModule } from './workshopregistrations/workshopreg
 import { CommunityAdminModule } from './community-admin/community-admin.module';
 import { CommunityMapModule } from './community-map/community-map.module';
 import { PlatformAdminModule } from './platform-admin/platform-admin.module';
+import { ServeStaticModule } from '@nestjs/serve-static'; 
+import { join } from 'path';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'), // ชี้ไปที่โฟลเดอร์ uploads (ถอยจาก dist 1 ขั้น)
+      serveRoot: '/uploads', 
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
     }),

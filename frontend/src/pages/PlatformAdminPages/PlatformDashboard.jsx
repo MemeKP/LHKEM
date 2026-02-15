@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, TrendingUp, Heart, Calendar, Plus, MapPin, Store, User as UserIcon, ChevronRight } from 'lucide-react';
+import { Users, TrendingUp, Heart, Calendar, Plus, MapPin, Store, User as UserIcon, ChevronRight, Image as ImageIcon } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
 import api from '../../services/api';
 import { useQuery } from '@tanstack/react-query';
@@ -52,6 +52,9 @@ const PlatformDashboard = () => {
     );
   }
   const { stats, communities, activities } = data;
+//   console.log("DASHBOARD DATA:", data);
+// console.log("COMMUNITIES:", communities);
+
   
   // const [activities, setActivities] = useState([]);
   // useEffect(() => {
@@ -137,8 +140,7 @@ const PlatformDashboard = () => {
   //   setCommunities(mockCommunities);
   //   setActivities(mockActivities);
   // }, []);
-console.log('Frontend received:', data);
-
+// console.log('received:', data);
 
   const StatCard = ({ icon: Icon, value, label, color = 'orange' }) => (
     <div className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
@@ -159,11 +161,18 @@ console.log('Frontend received:', data);
   const CommunityCard = ({ community }) => (
     <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all">
       <div className="relative h-48">
-        <img
-          src={community.image}
-          alt={community.name}
-          className="w-full h-full object-cover"
-        />
+        {community.image ? (
+          <img
+            src={community.image}
+            alt={community.name}
+            className="w-full h-full object-cover"
+            onError={(e) => { e.target.style.display = 'none'; e.target.parentNode.classList.add('gradient-placeholder'); }}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-300 to-rose-400">
+             <ImageIcon className="w-12 h-12 text-white opacity-75" />
+          </div>
+        )}
         {community.status === 'NEW' && (
           <span className="absolute top-3 right-3 bg-green-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
             NEW
@@ -192,6 +201,7 @@ console.log('Frontend received:', data);
           onClick={() => navigate(`/platform-admin/communities/${community.id}`)}
           className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2.5 rounded-lg transition-colors flex items-center justify-center space-x-2"
         >
+          
           <span>{ct('จัดการ', 'Manage')}</span>
           <ChevronRight className="h-4 w-4" />
         </button>

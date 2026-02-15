@@ -3,12 +3,26 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, MapPin, Store, Users, Calendar, TrendingUp, AlertCircle, CheckCircle, Edit, XCircle, UserPlus } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend } from 'recharts';
+import api from '../../services/api';
+import { useQuery } from '@tanstack/react-query';
+
+
+const fetchCommunityDetail = async (id) => {
+  const res = await api.get(`/api/platform-admin/communities/${id}`);
+  return res.data;
+};
 
 const PlatformCommunityDetail = () => {
   const { ct } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams();
   const [community, setCommunity] = useState(null);
+
+  const { data: communities, isLoading, error } = useQuery({
+    queryKey: ['platform-community', id],
+    queryFn: () => fetchCommunityDetail(id),
+    enabled: !!id,
+  });
 
   useEffect(() => {
     // Mock community data
@@ -61,12 +75,23 @@ const PlatformCommunityDetail = () => {
     setCommunity(mockCommunity);
   }, [id]);
 
-  if (!community) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#FAF8F3]">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent mb-4"></div>
           <p className="text-gray-600">{ct('กำลังโหลด...', 'Loading...')}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#FAF8F3]">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent mb-4"></div>
+          <p className="text-gray-600">{ct('เกิดข้อผิดพลาด', 'Error loading community')}</p>
         </div>
       </div>
     );
@@ -104,16 +129,17 @@ const PlatformCommunityDetail = () => {
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center space-x-3 mb-3">
-                <h1 className="text-3xl font-bold text-gray-900">{community.name}</h1>
+                <h1 className="text-3xl font-bold text-gray-900">{communities.name}</h1>
                 <span className="bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">
-                  {community.locationBadge}
+                  {/* {community.locationBadge} */} ดด
                 </span>
               </div>
               <div className="flex items-center text-gray-600 mb-3">
                 <MapPin className="h-4 w-4 mr-2" />
-                <span>{community.location}</span>
+                <span>{communities.location}</span>
               </div>
-              <p className="text-gray-600 max-w-3xl">{community.description}</p>
+              {/* <p className="text-gray-600 max-w-3xl">{communities.hero_section.description}</p> */} 
+              <p className="text-gray-600 max-w-3xl">{communities.hero_section}</p>
             </div>
             <div className="flex space-x-3">
               <button
@@ -135,35 +161,35 @@ const PlatformCommunityDetail = () => {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
           <StatCard
             icon={Store}
-            value={`${community.stats.shops.current}/${community.stats.shops.total}`}
+            value={`${communities.stats.shops.current}/${communities.stats.shops.total}`}
             label={ct('ร้าน Shop', 'Shops')}
             sublabel={ct('ทั้งหมด', 'Total')}
             color="green"
           />
           <StatCard
             icon={Users}
-            value={community.stats.admins}
+            value={communities.stats.admins}
             label={ct('Community Admin', 'Community Admin')}
             sublabel={ct('ผู้ดูแล', 'Admins')}
             color="orange"
           />
           <StatCard
             icon={Calendar}
-            value={community.stats.workshops}
+            value={communities.stats.workshopsAndEventsCount}
             label={ct('Workshop / Event', 'Workshop / Event')}
             sublabel={ct('กิจกรรมทั้งหมด', 'Total Events')}
             color="orange"
           />
           <StatCard
             icon={Users}
-            value={community.stats.participants}
+            value={communities.stats.participants}
             label={ct('ผู้เข้าร่วมทั้งหมด', 'Total Participants')}
             sublabel={ct('สมาชิก', 'Members')}
             color="orange"
           />
           <StatCard
             icon={TrendingUp}
-            value={community.stats.growth}
+            value={communities.stats.growth}
             label={ct('แนวโน้มการเติบโต', 'Growth Trend')}
             sublabel={ct('ต่อเดือน', 'Per Month')}
             color="green"
@@ -175,9 +201,8 @@ const PlatformCommunityDetail = () => {
           {community.alerts.map((alert, index) => (
             <div
               key={index}
-              className={`rounded-xl p-4 flex items-start space-x-3 ${
-                alert.type === 'warning' ? 'bg-orange-50 border border-orange-200' : 'bg-green-50 border border-green-200'
-              }`}
+              className={`rounded-xl p-4 flex items-start space-x-3 ${alert.type === 'warning' ? 'bg-orange-50 border border-orange-200' : 'bg-green-50 border border-green-200'
+                }`}
             >
               {alert.type === 'warning' ? (
                 <AlertCircle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
@@ -218,9 +243,8 @@ const PlatformCommunityDetail = () => {
                       <td className="py-3 text-sm text-orange-600 text-center font-medium">{shop.workshops}</td>
                       <td className="py-3 text-sm text-gray-900 text-center">{shop.members}</td>
                       <td className="py-3 text-center">
-                        <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${
-                          shop.status === 'active' ? 'bg-green-100' : 'bg-gray-100'
-                        }`}>
+                        <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${shop.status === 'active' ? 'bg-green-100' : 'bg-gray-100'
+                          }`}>
                           {shop.status === 'active' ? (
                             <CheckCircle className="h-4 w-4 text-green-600" />
                           ) : (
@@ -247,18 +271,15 @@ const PlatformCommunityDetail = () => {
               {community.workshopsEvents.map((item, index) => (
                 <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center space-x-3">
-                    <div className={`p-2 rounded-lg ${
-                      item.color === 'green' ? 'bg-green-50' : item.color === 'orange' ? 'bg-orange-50' : 'bg-gray-100'
-                    }`}>
-                      <Calendar className={`h-4 w-4 ${
-                        item.color === 'green' ? 'text-green-600' : item.color === 'orange' ? 'text-orange-500' : 'text-gray-500'
-                      }`} />
+                    <div className={`p-2 rounded-lg ${item.color === 'green' ? 'bg-green-50' : item.color === 'orange' ? 'bg-orange-50' : 'bg-gray-100'
+                      }`}>
+                      <Calendar className={`h-4 w-4 ${item.color === 'green' ? 'text-green-600' : item.color === 'orange' ? 'text-orange-500' : 'text-gray-500'
+                        }`} />
                     </div>
                     <span className="text-sm font-medium text-gray-900">{item.label}</span>
                   </div>
-                  <span className={`text-lg font-bold ${
-                    item.color === 'green' ? 'text-green-600' : item.color === 'orange' ? 'text-orange-500' : 'text-gray-500'
-                  }`}>
+                  <span className={`text-lg font-bold ${item.color === 'green' ? 'text-green-600' : item.color === 'orange' ? 'text-orange-500' : 'text-gray-500'
+                    }`}>
                     {item.count}
                   </span>
                 </div>
@@ -304,7 +325,7 @@ const PlatformCommunityDetail = () => {
           {/* Demographics */}
           <div className="bg-white rounded-xl p-6 shadow-sm">
             <h2 className="text-xl font-bold text-gray-900 mb-4">{ct('ผู้เข้าร่วม', 'Participants')}</h2>
-            
+
             {/* Participant Type Pie Chart */}
             <div className="mb-6">
               <h3 className="text-sm font-semibold text-gray-900 mb-3">{ct('ประเภทผู้เข้าร่วม', 'Participant Types')}</h3>
