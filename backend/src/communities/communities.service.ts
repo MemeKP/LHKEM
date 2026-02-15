@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateCommunityDto } from './dto/create-community.dto';
 import { UpdateCommunityDto } from './dto/update-community.dto';
 import { Community, CommunityDocument } from './schemas/community.schema';
@@ -9,6 +9,9 @@ import { ChartResponse, MonthlyStat, ParticipantsResult, RevenueResult } from '.
 import { Workshop } from 'src/workshops/schemas/workshop.schema';
 import { Shop } from 'src/shops/schemas/shop.schema';
 import { Workshopregistration } from 'src/workshopregistrations/schemas/workshopregistration.schema';
+import { CommunityAdmin } from 'src/community-admin/schemas/community-admin.schema';
+import { LocationDto } from './dto/location.dto';
+import { User } from 'src/users/schemas/users.schema';
 
 @Injectable()
 export class CommunitiesService {
@@ -17,50 +20,138 @@ export class CommunitiesService {
     @InjectModel(Workshop.name) private workshopModel: Model<Workshop>,
     @InjectModel(Shop.name) private shopModel: Model<Shop>,
     @InjectModel(Workshopregistration.name) private registrationModel: Model<Workshopregistration>,
+    @InjectModel(CommunityAdmin.name) private communityadminModel: Model<CommunityAdmin>,
+    @InjectModel(User.name) private userModel: Model<User>,
+
   ) { }
 
-  async create(createCommunityDto: CreateCommunityDto) {
+  async create(userId: string, createCommunityDto: CreateCommunityDto) {
     const { name } = createCommunityDto;
     const existing = await this.communityModel.findOne({ name });
     if (existing) {
-      throw new ConflictException('This community already exist.')
+      throw new ConflictException('This community already exists.');
     }
-    await this.fillEnglishFields(createCommunityDto);
-    const nameForSlug = createCommunityDto.name_en || createCommunityDto.name;
-    const baseSlug = generateSlug(nameForSlug);
+    let locData: any = createCommunityDto.location;
+    if (typeof locData === 'string') {
+      try { locData = JSON.parse(locData); } catch (e) { }
+    }
+    const formattedLocation = {
+      ...locData,
+      coordinates: locData?.coordinates
+        ? {
+          lat: locData.coordinates.lat != null
+            ? Number(locData.coordinates.lat)
+            : undefined,
+          lng: locData.coordinates.lng != null
+            ? Number(locData.coordinates.lng)
+            : undefined,
+        }
+        : undefined,
+    };
 
+    let contactData: any = createCommunityDto.contact_info;
+    if (typeof contactData === 'string') {
+      try { contactData = JSON.parse(contactData); } catch (e) { contactData = {}; }
+    }
+
+    let heroData: any = createCommunityDto.hero_section;
+    if (typeof heroData === 'string') {
+      try {
+        heroData = JSON.parse(heroData)
+      } catch (e) {
+        heroData = {}
+      }
+    }
+
+    const dataToSave: any = {
+      ...createCommunityDto,
+      location: formattedLocation,
+      contact_info: contactData,
+      hero_section: heroData,
+    };
+
+    await this.fillEnglishFields(dataToSave);
+
+    dataToSave.location = {
+      ...formattedLocation,
+      ...dataToSave.location
+    };
+
+    const nameForSlug = dataToSave.name_en || dataToSave.name;
+    const baseSlug = generateSlug(nameForSlug);
     let slug = baseSlug;
     let count = 1;
     while (await this.communityModel.exists({ slug })) {
       slug = `${baseSlug}-${count}`;
       count++;
     }
+
     const community = new this.communityModel({
-      ...createCommunityDto,
+      ...dataToSave,
       slug,
-    })
-    return await community.save()
+    });
+
+    // console.log('FINAL DATA BEFORE SAVE:', community);
+
+    const savedCommunity = await community.save();
+
+    // console.log('--- START ADMIN ASSIGNMENT ---');
+    // console.log('1. Raw DTO Admins:', createCommunityDto.admins);
+
+    let adminsList: any = createCommunityDto.admins;
+    if (typeof adminsList === 'string') {
+      try { adminsList = JSON.parse(adminsList); } catch (e) { adminsList = []; }
+    }
+    if (Array.isArray(adminsList) && adminsList.length > 0) {
+      const users = await this.userModel.find({
+        email: { $in: adminsList }
+      }).select('_id email role');
+
+      let adminPermissions: any = {};
+      if (createCommunityDto['admin_permissions']) {
+        try { adminPermissions = JSON.parse(createCommunityDto['admin_permissions']); } catch (e) { }
+      }
+
+      // console.log('Users found:', users)
+
+      if (users.length > 0) {
+        const adminDocs: any[] = []
+
+        users.forEach(user => {
+          adminDocs.push({
+            user_id: user._id,
+            community_id: savedCommunity._id,
+            assigned_by: new Types.ObjectId(userId),
+            can_approve_workshop: adminPermissions.can_approve_workshop || false
+          })
+        });
+        if (adminDocs.length > 0) {
+          await this.communityadminModel.insertMany(adminDocs);
+        }
+        console.log(`Assigned ${adminDocs.length} admins successfully.`);
+
+      }
+    }
+    return savedCommunity;
   }
 
   async findAll(): Promise<Community[]> {
     return this.communityModel.find()
-      // .populate('shops')
+      .populate('shops')
       .populate('events')
-      // .populate('workshops')
+      .populate('workshops')
       .exec();
   }
 
   async findOne(id: string): Promise<Community> {
     const community = await this.communityModel.findById(id)
-      // .populate('shops')
+      .populate('shops')
       .populate('events')
-      // .populate('workshops')
+      .populate('workshops')
       .exec();
-
     if (!community) {
       throw new NotFoundException(`Community with ID ${id} not found`);
     }
-
     return community;
   }
 
@@ -157,14 +248,11 @@ export class CommunitiesService {
     const community = await this.communityModel.findById(id);
     if (!community) throw new NotFoundException('Community not found');
     const communityId = community._id;
-
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-
     const workshops = await this.workshopModel.find({ community: communityId }).select('_id');
     const workshopIds = workshops.map(w => w._id);
-
     const [
       totalShops,
       totalWorkshops,
@@ -175,7 +263,6 @@ export class CommunitiesService {
       this.shopModel.countDocuments({ community: communityId }),
       this.workshopModel.countDocuments({ community: communityId }),
       this.workshopModel.countDocuments({ community: communityId, status: 'pending' }),
-
       this.registrationModel.aggregate<ParticipantsResult>([
         {
           $match: {
@@ -240,13 +327,11 @@ export class CommunitiesService {
     };
     if ('name' in dto) dto['name_en'] = await safeTranslate(dto['name'], dto['name_en']);
     if ('history' in dto) dto['history_en'] = await safeTranslate(dto['history'], dto['history_en']);
-
     if (dto['hero_section']) {
       const hero = dto['hero_section'];
       hero.title_en = await safeTranslate(hero.title, hero.title_en);
       hero.description_en = await safeTranslate(hero.description, hero.description_en);
     }
-
     if (dto['location']) {
       const loc = dto['location'];
       loc.province_en = await safeTranslate(loc.province, loc.province_en);
@@ -254,7 +339,6 @@ export class CommunitiesService {
       loc.sub_district_en = await safeTranslate(loc.sub_district, loc.sub_district_en);
       loc.full_address_en = await safeTranslate(loc.full_address, loc.full_address_en);
     }
-
     if (dto['cultural_highlights'] && Array.isArray(dto['cultural_highlights'])) {
       for (const item of dto['cultural_highlights']) {
         if (item) {
@@ -269,9 +353,8 @@ export class CommunitiesService {
   async getShops(id: string) {
     const community = await this.communityModel.findById(id);
     if (!community) throw new NotFoundException('Community not found');
-
     const shops = await this.shopModel
-      .find({ community: community._id }) //!!!!! schema ของ shop กับ workshop ยังไม่มี
+      .find({ community: community._id })
       .sort({ createdAt: -1 })
       .exec();
 
@@ -281,15 +364,12 @@ export class CommunitiesService {
   async getChartStats(id: string): Promise<ChartResponse> {
     const community = await this.communityModel.findById(id)
     if (!community) throw new NotFoundException('Community not found');
-
     const workshops = await this.workshopModel.find({ community: community._id }).select('_id'); // !!!!!
     const workshopIds = workshops.map(w => w._id);
-
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
     sixMonthsAgo.setDate(1);
     sixMonthsAgo.setHours(0, 0, 0, 0);
-
     const stats = await this.registrationModel.aggregate<MonthlyStat>([
       {
         $match: {
@@ -309,37 +389,29 @@ export class CommunitiesService {
         $sort: { _id: 1 }
       }
     ]);
-
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
     const formattedRevenue: { name: string; value: number }[] = [];
     const formattedParticipants: { name: string; value: number }[] = [];
-
     for (let i = 0; i < 6; i++) {
       const d = new Date();
       d.setMonth(d.getMonth() - (5 - i)); // ไล่จากอดีต -> ปัจจุบัน
       const monthIndex = d.getMonth() + 1; // 1-12
-      const monthName = monthNames[d.getMonth()]; 
-
+      const monthName = monthNames[d.getMonth()];
       const foundStat = stats.find(s => s._id === monthIndex);
-
       formattedRevenue.push({
         name: monthName,
         value: foundStat ? foundStat.revenue : 0
       });
-
       formattedParticipants.push({
         name: monthName,
         value: foundStat ? foundStat.participants : 0
       });
     }
-
     return {
       revenueByMonth: formattedRevenue,
       participantsByMonth: formattedParticipants
     };
   }
-
 }
 
 function generateSlug(name: string): string {

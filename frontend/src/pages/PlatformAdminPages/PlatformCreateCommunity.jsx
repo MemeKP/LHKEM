@@ -2,23 +2,116 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Image as ImageIcon, Plus, X } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
+import api from '../../services/api';
+import { useMutation } from '@tanstack/react-query';
 
+// เหลือต่อ map
+
+const createCommunity = async (formData) => {
+  const formDataToSend = new FormData();
+  formDataToSend.append('name', formData.name);
+
+  if (formData.history)
+    formDataToSend.append('history', formData.history);
+
+  if (formData.nameEn)
+    formDataToSend.append('name_en', formData.nameEn);
+  formDataToSend.append(
+    'location',
+    JSON.stringify({
+      full_address: formData.location.full_address,
+      province: formData.location.province,
+      district: formData.location.district,
+      sub_district: formData.location.sub_district,
+      postal_code: formData.location.postal_code,
+      coordinates: {
+        lat: formData.location.coordinates?.lat || null,
+        lng: formData.location.coordinates?.lng || null,
+      },
+    })
+  );
+  formDataToSend.append(
+    'contact_info',
+    JSON.stringify({
+      email: formData.contactEmail,
+      phone: formData.phone,
+    })
+  );
+
+  if (formData.hero_section) {
+    formDataToSend.append(
+      'hero_section',
+      JSON.stringify({
+        description: formData.hero_section.description || ''
+      })
+    )
+  }
+
+  if (formData.admins.length > 0) {
+    formDataToSend.append('admins', JSON.stringify(formData.admins));
+  }
+
+  if (formData.coverImage) {
+    formDataToSend.append('images', formData.coverImage);
+  }
+
+  formDataToSend.append('admin_permissions', JSON.stringify({
+     can_approve_workshop: formData.workshopApproval
+  }));
+
+  const res = await api.post('/api/communities', formDataToSend, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return res.data
+};
 const PlatformCreateCommunity = () => {
   const { ct } = useTranslation();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
-    nameEn: '',
-    description: '',
-    location: '',
-    locationDetails: '',
-    contactEmail: '',
-    coverImage: null,
+    name_en: '',
+    hero_section: {
+      description: ''
+    },
+    history: '',
+    location: {
+      full_address: '',
+      district: '',
+      sub_district: '',
+      postal_code: '',
+      province: '',
+      coordinates: {
+        lat: 0,
+        lng: 0,
+      },
+    },
+    contact_info: {
+      phone: '',
+      email: '',
+      facebook: '',
+      line: '',
+      website: '',
+    },
+    images: null,
     admins: [],
-    adminEmail: '',
+    admin_email: '',
     workshopApproval: false
   });
+
   const [imagePreview, setImagePreview] = useState(null);
+
+  const mutation = useMutation({
+    mutationFn: createCommunity,
+    onSuccess: () => {
+      navigate('/platform-admin/dashboard');
+    },
+    onError: (error) => {
+      console.log(error.response?.data);
+    }
+
+  });
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -57,18 +150,22 @@ const PlatformCreateCommunity = () => {
     }));
   };
 
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+  //   // Save to localStorage for demo
+  //   const communities = JSON.parse(localStorage.getItem('communities') || '[]');
+  //   const newCommunity = {
+  //     id: Date.now().toString(),
+  //     ...formData,
+  //     createdAt: new Date().toISOString()
+  //   };
+  //   communities.push(newCommunity);
+  //   localStorage.setItem('communities', JSON.stringify(communities));
+  //   navigate('/platform-admin/dashboard');
+  // };
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Save to localStorage for demo
-    const communities = JSON.parse(localStorage.getItem('communities') || '[]');
-    const newCommunity = {
-      id: Date.now().toString(),
-      ...formData,
-      createdAt: new Date().toISOString()
-    };
-    communities.push(newCommunity);
-    localStorage.setItem('communities', JSON.stringify(communities));
-    navigate('/platform-admin/dashboard');
+    mutation.mutate(formData);
   };
 
   return (
@@ -133,8 +230,8 @@ const PlatformCreateCommunity = () => {
               {ct('ประวัติ / เรื่องราว', 'History / Story')}
             </label>
             <textarea
-              name="description"
-              value={formData.description}
+              name="history"
+              value={formData.history}
               onChange={handleInputChange}
               placeholder={ct('เล่าเรื่องราวและเอกลักษณ์ของชุมชนของคุณ...', 'Tell the story and identity of your community...')}
               rows={5}
@@ -146,7 +243,7 @@ const PlatformCreateCommunity = () => {
           </div>
 
           {/* Location */}
-          <div className="mb-6">
+          {/* <div className="mb-6">
             <label className="block text-sm font-semibold text-gray-900 mb-2">
               {ct('ที่ตั้ง', 'Location')} <span className="text-red-500">*</span>
             </label>
@@ -162,10 +259,121 @@ const PlatformCreateCommunity = () => {
                 required
               />
             </div>
+          </div> */}
+          {/* Location */}
+          <div className="mb-6">
+            <label className="block text-sm font-semibold text-gray-900 mb-2">
+              {ct('ที่ตั้ง', 'Location')} <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <MapPin className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+              <div className="mb-4">
+                <input
+                  type="text"
+                  name="fullAddress"
+                  value={formData.location.full_address}
+                  onChange={(e) =>
+                    setFormData(prev => ({
+                      ...prev,
+                      location: {
+                        ...prev.location,
+                        full_address: e.target.value
+                      }
+                    }))
+                  }
+                  placeholder="เช่น 123 หมู่ 4 ต.สุเทพ"
+                  className="w-full px-8 py-3 border rounded-lg "
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-2">
+                    จังหวัด *
+                  </label>
+                  <input
+                    type="text"
+                    name="province"
+                    value={formData.location.province}
+                    onChange={(e) =>
+                      setFormData(prev => ({
+                        ...prev,
+                        location: {
+                          ...prev.location,
+                          province: e.target.value
+                        }
+                      }))
+                    }
+                    required
+                    className="w-full px-4 py-3 border rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-2">
+                    อำเภอ / เขต
+                  </label>
+                  <input
+                    type="text"
+                    name="district"
+                    value={formData.location.district}
+                    onChange={(e) =>
+                      setFormData(prev => ({
+                        ...prev,
+                        location: {
+                          ...prev.location,
+                          district: e.target.value
+                        }
+                      }))
+                    }
+                    className="w-full px-4 py-3 border rounded-lg"
+                  />
+                </div>
+              </div>
+              <div className="mb-6">
+                <label className="block text-sm font-semibold mb-2">
+                  รหัสไปรษณีย์
+                </label>
+                <input
+                  type="text"
+                  name="postalCode"
+                  value={formData.location.postal_code}
+                  onChange={(e) =>
+                    setFormData(prev => ({
+                      ...prev,
+                      location: {
+                        ...prev.location,
+                        postal_code: e.target.value
+                      }
+                    }))
+                  }
+                  className="w-full px-4 py-3 border rounded-lg"
+                />
+              </div>
+              <input
+                type="hidden"
+                value={formData.location.coordinates.lat}
+              />
+              <input
+                type="hidden"
+                value={formData.location.coordinates.lng}
+              />
+            </div>
+          </div>
+          <div className="mb-6">
+            <div
+              className="cursor-pointer border-2 border-orange-300 rounded-lg p-8 text-center bg-orange-50"
+            >
+              <MapPin className="h-12 w-12 text-orange-500 mx-auto mb-3" />
+              <p className="text-sm font-medium">
+                {formData.lat && formData.lng
+                  ? `Lat: ${formData.lat}, Lng: ${formData.lng}`
+                  : 'คลิกเพื่อเลือกตำแหน่งบนแผนที่'}
+              </p>
+            </div>
           </div>
 
           {/* Map Picker */}
-          <div className="mb-6">
+          {/* <div className="mb-6">
             <div className="border-2 border-orange-300 rounded-lg p-8 text-center bg-orange-50">
               <MapPin className="h-12 w-12 text-orange-500 mx-auto mb-3" />
               <p className="text-sm font-medium text-gray-900 mb-1">
@@ -178,7 +386,7 @@ const PlatformCreateCommunity = () => {
             <p className="text-xs text-gray-500 mt-2">
               {ct('ตำแหน่งที่เลือกจะใช้ใน 1 ที่', 'Selected location will be used in 1 place')}
             </p>
-          </div>
+          </div> */}
 
           {/* Additional Details */}
           <div className="mb-6">
@@ -186,10 +394,10 @@ const PlatformCreateCommunity = () => {
               {ct('คำอธิบาย', 'Description')}
             </label>
             <textarea
-              name="locationDetails"
-              value={formData.locationDetails}
+              name="hero_section"
+              value={formData.hero_section.description}
               onChange={handleInputChange}
-              placeholder={ct('ทิศทาง เช่น เดินทางโดยรถยนต์หรือรถโดยสารจากเชียงใหม่...', 'Directions, e.g., Travel by car or bus from Chiang Mai...')}
+              placeholder={ct('คำอธิบายสั้น ๆ เกี่ยวกับชุมชนและสิ่งที่ทำให้ชุมชนนี้พิเศษ...', 'A brief description of the community and what makes it special...')}
               rows={4}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all resize-none"
             />
@@ -262,7 +470,7 @@ const PlatformCreateCommunity = () => {
             <label className="block text-sm font-semibold text-gray-900 mb-2">
               {ct('ผู้ดูแลชุมชน', 'Community Admins')}
             </label>
-            
+
             {/* Checkbox */}
             <div className="flex items-start space-x-3 mb-4 p-4 bg-gray-50 rounded-lg">
               <input

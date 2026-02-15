@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { PlatformAdminService } from './platform-admin.service';
 import { PlatformAdminController } from './platform-admin.controller';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -6,6 +6,9 @@ import { Community, CommunitySchema } from 'src/communities/schemas/community.sc
 import { User, UserSchema } from 'src/users/schemas/users.schema';
 import { PlatformActivity, PlatformActivitySchema } from './schemas/platform-activity.schema';
 import { EventSchema } from 'src/events/schemas/event.schema';
+import { Shop, ShopSchema } from 'src/shops/schemas/shop.schema';
+import { Workshop, WorkshopSchema } from 'src/workshops/schemas/workshop.schema';
+import { CommunityAdmin, CommunityAdminSchema } from 'src/community-admin/schemas/community-admin.schema';
 
 @Module({
   imports: [
@@ -14,6 +17,9 @@ import { EventSchema } from 'src/events/schemas/event.schema';
       { name: User.name, schema: UserSchema },
       { name: PlatformActivity.name, schema: PlatformActivitySchema},
       { name: Event.name, schema: EventSchema },
+      { name: Shop.name, schema: ShopSchema},
+      { name: Workshop.name, schema: WorkshopSchema}, 
+      { name: CommunityAdmin.name, schema: CommunityAdminSchema},
     ]),
   ],
   controllers: [PlatformAdminController],
