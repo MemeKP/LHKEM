@@ -137,7 +137,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] py-8">
+    <div className="min-h-screen bg-[#F5EFE7] py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header with Action Buttons */}
         <div className="flex items-center justify-between mb-6">
@@ -173,7 +173,7 @@ const AdminDashboard = () => {
               </div>
               <span className="text-2xl font-bold text-[#1A1A1A]">{pendingCounts.total}</span>
             </div>
-            <p className="text-sm font-medium text-[#666666]">{ct('ที่ต้องตรวจสอบ', 'To Review')}</p>
+            <p className="text-sm font-medium text-[#666666]">{ct('รออนุมัติทั้งหมด', 'To Review')}</p>
           </div>
 
           <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
@@ -183,7 +183,7 @@ const AdminDashboard = () => {
               </div>
               <span className="text-2xl font-bold text-[#1A1A1A]">{pendingCounts.workshops }</span>
             </div>
-            <p className="text-sm font-medium text-[#666666]">{ct('ที่ต้องตรวจสอบ', 'Workshops Pending')}</p>
+            <p className="text-sm font-medium text-[#666666]">{ct('รออนุมัติ', 'Workshops Pending')}</p>
           </div>
 
           <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
@@ -207,45 +207,18 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Alert Section */}
-        <div className="bg-white rounded-xl p-5 mb-6 shadow-sm border border-gray-200">
-          <div className="flex items-center gap-2 mb-4">
-            <AlertCircle className="h-5 w-5 text-[#F57C00]" />
-            <h3 className="text-base font-bold text-[#1A1A1A]">
-              {ct('การแจ้งเตือนสำคัญ', 'Important Alerts')}
-            </h3>
-          </div>
-          <div className="space-y-3">
-            <div className="flex items-start gap-3 p-3 bg-[#FFF9E6] rounded-lg border border-[#FFE082]">
-              <AlertCircle className="h-5 w-5 text-[#F9A825] flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-[#1A1A1A] mb-1">
-                  {ct('Workshop ใหม่ที่ต้องอนุมัติ', 'New Workshop Pending Approval')}
-                </p>
-                <p className="text-xs text-[#666666]">
-                  {ct('ส่งเมื่อ 15 ม.ค. 2568, 10:30 น. โดย บ้านครามโหล่งฮิมคาว', 'Submitted on Jan 15, 2025, 10:30 AM by Baan Kram Loeng Him Kaw')}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 bg-[#E3F2FD] rounded-lg border border-[#90CAF9]">
-              <Calendar className="h-5 w-5 text-[#1976D2] flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-[#1A1A1A] mb-1">
-                  {ct('Event ใหม่ที่ต้องอนุมัติ', 'New Event Pending Approval')}
-                </p>
-                <p className="text-xs text-[#666666]">
-                  {ct('ส่งเมื่อ 14 ม.ค. 2568, 09:15 น. โดย ชุมชนโหล่งฮิมคาว', 'Submitted on Jan 14, 2025, 09:15 AM by Loeng Him Kaw Community')}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Workshop Section Title */}
-        <div className="mb-4">
+        {/* Workshop Section Title with CTA */}
+        <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-bold text-[#1A1A1A]">
             {ct('Workshop ที่ต้องจัดการ', 'Workshops to Manage')}
           </h2>
+          <button
+            onClick={() => navigate('/community-admin/workshops/pending')}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-[#1A1A1A] text-sm font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <List className="h-4 w-4" />
+            {ct('ดูทั้งหมด', 'View all')}
+          </button>
         </div>
 
         {/* Workshop Cards Grid */}
@@ -309,11 +282,18 @@ const AdminDashboard = () => {
           ))}
         </div>
 
-        {/* งานที่ต้องจัดการ Section Title */}
-        <div className="mb-4">
+        {/* งานที่ต้องจัดการ Section Title with CTA */}
+        <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-bold text-[#1A1A1A]">
             {ct('งานที่ต้องจัดการ', 'Tasks to Manage')}
           </h2>
+          <button
+            onClick={() => navigate('/community-admin/events')}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-[#1A1A1A] text-sm font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <List className="h-4 w-4" />
+            {ct('ดูอีเว้นท์ทั้งหมด', 'View all events')}
+          </button>
         </div>
 
         {/* Tasks Tabs */}
@@ -364,17 +344,6 @@ const AdminDashboard = () => {
                     <p className="text-sm text-[#666666] text-center mb-4">
                       {ct('ยังไม่มีงานอีเว้นท์ที่ต้องจัดการในขณะนี้', 'No events to manage at the moment')}
                     </p>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => navigate('/community-admin/events')}
-                        className="px-4 py-2 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-sm font-semibold rounded-lg transition-all"
-                      >
-                        {ct('ดูรายละเอียด', 'View Details')}
-                      </button>
-                      <button className="px-4 py-2 bg-[#1E293B] hover:bg-[#0F172A] text-white text-sm font-semibold rounded-lg transition-all">
-                        {ct('อนุมัติ', 'Approve')}
-                      </button>
-                    </div>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

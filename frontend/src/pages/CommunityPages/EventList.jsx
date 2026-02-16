@@ -169,7 +169,7 @@ const EventList = () => {
   if (isError) return <div className="p-8 text-center text-red-500">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>;
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] py-8">
+    <div className="min-h-screen bg-[#F5EFE7] py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">

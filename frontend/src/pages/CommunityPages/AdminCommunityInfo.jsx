@@ -67,7 +67,7 @@ const AdminCommunityInfo = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#FAF8F3] py-8">
+    <div className="min-h-screen bg-[#F5EFE7] py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
