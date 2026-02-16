@@ -1,63 +1,78 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Calendar, MapPin, Users, DollarSign, Save, Upload, X, Image as ImageIcon, Phone, MessageCircle, Facebook } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
 import api from '../../services/api';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 /**
- * Event Create Form - สร้าง Event ใหม่สำหรับชุมชน
+ * Event Edit Form - แก้ไข Event ที่มีอยู่แล้ว
  * 
- * ✅ Backend API: POST /api/events
+ * ✅ Backend API: PUT /api/events/:id
+ * ✅ Backend API: GET /api/events/:id - ดึงข้อมูล Event เพื่อแก้ไข
  * 
- * Event Schema fields (ส่งไปยัง Backend):
- * - title (required) - ชื่องาน/กิจกรรม
- * - description (required) - เล่าเกี่ยวกับกิจกรรม
- * - location (required) - สถานที่ (Object: full_address, province, coordinates)
- * - start_at (required) - วันและเวลาเริ่ม (ISO DateTime)
- * - end_at (required) - วันและเวลาสิ้นสุด (ISO DateTime)
- * - seat_limit (required) - จำนวนที่นั่ง
- * - deposit_amount (optional) - ค่าใช้จ่าย/ค่าม��ดจำ
- * - status (OPEN, CLOSED, CANCELLED) - สถานะ
- * - is_featured (boolean) - แนะนำ
- * - is_pinned (boolean) - ปักหมุด
- * - images (string) - รูปภาพปก (TODO: รอ Image Upload API)
+ * Event Schema fields:
+ * - title (required)
+ * - description (required)
+ * - location (required)
+ * - start_at (required)
+ * - end_at (required)
+ * - seat_limit (required)
+ * - deposit_amount (optional)
+ * - status (OPEN, CLOSED, CANCELLED)
+ * - is_featured (boolean)
+ * - is_pinned (boolean)
+ * - images (string) - TODO: รอ Image Upload API
  * 
- * Additional fields (ไม่ส่งไปยัง Backend - สำหรับ UI เท่านั้น):
- * - event_type - ประเภทกิจกรรม (เทศกาล, Workshop, วัฒนธรรม, ตลาดนัด, อื่นๆ)
- * - workshops - Workshop ที่เข้าร่วม (array of workshop IDs)
+ * Additional fields (not sent to backend):
+ * - event_type - ประเภทกิจกรรม
+ * - workshops - Workshop ที่เข้าร่วม
  * - target_audience - กลุ่มเป้าหมาย
  * - cost_type - ประเภทค่าใช้จ่าย (free/paid)
- * - contact_phone - เบอร์โทรศัพท์ติดต่อ
+ * - contact_phone - เบอร์ติดต่อ
  * - contact_line - Line ID
  * - contact_facebook - Facebook
  * - coordinator_name - ชื่อผู้ประสานงาน
  * - additional_info - ข้อมูลเพิ่มเติม
  */
-const createEventAPI = async (payload) => {
-  const response = await api.post('/api/events', payload);
+
+const fetchEvent = async (eventId) => {
+  const response = await api.get(`/api/events/${eventId}`);
   return response.data;
 };
 
-const useCreateEvent = () => {
+const updateEventAPI = async ({ eventId, payload }) => {
+  const response = await api.put(`/api/events/${eventId}`, payload);
+  return response.data;
+};
+
+const useEvent = (eventId) => {
+  return useQuery({
+    queryKey: ['event', eventId],
+    queryFn: () => fetchEvent(eventId),
+    enabled: !!eventId,
+  });
+};
+
+const useUpdateEvent = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: createEventAPI,
+    mutationFn: updateEventAPI,
     onSuccess: (data) => {
-      console.log("Event Created for Community:", data.community_id);
-      
-      if (data?.community_id) {
-        queryClient.invalidateQueries({ queryKey: ['events', 'pending'] }); 
-        queryClient.invalidateQueries({ queryKey: ['events', data.community_id] }); 
-      }
+      console.log("Event Updated:", data._id);
+      queryClient.invalidateQueries({ queryKey: ['events'] });
+      queryClient.invalidateQueries({ queryKey: ['event', data._id] });
+      queryClient.invalidateQueries({ queryKey: ['events', 'pending'] });
     },
   });
 };
 
-const EventCreateForm = () => {
-  const { mutateAsync: createEvent } = useCreateEvent();
+const EventEditForm = () => {
+  const { id } = useParams();
+  const { mutateAsync: updateEvent } = useUpdateEvent();
+  const { data: event, isLoading: eventLoading } = useEvent(id);
   const { user } = useAuth();
   const { ct } = useTranslation();
   const navigate = useNavigate();
@@ -73,7 +88,7 @@ const EventCreateForm = () => {
     event_type: '',
     workshops: [],
     target_audience: '',
-    cost_type: 'free', // 'free' or 'paid'
+    cost_type: 'free',
     deposit_amount: '',
     contact_phone: '',
     contact_line: '',
@@ -86,6 +101,40 @@ const EventCreateForm = () => {
     is_pinned: false,
   });
 
+  useEffect(() => {
+    if (event) {
+      const startDate = new Date(event.start_at);
+      const endDate = new Date(event.end_at);
+      
+      setFormData({
+        title: event.title || '',
+        description: event.description || '',
+        event_date: startDate.toISOString().split('T')[0],
+        start_time: startDate.toTimeString().slice(0, 5),
+        end_time: endDate.toTimeString().slice(0, 5),
+        location: typeof event.location === 'string' ? event.location : (event.location?.full_address || ''),
+        event_type: '',
+        workshops: [],
+        target_audience: '',
+        cost_type: event.deposit_amount > 0 ? 'paid' : 'free',
+        deposit_amount: event.deposit_amount || '',
+        contact_phone: '',
+        contact_line: '',
+        contact_facebook: '',
+        coordinator_name: '',
+        additional_info: '',
+        seat_limit: event.seat_limit || '',
+        status: event.status || 'OPEN',
+        is_featured: event.is_featured || false,
+        is_pinned: event.is_pinned || false,
+      });
+
+      if (event.images && event.images.length > 0) {
+        setImagePreview(event.images[0]);
+      }
+    }
+  }, [event]);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -95,13 +144,12 @@ const EventCreateForm = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();  
+    e.preventDefault();
     if (!formData.event_date || !formData.start_time || !formData.end_time) {
       alert("กรุณาระบุวันและเวลา");
       return;
     }
     try {
-      // Combine date and time
       const startDateTime = new Date(`${formData.event_date}T${formData.start_time}`);
       const endDateTime = new Date(`${formData.event_date}T${formData.end_time}`);
 
@@ -120,18 +168,18 @@ const EventCreateForm = () => {
             lng: 98.9853
           }
         },
-        images: "https://placehold.co/600x400?text=Event+Image",
+        images: imagePreview || "https://placehold.co/600x400?text=Event+Image",
         status: formData.status,
         is_featured: formData.is_featured,
         is_pinned: formData.is_pinned,
       };
-      console.log("Sending Payload:", payload); 
+      console.log("Updating Event:", payload);
 
-      await createEvent(payload);
-      alert('สร้าง Event สำเร็จ!');
-      navigate('/community-admin/dashboard');
+      await updateEvent({ eventId: id, payload });
+      alert('แก้ไข Event สำเร็จ!');
+      navigate(`/community-admin/events/${id}`);
     } catch (error) {
-      console.error('Failed to create event:', error);
+      console.error('Failed to update event:', error);
       const msg = error?.response?.data?.message;
       alert(`เกิดข้อผิดพลาด: ${Array.isArray(msg) ? msg.join('\n') : msg}`);
     }
@@ -148,13 +196,19 @@ const EventCreateForm = () => {
     }
   };
 
+  if (eventLoading) {
+    return <div className="min-h-screen bg-[#FAFAFA] py-8 flex items-center justify-center">
+      <p className="text-[#666666]">กำลังโหลดข้อมูล...</p>
+    </div>;
+  }
+
   return (
     <div className="min-h-screen bg-[#FAFAFA] py-8">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-6 text-center">
-          <h1 className="text-2xl font-bold text-[#1A1A1A] mb-1">{ct('สร้างกิจกรรมของชุมชน', 'Create Community Event')}</h1>
-          <p className="text-[#666666] text-sm">{ct('กรอกข้อมูลกิจกรรมพิเศษหรือเทศกาลของชุมชน', 'Fill in information for special events or community festivals')}</p>
+          <h1 className="text-2xl font-bold text-[#1A1A1A] mb-1">{ct('แก้ไขกิจกรรมของชุมชน', 'Edit Community Event')}</h1>
+          <p className="text-[#666666] text-sm">{ct('แก้ไขข้อมูลกิจกรรมพิเศษหรือเทศกาลของชุมชน', 'Edit information for special events or community festivals')}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
@@ -298,7 +352,6 @@ const EventCreateForm = () => {
               >
                 เปิดแผนที่
               </button>
-              <p className="text-xs text-[#999999] mt-3">{ct('คลิกเพื่อเลือกตำแหน่งที่แม่นยำบนแผนที่', 'Click to select precise location on map')}</p>
             </div>
           </div>
 
@@ -322,7 +375,7 @@ const EventCreateForm = () => {
             </select>
           </div>
 
-          {/* 7. Workshop ที่เข้าร่วม  ลองดูหน่อยว่าจะเอามั้ย*/}
+          {/* 7. Workshop ที่เข้าร่วม */}
           <div className="mb-6">
             <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
               Workshop ที่เข้าร่วม (ถ้ามี)
@@ -505,11 +558,11 @@ const EventCreateForm = () => {
               disabled={loading}
               className="px-8 py-2.5 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'กำลังบันทึก...' : 'สร้างกิจกรรม'}
+              {loading ? 'กำลังบันทึก...' : 'บันทึกการแก้ไข'}
             </button>
             <button
               type="button"
-              onClick={() => navigate('/community-admin/dashboard')}
+              onClick={() => navigate(`/community-admin/events/${id}`)}
               className="px-8 py-2.5 bg-white border border-gray-300 text-[#666666] font-medium rounded-lg hover:bg-gray-50 transition-colors"
             >
               ยกเลิก
@@ -521,4 +574,4 @@ const EventCreateForm = () => {
   );
 };
 
-export default EventCreateForm;
+export default EventEditForm;

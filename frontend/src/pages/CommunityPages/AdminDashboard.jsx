@@ -34,6 +34,7 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { ct } = useTranslation();
   const [activeTab, setActiveTab] = useState('workshops');
+  const [taskTab, setTaskTab] = useState('events'); // Tab for Events/Shops section
 
   const isLoading = eventsQuery.isLoading;
 
@@ -59,25 +60,27 @@ const AdminDashboard = () => {
   const pendingWorkshops = [
     {
       id: 'w1',
-      title: 'Workshop ย้อมผ้าครามธรรมชาติ',
+      title: 'กองสอนทอผ้าครามจังหวัดน่าน',
       shop: 'บ้านครามโหล่งฮิมคาว',
       description: 'เรียนรู้การย้อมผ้าด้วยสีครามจากธรรมชาติ ตั้งแต่การเตรียมน้ำย้อม การพับผ้า จนได้ผืนผ้าสวยงาม',
       price: 450,
       seats: 8,
       duration: '3 ชม.',
       submittedAt: '2024-01-15T10:30:00',
-      status: 'รออนุมัติ'
+      status: 'รออนุมัติ',
+      image: null
     },
     {
       id: 'w2',
-      title: 'Workshop เครื่องปั้นดินเผาล้านนา',
+      title: 'Workshop เครื่องปั้นดินเผาแบบล้านนา',
       shop: 'เครื่องปั้นดินเผาบ้านมอญ',
       description: 'สัมผัสประสบการณ์การปั้นดินเผาแบบล้านนา ทำภาชนะเครื่องใช้ด้วยมือของคุณเอง',
       price: 380,
       seats: 6,
       duration: '2.5 ชม.',
       submittedAt: '2024-01-16T14:20:00',
-      status: 'รออนุมัติ'
+      status: 'รออนุมัติ',
+      image: null
     }
   ];
 
@@ -134,29 +137,26 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF8F3] py-8">
+    <div className="min-h-screen bg-[#FAFAFA] py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header with Action Buttons */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              {ct('ศูนย์รวมการจัดการชุมชน', 'Community Management Hub')}
+            <h1 className="text-3xl font-bold text-[#1A1A1A] mb-1">
+              {ct('ชุมชนโหล่งฮิมคาว', 'Loeng Him Kaw Community')}
             </h1>
-            <p className="text-gray-600">
-              {ct('จัดการและอนุมัติข้อมูลต่างๆ ของชุมชน', 'Manage and approve community submissions')}
-            </p>
           </div>
           <div className="flex gap-3">
             <button
               onClick={() => navigate('/community-admin/settings')}
-              className="flex items-center gap-2 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white font-medium rounded-xl transition shadow-sm"
+              className="flex items-center gap-2 px-5 py-2.5 bg-[#E53935] hover:bg-[#D32F2F] text-white font-semibold rounded-lg transition shadow-sm"
             >
               <Edit className="h-4 w-4" />
               {ct('แก้ไข', 'Edit')}
             </button>
             <button
               onClick={() => navigate('/community-admin/events/create')}
-              className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition shadow-sm"
+              className="flex items-center gap-2 px-5 py-2.5 bg-[#1E293B] hover:bg-[#0F172A] text-white font-semibold rounded-lg transition shadow-sm"
             >
               <Plus className="h-4 w-4" />
               {ct('สร้างอีเว้นท์', 'Create Event')}
@@ -165,347 +165,316 @@ const AdminDashboard = () => {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-2xl p-6 shadow-md">
-            <div className="flex items-center justify-between mb-2">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                <AlertCircle className="h-6 w-6 text-white" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-[#FFF3E0] rounded-lg flex items-center justify-center">
+                <AlertCircle className="h-5 w-5 text-[#F57C00]" />
               </div>
-              <span className="text-4xl font-bold text-white">{pendingCounts.total}</span>
+              <span className="text-2xl font-bold text-[#1A1A1A]">{pendingCounts.total}</span>
             </div>
-            <p className="text-sm font-semibold text-white/90">{ct('รออนุมัติทั้งหมด', 'All Pending')}</p>
+            <p className="text-sm font-medium text-[#666666]">{ct('ที่ต้องตรวจสอบ', 'To Review')}</p>
           </div>
 
-          <div className="bg-white border-2 border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition">
-            <div className="flex items-center justify-between mb-2">
-              <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
-                <FileText className="h-6 w-6 text-blue-600" />
+          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-[#FFF9C4] rounded-lg flex items-center justify-center">
+                <FileText className="h-5 w-5 text-[#F9A825]" />
               </div>
-              <span className="text-4xl font-bold text-gray-900">{pendingCounts.workshops}</span>
+              <span className="text-2xl font-bold text-[#1A1A1A]">{pendingCounts.workshops }</span>
             </div>
-            <p className="text-sm font-semibold text-gray-600">Workshop {ct('รออนุมัติ', 'Pending')}</p>
+            <p className="text-sm font-medium text-[#666666]">{ct('ที่ต้องตรวจสอบ', 'Workshops Pending')}</p>
           </div>
 
-          <div className="bg-white border-2 border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition">
-            <div className="flex items-center justify-between mb-2">
-              <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center">
-                <Calendar className="h-6 w-6 text-green-600" />
+          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-[#E3F2FD] rounded-lg flex items-center justify-center">
+                <Calendar className="h-5 w-5 text-[#1976D2]" />
               </div>
-              <span className="text-4xl font-bold text-gray-900">{pendingCounts.events}</span>
+              <span className="text-2xl font-bold text-[#1A1A1A]">{pendingCounts.events}</span>
             </div>
-            <p className="text-sm font-semibold text-gray-600">{ct('กิจกรรมรออนุมัติ', 'Events Pending')}</p>
+            <p className="text-sm font-medium text-[#666666]">{ct('กิจกรรม', 'Events')}</p>
           </div>
 
-          <div className="bg-white border-2 border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition">
-            <div className="flex items-center justify-between mb-2">
-              <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center">
-                <Store className="h-6 w-6 text-purple-600" />
+          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-[#F3E5F5] rounded-lg flex items-center justify-center">
+                <Store className="h-5 w-5 text-[#8E24AA]" />
               </div>
-              <span className="text-4xl font-bold text-gray-900">{pendingCounts.shops}</span>
+              <span className="text-2xl font-bold text-[#1A1A1A]">{pendingCounts.shops}</span>
             </div>
-            <p className="text-sm font-semibold text-gray-600">{ct('ร้านค้ารออนุมัติ', 'Shops Pending')}</p>
+            <p className="text-sm font-medium text-[#666666]">{ct('ร้านค้า', 'Shops')}</p>
           </div>
         </div>
 
-        {/* การแจ้งเตือนด่วน */}
-        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 p-5 mb-8 rounded-2xl shadow-sm">
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center flex-shrink-0">
-              <AlertCircle className="h-5 w-5 text-white" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-base font-bold text-gray-900 mb-1">
-                {ct('การแจ้งเตือนด่วน', 'Urgent Notifications')}
-              </h3>
-              <p className="text-sm text-gray-700">
-                {ct('มีรายการรออนุมัติ: Workshop ย้อมผ้าครามธรรมชาติ ส่งมาเมื่อ 15 ม.ค. 2568 เวลา 10:30 น. กรุณาตรวจสอบ', 'Pending approval: Natural Indigo Dyeing Workshop submitted on Jan 15, 2024 at 10:30 AM. Please review.')}
-              </p>
-            </div>
+        {/* Alert Section */}
+        <div className="bg-white rounded-xl p-5 mb-6 shadow-sm border border-gray-200">
+          <div className="flex items-center gap-2 mb-4">
+            <AlertCircle className="h-5 w-5 text-[#F57C00]" />
+            <h3 className="text-base font-bold text-[#1A1A1A]">
+              {ct('การแจ้งเตือนสำคัญ', 'Important Alerts')}
+            </h3>
           </div>
-        </div>
-        
-        {/* Quick Actions for Events */}
-        <div className="bg-blue-50 border border-blue-200 p-5 mb-8 rounded-2xl shadow-sm">
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
-              <Calendar className="h-5 w-5 text-white" />
+          <div className="space-y-3">
+            <div className="flex items-start gap-3 p-3 bg-[#FFF9E6] rounded-lg border border-[#FFE082]">
+              <AlertCircle className="h-5 w-5 text-[#F9A825] flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-[#1A1A1A] mb-1">
+                  {ct('Workshop ใหม่ที่ต้องอนุมัติ', 'New Workshop Pending Approval')}
+                </p>
+                <p className="text-xs text-[#666666]">
+                  {ct('ส่งเมื่อ 15 ม.ค. 2568, 10:30 น. โดย บ้านครามโหล่งฮิมคาว', 'Submitted on Jan 15, 2025, 10:30 AM by Baan Kram Loeng Him Kaw')}
+                </p>
+              </div>
             </div>
-            <div className="flex-1">
-              <h3 className="text-base font-bold text-gray-900 mb-1">
-                {ct('จัดการกิจกรรม (Event)', 'Event Management')}
-              </h3>
-              <p className="text-sm text-gray-700 mb-3">
-                {ct('สร้างกิจกรรมใหม่หรือดูรายการกิจกรรมทั้งหมดของชุมชน', 'Create new events or view all community events')}
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => navigate('/community-admin/events/create')}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition"
-                >
-                  <Plus className="h-4 w-4" />
-                  {ct('สร้างกิจกรรมใหม่', 'Create Event')}
-                </button>
-                <button
-                  onClick={() => navigate('/community-admin/events')}
-                  className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-blue-600 text-sm font-medium rounded-lg border border-blue-200 transition"
-                >
-                  <List className="h-4 w-4" />
-                  {ct('ดูกิจกรรมทั้งหมด', 'View All Events')}
-                </button>
+            <div className="flex items-start gap-3 p-3 bg-[#E3F2FD] rounded-lg border border-[#90CAF9]">
+              <Calendar className="h-5 w-5 text-[#1976D2] flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-[#1A1A1A] mb-1">
+                  {ct('Event ใหม่ที่ต้องอนุมัติ', 'New Event Pending Approval')}
+                </p>
+                <p className="text-xs text-[#666666]">
+                  {ct('ส่งเมื่อ 14 ม.ค. 2568, 09:15 น. โดย ชุมชนโหล่งฮิมคาว', 'Submitted on Jan 14, 2025, 09:15 AM by Loeng Him Kaw Community')}
+                </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="bg-white rounded-lg shadow-sm mb-6">
-          <div className="border-b border-gray-200">
-            <div className="flex space-x-8 px-6">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2 ${
-                      activeTab === tab.id
-                        ? 'border-orange-500 text-orange-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {tab.label}
-                    {tab.count > 0 && (
-                      <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-semibold ${
-                        activeTab === tab.id ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600'
-                      }`}>
-                        {tab.count}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+        {/* Workshop Section Title */}
+        <div className="mb-4">
+          <h2 className="text-xl font-bold text-[#1A1A1A]">
+            {ct('Workshop ที่ต้องจัดการ', 'Workshops to Manage')}
+          </h2>
+        </div>
 
-          {/* Content */}
-          <div className="p-6">
-            {/* Workshop Tab */}
-            {activeTab === 'workshops' && (
-              <div className="space-y-4">
-                {pendingWorkshops.length === 0 ? (
-                  <div className="text-center py-12">
-                    <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-                    <p className="text-gray-600">{ct('ไม่มี Workshop รออนุมัติ', 'No pending workshops')}</p>
-                  </div>
+        {/* Workshop Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          {pendingWorkshops.map((workshop) => (
+            <div key={workshop.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200 hover:shadow-md transition-all">
+              {/* Workshop Image */}
+              <div className="relative h-48 bg-gradient-to-br from-blue-100 to-blue-200">
+                {workshop.image ? (
+                  <img src={workshop.image} alt={workshop.title} className="w-full h-full object-cover" />
                 ) : (
-                  pendingWorkshops.map((workshop) => (
-                    <div key={workshop.id} className="bg-white border-2 border-gray-200 rounded-2xl p-6 hover:shadow-lg hover:border-orange-300 transition-all">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-3">
-                            <span className="px-3 py-1.5 bg-yellow-100 text-yellow-800 rounded-lg text-xs font-bold">
-                              {ct('รออนุมัติ', 'Pending')}
-                            </span>
-                            <span className="text-xs text-gray-500 font-medium">
-                              {ct('ส่งเมื่อ', 'Submitted')}: {new Date(workshop.submittedAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })} {new Date(workshop.submittedAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} {ct('น.', '')}
-                            </span>
-                          </div>
-                          <h3 className="text-xl font-bold text-gray-900 mb-2">{workshop.title}</h3>
-                          <p className="text-sm text-gray-600 mb-3 flex items-center gap-2">
-                            <Store className="h-4 w-4" />
-                            {ct('โดยร้าน', 'By')} <span className="font-semibold">{workshop.shop}</span>
-                          </p>
-                          <p className="text-sm text-gray-700 leading-relaxed mb-4">{workshop.description}</p>
-                          <div className="flex items-center gap-4 text-sm">
-                            <span className="flex items-center gap-1 text-gray-700">
-                              <span className="font-semibold">฿{workshop.price}</span>
-                            </span>
-                            <span className="text-gray-400">•</span>
-                            <span className="flex items-center gap-1 text-gray-700">
-                              <Users className="h-4 w-4" />
-                              {workshop.seats} {ct('ที่นั่ง', 'seats')}
-                            </span>
-                            <span className="text-gray-400">•</span>
-                            <span className="text-gray-700">{workshop.duration}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-end pt-4 border-t-2 border-gray-100">
-                        <button
-                          onClick={() => navigate(`/community-admin/workshops/${workshop.id}/approve`)}
-                          className="px-5 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md flex items-center gap-2"
-                        >
-                          {ct('ตรวจสอบ', 'Review')}
-                        </button>
-                      </div>
-                    </div>
-                  ))
+                  <div className="w-full h-full flex items-center justify-center">
+                    <FileText className="h-16 w-16 text-blue-300" />
+                  </div>
                 )}
+                {/* Pending Badge */}
+                <div className="absolute top-3 right-3">
+                  <span className="px-3 py-1 bg-[#E53935] text-white rounded-md text-xs font-semibold">
+                    {ct('รออนุมัติ', 'Pending')}
+                  </span>
+                </div>
               </div>
-            )}
 
+              {/* Workshop Info */}
+              <div className="p-4">
+                <span className="inline-block px-2 py-1 bg-[#FFF3E0] text-[#F57C00] rounded text-xs font-medium mb-2">
+                  {ct('ร้านค้าของฉัน', 'My Shop')}
+                </span>
+                <h3 className="text-base font-bold text-[#1A1A1A] mb-2 line-clamp-2">
+                  {workshop.title}
+                </h3>
+                <p className="text-sm text-[#666666] mb-3 line-clamp-2">
+                  {workshop.description}
+                </p>
+
+                {/* Workshop Details */}
+                <div className="flex items-center gap-3 text-sm text-[#666666] mb-4">
+                  <span className="flex items-center gap-1">
+                    <span className="font-semibold text-[#1A1A1A]">฿{workshop.price}</span>
+                  </span>
+                  <span>•</span>
+                  <span>{workshop.duration}</span>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => navigate(`/community-admin/workshops/${workshop.id}/approve`)}
+                    className="flex-1 px-4 py-2 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-sm font-semibold rounded-lg transition-all"
+                  >
+                    {ct('ตรวจสอบรายละเอียด', 'Review')}
+                  </button>
+                  <button
+                    className="px-4 py-2 bg-[#1E293B] hover:bg-[#0F172A] text-white text-sm font-semibold rounded-lg transition-all"
+                  >
+                    {ct('อนุมัติ', 'Approve')}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* งานที่ต้องจัดการ Section Title */}
+        <div className="mb-4">
+          <h2 className="text-xl font-bold text-[#1A1A1A]">
+            {ct('งานที่ต้องจัดการ', 'Tasks to Manage')}
+          </h2>
+        </div>
+
+        {/* Tasks Tabs */}
+        <div className="bg-white rounded-xl shadow-sm mb-6 border border-gray-200">
+          <div className="border-b border-gray-200">
+            <div className="flex space-x-1 px-2 py-2">
+              <button
+                onClick={() => setTaskTab('events')}
+                className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-2 ${
+                  taskTab === 'events'
+                    ? 'bg-[#4CAF50] text-white'
+                    : 'text-[#666666] hover:bg-gray-100'
+                }`}
+              >
+                <Calendar className="h-4 w-4" />
+                {ct('อีเว้นท์', 'Events')}
+              </button>
+              <button
+                onClick={() => setTaskTab('shops')}
+                className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-2 ${
+                  taskTab === 'shops'
+                    ? 'bg-[#4CAF50] text-white'
+                    : 'text-[#666666] hover:bg-gray-100'
+                }`}
+              >
+                <Store className="h-4 w-4" />
+                {ct('ร้านค้า', 'Shops')}
+              </button>
+            </div>
+          </div>
+
+          {/* Tab Content */}
+          <div className="p-6">
             {/* Events Tab */}
-            {activeTab === 'events' && (
-              <div className="space-y-4">
+            {taskTab === 'events' && (
+              <div>
                 {pendingEvents.length === 0 ? (
-                  <div className="text-center py-12">
-                    <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-                    <p className="text-gray-600">{ct('ไม่มีกิจกรรมรออนุมัติ', 'No pending events')}</p>
+                  <div className="bg-[#F5F5F5] rounded-xl p-8 flex flex-col items-center justify-center min-h-[280px]">
+                    <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center mb-4">
+                      <Calendar className="h-8 w-8 text-[#90CAF9]" />
+                    </div>
+                    <span className="inline-block px-3 py-1 bg-[#E3F2FD] text-[#1976D2] rounded-md text-xs font-semibold mb-2">
+                      {ct('ไม่มี', 'None')}
+                    </span>
+                    <h3 className="text-base font-bold text-[#1A1A1A] mb-2">
+                      {ct('งานอีเว้นท์ที่ต้องจัดการ', 'Events to Manage')}
+                    </h3>
+                    <p className="text-sm text-[#666666] text-center mb-4">
+                      {ct('ยังไม่มีงานอีเว้นท์ที่ต้องจัดการในขณะนี้', 'No events to manage at the moment')}
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => navigate('/community-admin/events')}
+                        className="px-4 py-2 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-sm font-semibold rounded-lg transition-all"
+                      >
+                        {ct('ดูรายละเอียด', 'View Details')}
+                      </button>
+                      <button className="px-4 py-2 bg-[#1E293B] hover:bg-[#0F172A] text-white text-sm font-semibold rounded-lg transition-all">
+                        {ct('อนุมัติ', 'Approve')}
+                      </button>
+                    </div>
                   </div>
                 ) : (
-                  pendingEvents.map((event) => (
-                    <div key={event.id} className="bg-white border-2 border-gray-200 rounded-2xl p-6 hover:shadow-lg hover:border-green-300 transition-all">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-3">
-                            <span className="px-3 py-1.5 bg-yellow-100 text-yellow-800 rounded-lg text-xs font-bold">
-                              {ct('รออนุมัติ', 'Pending')}
-                            </span>
-                            <span className="text-xs text-gray-500 font-medium">
-                              {ct('ส่งเมื่อ', 'Submitted')}: {new Date(event.submittedAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })} {new Date(event.submittedAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} {ct('น.', '')}
-                            </span>
-                          </div>
-                          <h3 className="text-xl font-bold text-gray-900 mb-2">{event.title}</h3>
-                          <p className="text-sm text-gray-600 mb-3 flex items-center gap-2">
-                            <Users className="h-4 w-4" />
-                            {ct('จัดโดย', 'Organized by')} <span className="font-semibold">{event.organizer}</span>
-                          </p>
-                          <p className="text-sm text-gray-700 leading-relaxed mb-4">{event.description}</p>
-                          <div className="grid grid-cols-3 gap-3">
-                            <div className="flex items-center gap-2 text-sm text-gray-700 bg-gray-50 px-3 py-2 rounded-lg">
-                              <Calendar className="h-4 w-4 text-green-600" />
-                              <span className="font-medium">{new Date(event.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm text-gray-700 bg-gray-50 px-3 py-2 rounded-lg">
-                              <span className="text-green-600">⏰</span>
-                              <span className="font-medium">{event.time}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm text-gray-700 bg-gray-50 px-3 py-2 rounded-lg">
-                              <span className="text-green-600">📍</span>
-                              <span className="font-medium truncate">{event.location}</span>
-                            </div>
-                          </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {pendingEvents.map((event) => (
+                      <div key={event.id} className="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-md transition-all">
+                        <span className="inline-block px-3 py-1 bg-[#E3F2FD] text-[#1976D2] rounded-md text-xs font-semibold mb-3">
+                          {ct('อีเว้นท์', 'Event')}
+                        </span>
+                        <h3 className="text-base font-bold text-[#1A1A1A] mb-2">{event.title}</h3>
+                        <p className="text-sm text-[#666666] mb-4 line-clamp-2">{event.description}</p>
+                        <div className="flex items-center gap-3 text-sm text-[#666666] mb-4">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            {new Date(event.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}
+                          </span>
+                          <span>•</span>
+                          <span>{event.time}</span>
                         </div>
-                      </div>
-
-                      <div className="flex items-center justify-between pt-4 border-t-2 border-gray-100">
                         <div className="flex gap-2">
                           <button
                             onClick={() => navigate(`/community-admin/events/${event.id}`)}
-                            className="px-5 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md flex items-center gap-2"
+                            className="flex-1 px-4 py-2 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-sm font-semibold rounded-lg transition-all"
                           >
                             {ct('ดูรายละเอียด', 'View Details')}
                           </button>
-                          <button
-                            onClick={() => navigate(`/community-admin/events/${event.id}/edit`)}
-                            className="px-5 py-2.5 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md"
-                          >
-                            {ct('แก้ไข', 'Edit')}
+                          <button className="px-4 py-2 bg-[#1E293B] hover:bg-[#0F172A] text-white text-sm font-semibold rounded-lg transition-all">
+                            {ct('อนุมัติ', 'Approve')}
                           </button>
                         </div>
                       </div>
-                    </div>
-                  ))
+                    ))}
+                  </div>
                 )}
               </div>
             )}
 
             {/* Shops Tab */}
-            {activeTab === 'shops' && (
-              <div className="space-y-4">
+            {taskTab === 'shops' && (
+              <div>
                 {pendingShops.length === 0 ? (
-                  <div className="text-center py-12">
-                    <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-                    <p className="text-gray-600">{ct('ไม่มีร้านค้ารออนุมัติ', 'No pending shops')}</p>
+                  <div className="bg-[#F5F5F5] rounded-xl p-8 flex flex-col items-center justify-center min-h-[280px]">
+                    <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center mb-4">
+                      <Store className="h-8 w-8 text-[#CE93D8]" />
+                    </div>
+                    <span className="inline-block px-3 py-1 bg-[#F3E5F5] text-[#8E24AA] rounded-md text-xs font-semibold mb-2">
+                      {ct('ไม่มี', 'None')}
+                    </span>
+                    <h3 className="text-base font-bold text-[#1A1A1A] mb-2">
+                      {ct('ร้านค้าที่ต้องจัดการ', 'Shops to Manage')}
+                    </h3>
+                    <p className="text-sm text-[#666666] text-center mb-4">
+                      {ct('ยังไม่มีร้านค้าที่ต้องจัดการในขณะนี้', 'No shops to manage at the moment')}
+                    </p>
+                    <div className="flex gap-2">
+                      <button className="px-4 py-2 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-sm font-semibold rounded-lg transition-all">
+                        {ct('ดูรายละเอียด', 'View Details')}
+                      </button>
+                      <button className="px-4 py-2 bg-[#1E293B] hover:bg-[#0F172A] text-white text-sm font-semibold rounded-lg transition-all">
+                        {ct('อนุมัติ', 'Approve')}
+                      </button>
+                    </div>
                   </div>
                 ) : (
-                  pendingShops.map((shop) => (
-                    <div key={shop.id} className="bg-white border-2 border-gray-200 rounded-2xl p-6 hover:shadow-lg hover:border-purple-300 transition-all">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-3">
-                            <span className="px-3 py-1.5 bg-yellow-100 text-yellow-800 rounded-lg text-xs font-bold">
-                              {ct('รออนุมัติ', 'Pending')}
-                            </span>
-                            <span className="text-xs text-gray-500 font-medium">
-                              {ct('ส่งเมื่อ', 'Submitted')}: {new Date(shop.submittedAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })} {new Date(shop.submittedAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} {ct('น.', '')}
-                            </span>
-                          </div>
-                          <h3 className="text-xl font-bold text-gray-900 mb-2">{shop.name}</h3>
-                          <p className="text-sm text-gray-600 mb-3 flex items-center gap-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {pendingShops.map((shop) => (
+                      <div key={shop.id} className="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-md transition-all">
+                        <span className="inline-block px-3 py-1 bg-[#F3E5F5] text-[#8E24AA] rounded-md text-xs font-semibold mb-3">
+                          {ct('ร้านค้า', 'Shop')}
+                        </span>
+                        <h3 className="text-base font-bold text-[#1A1A1A] mb-2">{shop.name}</h3>
+                        <p className="text-sm text-[#666666] mb-4 line-clamp-2">{shop.description}</p>
+                        <div className="flex items-center gap-3 text-sm text-[#666666] mb-4">
+                          <span className="flex items-center gap-1">
                             <Users className="h-4 w-4" />
-                            {ct('เจ้าของ', 'Owner')}: <span className="font-semibold">{shop.owner}</span>
-                          </p>
-                          <p className="text-sm text-gray-700 leading-relaxed mb-4">{shop.description}</p>
-                          <div className="flex items-center gap-2">
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-100 text-purple-700 text-xs font-bold rounded-lg">
-                              <Store className="h-3.5 w-3.5" />
-                              {shop.category}
-                            </span>
-                          </div>
+                            {shop.owner}
+                          </span>
+                          <span>•</span>
+                          <span>{shop.category}</span>
                         </div>
-                      </div>
-
-                      <div className="flex items-center justify-between pt-4 border-t-2 border-gray-100">
                         <div className="flex gap-2">
                           <button
                             onClick={() => navigate(`/community-admin/shops/${shop.id}/approve`)}
-                            className="px-5 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md flex items-center gap-2"
+                            className="flex-1 px-4 py-2 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-sm font-semibold rounded-lg transition-all"
                           >
-                            {ct('ตรวจสอบ', 'Review')}
+                            {ct('ดูรายละเอียด', 'View Details')}
                           </button>
-                          <button
-                            className="px-5 py-2.5 bg-purple-500 hover:bg-purple-600 text-white text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md"
-                          >
-                            {ct('ดูข้อมูล', 'View Info')}
+                          <button className="px-4 py-2 bg-[#1E293B] hover:bg-[#0F172A] text-white text-sm font-semibold rounded-lg transition-all">
+                            {ct('อนุมัติ', 'Approve')}
                           </button>
                         </div>
                       </div>
-                    </div>
-                  ))
+                    ))}
+                  </div>
                 )}
               </div>
             )}
           </div>
         </div>
 
-        {/* การจัดการล่าสุด */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">{ct('การจัดการล่าสุด', 'Recent Actions')}</h3>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-              <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">
-                  {ct('อนุมัติ Workshop "ทำขนมไทยโบราณ"', 'Approved Workshop "Traditional Thai Desserts"')}
-                </p>
-                <p className="text-xs text-gray-500">2 {ct('ชั่วโมงที่แล้ว', 'hours ago')}</p>
-              </div>
-            </div>
 
-            <div className="flex items-center gap-3 p-3 bg-red-50 rounded-lg">
-              <XCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">
-                  {ct('ปฏิเสธ Event "งานวัดประจำปี" - ข้อมูลไม่ครบถ้วน', 'Rejected Event "Annual Temple Fair" - Incomplete information')}
-                </p>
-                <p className="text-xs text-gray-500">5 {ct('ชั่วโมงที่แล้ว', 'hours ago')}</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-              <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">
-                  {ct('อนุมัติร้านค้า "บ้านผ้าทอมือ"', 'Approved Shop "Handwoven Fabric House"')}
-                </p>
-                <p className="text-xs text-gray-500">{ct('เมื่อวาน', 'Yesterday')}</p>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
