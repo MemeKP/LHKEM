@@ -65,7 +65,9 @@ const EventCreateForm = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
+    titleEn: '',
     description: '',
+    descriptionEn: '',
     event_date: '',
     start_time: '',
     end_time: '',
@@ -107,7 +109,9 @@ const EventCreateForm = () => {
 
       const payload = {
         title: formData.title,
+        title_en: formData.titleEn || formData.title,
         description: formData.description,
+        description_en: formData.descriptionEn || formData.description,
         seat_limit: parseInt(formData.seat_limit) || 1,
         deposit_amount: formData.cost_type === 'free' ? 0 : (parseFloat(formData.deposit_amount) || 0),
         start_at: startDateTime.toISOString(),
@@ -172,6 +176,23 @@ const EventCreateForm = () => {
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A]"
               placeholder="ระบุชื่องาน / กิจกรรม"
             />
+            <p className="text-xs text-[#888888] mt-1">{ct('ภาษาไทย', 'Thai')}</p>
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
+              {ct('ชื่อภาษาอังกฤษ', 'Event Name (English)')} <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="titleEn"
+              value={formData.titleEn}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A]"
+              placeholder="Enter event name in English"
+            />
+            <p className="text-xs text-[#888888] mt-1">{ct('ใช้สำหรับแสดงผลในภาษาอังกฤษ', 'Used for English interfaces')}</p>
           </div>
 
           {/* 2. รูปภาพปกกิจกรรม */}
@@ -221,6 +242,23 @@ const EventCreateForm = () => {
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A] resize-none"
               placeholder="อธิบายรายละเอียดกิจกรรม..."
             />
+            <p className="text-xs text-[#888888] mt-1">{ct('ภาษาไทย', 'Thai')}</p>
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
+              {ct('คำอธิบายภาษาอังกฤษ', 'Description (English)')} <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              name="descriptionEn"
+              value={formData.descriptionEn}
+              onChange={handleChange}
+              required
+              rows={4}
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A] resize-none"
+              placeholder="Describe the event in English..."
+            />
+            <p className="text-xs text-[#888888] mt-1">{ct('ใช้สำหรับผู้ใช้ภาษาอังกฤษ', 'For English-speaking visitors')}</p>
           </div>
 
           {/* 4. วันและเวลา */}

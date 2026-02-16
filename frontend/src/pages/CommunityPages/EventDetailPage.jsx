@@ -142,7 +142,10 @@ const EventDetailPage = () => {
                   </span>
                 )}
               </div>
-              <h1 className="text-3xl font-bold text-[#1A1A1A] mb-2">{event.title}</h1>
+              <h1 className="text-3xl font-bold text-[#1A1A1A] mb-1">{event.title}</h1>
+              {event.title_en && (
+                <p className="text-lg text-[#8C8C8C] mb-1">{event.title_en}</p>
+              )}
               <p className="text-[#666666]">สร้างโดย {event.created_by?.firstname
                 ? `${event.created_by.firstname} ${event.created_by.lastname}`
                 : 'ไม่ระบุตัวตน'}</p>
@@ -184,7 +187,18 @@ const EventDetailPage = () => {
                 <Info className="h-5 w-5 text-[#FFC107]" />
                 รายละเอียด
               </h2>
-              <p className="text-[#666666] leading-relaxed whitespace-pre-line">{event.description}</p>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm font-semibold text-[#555555] mb-1">ภาษาไทย</p>
+                  <p className="text-[#666666] leading-relaxed whitespace-pre-line">{event.description}</p>
+                </div>
+                {event.description_en && (
+                  <div className="pt-4 border-t border-gray-100">
+                    <p className="text-sm font-semibold text-[#555555] mb-1">English</p>
+                    <p className="text-[#666666] leading-relaxed whitespace-pre-line">{event.description_en}</p>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Additional Information Sections */}
