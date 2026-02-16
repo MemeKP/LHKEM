@@ -9,6 +9,7 @@ const Register = () => {
   const { t } = useTranslation();
   const { register } = useAuth();
   const [formData, setFormData] = useState({
+    role: 'TOURIST',
     email: '',
     firstname: '',
     lastname: '',
@@ -29,6 +30,7 @@ const Register = () => {
       lastname: formData.lastname,
       phone: formData.phone,
       password: formData.password,
+      role: formData.role,
     };
     const res = await register(payload);
     if (res.success) {
@@ -81,6 +83,48 @@ const Register = () => {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Role Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                {t('auth.role') || 'บทบาท'}
+              </label>
+              <div className="grid grid-cols-3 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, role: 'TOURIST' })}
+                  className={`px-4 py-3 rounded-lg border-2 font-medium transition-all duration-200 ${
+                    formData.role === 'TOURIST'
+                      ? 'border-orange-500 bg-orange-50 text-orange-700'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-orange-300'
+                  }`}
+                >
+                  {t('auth.roleTourist') || 'นักท่องเที่ยว'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, role: 'SHOP_OWNER' })}
+                  className={`px-4 py-3 rounded-lg border-2 font-medium transition-all duration-200 ${
+                    formData.role === 'SHOP_OWNER'
+                      ? 'border-orange-500 bg-orange-50 text-orange-700'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-orange-300'
+                  }`}
+                >
+                  {t('auth.roleShop') || 'ร้านค้า'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, role: 'COMMUNITY_ADMIN' })}
+                  className={`px-4 py-3 rounded-lg border-2 font-medium transition-all duration-200 ${
+                    formData.role === 'COMMUNITY_ADMIN'
+                      ? 'border-orange-500 bg-orange-50 text-orange-700'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-orange-300'
+                  }`}
+                >
+                  {t('auth.roleAdmin') || 'ผู้ดูแล'}
+                </button>
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 {t('auth.email')}

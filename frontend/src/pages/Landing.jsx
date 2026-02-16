@@ -19,7 +19,7 @@ const fetchCommunities = async () => {
 
 const Landing = () => {
   const navigate = useNavigate();
-  const { t, language } = useTranslation();
+  const { t, ct, language } = useTranslation();
 
   const { data: communities = [], isLoading } = useQuery({
     queryKey: ['communities'],
@@ -33,9 +33,9 @@ const Landing = () => {
 
   // Platform stats - TODO: อาจจะมี API สำหรับดึงสถิติรวม
   const platformStats = [
-    { number: communities.length > 0 ? `${communities.length}+` : '0', label: 'ชุมชน', label_en: 'Communities' },
-    { number: '50+', label: 'กิจกรรม', label_en: 'Activities' },
-    { number: '15+', label: 'ร้านค้า', label_en: 'Shops' }
+    { number: communities.length > 0 ? `${communities.length}+` : '0', label: ct('ชุมชน', 'Communities') },
+    { number: '50+', label: ct('กิจกรรม', 'Activities') },
+    { number: '15+', label: ct('ร้านค้า', 'Shops') }
   ];
 
   return (
@@ -46,38 +46,26 @@ const Landing = () => {
           {/* Badge */}
           <div className="inline-flex items-center space-x-2 bg-orange-100 border border-orange-200 px-4 py-2 rounded-full text-sm font-semibold text-orange-700 mb-6">
             <Sparkles className="h-4 w-4" />
-            <span>
-              {language === 'th' ? 'สำรวจชุมชนท้องถิ่น' : 'Explore Local Communities'}
-            </span>
+            <span>{ct('สำรวจชุมชนท้องถิ่น', 'Explore Local Communities')}</span>
           </div>
 
           {/* Main Heading */}
           <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 mb-6 leading-tight">
-            {language === 'th' ? (
-              <>
-                สำรวจชุมชนท้องถิ่น
-                <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600">
-                  และ ประสบการณ์วัฒนธรรม
-                </span>
-              </>
-            ) : (
-              <>
-                Explore Local Communities
-                <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600">
-                  and Cultural Experiences
-                </span>
-              </>
-            )}
+            <>
+              {ct('สำรวจชุมชนท้องถิ่น', 'Explore Local Communities')}
+              <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600">
+                {ct('และ ประสบการณ์วัฒนธรรม', 'and Cultural Experiences')}
+              </span>
+            </>
           </h1>
 
           {/* Description */}
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-10 leading-relaxed">
-            {language === 'th' 
-              ? 'ค้นพบกิจกรรมเวิร์กช็อปและประสบการณ์ทางวัฒนธรรมที่น่าสนใจจากชุมชนท้องถิ่นทั่วประเทศ ร่วมสัมผัสวิถีชีวิตและภูมิปัญญาท้องถิ่นอันงดงาม'
-              : 'Discover exciting workshops and cultural experiences from local communities across the country. Experience the beautiful local way of life and wisdom.'
-            }
+            {ct(
+              'ค้นพบกิจกรรมเวิร์กช็อปและประสบการณ์ทางวัฒนธรรมที่น่าสนใจจากชุมชนท้องถิ่นทั่วประเทศ ร่วมสัมผัสวิถีชีวิตและภูมิปัญญาท้องถิ่นอันงดงาม',
+              'Discover exciting workshops and cultural experiences from local communities across the country. Experience the beautiful local way of life and wisdom.'
+            )}
           </p>
 
           {/* Stats */}
@@ -85,7 +73,7 @@ const Landing = () => {
             {platformStats.map((stat, index) => (
               <div key={index} className="text-center p-8 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-orange-200 hover:border-orange-300 transform hover:scale-105">
                 <div className="text-4xl font-bold text-orange-600 mb-2">{stat.number}</div>
-                <div className="text-gray-700 font-medium">{language === 'th' ? stat.label : stat.label_en}</div>
+                <div className="text-gray-700 font-medium">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -98,7 +86,7 @@ const Landing = () => {
             }}
             className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-8 py-4 rounded-full shadow-lg transition-all hover:shadow-xl"
           >
-            {language === 'th' ? 'เริ่มสำรวจชุมชน' : 'Start Exploring'}
+            {ct('เริ่มสำรวจชุมชน', 'Start Exploring')}
             <ArrowRight className="h-5 w-5" />
           </button>
         </div>
@@ -110,16 +98,16 @@ const Landing = () => {
           {/* Section Header */}
           <div className="text-center mb-12">
             <span className="inline-block bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-semibold mb-4">
-              {language === 'th' ? 'ชุมชนของเรา' : 'Our Communities'}
+              {ct('ชุมชนของเรา', 'Our Communities')}
             </span>
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              {language === 'th' ? 'เลือกชุมชนที่คุณสนใจ' : 'Choose Your Community'}
+              {ct('เลือกชุมชนที่คุณสนใจ', 'Choose Your Community')}
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              {language === 'th'
-                ? 'แต่ละชุมชนมีเอกลักษณ์และกิจกรรมที่น่าสนใจรอคุณอยู่'
-                : 'Each community has unique characteristics and exciting activities waiting for you'
-              }
+              {ct(
+                'แต่ละชุมชนมีเอกลักษณ์และกิจกรรมที่น่าสนใจรอคุณอยู่',
+                'Each community has unique characteristics and exciting activities waiting for you'
+              )}
             </p>
           </div>
 
@@ -128,7 +116,7 @@ const Landing = () => {
             <div className="text-center py-20">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent"></div>
               <p className="mt-4 text-gray-600">
-                {language === 'th' ? 'กำลังโหลดชุมชน...' : 'Loading communities...'}
+                {ct('กำลังโหลดชุมชน...', 'Loading communities...')}
               </p>
             </div>
           )}
@@ -137,7 +125,7 @@ const Landing = () => {
           {!isLoading && communities.length === 0 && (
             <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300">
               <p className="text-gray-600 text-lg">
-                {language === 'th' ? 'ยังไม่มีชุมชนในระบบ' : 'No communities available yet'}
+                {ct('ยังไม่มีชุมชนในระบบ', 'No communities available yet')}
               </p>
             </div>
           )}
@@ -172,26 +160,30 @@ const Landing = () => {
                   <div className="p-6">
                     {/* Community Name */}
                     <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors">
-                      {language === 'th' ? community.name : community.name_en || community.name}
+                      {ct(community.name, community.name_en || community.name)}
                     </h3>
 
                     {/* Description */}
                     <p className="text-gray-600 mb-4 line-clamp-2 leading-relaxed">
-                      {language === 'th' 
-                        ? community.hero_section?.description || community.history
-                        : community.hero_section?.description_en || community.history_en || community.hero_section?.description
-                      }
+                      {ct(
+                        community.hero_section?.description || community.history,
+                        community.hero_section?.description_en || community.history_en || community.hero_section?.description
+                      )}
                     </p>
 
                     {/* Stats */}
                     <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
                       <div className="flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
-                        <span>{community.workshops?.length || 0} {language === 'th' ? 'กิจกรรม' : 'activities'}</span>
+                        <span>
+                          {community.workshops?.length || 0} {ct('กิจกรรม', 'activities')}
+                        </span>
                       </div>
                       <div className="flex items-center gap-1">
                         <Users className="h-4 w-4" />
-                        <span>{community.events?.length || 0} {language === 'th' ? 'อีเวนต์' : 'events'}</span>
+                        <span>
+                          {community.events?.length || 0} {ct('อีเวนต์', 'events')}
+                        </span>
                       </div>
                     </div>
 
@@ -200,17 +192,14 @@ const Landing = () => {
                       <div className="flex items-start gap-2 text-sm text-gray-500 mb-4">
                         <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
                         <span className="line-clamp-1">
-                          {language === 'th' 
-                            ? community.location.address 
-                            : community.location.address_en || community.location.address
-                          }
+                          {ct(community.location.address, community.location.address_en || community.location.address)}
                         </span>
                       </div>
                     )}
 
                     {/* CTA Button */}
                     <button className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-gray-900 to-gray-800 hover:from-orange-500 hover:to-orange-600 text-white font-semibold py-3 rounded-full transition-all duration-300 shadow-md hover:shadow-lg group-hover:from-orange-500 group-hover:to-orange-600">
-                      {language === 'th' ? 'เข้าชมชุมชน' : 'Visit Community'}
+                      {ct('เข้าชมชุมชน', 'Visit Community')}
                       <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </button>
                   </div>
@@ -225,19 +214,19 @@ const Landing = () => {
       <section className="py-20 px-4 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-4xl mx-auto bg-gradient-to-br from-orange-500 to-orange-600 rounded-3xl p-12 text-center text-white shadow-2xl border-4 border-orange-400 animate-scaleIn">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            {language === 'th' ? 'พร้อมที่จะ เริ่มต้น แล้วหรือยัง?' : 'Ready to Get Started?'}
+            {ct('พร้อมที่จะ เริ่มต้น แล้วหรือยัง?', 'Ready to Get Started?')}
           </h2>
           <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
-            {language === 'th'
-              ? 'สมัครสมาชิกวันนี้เพื่อเข้าถึงกิจกรรมและประสบการณ์พิเศษจากชุมชนท้องถิ่น'
-              : 'Sign up today to access special activities and experiences from local communities'
-            }
+            {ct(
+              'สมัครสมาชิกวันนี้เพื่อเข้าถึงกิจกรรมและประสบการณ์พิเศษจากชุมชนท้องถิ่น',
+              'Sign up today to access special activities and experiences from local communities'
+            )}
           </p>
           <button
             onClick={() => navigate('/register')}
             className="inline-flex items-center gap-2 bg-white text-orange-600 hover:bg-gray-100 font-semibold px-8 py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 border-2 border-white hover:border-gray-200"
           >
-            {language === 'th' ? 'สมัครสมาชิกฟรี' : 'Sign Up Free'}
+            {ct('สมัครสมาชิกฟรี', 'Sign Up Free')}
             <ArrowRight className="h-5 w-5" />
           </button>
         </div>

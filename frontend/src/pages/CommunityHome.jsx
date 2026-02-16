@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
-import { MapPin, Calendar, Heart, Leaf, Users, Palette, HomeIcon, List, BookXIcon, Box, BoxesIcon, Sparkle, SparklesIcon, Clock, Users as UsersIcon, Star } from 'lucide-react';
+import { MapPin, Calendar, Heart, Leaf, Users, Palette, HomeIcon, List, BookXIcon, Box, BoxesIcon, Sparkle, SparklesIcon, Clock, Users as UsersIcon, Star, Store, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import workshopData from '../data/workshops';
 import WorkshopModal from '../components/WorkshopModal';
+import ETicketModal from '../components/ETicketModal';
 import api from '../services/api';
 import { useQuery } from '@tanstack/react-query';
 
@@ -64,9 +65,21 @@ const CommunityHome = () => {
 
   const workshopCards = workshopData.slice(0, 3);
   const [activeWorkshop, setActiveWorkshop] = useState(null);
+  const [currentBooking, setCurrentBooking] = useState(null);
+  const [showETicket, setShowETicket] = useState(false);
 
   const handleOpenModal = (workshop) => setActiveWorkshop(workshop);
   const handleCloseModal = () => setActiveWorkshop(null);
+  
+  const handleBookingSuccess = (booking) => {
+    setCurrentBooking(booking);
+    setShowETicket(true);
+  };
+  
+  const handleCloseETicket = () => {
+    setShowETicket(false);
+    setCurrentBooking(null);
+  };
 
   return (
     <div className="min-h-screen bg-[#fdf7ef] animate-fadeIn">
@@ -109,6 +122,53 @@ const CommunityHome = () => {
                   <p className="text-sm text-white/80">{stat.label}</p>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Image Gallery Section */}
+      <section className="px-4 py-16 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-8">
+            <span className="inline-block bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+              {ct('ภาพบรรยากาศ', 'Gallery')}
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
+              {ct('สัมผัสบรรยากาศชุมชน', 'Experience Our Community')}
+            </h2>
+          </div>
+
+          {/* Gallery Grid - 1 large left + 3 small right */}
+          <div className="grid grid-rows-2 gap-4 h-full">
+            <div className="h-full rounded-2xl bg-gradient-to-br from-green-200 via-green-300 to-green-400 overflow-hidden shadow-md hover:shadow-xl transition-shadow">
+                <div className="w-full h-full flex items-center justify-center text-white text-lg font-semibold">
+                  {ct('รูปภาพหลัก', 'Main Image')}
+                </div>
+              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[500px]">
+              {/* Large image - Left side */}
+              <div className="h-full rounded-2xl bg-gradient-to-br from-green-200 via-green-300 to-green-400 overflow-hidden shadow-md hover:shadow-xl transition-shadow">
+                <div className="w-full h-full flex items-center justify-center text-white text-lg font-semibold">
+                  {ct('รูปภาพหลัก', 'Main Image')}
+                </div>
+              </div>
+              
+              {/* Small images - Right side, stacked */}
+              <div className="grid grid-rows-2 gap-4 h-full">
+                <div className="rounded-2xl bg-gradient-to-br from-orange-200 via-orange-300 to-orange-400 overflow-hidden shadow-md hover:shadow-xl transition-shadow">
+                  <div className="w-full h-full flex items-center justify-center text-white font-semibold">
+                    {ct('รูปภาพ 2', 'Image 2')}
+                  </div>
+                </div>
+                <div className="rounded-2xl bg-gradient-to-br from-blue-200 via-blue-300 to-blue-400 overflow-hidden shadow-md hover:shadow-xl transition-shadow">
+                  <div className="w-full h-full flex items-center justify-center text-white font-semibold">
+                    {ct('รูปภาพ 3', 'Image 3')}
+                  </div>
+                </div>
+                <div className="rounded-2xl bg-gradient-to-br from-purple-200 via-purple-300 to-purple-400 overflow-hidden shadow-md hover:shadow-xl transition-shadow">
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -157,21 +217,198 @@ const CommunityHome = () => {
         </div>
       </section>
 
-      <section className="py-20 px-4">
+      {/* Map Section - Enlarged */}
+      <section className="py-16 px-4 bg-gradient-to-b from-gray-50 to-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-8">
+            <span className="inline-block bg-orange-50 text-orange-600 font-semibold text-sm px-4 py-2 rounded-full mb-4">
+              {t('explore.badge')}
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">{t('explore.title')}</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto mb-8">{t('explore.description')}</p>
+          </div>
+          
+          {/* Larger Map Placeholder */}
+          <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-gray-200">
+            <div className="h-96 md:h-[500px] bg-gradient-to-br from-blue-100 via-green-50 to-yellow-50 flex items-center justify-center">
+              <div className="text-center">
+                <MapPin className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500 text-lg font-medium">
+                  {ct('แผนที่ชุมชนแบบอินเทอร์แอคทีฟ', 'Interactive Community Map')}
+                </p>
+                <p className="text-gray-400 text-sm mt-2">
+                  {ct('(กำลังพัฒนา)', '(Coming Soon)')}
+                </p>
+              </div>
+            </div>
+            
+            {/* View Full Map Button Overlay */}
+            <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
+              <Link
+                to={`/${community.slug}/map`}
+                className="inline-flex items-center justify-center gap-2 bg-white text-gray-900 px-8 py-4 rounded-full font-semibold hover:bg-gray-100 transition shadow-xl border-2 border-gray-200"
+              >
+                <MapPin className="h-5 w-5" />
+                {t('explore.viewMap')}
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Shops Section */}
+      <section className="py-20 px-4 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <span className="inline-block bg-orange-50 text-orange-600 px-4 py-2 rounded-full text-sm font-semibold">
+            <span className="inline-block bg-green-50 text-green-600 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+              {ct('ร้านค้าในชุมชน', 'Local Shops')}
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+              {ct('ร้านค้าและผู้ให้บริการ', 'Shops & Service Providers')}
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              {ct('ร้านค้าท้องถิ่นที่เปิดให้บริการเวิร์กช็อปและประสบการณ์ทางวัฒนธรรม', 'Local shops offering workshops and cultural experiences')}
+            </p>
+          </div>
+
+          {/* Shops Carousel - Mock Data */}
+          <div className="relative">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Shop Card 1 */}
+              <Link to={`/${community.slug}/shops/1`} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition group">
+                <div className="relative h-48 bg-gradient-to-br from-orange-300 via-orange-400 to-orange-500">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Store className="h-16 w-16 text-white/50" />
+                  </div>
+                  <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 rounded-full text-xs font-semibold text-gray-700">
+                    {ct('ร้านหัตถกรรม', 'Craft Shop')}
+                  </div>
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition">
+                    {ct('ร้านมีนา', 'Meena Shop')}
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                    {ct('ร้านหัตถกรรมท้องถิ่น เปิดสอนทำงานฝีมือและของที่ระลึก', 'Local craft shop offering handmade workshops and souvenirs')}
+                  </p>
+                  <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+                    <MapPin className="h-4 w-4" />
+                    <span>{ct('ในชุมชนโหล่งฮิมคาว', 'In Loeng Him Kaw')}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-orange-600 font-semibold">
+                      {ct('2 เวิร์กช็อป', '2 Workshops')}
+                    </span>
+                    <span className="px-4 py-2 bg-gray-900 text-white rounded-full text-sm font-semibold group-hover:bg-gray-800 transition">
+                      {ct('ดูร้าน', 'View Shop')}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+
+              {/* Shop Card 2 */}
+              <Link to={`/${community.slug}/shops/2`} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition group">
+                <div className="relative h-48 bg-gradient-to-br from-green-300 via-green-400 to-green-500">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Store className="h-16 w-16 text-white/50" />
+                  </div>
+                  <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 rounded-full text-xs font-semibold text-gray-700">
+                    {ct('ร้านอาหาร', 'Food Shop')}
+                  </div>
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition">
+                    {ct('ร้านอาหารท้องถิ่น', 'Local Food Shop')}
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                    {ct('ร้านอาหารพื้นเมือง สอนทำอาหารและขนมไทย', 'Local restaurant offering cooking classes and Thai desserts')}
+                  </p>
+                  <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+                    <MapPin className="h-4 w-4" />
+                    <span>{ct('ในชุมชนโหล่งฮิมคาว', 'In Loeng Him Kaw')}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-orange-600 font-semibold">
+                      {ct('3 เวิร์กช็อป', '3 Workshops')}
+                    </span>
+                    <span className="px-4 py-2 bg-gray-900 text-white rounded-full text-sm font-semibold group-hover:bg-gray-800 transition">
+                      {ct('ดูร้าน', 'View Shop')}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+
+              {/* Shop Card 3 */}
+              <Link to={`/${community.slug}/shops/3`} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition group">
+                <div className="relative h-48 bg-gradient-to-br from-blue-300 via-blue-400 to-blue-500">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Store className="h-16 w-16 text-white/50" />
+                  </div>
+                  <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 rounded-full text-xs font-semibold text-gray-700">
+                    {ct('ร้านผ้า', 'Textile Shop')}
+                  </div>
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition">
+                    {ct('ร้านผ้าทอมือ', 'Handwoven Textile')}
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                    {ct('ร้านผ้าทอมือ สอนการทอผ้าและย้อมสีธรรมชาติ', 'Handwoven textile shop teaching weaving and natural dyeing')}
+                  </p>
+                  <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+                    <MapPin className="h-4 w-4" />
+                    <span>{ct('ในชุมชนโหล่งฮิมคาว', 'In Loeng Him Kaw')}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-orange-600 font-semibold">
+                      {ct('1 เวิร์กช็อป', '1 Workshop')}
+                    </span>
+                    <span className="px-4 py-2 bg-gray-900 text-white rounded-full text-sm font-semibold group-hover:bg-gray-800 transition">
+                      {ct('ดูร้าน', 'View Shop')}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            </div>
+          </div>
+
+          {/* View All Shops Button */}
+          <div className="text-center mt-10">
+            <Link 
+              to={`/${community.slug}/shops`} 
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 border-2 border-gray-300 rounded-full text-gray-700 hover:border-gray-400 hover:bg-gray-50 transition font-semibold"
+            >
+              {ct('ดูร้านค้าทั้งหมด', 'View All Shops')}
+              <ArrowRight className="h-5 w-5" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Workshop Section */}
+      <section className="py-20 px-4 bg-[#fdf7ef]">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <span className="inline-block bg-orange-50 text-orange-600 px-4 py-2 rounded-full text-sm font-semibold mb-4">
               {t('workshopSection.badge')}
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-4 mb-3">{t('workshopSection.title')}</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">{t('workshopSection.description')}</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+              {t('workshopSection.title')}
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              {t('workshopSection.description')}
+            </p>
           </div>
 
           {isLoading ? (
-            <div className="text-center py-20 text-gray-400">{t('workshops.loading')}</div>
-          ) : workshops.length === 0 ? (
-            <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed">
-              {t('workshops.noData')}
+            <div className="text-center py-20">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+              <p className="text-gray-500 mt-4">{t('workshops.loading')}</p>
+            </div>
+          ) : workshopCards.length === 0 ? (
+            <div className="text-center py-20">
+              <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500 text-lg">{t('workshops.noData')}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -234,27 +471,17 @@ const CommunityHome = () => {
         </div>
       </section>
 
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto bg-white rounded-3xl border border-gray-100 p-10 text-center">
-          <span className="inline-block bg-orange-50 text-orange-600 font-semibold text-sm px-4 py-2 rounded-full mb-4">
-            {t('explore.badge')}
-          </span>
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">{t('explore.title')}</h2>
-          <p className="text-gray-600 max-w-2xl mx-auto mb-8">{t('explore.description')}</p>
-          <div className="h-64 rounded-2xl border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-gray-400 mb-8">
-            Interactive Map Component (Coming Soon)
-          </div>
-          <Link
-            to={`/${community.slug}/map`}
-            className="inline-flex items-center justify-center gap-2 bg-orange-400 text-white px-8 py-3 rounded-full font-semibold hover:bg-orange-500 transition"
-          >
-            <MapPin className="h-5 w-5" />
-            {t('explore.viewMap')}
-          </Link>
-        </div>
-      </section>
-
-      <WorkshopModal workshop={activeWorkshop} isOpen={!!activeWorkshop} onClose={handleCloseModal} />
+      <WorkshopModal 
+        workshop={activeWorkshop} 
+        isOpen={!!activeWorkshop} 
+        onClose={handleCloseModal}
+        onBookingSuccess={handleBookingSuccess}
+      />
+      <ETicketModal 
+        booking={currentBooking}
+        isOpen={showETicket}
+        onClose={handleCloseETicket}
+      />
     </div>
   );
 };

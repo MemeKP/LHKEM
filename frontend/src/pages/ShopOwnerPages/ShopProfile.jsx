@@ -92,20 +92,33 @@ const ShopProfile = () => {
     );
   }
 
+  const handleImageUpload = (type, file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (type === 'cover') {
+        setShopData(prev => ({ ...prev, coverImage: reader.result }));
+      } else if (type === 'icon') {
+        setShopData(prev => ({ ...prev, iconImage: reader.result }));
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-[#FAF8F3] py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <button
-            onClick={() => navigate(-1)}
-            className="text-gray-600 hover:text-gray-900 mb-4"
-          >
-            ← {t('common.back')}
-          </button>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {t('shopProfile.title')}
-          </h1>
-          <p className="text-gray-600">{t('shopProfile.description')}</p>
+        <button
+          onClick={() => navigate('/shop/dashboard')}
+          className="mb-6 text-sm text-gray-600 hover:text-orange-600 flex items-center gap-1"
+        >
+          ← กลับ
+        </button>
+        
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">แก้ไขข้อมูลร้านของคุณ</h1>
+          <p className="text-gray-600">คุณสามารถแก้ไขข้อมูลร้านของคุณได้ตามต้องการ</p>
+          <p className="text-sm text-gray-500 mt-1">ข้อมูลที่แก้ไขจะถูกบันทึกทันที หลังจากกดปุ่มบันทึกข้อมูล</p>
         </div>
 
         {message.text && (
@@ -116,114 +129,173 @@ const ShopProfile = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center gap-4 mb-6 pb-6 border-b">
-              <div className="relative">
-                <div className="h-24 w-24 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-3xl font-bold">
-                  {shopData.name.charAt(0) || 'S'}
-                </div>
-                <button
-                  type="button"
-                  className="absolute bottom-0 right-0 p-2 bg-white rounded-full shadow-lg border border-gray-200 hover:bg-gray-50"
-                >
-                  <Camera className="h-4 w-4 text-gray-600" />
-                </button>
+        <form onSubmit={handleSubmit} className="space-y-6 animate-slideUp">
+          <div className="bg-white rounded-2xl shadow-sm p-8 border border-gray-100 animate-scaleIn">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">ชื่อร้าน</h2>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">ชื่อร้านของคุณ</label>
+              <input
+                type="text"
+                name="name"
+                value={shopData.name}
+                onChange={handleChange}
+                placeholder="ใส่ชื่อร้านของคุณ"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                required
+              />
+              <p className="text-xs text-gray-500 mt-2">ชื่อร้านจะแสดงในหน้าร้านค้าและ Workshop</p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm p-8 border border-gray-100 animate-scaleIn">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">รูปภาพ</h2>
+            
+            {/* Cover Image */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-3">รูปหน้าปก</label>
+              <div className="relative aspect-[16/6] w-full bg-gray-100 rounded-xl overflow-hidden">
+                {shopData.coverImage ? (
+                  <img src={shopData.coverImage} alt="cover" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400">
+                    <div className="text-center">
+                      <Camera className="h-12 w-12 mx-auto mb-2" />
+                      <p className="text-sm">อัปโหลดรูปหน้าปกร้าน</p>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div>
-                <h3 className="text-xl font-semibold text-gray-900">{shopData.name}</h3>
-                <p className="text-gray-600">{t('shopProfile.shopOwner')}</p>
+              <div className="flex gap-2 mt-3">
+                <label className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg cursor-pointer hover:bg-orange-600 shadow-sm transition-colors">
+                  <Camera className="h-4 w-4" />
+                  เปลี่ยนรูปหน้าปก
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload('cover', e.target.files?.[0])} />
+                </label>
+                {shopData.coverImage && (
+                  <button
+                    type="button"
+                    onClick={() => setShopData(prev => ({ ...prev, coverImage: '' }))}
+                    className="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                  >
+                    ลบรูป
+                  </button>
+                )}
               </div>
             </div>
 
+            {/* Icon Image */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">ไอคอนร้าน</label>
+              <div className="flex items-center gap-4">
+                <div className="relative h-24 w-24 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-3xl font-bold overflow-hidden">
+                  {shopData.iconImage ? (
+                    <img src={shopData.iconImage} alt="icon" className="w-full h-full object-cover" />
+                  ) : (
+                    shopData.name.charAt(0) || 'S'
+                  )}
+                </div>
+                <div>
+                  <label className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg cursor-pointer hover:bg-gray-700 shadow-sm transition-colors">
+                    <Camera className="h-4 w-4" />
+                    เปลี่ยนไอคอน
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload('icon', e.target.files?.[0])} />
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm p-8 border border-gray-100 animate-scaleIn">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">คำอธิบายร้าน</h2>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">เกี่ยวกับร้านของคุณ</label>
+              <textarea
+                name="description"
+                value={shopData.description}
+                onChange={handleChange}
+                rows="5"
+                placeholder="บอกเล่าเกี่ยวกับร้านของคุณ เช่น ประวัติ จุดเด่น สินค้าและบริการ"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                required
+              />
+              <p className="text-xs text-gray-500 mt-2">แนะนำให้เขียนอย่างน้อย 100 ตัวอักษร</p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm p-8 border border-gray-100 animate-scaleIn">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">ที่อยู่ร้านค้า</h2>
+            
             <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('shopProfile.fields.shopName')}
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={shopData.name}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  required
-                />
-              </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('shopProfile.fields.description')}
-                </label>
-                <textarea
-                  name="description"
-                  value={shopData.description}
-                  onChange={handleChange}
-                  rows="4"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('shopProfile.fields.openTime')}
-                  </label>
-                  <div className="relative">
-                    <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <input
-                      type="time"
-                      name="openTime"
-                      value={shopData.openTime}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('shopProfile.fields.closeTime')}
-                  </label>
-                  <div className="relative">
-                    <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <input
-                      type="time"
-                      name="closeTime"
-                      value={shopData.closeTime}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('shopProfile.fields.address')}
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">ที่อยู่ร้าน</label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                   <textarea
                     name="location.address"
                     value={shopData.location.address}
                     onChange={handleChange}
-                    rows="2"
+                    rows="3"
+                    placeholder="ใส่ที่อยู่ร้านของคุณ"
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                     required
                   />
                 </div>
               </div>
+
+              {/* Location Picker Placeholder */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">📍 ตำแหน่งบนแผนที่</label>
+                <div className="aspect-video w-full bg-green-50 border-2 border-dashed border-green-300 rounded-xl flex items-center justify-center">
+                  <div className="text-center text-green-700">
+                    <MapPin className="h-12 w-12 mx-auto mb-2" />
+                    <p className="text-sm font-medium">คลิกเพื่อเลือกตำแหน่งบนแผนที่</p>
+                    <button
+                      type="button"
+                      className="mt-3 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm transition-colors"
+                    >
+                      เปิดแผนที่
+                    </button>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">ตำแหน่งจะช่วยให้ลูกค้าหาร้านของคุณได้ง่ายขึ้น</p>
+              </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              {t('shopProfile.contactInfo')}
-            </h2>
+          <div className="bg-white rounded-2xl shadow-sm p-8 border border-gray-100 animate-scaleIn">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">⏰ เวลาทำการ</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">เวลาเปิด</label>
+                <input
+                  type="time"
+                  name="openTime"
+                  value={shopData.openTime}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">เวลาปิด</label>
+                <input
+                  type="time"
+                  name="closeTime"
+                  value={shopData.closeTime}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm p-8 border border-gray-100 animate-scaleIn">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">ช่องทางติดต่อ</h2>
             
             <div className="space-y-4">
               <div>
@@ -296,23 +368,27 @@ const ShopProfile = () => {
             </div>
           </div>
 
-          <div className="flex justify-end gap-4">
+          <div className="flex justify-center gap-4 pt-4">
             <button
               type="button"
-              onClick={() => navigate(-1)}
-              className="px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+              onClick={() => navigate('/shop/dashboard')}
+              className="px-8 py-3 border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-colors"
             >
-              {t('common.cancel')}
+              ยกเลิก
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-8 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-all disabled:opacity-50 shadow-lg hover:shadow-xl transform hover:scale-105"
             >
               <Save className="h-5 w-5" />
-              {saving ? t('common.loading') : t('shopProfile.save')}
+              {saving ? 'กำลังบันทึก...' : 'บันทึกข้อมูล'}
             </button>
           </div>
+          
+          <p className="text-center text-xs text-gray-500 mt-4">
+            ข้อมูลที่แก้ไขจะถูกบันทึกและแสดงในหน้าร้านค้าทันที
+          </p>
         </form>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { MapPin, Clock, Users, Calendar, Star, ArrowLeft, CheckCircle } from 'lu
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from '../hooks/useTranslation';
 import api from '../services/api';
+import ETicketModal from '../components/ETicketModal';
 
 const WorkshopDetail = () => {
   const { id } = useParams();
@@ -15,6 +16,8 @@ const WorkshopDetail = () => {
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState(false);
   const [participants, setParticipants] = useState(1);
+  const [showETicket, setShowETicket] = useState(false);
+  const [bookingData, setBookingData] = useState(null);
 
   useEffect(() => {
     fetchWorkshopDetails();
@@ -49,7 +52,19 @@ const WorkshopDetail = () => {
         participants
       });
 
-      alert(t('workshopDetail.enrollSuccess'));
+      // Show E-Ticket Modal after successful booking
+      setBookingData({
+        workshop: {
+          title: workshop.title,
+          host: workshop.host || 'Shop Name',
+          date: workshop.date,
+          time: workshop.time,
+          location: workshop.location
+        },
+        guestCount: participants,
+        bookingDate: new Date().toISOString()
+      });
+      setShowETicket(true);
       fetchWorkshopDetails();
     } catch (error) {
       alert(error.response?.data?.error || t('workshopDetail.enrollError'));
@@ -286,6 +301,13 @@ const WorkshopDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* E-Ticket Modal */}
+      <ETicketModal
+        booking={bookingData}
+        isOpen={showETicket}
+        onClose={() => setShowETicket(false)}
+      />
     </div>
   );
 };

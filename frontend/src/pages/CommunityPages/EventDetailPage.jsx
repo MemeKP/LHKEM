@@ -1,6 +1,7 @@
-import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Calendar, MapPin, Users, DollarSign, Edit, ArrowLeft, Clock, Info } from 'lucide-react';
+import api from '../../services/api';
+import { useQuery } from '@tanstack/react-query';
 
 /**
  * Event Detail Page - แสดงรายละเอียด Event และสามารถแก้ไขได้
@@ -9,13 +10,47 @@ import { Calendar, MapPin, Users, DollarSign, Edit, ArrowLeft, Clock, Info } fro
  * - GET /api/events/:id - ดึงรายละเอียด Event
  * - GET /api/events/:id/participants - ดึงรายชื่อผู้ลงทะเบียน
  */
+const useEvent = (eventId) => {
+  return useQuery({
+    queryKey: ['event', eventId],
+    queryFn: async () => {
+      const res = await api.get(`/api/events/${eventId}`);
+      return res.data;
+    },
+    enabled: !!eventId,
+  });
+};
+
+const fetchParticipants = async (eventId) => {
+  const res = await api.get(`/api/events/${eventId}/participants`);
+  return res.data;
+};
+
+const useEventParticipants = (eventId) => {
+  return useQuery({
+    queryKey: ['event-participants', eventId],
+    queryFn: () => fetchParticipants(eventId),
+    enabled: !!eventId,
+  });
+};
 
 const EventDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { data: event, isLoading, isError } = useEvent(id);
+  const {
+    data: participants = [],
+  } = useEventParticipants(id);
+
+  const getLocationName = (location) => {
+    if (!location) return 'ไม่ระบุสถานที่';
+    if (typeof location === 'string') return location;
+    return location.full_address || location.address || 'ไม่ระบุสถานที่';
+  };
 
   // TODO: Fetch from API - GET /api/events/:id
   // Mock data for Event detail
+  /*
   const event = {
     id: id,
     title: 'งานลอยกระทงโหล่งฮิมคาว 2567',
@@ -33,14 +68,15 @@ const EventDetailPage = () => {
     created_at: new Date('2024-01-01T10:00:00'),
     updated_at: new Date('2024-01-05T14:30:00'),
     images: []
-  };
+  };*/
 
   // TODO: Fetch from API - GET /api/events/:id/participants
+  /*
   const participants = [
     { id: '1', name: 'สมชาย ใจดี', email: 'somchai@example.com', phone: '081-234-5678', registered_at: new Date('2024-01-02') },
     { id: '2', name: 'สมหญิง รักสงบ', email: 'somying@example.com', phone: '082-345-6789', registered_at: new Date('2024-01-03') },
     { id: '3', name: 'วิชัย มั่นคง', email: 'wichai@example.com', phone: '083-456-7890', registered_at: new Date('2024-01-04') }
-  ];
+  ];*/
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -67,6 +103,13 @@ const EventDetailPage = () => {
         return status;
     }
   };
+
+  if (isLoading) return <div className="p-10 text-center">กำลังโหลดข้อมูล...</div>;
+  if (isError || !event) return <div className="p-10 text-center text-red-500">ไม่พบข้อมูลกิจกรรม</div>;
+
+  const registeredCount = participants?.length || 0;
+  const seatLimit = event.seat_limit || 0;
+  const remainingSeats = seatLimit - registeredCount;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -100,7 +143,9 @@ const EventDetailPage = () => {
                 )}
               </div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">{event.title}</h1>
-              <p className="text-gray-600">สร้างโดย {event.created_by}</p>
+              <p className="text-gray-600">สร้างโดย {event.created_by?.firstname
+                ? `${event.created_by.firstname} ${event.created_by.lastname}`
+                : 'ไม่ระบุตัวตน'}</p>
             </div>
             <button
               onClick={() => navigate(`/community-admin/events/${id}/edit`)}
@@ -148,7 +193,7 @@ const EventDetailPage = () => {
                 <Users className="h-5 w-5 text-orange-500" />
                 รายชื่อผู้ลงทะเบียน ({participants.length}/{event.seat_limit})
               </h2>
-              
+
               {participants.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   ยังไม่มีผู้ลงทะเบียน
@@ -240,7 +285,7 @@ const EventDetailPage = () => {
                 <MapPin className="h-5 w-5 text-orange-500" />
                 สถานที่
               </h3>
-              <p className="text-gray-700 leading-relaxed">{event.location}</p>
+              <p className="text-gray-700 leading-relaxed">{getLocationName(event.location)}</p>
             </div>
 
             {/* Capacity & Pricing */}
@@ -252,15 +297,15 @@ const EventDetailPage = () => {
                     <Users className="h-4 w-4" />
                     <span>จำนวนที่นั่ง</span>
                   </div>
-                  <span className="font-semibold text-gray-900">{event.seat_limit} ที่</span>
+                  <span className="font-semibold text-gray-900">{seatLimit} ที่</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">ลงทะเบียนแล้ว</span>
-                  <span className="font-semibold text-gray-900">{event.registered} คน</span>
+                  <span className="font-semibold text-gray-900">{registeredCount} คน</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">ที่นั่งคงเหลือ</span>
-                  <span className="font-semibold text-orange-600">{event.seat_limit - event.registered} ที่</span>
+                  <span className="font-semibold text-orange-600">{remainingSeats} ที่</span>
                 </div>
                 {event.deposit_amount > 0 && (
                   <div className="flex items-center justify-between pt-3 border-t">
@@ -279,11 +324,23 @@ const EventDetailPage = () => {
               <div className="space-y-2">
                 <div>
                   <span className="font-medium">สร้างเมื่อ:</span>{' '}
-                  {new Date(event.created_at).toLocaleDateString('th-TH')}
+                  {event.createdAt 
+                    ? new Date(event.createdAt).toLocaleDateString('th-TH', { 
+                        year: 'numeric', month: 'long', day: 'numeric', 
+                        hour: '2-digit', minute: '2-digit' 
+                      })
+                    : '-'
+                  }
                 </div>
                 <div>
                   <span className="font-medium">แก้ไขล่าสุด:</span>{' '}
-                  {new Date(event.updated_at).toLocaleDateString('th-TH')}
+                  {event.updatedAt
+                    ? new Date(event.updatedAt).toLocaleDateString('th-TH', {
+                      year: 'numeric', month: 'long', day: 'numeric',
+                      hour: '2-digit', minute: '2-digit'
+                    })
+                    : '-'
+                  }
                 </div>
               </div>
             </div>

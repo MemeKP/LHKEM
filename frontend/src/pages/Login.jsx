@@ -16,8 +16,6 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const from = location.state?.from || '/dashboard';
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -27,7 +25,46 @@ const Login = () => {
       const result = await login(formData.email, formData.password);
       
       if (result.success) {
-        navigate(from, { replace: true });
+        // Redirect based on user role
+        const userRole = result.user?.role;
+        const from = location.state?.from?.pathname;
+        let redirectPath;
+        
+        if (userRole === 'COMMUNITY_ADMIN') {
+          // Community Admin: return to previous page if public, otherwise dashboard
+          const protectedPaths = ['/dashboard', '/settings', '/shop', '/platform-admin'];
+          const isProtectedPath = from && protectedPaths.some(path => from.startsWith(path));
+          redirectPath = (from && !isProtectedPath) ? from : '/community-admin/dashboard';
+        } else if (userRole === 'SHOP_OWNER') {
+          // Shop Owner: return to previous page if public, otherwise shop dashboard
+          const protectedPaths = ['/dashboard', '/settings', '/platform-admin', '/community-admin'];
+          const isProtectedPath = from && protectedPaths.some(path => from.startsWith(path));
+          // If on community page, stay there; otherwise go to shop dashboard
+          if (from && !isProtectedPath) {
+            redirectPath = from;
+          } else {
+            redirectPath = '/loeng-him-kaw/shop/dashboard'; // Default community
+          }
+        } else if (userRole === 'PLATFORM_ADMIN') {
+          // Platform Admin: return to previous page if public, otherwise admin dashboard
+          const protectedPaths = ['/dashboard', '/settings', '/shop', '/community-admin'];
+          const isProtectedPath = from && protectedPaths.some(path => from.startsWith(path));
+          redirectPath = (from && !isProtectedPath) ? from : '/platform-admin/dashboard';
+        } else {
+          // Tourist/User: return to previous page if it was public, otherwise go to landing
+          const protectedPaths = ['/dashboard', '/settings', '/community-admin', '/shop', '/platform-admin'];
+          const isProtectedPath = from && protectedPaths.some(path => from.startsWith(path));
+          
+          if (from && !isProtectedPath) {
+            // Return to the public page they were viewing
+            redirectPath = from;
+          } else {
+            // Go to landing page for protected or undefined paths
+            redirectPath = '/';
+          }
+        }
+        
+        navigate(redirectPath, { replace: true });
       } else {
         setError(result.message || 'Login failed');
       }
