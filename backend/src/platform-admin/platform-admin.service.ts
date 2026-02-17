@@ -60,9 +60,26 @@ export class PlatformAdminService {
 
     const shops = await this.shopModel.find({ communityId: objectId }).lean();
 
-    const admins = await this.communityAdminModel.countDocuments({
-      community_id: objectId
-    })
+    // const admins = await this.communityAdminModel.countDocuments({
+    //   community: objectId
+    // })
+
+    const adminDocs = await this.communityAdminModel.find({ community: objectId })
+      .populate('user', 'username email')
+      .lean();
+
+    const adminsList = adminDocs.map((doc: any) => {
+      const user = doc.user;
+      const joinYear = new Date(doc.createdAt).getFullYear() + 543; 
+
+      return {
+        id: doc._id.toString(), 
+        name: user?.username || user?.email || 'Unknown', 
+        email: user?.email || '-',
+        joinDate: joinYear.toString(), 
+        userId: user?._id?.toString() 
+      };
+    });
 
     const workshops = await this.workshopModel.find({
       community_id: objectId,
@@ -82,18 +99,135 @@ export class PlatformAdminService {
     const participantsCount = 0;
 
     const activeShops = shops.filter(s => s.status === 'ACTIVE');
+
+    const shopsList = shops.map(shop => {
+      const shopWorkshopsCount = workshops.filter(w => 
+        w['shop']?.toString() === shop._id.toString() || 
+        w['shop_id']?.toString() === shop._id.toString()
+      ).length;
+
+      return {
+        id: shop._id.toString(),
+        name: shop.shopName,
+        workshops: shopWorkshopsCount,
+        members: 0, // ตอนนี้ยังไม่มีระบบสมาชิกแยกรายร้าน ให้ใส่ 0 หรือ mock ไปก่อน
+        status: (shop.status || 'inactive').toLowerCase() 
+      };
+    });
+
     console.log('Community Data:', JSON.stringify(community, null, 2));
+    
+    const allItems = [...workshops, ...events];
+
+    const checkStatus = (item: any, statusToCheck: string) => {
+        return (item.status || 'PENDING').toUpperCase() === statusToCheck;
+    };
+
+    const pendingCount = allItems.filter(i => checkStatus(i, 'PENDING')).length;
+    const activeCount = allItems.filter(i => 
+        checkStatus(i, 'ACTIVE') || checkStatus(i, 'APPROVED') || checkStatus(i, 'ONGOING')
+    ).length;
+    const completedCount = allItems.filter(i => checkStatus(i, 'COMPLETED') || checkStatus(i, 'FINISHED')).length;
+
+    const workshopsEventsData = [
+      { 
+        label: 'รายการทั้งหมด', 
+        count: allItems.length, 
+        color: 'green' 
+      },
+      { 
+        label: 'รอการอนุมัติ', 
+        count: pendingCount, 
+        color: 'orange' 
+      },
+      { 
+        label: 'กำลังดำเนินการ', 
+        count: activeCount, 
+        color: 'orange' 
+      },
+      { 
+        label: 'เสร็จสิ้น', 
+        count: completedCount, 
+        color: 'gray' 
+      }
+    ];
+
+    // Popular Activity (Bar Chart) นับจาก Workshop 
+    let popularActivityData: any[] = [];
+
+    if (workshops.length > 0) {
+      const categoryCount = workshops.reduce((acc, curr) => {
+        const cat = curr['category'] || curr['type'] || 'Workshop'; 
+        acc[cat] = (acc[cat] || 0) + 1;
+        return acc;
+      }, {});
+
+      popularActivityData = Object.keys(categoryCount).map(key => ({
+        name: key,
+        value: categoryCount[key]
+      }));
+      
+      // เรียงลำดับมากไปน้อย และตัดเอาแค่ 5 อันดับแรก
+      popularActivityData.sort((a, b) => b.value - a.value).splice(5);
+    }
+
+    // ถ้าไม่มี Workshop เลย (หรือ Data ว่าง) ให้ส่งค่า Mock ไปก่อน
+    if (popularActivityData.length === 0) {
+      popularActivityData = [
+        { name: 'Craft', value: 12 },
+        { name: 'Cooking', value: 8 },
+        { name: 'Culture', value: 6 },
+        { name: 'Nature', value: 4 }
+      ];
+    }
+
+    // Participant Types (Pie Chart) - Mock ไปก่อน
+    const localCount = shops.length + adminDocs.length; // ร้านค้า + แอดมิน = คนพื้นที่
+    
+    // !!! ตอนนี้ Workshop ยังไม่มี participant เป็น 0 ตามด้านบนอยู่
+    // ถ้าเสร็จแล้วให้ใช้ bookings.length หรือ participants.length 
+    const touristCount = participantsCount > 0 ? participantsCount : 25; // ใส่ mock (ถ้าไม่มีคนเลย กราฟจะพัง)
+
+    const totalPeople = localCount + touristCount;
+
+    // คำนวณ % 
+    let localPercent = 0;
+    let touristPercent = 0;
+
+    if (totalPeople > 0) {
+        localPercent = Math.round((localCount / totalPeople) * 100);
+        touristPercent = 100 - localPercent; // เพื่อให้รวมกันได้ 100 เสมอ
+    } else {
+        // ถ้าไม่มีข้อมูลเลย ให้ mock ค่า default
+        localPercent = 60;
+        touristPercent = 40;
+    }
+
+    const participantTypeData = [
+        { 
+          name: 'Local (คนในพื้นที่)', 
+          value: localPercent, 
+          color: '#16a34a' // เขียว
+        },
+        { 
+          name: 'Tourist (นักท่องเที่ยว)', 
+          value: touristPercent, 
+          color: '#f97316' // ส้ม
+        }
+    ];
+
     return {
       id: community._id.toString(),
       name: community.name,
       location: community.location.full_address,
 
+      is_active: community.is_active ?? true,
       stats: {
         shops: {
           current: activeShops.length,
           total: shops.length,
         },
-        admins,
+        admins: adminDocs.length,
         workshops: workshops.length,
         participants: participantsCount,
         growth: '+0%', // ค่อยคำนวณทีหลัง
@@ -101,11 +235,21 @@ export class PlatformAdminService {
       },
 
       alerts: this.generateAlerts(shops, workshops),
+      shopsList: shopsList,
+      workshopsEvents: workshopsEventsData,
+      admins: adminsList,
+      participantTypeData,
+      popularActivityData,
     };
   }
 
   async getDashboardData(): Promise<PlatformDashboardResponseDto> {
     const communitiesData = await this.communityModel.aggregate<CommunityAggregationResult>([
+      {
+        $match: {
+          is_active: { $ne: false }
+        }
+      },
       {
         $lookup: {
           from: 'shops',
@@ -219,7 +363,7 @@ export class PlatformAdminService {
 
     alerts.push({
       type: 'success',
-      message: `Workshop ได้รับอนุมัติแล้ว ${approvalRate}%`,
+      message: `Workshop ได้รับอนุมัติแล้ว ${approvalRate}% `,
       time: 'ล่าสุด',
     });
 

@@ -24,7 +24,7 @@ export class EventsService {
     if (createEventDto.end_at < createEventDto.start_at) {
       throw new BadRequestException('End date must be after start date');
     }
-
+ 
     const newEvent = new this.eventModel({
       ...createEventDto,
       community_id: new Types.ObjectId(community_id),

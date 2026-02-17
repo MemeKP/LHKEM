@@ -20,6 +20,9 @@ const CommunityHome = () => {
   const { community } = useOutletContext()
   const highlights = community.cultural_highlights || []
   const workshopCount = community.workshops?.length || 0;
+  const API_URL = import.meta.env.VITE_API_URL;
+
+  console.log("images: ", `${API_URL}/uploads/${community.images?.[1]}`)
 
   // ไว้แมชไอคอนกับชื่อไฮไลท
   const getIcon = (title) => {
@@ -47,21 +50,21 @@ const CommunityHome = () => {
   })
 
   const stats = [
-  { 
-    number: workshopCount > 0 ? `${workshopCount}+` : '0', 
-    label: t('stats.workshops') 
-  },
-  { 
-    // ส่วน locations ตอนนี้ยังไม่มี collection ร้านค้าแยก
-    number: '1', 
-    label: t('stats.locations') 
-  },
-  { 
-    // ให้ static เหมือนกันหมด
-    number: '100%', 
-    label: 'Eco-Friendly' 
-  }
-];
+    {
+      number: workshopCount > 0 ? `${workshopCount}+` : '0',
+      label: t('stats.workshops')
+    },
+    {
+      // ส่วน locations ตอนนี้ยังไม่มี collection ร้านค้าแยก
+      number: '1',
+      label: t('stats.locations')
+    },
+    {
+      // ให้ static เหมือนกันหมด
+      number: '100%',
+      label: 'Eco-Friendly'
+    }
+  ];
 
   const workshopCards = workshopData.slice(0, 3);
   const [activeWorkshop, setActiveWorkshop] = useState(null);
@@ -70,12 +73,12 @@ const CommunityHome = () => {
 
   const handleOpenModal = (workshop) => setActiveWorkshop(workshop);
   const handleCloseModal = () => setActiveWorkshop(null);
-  
+
   const handleBookingSuccess = (booking) => {
     setCurrentBooking(booking);
     setShowETicket(true);
   };
-  
+
   const handleCloseETicket = () => {
     setShowETicket(false);
     setCurrentBooking(null);
@@ -92,10 +95,17 @@ const CommunityHome = () => {
                 <span>{t('hero.badge')}</span>
               </div>
               <h1 className="text-4xl md:text-5xl font-extrabold leading-tight mb-4">
-                {ct(community.hero_section.title, community.hero_section.title_en)}
+                {ct(
+                  community.hero_section?.title
+                    ? community.hero_section.title
+                    : `${community.name} ชุมชนแห่งความสุข`,
+                  community.hero_section?.title_en
+                    ? community.hero_section.title_en
+                    : `${community.name_en} Community of Happiness`
+                )}
               </h1>
               <p className="text-lg text-white/80 mb-8 line-clamp-2">
-              {ct(community.hero_section.description, community.hero_section.description_en)}
+                {ct(community.hero_section.description, community.hero_section.description_en)}
               </p>
               <div className="flex flex-col sm:flex-row justify-center gap-4">
                 <Link
@@ -139,34 +149,43 @@ const CommunityHome = () => {
             </h2>
           </div>
 
-          {/* Gallery Grid - 1 large left + 3 small right */}
-          <div className="grid grid-rows-2 gap-4 h-full">
-            <div className="h-full rounded-2xl bg-gradient-to-br from-green-200 via-green-300 to-green-400 overflow-hidden shadow-md hover:shadow-xl transition-shadow">
-                <div className="w-full h-full flex items-center justify-center text-white text-lg font-semibold">
-                  {ct('รูปภาพหลัก', 'Main Image')}
-                </div>
-              </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[500px]">
+          {/* Gallery Grid */}
+          <div className="grid grid-cols-1 gap-4">
+            {/* Top Large Image - Full Width */}
+            <div className="h-[300px] md:h-[400px] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow relative">
+              <img
+                src={`${API_URL}/uploads/${community.images?.[1]}`}
+                alt={ct('รูปภาพหลัก', 'Main Image')}
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            {/* Bottom Row: 1 Large Left + 2 Small Right */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[700px] md:h-[850px]">
               {/* Large image - Left side */}
-              <div className="h-full rounded-2xl bg-gradient-to-br from-green-200 via-green-300 to-green-400 overflow-hidden shadow-md hover:shadow-xl transition-shadow">
-                <div className="w-full h-full flex items-center justify-center text-white text-lg font-semibold">
-                  {ct('รูปภาพหลัก', 'Main Image')}
-                </div>
+              <div className="h-full rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow relative">
+                <img
+                  src={`${API_URL}/uploads/${community.images?.[0]}`}
+                  alt={ct('รูปภาพหลัก 2', 'Main Image 2')}
+                  className="w-full h-full object-cover"
+                />
               </div>
-              
+
               {/* Small images - Right side, stacked */}
               <div className="grid grid-rows-2 gap-4 h-full">
-                <div className="rounded-2xl bg-gradient-to-br from-orange-200 via-orange-300 to-orange-400 overflow-hidden shadow-md hover:shadow-xl transition-shadow">
-                  <div className="w-full h-full flex items-center justify-center text-white font-semibold">
-                    {ct('รูปภาพ 2', 'Image 2')}
-                  </div>
+                <div className="rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow relative">
+                  <img
+                    src={`${API_URL}/uploads/${community.images?.[2]}`}
+                    alt={ct('รูปภาพ 2', 'Image 2')}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-                <div className="rounded-2xl bg-gradient-to-br from-blue-200 via-blue-300 to-blue-400 overflow-hidden shadow-md hover:shadow-xl transition-shadow">
-                  <div className="w-full h-full flex items-center justify-center text-white font-semibold">
-                    {ct('รูปภาพ 3', 'Image 3')}
-                  </div>
-                </div>
-                <div className="rounded-2xl bg-gradient-to-br from-purple-200 via-purple-300 to-purple-400 overflow-hidden shadow-md hover:shadow-xl transition-shadow">
+                <div className="rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow relative">
+                  <img
+                    src={`${API_URL}/uploads/${community.images?.[3]}`}
+                    alt={ct('รูปภาพ 3', 'Image 3')}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               </div>
             </div>
@@ -227,7 +246,7 @@ const CommunityHome = () => {
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">{t('explore.title')}</h2>
             <p className="text-gray-600 max-w-2xl mx-auto mb-8">{t('explore.description')}</p>
           </div>
-          
+
           {/* Larger Map Placeholder */}
           <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-gray-200">
             <div className="h-96 md:h-[500px] bg-gradient-to-br from-blue-100 via-green-50 to-yellow-50 flex items-center justify-center">
@@ -241,7 +260,7 @@ const CommunityHome = () => {
                 </p>
               </div>
             </div>
-            
+
             {/* View Full Map Button Overlay */}
             <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
               <Link
@@ -374,8 +393,8 @@ const CommunityHome = () => {
 
           {/* View All Shops Button */}
           <div className="text-center mt-10">
-            <Link 
-              to={`/${community.slug}/shops`} 
+            <Link
+              to={`/${community.slug}/shops`}
               className="inline-flex items-center justify-center gap-2 px-8 py-3 border-2 border-gray-300 rounded-full text-gray-700 hover:border-gray-400 hover:bg-gray-50 transition font-semibold"
             >
               {ct('ดูร้านค้าทั้งหมด', 'View All Shops')}
@@ -471,13 +490,13 @@ const CommunityHome = () => {
         </div>
       </section>
 
-      <WorkshopModal 
-        workshop={activeWorkshop} 
-        isOpen={!!activeWorkshop} 
+      <WorkshopModal
+        workshop={activeWorkshop}
+        isOpen={!!activeWorkshop}
         onClose={handleCloseModal}
         onBookingSuccess={handleBookingSuccess}
       />
-      <ETicketModal 
+      <ETicketModal
         booking={currentBooking}
         isOpen={showETicket}
         onClose={handleCloseETicket}

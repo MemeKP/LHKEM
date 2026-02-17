@@ -110,4 +110,11 @@ export class CommunitiesController {
     return this.communitiesService.remove(id);
   }
 
+  @Patch(':id/close') 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PLATFORM_ADMIN) 
+  async closeCommunity(@Param('id') id: string) {
+    return this.communitiesService.close(id);
+  }
+
 }
