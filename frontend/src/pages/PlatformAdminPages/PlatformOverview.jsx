@@ -3,6 +3,8 @@ import { Users, Store, Calendar, TrendingUp, AlertCircle, CheckCircle, ChevronRi
 import { useTranslation } from '../../hooks/useTranslation';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
+// หน้านี้ยังงง กี้้ด้ดๆๆๆ ;____;
+
 const PlatformOverview = () => {
   const { ct } = useTranslation();
   const [stats, setStats] = useState({

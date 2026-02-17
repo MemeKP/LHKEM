@@ -1,10 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UseGuards } from '@nestjs/common';
 import { PlatformAdminService } from './platform-admin.service';
 import { CreatePlatformAdminDto } from './dto/create-platform-admin.dto';
 import { UpdatePlatformAdminDto } from './dto/update-platform-admin.dto';
 import { PlatformDashboardResponseDto } from './dto/platform-dashboard.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CommunityDetailResponseDto } from './dto/community-detail.dto';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { UserRole } from 'src/common/enums/user-role.enum';
+import { Roles } from 'src/common/decorators/roles.decorator';
 
 @Controller('api/platform-admin')
 export class PlatformAdminController {
@@ -33,6 +37,13 @@ export class PlatformAdminController {
     @Param('id') id: string,
   ): Promise<CommunityDetailResponseDto> {
     return this.platformAdminService.getCommunityDetail(id);
+  }
+
+  @Get('communities/:id/for-update')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PLATFORM_ADMIN, UserRole.PLATFORM_ADMIN)
+  async findOneForUpdate(@Param('id') id: string) {
+    return this.platformAdminService.getCommunityForUpdate(id);
   }
 
   // @Patch(':id')

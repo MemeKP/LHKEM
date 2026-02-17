@@ -66,6 +66,7 @@ const createCommunity = async (formData) => {
   });
   return res.data
 };
+
 const PlatformCreateCommunity = () => {
   const { ct } = useTranslation();
   const navigate = useNavigate();

@@ -342,6 +342,29 @@ export class PlatformAdminService {
     };
   }
 
+  async getCommunityForUpdate(id: string) {
+    const community = await this.communityModel.findById(id).lean();
+    if (!community) throw new NotFoundException('Community not found');
+    const adminsList = await this.communityAdminModel.find({ community: community._id })
+        .populate('user', 'email username')
+        .lean();
+
+    return {
+      ...community, 
+      id: community._id.toString(),
+      admins: adminsList.map(admin => {
+         const user = admin.user as any; 
+         return {
+            id: admin._id.toString(),
+            email: user?.email || '-',
+            name: user?.username || user?.email?.split('@')[0] || 'Admin',
+            userId: user?._id?.toString()
+         };
+      }),
+      location: community.location, 
+    };
+  }
+
   private generateAlerts(shops, workshops) {
     const alerts: CommunityAlert[] = [];
 

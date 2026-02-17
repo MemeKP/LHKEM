@@ -76,7 +76,7 @@ export class CommunitiesService {
         },
         {
           title: "สืบสานวัฒนธรรม",
-          title_en: "Cultural Heritage", 
+          title_en: "Cultural Heritage",
           desc: "เรียนรู้จากช่างฝีมือท้องถิ่น",
           desc_en: "Learn from local artisans"
         },
@@ -169,7 +169,7 @@ export class CommunitiesService {
   }
 
   async findAll(): Promise<Community[]> {
-    return this.communityModel.find({is_active: true})
+    return this.communityModel.find({ is_active: true })
       .populate('shops')
       .populate('events')
       .populate('workshops')
@@ -192,7 +192,7 @@ export class CommunitiesService {
     if (Types.ObjectId.isValid(identifier)) {
       const doc = await this.communityModel.findOne({
         _id: identifier,
-        is_active: true 
+        is_active: true
       }).exec();
       if (doc) return doc;
     }
@@ -208,8 +208,63 @@ export class CommunitiesService {
     return community;
   }
 
-  async update(id: string, updateCommunityDto: UpdateCommunityDto) {
-    const finalDto = await this.fillEnglishFields(updateCommunityDto);
+  async update(
+    id: string,
+    userId: string,
+    updateCommunityDto: UpdateCommunityDto,
+    files: Array<Express.Multer.File>
+  ) {
+
+    let finalImages: string[] = [];
+
+    if (updateCommunityDto.existing_images) {
+      if (Array.isArray(updateCommunityDto.existing_images)) {
+        finalImages = [...updateCommunityDto.existing_images];
+      } else {
+        finalImages = [updateCommunityDto.existing_images];
+      }
+    }
+
+    if (files && files.length > 0) {
+      const newImagePaths = files.map(file =>
+        `/uploads/communities/${file.filename}`
+      );
+      finalImages = [...finalImages, ...newImagePaths];
+    }
+
+    if (files?.length > 0 || updateCommunityDto.existing_images) {
+      updateCommunityDto.images = finalImages;
+    }
+    const updateData: any = { ...updateCommunityDto };
+    delete updateData.admins;
+    delete updateData.existing_images;
+    if (updateCommunityDto.admins !== undefined) {
+      let adminsList: any = updateCommunityDto.admins;
+      if (typeof adminsList === 'string') {
+        try { adminsList = JSON.parse(adminsList); }
+        catch { adminsList = []; }
+      }
+
+      const users = await this.userModel.find({
+        email: { $in: adminsList }
+      }).select('_id');
+
+      await this.communityadminModel.deleteMany({
+        community: new Types.ObjectId(id)
+      });
+
+      if (users.length > 0) {
+        const adminDocs = users.map(user => ({
+          user: user._id,
+          community: new Types.ObjectId(id),
+          assigned_by: new Types.ObjectId(userId),
+          can_approve_workshop: false
+        }));
+
+        await this.communityadminModel.insertMany(adminDocs);
+      }
+    }
+    const finalDto = await this.fillEnglishFieldsForUpdate(updateData);
     const updatedCommunity = await this.communityModel.findByIdAndUpdate(
       id,
       finalDto,
@@ -220,6 +275,71 @@ export class CommunitiesService {
     }
     return updatedCommunity;
   }
+
+  async addAdminByEmail(communityId: string, email: string, addedById: string) {
+    const user = await this.userModel.findOne({ email });
+    if (!user) {
+      throw new NotFoundException('User with this email not found');
+    }
+
+    const community = await this.communityModel.findById(communityId);
+    if (!community) {
+      throw new NotFoundException('Community not found');
+    }
+
+    const existingAdmin = await this.communityadminModel.findOne({
+      user: user._id,
+      community: community._id,
+    });
+
+    if (existingAdmin) {
+      throw new ConflictException('User is already an admin of this community');
+    }
+
+    const newAdmin = new this.communityadminModel({
+      user: user._id,
+      community: community._id,
+      can_approve_workshop: true,
+      role: 'COMMUNITY_ADMIN',
+      addedBy: addedById,
+    });
+
+    await newAdmin.save();
+
+    return { message: 'Admin added successfully', admin: newAdmin };
+  }
+
+  private async fillEnglishFieldsForUpdate(dto: UpdateCommunityDto) {
+    const result = { ...dto };
+    if (dto.history) {
+      result.history_en = await this.autoTranslate(dto.history);
+    }
+    if (dto.hero_section?.title) {
+      result.hero_section = {
+        ...dto.hero_section,
+        title_en: await this.autoTranslate(dto.hero_section.title),
+        description_en: dto.hero_section.description
+          ? await this.autoTranslate(dto.hero_section.description)
+          : undefined
+      };
+    }
+    return result;
+  }
+
+  async removeAdmin(communityId: string, adminId: string) {
+    if (!Types.ObjectId.isValid(adminId) || !Types.ObjectId.isValid(communityId)) {
+      throw new BadRequestException('Invalid id format');
+    }
+    const deleted = await this.communityadminModel.findOneAndDelete({
+      _id: new Types.ObjectId(adminId),
+      community: new Types.ObjectId(communityId),
+    });
+    if (!deleted) {
+      throw new NotFoundException('Admin not found in this community');
+    }
+    return { message: 'Admin removed successfully' };
+  }
+
 
   async remove(id: string): Promise<{ message: string }> {
     try {
@@ -238,17 +358,17 @@ export class CommunitiesService {
     const community = await this.communityModel.findByIdAndUpdate(
       id,
       { is_active: false },
-      { new: true } 
+      { new: true }
     );
     if (!community) {
       throw new NotFoundException(`Community #${id} not found`);
     }
-    await this.communityadminModel.deleteMany({ 
-        community: new Types.ObjectId(id) 
+    await this.communityadminModel.deleteMany({
+      community: new Types.ObjectId(id)
     });
-    return { 
-      message: 'Community closed successfully', 
-      community 
+    return {
+      message: 'Community closed successfully',
+      community
     };
   }
 
