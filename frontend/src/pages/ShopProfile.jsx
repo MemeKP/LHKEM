@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useParams, useOutletContext } from 'react-router-dom';
+import { Link, useParams, useOutletContext, useNavigate } from 'react-router-dom';
 import { MapPin, Clock, Phone, Facebook, Globe, ArrowLeft, Store, Calendar, Users, Star } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import WorkshopModal from '../components/WorkshopModal';
@@ -18,6 +18,7 @@ const ShopProfile = () => {
   const { t, ct } = useTranslation();
   const { community } = useOutletContext();
   const { shopId } = useParams();
+  const navigate = useNavigate();
   const [activeWorkshop, setActiveWorkshop] = useState(null);
   const [currentBooking, setCurrentBooking] = useState(null);
   const [showETicket, setShowETicket] = useState(false);
@@ -142,7 +143,14 @@ const ShopProfile = () => {
       <section className="relative h-64 md:h-80 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 overflow-hidden">
         {displayShop.coverUrl ? (
           <>
-            <img src={displayShop.coverUrl} alt={displayShop.shopName} className="absolute inset-0 w-full h-full object-cover" />
+            <img 
+              src={`${import.meta.env.VITE_API_URL}/uploads/${displayShop.coverUrl}`} 
+              alt={displayShop.shopName} 
+              className="absolute inset-0 w-full h-full object-cover"
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
             <div className="absolute inset-0 bg-black/40"></div>
           </>
         ) : (
@@ -227,7 +235,7 @@ const ShopProfile = () => {
                 {/* LINE ID */}
                 {displayShop.contact?.line && (
                   <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
-                    <div className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0 font-bold">ไ</div>
+                    <div className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0 font-bold">L</div>
                     <div>
                       <p className="text-sm font-semibold text-[#2F4F2F] mb-1">
                         {ct('LINE ID', 'LINE ID')}
@@ -247,17 +255,21 @@ const ShopProfile = () => {
                       <p className="text-sm font-semibold text-[#2F4F2F] mb-1">
                         {ct('Facebook', 'Facebook')}
                       </p>
-                      <a href={displayShop.contact.facebook} target="_blank" rel="noopener noreferrer" className="text-sm text-[#E07B39] hover:text-[#D66B29]">
-                        {ct('เยี่ยมชมเพจ', 'Visit Page')}
-                      </a>
+                      <p className="text-sm text-[#6B6B6B]">
+                        {displayShop.contact.facebook}
+                      </p>
                     </div>
                   </div>
                 )}
               </div>
 
               {/* Call to Action Button */}
-              <button className="w-full md:w-auto px-8 py-3 bg-[#E07B39] hover:bg-[#D66B29] text-white font-semibold rounded-full transition shadow-lg hover:shadow-xl hover:scale-105">
-                {ct('ติดต่อร้าน', 'Contact Shop')}
+              <button 
+                onClick={() => navigate(`/${community.slug}/map`)}
+                className="w-full md:w-auto px-8 py-3 bg-[#E07B39] hover:bg-[#D66B29] text-white font-semibold rounded-full transition shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center gap-2"
+              >
+                <MapPin className="h-5 w-5" />
+                {ct('ดูบนแผนที่', 'View on Map')}
               </button>
             </div>
           </div>

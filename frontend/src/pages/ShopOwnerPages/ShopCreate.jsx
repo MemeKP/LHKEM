@@ -246,13 +246,13 @@ const ShopCreate = () => {
                 />
               </div>
               <div>
-                <label className="block text-xs text-[#6B6B6B] mb-1.5">📘 Facebook</label>
+                <label className="block text-xs text-[#6B6B6B] mb-1.5">📘 ชื่อ Facebook</label>
                 <input
                   type="text"
                   name="contactLinks.facebook"
                   value={shopData.contactLinks.facebook}
                   onChange={handleChange}
-                  placeholder="https://facebook.com/yourshop"
+                  placeholder="เช่น ร้านมีนา"
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
                 />
               </div>

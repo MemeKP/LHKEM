@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, Edit, Trash2, Eye, Users, DollarSign, Clock, CheckCircle, XCircle, AlertCircle, Camera, Settings as SettingsIcon, Bell, Calendar, TrendingUp, Star } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -11,17 +11,27 @@ const ShopDashboard = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { slug } = useParams();
+  const queryClient = useQueryClient();
+  
   const { data: shop, isLoading: shopLoading } = useQuery({
-    queryKey: ['shop/me'],
+    queryKey: ['shop/me', user?.id],
     queryFn: async () => {
       const res = await api.get('/api/shops/me', {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       return res.data;
     },
-    enabled: !!token,
+    enabled: !!token && !!user,
     retry: 1,
+    staleTime: 0,
   });
+
+  // Clear shop cache when user changes
+  useEffect(() => {
+    return () => {
+      queryClient.removeQueries(['shop/me']);
+    };
+  }, [user?.id, queryClient]);
 
   useEffect(() => {
     if (!shopLoading && !shop) {

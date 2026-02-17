@@ -408,7 +408,15 @@ const CommunityHome = () => {
                     <Link key={shop._id} to={`/${community.slug}/shops/${shop._id}`} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition group">
                       <div className="relative h-48 overflow-hidden">
                         {shop.coverUrl ? (
-                          <img src={shop.coverUrl} alt={shop.shopName} className="w-full h-full object-cover" />
+                          <img 
+                            src={`${import.meta.env.VITE_API_URL}/uploads/${shop.coverUrl}`} 
+                            alt={shop.shopName} 
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.parentElement.innerHTML = `<div class="w-full h-full bg-gradient-to-br ${gradient}"><div class="absolute inset-0 flex items-center justify-center"><svg class="h-16 w-16 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg></div></div>`;
+                            }}
+                          />
                         ) : (
                           <div className={`w-full h-full bg-gradient-to-br ${gradient}`}>
                             <div className="absolute inset-0 flex items-center justify-center">

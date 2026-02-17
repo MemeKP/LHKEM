@@ -29,6 +29,39 @@ const Landing = () => {
     initialData: []
   });
 
+  const { data: platformStats } = useQuery({
+    queryKey: ['platform-stats'],
+    queryFn: async () => {
+      const communitiesRes = await api.get('/api/communities');
+      
+      const totalWorkshops = communitiesRes.data.reduce((sum, comm) => 
+        sum + (comm.workshops?.length || 0), 0
+      );
+      
+      // Count active shops from all communities
+      let totalShops = 0;
+      for (const comm of communitiesRes.data) {
+        try {
+          const shopsRes = await api.get(`/api/shops/community/${comm._id}`);
+          totalShops += shopsRes.data.filter(shop => shop.status === 'ACTIVE').length;
+        } catch (err) {
+          console.error('Failed to fetch shops for community:', comm._id);
+        }
+      }
+      
+      return [
+        { number: `${communitiesRes.data.length}`, label: ct('ชุมชน', 'Communities') },
+        { number: `${totalWorkshops}`, label: ct('กิจกรรม', 'Workshops') },
+        { number: `${totalShops}`, label: ct('ร้านค้า', 'Shops') }
+      ];
+    },
+    initialData: [
+      { number: '0', label: ct('ชุมชน', 'Communities') },
+      { number: '0', label: ct('กิจกรรม', 'Workshops') },
+      { number: '0', label: ct('ร้านค้า', 'Shops') }
+    ]
+  });
+
   const handleCommunityClick = (slug) => {
     navigate(`/${slug}`);
   };
@@ -37,13 +70,6 @@ const Landing = () => {
   const filterTags = [
     'ทั้งหมด', 'กิจกรรม', 'เครื่องจักร', 'ร้าน', 'ร้านอาหาร', 'ท่องเที่ยว', 'สถานที่',
     'วัด', 'ศาลา', 'ผลิตภัณฑ์', 'ผ้า', 'งานฝีมือ', 'จักสาน'
-  ];
-
-  // Platform stats
-  const platformStats = [
-    { number: '4+', label: ct('ชุมชน', 'Communities') },
-    { number: '50+', label: ct('ร้านค้า', 'Shops') },
-    { number: '15+', label: ct('ร้านค้า', 'Shops') }
   ];
 
   return (
