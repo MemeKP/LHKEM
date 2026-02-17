@@ -25,7 +25,7 @@ export class ShopController {
   @Roles(UserRole.SHOP)
   @Post()
   create(@Req() req, @Body() dto: CreateShopDto) {
-    return this.shopService.create(req.user.userId, dto);
+    return this.shopService.create(req.user.userMongoId, dto);
   }
 
   //get my shop
@@ -33,7 +33,7 @@ export class ShopController {
   @Roles(UserRole.SHOP)
   @Get('me')
   findMine(@Req() req) {
-    return this.shopService.findMyShop(req.user.userId);
+    return this.shopService.findMyShop(req.user.userMongoId);
   }
 
   //update shop
@@ -45,7 +45,7 @@ export class ShopController {
     @Param('id') id: string,
     @Body() dto: UpdateShopDto,
   ) {
-    return this.shopService.update(id, req.user.userId, dto);
+    return this.shopService.update(id, req.user.userMongoId, dto);
   }
 
   //get public shop info

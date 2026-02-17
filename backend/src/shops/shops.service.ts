@@ -18,41 +18,64 @@ export class ShopsService {
   ) {}
 
   async create(userId: string, dto: CreateShopDto) {
-  const userObjectId = new Types.ObjectId(userId);
-  const communityObjectId = new Types.ObjectId(dto.communityId);
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new BadRequestException('Invalid user identifier');
+    }
+    if (!Types.ObjectId.isValid(dto.communityId)) {
+      throw new BadRequestException('Invalid community identifier');
+    }
 
-  const exists = await this.shopModel.findOne({
-  userId: userObjectId,
-});
-  if (exists) {
-    throw new BadRequestException('User already has a shop');
+    const userObjectId = new Types.ObjectId(userId);
+    const communityObjectId = new Types.ObjectId(dto.communityId);
+
+    const exists = await this.shopModel.findOne({
+      userId: userObjectId,
+    });
+    if (exists) {
+      throw new BadRequestException('User already has a shop');
+    }
+
+    const payload: Partial<Shop> = {
+      shopName: dto.shopName,
+      description: dto.description,
+      picture: dto.picture ?? dto.coverUrl,
+      coverUrl: dto.coverUrl,
+      iconUrl: dto.iconUrl,
+      openTime: dto.openTime,
+      closeTime: dto.closeTime,
+      location: this.normalizeLocation(dto.location),
+      contact: dto.contact,
+      images: dto.images,
+      userId: userObjectId,
+      communityId: communityObjectId,
+      status: 'PENDING',
+    };
+
+    return this.shopModel.create(payload);
   }
-  
-
-  return this.shopModel.create({
-    shopName: dto.shopName,
-    description: dto.description,
-    picture: dto.picture,
-    openTime: dto.openTime,
-    contact: dto.contact,
-    userId: userObjectId,
-    communityId: new Types.ObjectId(dto.communityId),
-    status: 'PENDING',
-  });
-}
 
 
   async findMyShop(userId: string) {
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new BadRequestException('Invalid user identifier');
+    }
     const userObjectId = new Types.ObjectId(userId);
 
     const shop = await this.shopModel.findOne({
-    userId: userObjectId,
+      userId: userObjectId,
     });
     if (!shop) throw new NotFoundException('Shop not found');
     return shop;
   }
 
   async update(shopId: string, userId: string, dto: UpdateShopDto) {
+    if (!Types.ObjectId.isValid(shopId)) {
+      throw new BadRequestException('Invalid shop identifier');
+    }
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new BadRequestException('Invalid user identifier');
+    }
+
     const shop = await this.shopModel.findById(shopId);
     if (!shop) throw new NotFoundException();
 
@@ -60,44 +83,69 @@ export class ShopsService {
       throw new ForbiddenException();
     }
 
-    Object.assign(shop, dto);
+    const updates: Partial<Shop> = {
+      shopName: dto.shopName ?? shop.shopName,
+      description: dto.description ?? shop.description,
+      picture: dto.picture ?? shop.picture,
+      coverUrl: dto.coverUrl ?? shop.coverUrl,
+      iconUrl: dto.iconUrl ?? shop.iconUrl,
+      openTime: dto.openTime ?? shop.openTime,
+      closeTime: dto.closeTime ?? shop.closeTime,
+      location: dto.location ? this.normalizeLocation(dto.location) : shop.location,
+      contact: dto.contact ?? shop.contact,
+      images: dto.images ?? shop.images,
+    };
+
+    Object.assign(shop, updates);
     return shop.save();
   }
 
   async findPublic(shopId: string) {
-  return this.shopModel.findOne({
-    _id: shopId,
-    status: 'ACTIVE',
-  });
-}
+    if (!Types.ObjectId.isValid(shopId)) {
+      throw new BadRequestException('Invalid shop identifier');
+    }
+    return this.shopModel.findOne({
+      _id: new Types.ObjectId(shopId),
+      status: 'ACTIVE',
+    });
+  }
 
 
   async findByCommunity(communityId: string) {
-  return this.shopModel.find({
-    communityId: new Types.ObjectId(communityId),
-    status: 'ACTIVE',
-  });
-}
+    if (!Types.ObjectId.isValid(communityId)) {
+      throw new BadRequestException('Invalid community identifier');
+    }
+    return this.shopModel.find({
+      communityId: new Types.ObjectId(communityId),
+      status: 'ACTIVE',
+    });
+  }
 
   async findActiveShopByUser(userId: string) {
-  const userObjectId = new Types.ObjectId(userId);
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new BadRequestException('Invalid user identifier');
+    }
+    const userObjectId = new Types.ObjectId(userId);
 
-  const shop = await this.shopModel.findOne({
-  userId: userObjectId,
-});
+    const shop = await this.shopModel.findOne({
+      userId: userObjectId,
+    });
 
-  if (!shop) {
-    throw new NotFoundException('Shop not found');
+    if (!shop) {
+      throw new NotFoundException('Shop not found');
+    }
+
+    if (shop.status !== 'ACTIVE') {
+      throw new ForbiddenException('Shop is not approved yet');
+    }
+
+    return shop;
   }
-
-  if (shop.status !== 'ACTIVE') {
-    throw new ForbiddenException('Shop is not approved yet');
-  }
-
-  return shop;
-}
 // shop.service.ts
 async findPendingByCommunity(communityId: string) {
+  if (!Types.ObjectId.isValid(communityId)) {
+    throw new BadRequestException('Invalid community identifier');
+  }
   return this.shopModel.find({
     communityId: new Types.ObjectId(communityId),
     status: 'PENDING',
@@ -105,6 +153,9 @@ async findPendingByCommunity(communityId: string) {
 }
 // shop.service.ts
 async approveShop(shopId: string) {
+  if (!Types.ObjectId.isValid(shopId)) {
+    throw new BadRequestException('Invalid shop identifier');
+  }
   const shop = await this.shopModel.findById(shopId);
   if (!shop) throw new NotFoundException();
 
@@ -113,6 +164,9 @@ async approveShop(shopId: string) {
 }
 
 async rejectShop(shopId: string) {
+  if (!Types.ObjectId.isValid(shopId)) {
+    throw new BadRequestException('Invalid shop identifier');
+  }
   const shop = await this.shopModel.findById(shopId);
   if (!shop) throw new NotFoundException();
 
@@ -120,5 +174,14 @@ async rejectShop(shopId: string) {
   return shop.save();
 }
 
-
+  private normalizeLocation(location?: CreateShopDto['location']) {
+    if (!location) return undefined;
+    const lat = location.lat != null ? Number(location.lat) : undefined;
+    const lng = location.lng != null ? Number(location.lng) : undefined;
+    return {
+      address: location.address,
+      lat,
+      lng,
+    };
+  }
 }

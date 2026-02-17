@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { X, AlertCircle } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useAuth } from '../hooks/useAuth';
+import api from '../services/api';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -36,14 +37,34 @@ const Login = () => {
           const isProtectedPath = from && protectedPaths.some(path => from.startsWith(path));
           redirectPath = (from && !isProtectedPath) ? from : '/community-admin/dashboard';
         } else if (userRole === 'SHOP_OWNER') {
-          // Shop Owner: return to previous page if public, otherwise shop dashboard
+          // Shop Owner: fetch their shop's community and redirect to shop dashboard
           const protectedPaths = ['/dashboard', '/settings', '/platform-admin', '/community-admin'];
           const isProtectedPath = from && protectedPaths.some(path => from.startsWith(path));
-          // If on community page, stay there; otherwise go to shop dashboard
-          if (from && !isProtectedPath) {
-            redirectPath = from;
-          } else {
-            redirectPath = '/loeng-him-kaw/shop/dashboard'; // Default community
+          
+          // Fetch shop owner's community slug
+          try {
+            const shopResponse = await api.get('/api/shops/me', {
+              headers: { Authorization: `Bearer ${result.token}` }
+            });
+            
+            if (shopResponse.data?.communityId) {
+              const communityResponse = await api.get(`/api/communities/${shopResponse.data.communityId}`);
+              const shopSlug = communityResponse.data.slug;
+              
+              // If on community page, stay there; otherwise go to shop dashboard
+              if (from && !isProtectedPath) {
+                redirectPath = from;
+              } else {
+                redirectPath = `/${shopSlug}/shop/dashboard`;
+              }
+            } else {
+              // No shop found, redirect to create shop page (no slug needed)
+              redirectPath = '/shop/create';
+            }
+          } catch (error) {
+            console.error('Failed to fetch shop community:', error);
+            // Fallback to create shop page
+            redirectPath = '/shop/create';
           }
         } else if (userRole === 'PLATFORM_ADMIN') {
           // Platform Admin: return to previous page if public, otherwise admin dashboard

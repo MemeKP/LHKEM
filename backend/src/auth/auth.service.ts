@@ -42,9 +42,10 @@ export class AuthService {
 
     // 3. สร้าง JWT payload
     const payload = {
-      sub: user.user_id.toString(), // ใช้ _id จากmongodbแทนuserId แก้ปัญหาหาobjecytIdไม่เจอ
+      sub: user.user_id.toString(),
       role: user.role,
-      community_id: community_id
+      community_id: community_id,
+      userMongoId: user._id.toString(),
     };
 
     // 4. sign token
@@ -53,7 +54,8 @@ export class AuthService {
       user: {
         id: user._id,
         role: user.role,
-        community_id: community_id
+        community_id: community_id,
+        user_id: user.user_id,
       }
     };
   }

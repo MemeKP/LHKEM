@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, MapPin, Clock, Phone, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
-import api from '../../services/api';
+import { getMyShop, updateShop } from '../../services/shopService';
 
 const ShopProfile = () => {
   const { user } = useAuth();
@@ -15,7 +15,7 @@ const ShopProfile = () => {
   const [message, setMessage] = useState({ type: '', text: '' });
   
   const [shopData, setShopData] = useState({
-    name: '',
+    shopName: '',
     description: '',
     openTime: '',
     closeTime: '',
@@ -24,30 +24,44 @@ const ShopProfile = () => {
       lat: 0,
       lng: 0
     },
-    contactLinks: {
+    contact: {
       phone: '',
       line: '',
-      facebook: '',
-      website: ''
+      facebook: ''
     },
+    coverUrl: '',
+    iconUrl: '',
     images: []
   });
+  const [shopId, setShopId] = useState(null);
 
   useEffect(() => {
-    if (!user?.shopId) {
-      setLoading(false);
-      return;
-    }
-    const run = async () => {
+    const fetchShop = async () => {
       try {
-        const response = await api.get(`/shops/${user.shopId}`);
-        setShopData(response.data.shop);
+        const shop = await getMyShop();
+        setShopId(shop._id);
+        setShopData({
+          shopName: shop.shopName || '',
+          description: shop.description || '',
+          openTime: shop.openTime || '',
+          closeTime: shop.closeTime || '',
+          location: shop.location || { address: '', lat: 0, lng: 0 },
+          contact: shop.contact || { phone: '', line: '', facebook: '' },
+          coverUrl: shop.coverUrl || '',
+          iconUrl: shop.iconUrl || '',
+          images: shop.images || []
+        });
+      } catch (error) {
+        console.error('Failed to fetch shop:', error);
+        if (error.response?.status === 404) {
+          navigate(`/${slug}/shop/create`);
+        }
       } finally {
         setLoading(false);
       }
     };
-    run();
-  }, [user]);
+    fetchShop();
+  }, [navigate, slug]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -71,15 +85,20 @@ const ShopProfile = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!shopId) {
+      setMessage({ type: 'error', text: 'ไม่พบข้อมูลร้านค้า' });
+      return;
+    }
     setSaving(true);
     setMessage({ type: '', text: '' });
 
     try {
-      await api.put(`/shops/${user.shopId}`, shopData);
-      setMessage({ type: 'success', text: t('shopProfile.saveSuccess') });
+      await updateShop(shopId, shopData);
+      setMessage({ type: 'success', text: 'บันทึกข้อมูลสำเร็จ' });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-    } catch {
-      setMessage({ type: 'error', text: t('shopProfile.saveError') });
+    } catch (error) {
+      console.error('Failed to update shop:', error);
+      setMessage({ type: 'error', text: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล' });
     } finally {
       setSaving(false);
     }
@@ -98,9 +117,9 @@ const ShopProfile = () => {
     const reader = new FileReader();
     reader.onloadend = () => {
       if (type === 'cover') {
-        setShopData(prev => ({ ...prev, coverImage: reader.result }));
+        setShopData(prev => ({ ...prev, coverUrl: reader.result }));
       } else if (type === 'icon') {
-        setShopData(prev => ({ ...prev, iconImage: reader.result }));
+        setShopData(prev => ({ ...prev, iconUrl: reader.result }));
       }
     };
     reader.readAsDataURL(file);
@@ -136,8 +155,8 @@ const ShopProfile = () => {
             <label className="block text-sm font-semibold text-[#3D3D3D] mb-2">ชื่อร้าน</label>
             <input
               type="text"
-              name="name"
-              value={shopData.name}
+              name="shopName"
+              value={shopData.shopName}
               onChange={handleChange}
               placeholder="ใส่ชื่อร้านของคุณ"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
@@ -150,9 +169,9 @@ const ShopProfile = () => {
           <div className="animate-fadeIn" style={{animationDelay: '0.3s'}}>
             <label className="block text-sm font-semibold text-[#3D3D3D] mb-2">รูปหน้าปก</label>
             <div className="border-2 border-dashed border-[#E07B39] rounded-xl p-8 bg-[#FFF7ED] hover:bg-[#FFEDD5] transition-colors">
-              {shopData.coverImage ? (
+              {shopData.coverUrl ? (
                 <div className="relative aspect-video w-full rounded-lg overflow-hidden">
-                  <img src={shopData.coverImage} alt="cover" className="w-full h-full object-cover" />
+                  <img src={shopData.coverUrl} alt="cover" className="w-full h-full object-cover" />
                 </div>
               ) : (
                 <div className="text-center">
@@ -168,10 +187,10 @@ const ShopProfile = () => {
                 เปลี่ยนรูปหน้าปก
                 <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload('cover', e.target.files?.[0])} />
               </label>
-              {shopData.coverImage && (
+              {shopData.coverUrl && (
                 <button
                   type="button"
-                  onClick={() => setShopData(prev => ({ ...prev, coverImage: '' }))}
+                  onClick={() => setShopData(prev => ({ ...prev, coverUrl: '' }))}
                   className="px-5 py-2.5 bg-red-50 text-red-600 font-medium rounded-full hover:bg-red-100 transition-all hover:scale-105"
                 >
                   ลบรูป
@@ -200,29 +219,40 @@ const ShopProfile = () => {
             <label className="block text-sm font-semibold text-[#3D3D3D] mb-3">📞 ข้อมูลติดต่อ</label>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs text-[#9CA3AF] mb-1.5">อีเมล</label>
-                <input
-                  type="text"
-                  name="contactLinks.line"
-                  value={shopData.contactLinks.line}
-                  onChange={handleChange}
-                  placeholder="mail@example.com"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
-                />
-              </div>
-              <div>
                 <label className="block text-xs text-[#9CA3AF] mb-1.5">📱 เบอร์โทรศัพท์</label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#9CA3AF]" />
                   <input
                     type="tel"
-                    name="contactLinks.phone"
-                    value={shopData.contactLinks.phone}
+                    name="contact.phone"
+                    value={shopData.contact.phone}
                     onChange={handleChange}
                     placeholder="เช่น 081-234-5678"
                     className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
                   />
                 </div>
+              </div>
+              <div>
+                <label className="block text-xs text-[#9CA3AF] mb-1.5">� LINE ID</label>
+                <input
+                  type="text"
+                  name="contact.line"
+                  value={shopData.contact.line}
+                  onChange={handleChange}
+                  placeholder="เช่น @shopname"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-[#9CA3AF] mb-1.5">📘 Facebook</label>
+                <input
+                  type="text"
+                  name="contact.facebook"
+                  value={shopData.contact.facebook}
+                  onChange={handleChange}
+                  placeholder="https://facebook.com/yourshop"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
+                />
               </div>
             </div>
           </div>

@@ -1,12 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { MapPin, Clock, Phone, Image as ImageIcon } from 'lucide-react';
+import api from '../../services/api';
+import { useAuth } from '../../hooks/useAuth';
 
 const ShopCreate = () => {
   const navigate = useNavigate();
   const { slug } = useParams();
+  const { token } = useAuth();
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [communityId, setCommunityId] = useState('');
   
   const [shopData, setShopData] = useState({
     name: '',
@@ -23,8 +28,7 @@ const ShopCreate = () => {
     contactLinks: {
       phone: '',
       line: '',
-      facebook: '',
-      website: ''
+      facebook: ''
     },
     images: []
   });
@@ -58,27 +62,63 @@ const ShopCreate = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const { data: communities = [] } = useQuery({
+    queryKey: ['communities'],
+    queryFn: async () => {
+      const res = await api.get('/api/communities');
+      return res.data;
+    }
+  });
+
+  useEffect(() => {
+    if (communities.length && !communityId) {
+      setCommunityId(communities[0]._id);
+    }
+  }, [communities, communityId]);
+
+  const createShopMutation = useMutation({
+    mutationFn: async () => {
+      if (!token) throw new Error('กรุณาเข้าสู่ระบบก่อนสร้างร้าน');
+      if (!communityId) throw new Error('เลือกชุมชนก่อน');
+      const payload = {
+        shopName: shopData.name,
+        description: shopData.description,
+        openTime: shopData.openTime,
+        picture: shopData.coverUrl,
+        contact: {
+          line: shopData.contactLinks.line,
+          facebook: shopData.contactLinks.facebook,
+          phone: shopData.contactLinks.phone,
+        },
+        communityId,
+      };
+      return api.post('/api/shops', payload, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+    },
+    onSuccess: (response) => {
+      setMessage({ type: 'success', text: 'บันทึกโปรไฟล์ร้านเรียบร้อย' });
+      // Get the community slug from the selected community
+      const selectedCommunity = communities.find(c => c._id === communityId);
+      const communitySlug = selectedCommunity?.slug || slug;
+      navigate(`/${communitySlug}/shop/dashboard`);
+    },
+    onError: (err) => {
+      const msg = err?.response?.data?.message || 'บันทึกร้านไม่สำเร็จ ลองใหม่อีกครั้ง';
+      setMessage({ type: 'error', text: Array.isArray(msg) ? msg.join(', ') : msg });
+    },
+    onSettled: () => setSaving(false),
+  });
+
+  const handleSubmit = (e) => {
     e.preventDefault();
+    if (!communities.length) {
+      setMessage({ type: 'error', text: 'ยังโหลดรายการชุมชนไม่เสร็จ กรุณาลองใหม่' });
+      return;
+    }
     setSaving(true);
     setMessage({ type: '', text: '' });
-
-    try {
-      const draft = {
-        id: `shop-${Date.now()}`,
-        ...shopData,
-        createdAt: new Date().toISOString(),
-        workshops: []
-      };
-      localStorage.setItem('shopDraft', JSON.stringify(draft));
-      localStorage.setItem('shopHasSetup', 'true');
-      setMessage({ type: 'success', text: 'บันทึกโปรไฟล์ร้านเรียบร้อย' });
-      navigate(`/${slug}/shop/dashboard`);
-    } catch {
-      setMessage({ type: 'error', text: 'บันทึกร้านไม่สำเร็จ ลองใหม่อีกครั้ง' });
-    } finally {
-      setSaving(false);
-    }
+    createShopMutation.mutate();
   };
 
   return (
@@ -157,21 +197,29 @@ const ShopCreate = () => {
             <p className="text-xs text-[#9CA3AF] mt-1">ไม่ต้องยาวมากก็ได้ แค่ให้ลูกค้ารู้จักร้านของคุณ</p>
           </div>
 
+          {/* ชุมชน */}
+          <div className="animate-fadeIn" style={{animationDelay: '0.45s'}}>
+            <label className="block text-sm font-semibold text-[#3D3D3D] mb-2">เลือกชุมชน</label>
+            <select
+              name="community"
+              value={communityId}
+              onChange={(e) => setCommunityId(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
+              required
+            >
+              {communities.map((c) => (
+                <option key={c._id} value={c._id}>
+                  {c.name || c.slug}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-[#9CA3AF] mt-1">เลือกร้านสังกัดชุมชนในระบบ</p>
+          </div>
+
           {/* ข้อมูลติดต่อ */}
           <div className="animate-fadeIn" style={{animationDelay: '0.5s'}}>
             <label className="block text-sm font-semibold text-[#3D3D3D] mb-3">📞 ข้อมูลติดต่อ</label>
             <div className="space-y-3">
-              <div>
-                <label className="block text-xs text-[#6B6B6B] mb-1.5">อีเมล</label>
-                <input
-                  type="text"
-                  name="contactLinks.line"
-                  value={shopData.contactLinks.line}
-                  onChange={handleChange}
-                  placeholder="mail@example.com"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
-                />
-              </div>
               <div>
                 <label className="block text-xs text-[#6B6B6B] mb-1.5">📱 เบอร์โทรศัพท์</label>
                 <div className="relative">
@@ -185,6 +233,28 @@ const ShopCreate = () => {
                     className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
                   />
                 </div>
+              </div>
+              <div>
+                <label className="block text-xs text-[#6B6B6B] mb-1.5">� LINE ID</label>
+                <input
+                  type="text"
+                  name="contactLinks.line"
+                  value={shopData.contactLinks.line}
+                  onChange={handleChange}
+                  placeholder="เช่น @shopname"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-[#6B6B6B] mb-1.5">📘 Facebook</label>
+                <input
+                  type="text"
+                  name="contactLinks.facebook"
+                  value={shopData.contactLinks.facebook}
+                  onChange={handleChange}
+                  placeholder="https://facebook.com/yourshop"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
+                />
               </div>
             </div>
           </div>

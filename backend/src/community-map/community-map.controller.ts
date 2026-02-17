@@ -58,7 +58,7 @@ async getPinDetail(
     @Body() dto: CreateMapPinDto,
   ) {
     return this.communityMapService.createOrUpdateShopPin(
-      req.user.userId,
+      req.user.userMongoId,
       dto,
     );
   }

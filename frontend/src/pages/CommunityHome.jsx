@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useOutletContext } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useOutletContext, useParams } from 'react-router-dom';
 import { MapPin, Calendar, Heart, Leaf, Users, Palette, HomeIcon, List, BookXIcon, Box, BoxesIcon, Sparkle, SparklesIcon, Clock, Users as UsersIcon, Star, Store, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import workshopData from '../data/workshops';
@@ -7,6 +7,8 @@ import WorkshopModal from '../components/WorkshopModal';
 import ETicketModal from '../components/ETicketModal';
 import api from '../services/api';
 import { useQuery } from '@tanstack/react-query';
+import { communityEventsMock } from '../data/eventsMock';
+import { getShopsByCommunity } from '../services/shopService';
 
 const fetchPopularWorkshops = async (communityId) => {
   const res = await api.get(`/api/communities/${communityId}/workshops`, {
@@ -20,6 +22,29 @@ const CommunityHome = () => {
   const { community } = useOutletContext()
   const highlights = community.cultural_highlights || []
   const workshopCount = community.workshops?.length || 0;
+  const params = useParams();
+  const [activeWorkshop, setActiveWorkshop] = useState(null);
+  const [currentBooking, setCurrentBooking] = useState(null);
+  const [showETicket, setShowETicket] = useState(false);
+  const [shops, setShops] = useState([]);
+
+  useEffect(() => {
+    const fetchCommunity = async () => {
+      const response = await api.get(`/api/communities/${params.slug}`);
+      const communityData = response.data;
+
+      // Fetch shops for this community
+      if (communityData._id) {
+        try {
+          const shopsData = await getShopsByCommunity(communityData._id);
+          setShops(shopsData.slice(0, 3)); // Show only first 3 shops on home page
+        } catch (error) {
+          console.error('Failed to fetch shops:', error);
+        }
+      }
+    };
+    fetchCommunity();
+  }, [params.slug]);
 
   // ไว้แมชไอคอนกับชื่อไฮไลท
   const getIcon = (title) => {
@@ -64,9 +89,13 @@ const CommunityHome = () => {
 ];
 
   const workshopCards = workshopData.slice(0, 3);
-  const [activeWorkshop, setActiveWorkshop] = useState(null);
-  const [currentBooking, setCurrentBooking] = useState(null);
-  const [showETicket, setShowETicket] = useState(false);
+  const eventCards = communityEventsMock.map((ev) => ({
+    ...ev,
+    title: ct(ev.title, ev.title_en),
+    description: ct(ev.description, ev.description_en),
+    date: ct(ev.date, ev.date_en),
+    location: ct(ev.location, ev.location_en),
+  }));
 
   const handleOpenModal = (workshop) => setActiveWorkshop(workshop);
   const handleCloseModal = () => setActiveWorkshop(null);
@@ -256,6 +285,72 @@ const CommunityHome = () => {
         </div>
       </section>
 
+      {/* Events Section */}
+      <section className="py-20 px-4 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <span className="inline-block bg-orange-50 text-orange-600 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+              {ct('กิจกรรมในชุมชน', 'Community Events')}
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+              {ct('กำลังจะจัดขึ้น', 'Upcoming Events')}
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              {ct('ติดตามกิจกรรมพิเศษ เทศกาล และงานชุมชนที่กำลังจะเกิดขึ้น', 'See festivals and special events happening in the community')}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {eventCards.map((event) => (
+              <Link
+                to={`/${community.slug}/events/${event.id}`}
+                key={event.id}
+                className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition block"
+              >
+                <div className={`relative h-44 bg-gradient-to-br ${event.gradient}`}>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Calendar className="h-16 w-16 text-white/60" />
+                  </div>
+                  <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 rounded-full text-xs font-semibold text-gray-700">
+                    {event.date}
+                  </div>
+                </div>
+                <div className="p-6 space-y-3">
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <Clock className="h-4 w-4" />
+                    <span>{event.time}</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 leading-snug line-clamp-2">
+                    {event.title}
+                  </h3>
+                  <p className="text-sm text-gray-600 line-clamp-2">{event.description}</p>
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <MapPin className="h-4 w-4" />
+                    <span className="line-clamp-1">{event.location}</span>
+                  </div>
+                  <div className="flex items-center justify-between pt-2">
+                    <span className="text-sm font-semibold text-orange-600">{ct('ดูรายละเอียด', 'View details')}</span>
+                    <button className="px-4 py-2 bg-gray-900 text-white rounded-full text-sm font-semibold hover:bg-gray-800 transition">
+                      {ct('เข้าร่วม', 'Join')}
+                    </button>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          <div className="text-center mt-10">
+            <Link
+              to={`/${community.slug}/events`}
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 border-2 border-gray-300 rounded-full text-gray-700 hover:border-gray-400 hover:bg-gray-50 transition font-semibold"
+            >
+              {ct('ดู Event ทั้งหมด', 'View All Events')}
+              <ArrowRight className="h-5 w-5" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Shops Section */}
       <section className="py-20 px-4 bg-white">
         <div className="max-w-6xl mx-auto">
@@ -271,105 +366,71 @@ const CommunityHome = () => {
             </p>
           </div>
 
-          {/* Shops Carousel - Mock Data */}
+          {/* Shops Grid */}
           <div className="relative">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Shop Card 1 */}
-              <Link to={`/${community.slug}/shops/1`} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition group">
-                <div className="relative h-48 bg-gradient-to-br from-orange-300 via-orange-400 to-orange-500">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Store className="h-16 w-16 text-white/50" />
-                  </div>
-                  <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 rounded-full text-xs font-semibold text-gray-700">
-                    {ct('ร้านหัตถกรรม', 'Craft Shop')}
-                  </div>
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition">
-                    {ct('ร้านมีนา', 'Meena Shop')}
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                    {ct('ร้านหัตถกรรมท้องถิ่น เปิดสอนทำงานฝีมือและของที่ระลึก', 'Local craft shop offering handmade workshops and souvenirs')}
-                  </p>
-                  <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-                    <MapPin className="h-4 w-4" />
-                    <span>{ct('ในชุมชนโหล่งฮิมคาว', 'In Loeng Him Kaw')}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-orange-600 font-semibold">
-                      {ct('2 เวิร์กช็อป', '2 Workshops')}
-                    </span>
-                    <span className="px-4 py-2 bg-gray-900 text-white rounded-full text-sm font-semibold group-hover:bg-gray-800 transition">
-                      {ct('ดูร้าน', 'View Shop')}
-                    </span>
-                  </div>
-                </div>
-              </Link>
-
-              {/* Shop Card 2 */}
-              <Link to={`/${community.slug}/shops/2`} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition group">
-                <div className="relative h-48 bg-gradient-to-br from-green-300 via-green-400 to-green-500">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Store className="h-16 w-16 text-white/50" />
-                  </div>
-                  <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 rounded-full text-xs font-semibold text-gray-700">
-                    {ct('ร้านอาหาร', 'Food Shop')}
-                  </div>
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition">
-                    {ct('ร้านอาหารท้องถิ่น', 'Local Food Shop')}
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                    {ct('ร้านอาหารพื้นเมือง สอนทำอาหารและขนมไทย', 'Local restaurant offering cooking classes and Thai desserts')}
-                  </p>
-                  <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-                    <MapPin className="h-4 w-4" />
-                    <span>{ct('ในชุมชนโหล่งฮิมคาว', 'In Loeng Him Kaw')}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-orange-600 font-semibold">
-                      {ct('3 เวิร์กช็อป', '3 Workshops')}
-                    </span>
-                    <span className="px-4 py-2 bg-gray-900 text-white rounded-full text-sm font-semibold group-hover:bg-gray-800 transition">
-                      {ct('ดูร้าน', 'View Shop')}
-                    </span>
-                  </div>
-                </div>
-              </Link>
-
-              {/* Shop Card 3 */}
-              <Link to={`/${community.slug}/shops/3`} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition group">
-                <div className="relative h-48 bg-gradient-to-br from-blue-300 via-blue-400 to-blue-500">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Store className="h-16 w-16 text-white/50" />
-                  </div>
-                  <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 rounded-full text-xs font-semibold text-gray-700">
-                    {ct('ร้านผ้า', 'Textile Shop')}
-                  </div>
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition">
-                    {ct('ร้านผ้าทอมือ', 'Handwoven Textile')}
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                    {ct('ร้านผ้าทอมือ สอนการทอผ้าและย้อมสีธรรมชาติ', 'Handwoven textile shop teaching weaving and natural dyeing')}
-                  </p>
-                  <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-                    <MapPin className="h-4 w-4" />
-                    <span>{ct('ในชุมชนโหล่งฮิมคาว', 'In Loeng Him Kaw')}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-orange-600 font-semibold">
-                      {ct('1 เวิร์กช็อป', '1 Workshop')}
-                    </span>
-                    <span className="px-4 py-2 bg-gray-900 text-white rounded-full text-sm font-semibold group-hover:bg-gray-800 transition">
-                      {ct('ดูร้าน', 'View Shop')}
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            </div>
+            {shops.length === 0 ? (
+              <div className="text-center py-12 bg-white rounded-2xl border border-gray-200">
+                <Store className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500">
+                  {ct('ยังไม่มีร้านค้าในชุมชนนี้', 'No shops available yet')}
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {shops.map((shop, index) => {
+                  const gradients = [
+                    'from-orange-300 via-orange-400 to-orange-500',
+                    'from-green-300 via-green-400 to-green-500',
+                    'from-blue-300 via-blue-400 to-blue-500'
+                  ];
+                  const gradient = gradients[index % gradients.length];
+                  
+                  return (
+                    <Link key={shop._id} to={`/${community.slug}/shops/${shop._id}`} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition group">
+                      <div className="relative h-48 overflow-hidden">
+                        {shop.coverUrl ? (
+                          <img src={shop.coverUrl} alt={shop.shopName} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className={`w-full h-full bg-gradient-to-br ${gradient}`}>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <Store className="h-16 w-16 text-white/50" />
+                            </div>
+                          </div>
+                        )}
+                        <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 rounded-full text-xs font-semibold text-gray-700">
+                          {shop.status === 'ACTIVE' ? ct('เปิดให้บริการ', 'Active') : ct('รอการอนุมัติ', 'Pending')}
+                        </div>
+                      </div>
+                      <div className="p-6">
+                        <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition">
+                          {shop.shopName}
+                        </h3>
+                        <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                          {shop.description || ct('ไม่มีคำอธิบาย', 'No description')}
+                        </p>
+                        {shop.location?.address && (
+                          <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+                            <MapPin className="h-4 w-4" />
+                            <span className="line-clamp-1">{shop.location.address}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between">
+                          {shop.openTime && (
+                            <div className="flex items-center gap-1 text-sm text-gray-500">
+                              <Clock className="h-4 w-4" />
+                              <span>{shop.openTime}</span>
+                            </div>
+                          )}
+                          <span className="px-4 py-2 bg-gray-900 text-white rounded-full text-sm font-semibold group-hover:bg-gray-800 transition">
+                            {ct('ดูร้าน', 'View Shop')}
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* View All Shops Button */}

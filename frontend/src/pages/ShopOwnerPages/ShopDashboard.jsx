@@ -1,39 +1,47 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Plus, Edit, Trash2, Eye, Users, DollarSign, Clock, CheckCircle, XCircle, AlertCircle, Camera, Settings as SettingsIcon, Bell, Calendar, TrendingUp, Star } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
-// Frontend-only prototype: use localStorage instead of API
+import api from '../../services/api';
 
 const ShopDashboard = () => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { slug } = useParams();
-  const initialDraft = JSON.parse(localStorage.getItem('shopDraft') || '{}');
-  const initialWorkshops = Array.isArray(initialDraft.workshops) ? initialDraft.workshops : [];
-  const [workshops, setWorkshops] = useState(initialWorkshops);
-  const [activeTab, setActiveTab] = useState('all');
-  const [profile, setProfile] = useState({
-    name: initialDraft.name || '',
-    description: initialDraft.description || '',
-    openTime: initialDraft.openTime || '',
-    closeTime: initialDraft.closeTime || '',
-    contactLinks: initialDraft.contactLinks || { phone: '', line: '' , facebook: '', website: ''},
-    location: initialDraft.location || { address: '' },
-    iconUrl: initialDraft.iconUrl || '',
-    coverUrl: initialDraft.coverUrl || '',
+  const { data: shop, isLoading: shopLoading } = useQuery({
+    queryKey: ['shop/me'],
+    queryFn: async () => {
+      const res = await api.get('/api/shops/me', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      return res.data;
+    },
+    enabled: !!token,
+    retry: 1,
   });
 
   useEffect(() => {
-    const hasSetup = localStorage.getItem('shopHasSetup') === 'true';
-    if (!user?.shopId && !hasSetup) {
-      navigate(`/${slug}/shop/create`);
-      return;
+    if (!shopLoading && !shop) {
+      navigate('/shop/create');
     }
-  }, [user, navigate]);
+  }, [shop, shopLoading, navigate]);
 
-  // no-op for prototype
+  const profile = {
+    name: shop?.shopName || '',
+    description: shop?.description || '',
+    openTime: shop?.openTime || '',
+    contactLinks: shop?.contact || { phone: '', line: '', facebook: '', website: '' },
+    location: shop?.location || { address: '' },
+    iconUrl: shop?.iconUrl || '',
+    coverUrl: shop?.picture || '',
+    status: shop?.status || 'PENDING',
+  };
+
+  const workshops = [];
+  const activeTab = 'all';
 
   const stats = useMemo(() => {
     const active = workshops.filter(w => w.status === 'ACTIVE');

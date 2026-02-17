@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 import { Store, MapPin, Clock, Phone, Search, Filter, ArrowRight } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
+import { getShopsByCommunity } from '../services/shopService';
 
 /**
  * Shops Page - แสดงรายการร้านค้าทั้งหมดในชุมชน
@@ -14,8 +15,25 @@ const Shops = () => {
   const { community } = useOutletContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [shops, setShops] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data - จะถูกแทนที่ด้วย API call
+  useEffect(() => {
+    const fetchShops = async () => {
+      if (!community?._id) return;
+      try {
+        const data = await getShopsByCommunity(community._id);
+        setShops(data);
+      } catch (error) {
+        console.error('Failed to fetch shops:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchShops();
+  }, [community]);
+
+  // Mock data for fallback
   const mockShops = [
     {
       id: 1,
@@ -123,12 +141,19 @@ const Shops = () => {
     { value: 'souvenir', label: ct('ของฝาก', 'Souvenir') }
   ];
 
-  const filteredShops = mockShops.filter(shop => {
-    const matchesSearch = shop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         shop.name_en.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredShops = shops.filter(shop => {
+    const matchesSearch = (shop.shopName || '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || shop.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#fdf7ef] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#fdf7ef] py-8">
@@ -200,54 +225,72 @@ const Shops = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredShops.map((shop) => (
+            {filteredShops.map((shop, index) => {
+              const gradients = [
+                'from-orange-300 via-orange-400 to-orange-500',
+                'from-green-300 via-green-400 to-green-500',
+                'from-blue-300 via-blue-400 to-blue-500',
+                'from-purple-300 via-purple-400 to-purple-500',
+                'from-amber-300 via-amber-400 to-amber-500',
+                'from-rose-300 via-rose-400 to-rose-500'
+              ];
+              const gradient = gradients[index % gradients.length];
+              
+              return (
               <Link
-                key={shop.id}
-                to={`/${community.slug}/shops/${shop.id}`}
+                key={shop._id}
+                to={`/${community.slug}/shops/${shop._id}`}
                 className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 group"
               >
                 {/* Shop Image/Gradient */}
-                <div className={`relative h-48 bg-gradient-to-br ${shop.gradient}`}>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Store className="h-16 w-16 text-white/50" />
-                  </div>
-                  
-                  <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 rounded-full text-xs font-semibold text-gray-700">
-                    {ct(shop.category_en, shop.category_en)}
-                  </div>
-                  {shop.workshopCount > 0 && (
-                    <div className="absolute top-4 right-4 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                      {shop.workshopCount} {ct('เวิร์กช็อป', 'Workshops')}
+                <div className="relative h-48 overflow-hidden">
+                  {shop.coverUrl ? (
+                    <img src={shop.coverUrl} alt={shop.shopName} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className={`w-full h-full bg-gradient-to-br ${gradient}`}>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Store className="h-16 w-16 text-white/50" />
+                      </div>
                     </div>
                   )}
+                  
+                  <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 rounded-full text-xs font-semibold text-gray-700">
+                    {shop.status === 'ACTIVE' ? ct('เปิดให้บริการ', 'Active') : ct('รอการอนุมัติ', 'Pending')}
+                  </div>
                 </div>
 
                 {/* Shop Info */}
                 <div className="p-6">
                   <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition">
-                    {ct(shop.name, shop.name_en)}
+                    {shop.shopName}
                   </h3>
                   <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                    {ct(shop.description, shop.description_en)}
+                    {shop.description || ct('ไม่มีคำอธิบาย', 'No description')}
                   </p>
 
                   {/* Location */}
-                  <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
-                    <MapPin className="h-4 w-4" />
-                    <span>{ct(shop.location, shop.location_en)}</span>
-                  </div>
+                  {shop.location?.address && (
+                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
+                      <MapPin className="h-4 w-4" />
+                      <span>{shop.location.address}</span>
+                    </div>
+                  )}
 
                   {/* Opening Hours */}
-                  <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
-                    <Clock className="h-4 w-4" />
-                    <span>{shop.openTime} - {shop.closeTime}</span>
-                  </div>
+                  {shop.openTime && (
+                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
+                      <Clock className="h-4 w-4" />
+                      <span>{shop.openTime}{shop.closeTime ? ` - ${shop.closeTime}` : ''}</span>
+                    </div>
+                  )}
 
                   {/* Phone */}
-                  <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-                    <Phone className="h-4 w-4" />
-                    <span>{shop.phone}</span>
-                  </div>
+                  {shop.contact?.phone && (
+                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+                      <Phone className="h-4 w-4" />
+                      <span>{shop.contact.phone}</span>
+                    </div>
+                  )}
 
                   {/* View Button */}
                   <div className="flex items-center justify-between pt-4 border-t border-gray-100">
@@ -258,7 +301,8 @@ const Shops = () => {
                   </div>
                 </div>
               </Link>
-            ))}
+            );
+            })}
           </div>
         )}
       </div>

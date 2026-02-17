@@ -13,6 +13,7 @@ import Workshops from './pages/Workshops';
 import WorkshopDetail from './pages/WorkshopDetail';
 import Shops from './pages/Shops';
 import ShopProfile from './pages/ShopProfile';
+import EventDetail from './pages/EventDetail';
 import About from './pages/About';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -63,6 +64,12 @@ function App() {
                   <Settings />
                 </ProtectedRoute>
               } />
+              {/* Shop Create - outside community context since shop doesn't exist yet */}
+              <Route path="shop/create" element={
+                <ProtectedRoute allowedRoles={['SHOP_OWNER']}>
+                  <ShopCreate />
+                </ProtectedRoute>
+              } />
             </Route>
             
             {/* Community Routes - With CommunityLayout */}
@@ -72,6 +79,8 @@ function App() {
               <Route path="map" element={<Map />} />
               <Route path="workshops" element={<Workshops />} />
               <Route path="workshops/:id" element={<WorkshopDetail />} />
+              <Route path="events" element={<CommunityHome />} />
+              <Route path="events/:id" element={<EventDetail />} />
               <Route path="shops" element={<Shops />} />
               <Route path="shops/:shopId" element={<ShopProfile />} />
               <Route path="about" element={<About />} />
@@ -91,11 +100,6 @@ function App() {
               } />
               
               {/* Shop Owner Routes - in community context */}
-              <Route path="shop/create" element={
-                <ProtectedRoute allowedRoles={['SHOP_OWNER']}>
-                  <ShopCreate />
-                </ProtectedRoute>
-              } />
               <Route path="shop/dashboard" element={
                 <ProtectedRoute allowedRoles={['SHOP_OWNER']}>
                   <ShopDashboard />

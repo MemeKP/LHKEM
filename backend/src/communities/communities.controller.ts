@@ -57,7 +57,7 @@ export class CommunitiesController {
     if (typeof createCommunityDto.admins === 'string') {
       createCommunityDto.admins = JSON.parse(createCommunityDto.admins);
     }
-    return this.communitiesService.create(req.user.userId, createCommunityDto);
+    return this.communitiesService.create(req.user.userMongoId, createCommunityDto);
   }
 
   @Get()

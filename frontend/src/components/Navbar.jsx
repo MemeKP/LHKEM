@@ -5,14 +5,16 @@ import { useTranslation } from '../hooks/useTranslation';
 import { useAuth } from '../hooks/useAuth';
 import { getLogo } from '../utils/getLogo';
 import axios from 'axios';
+import api from '../services/api';
 
 const Navbar = ({ community }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isCommunityMenuOpen, setIsCommunityMenuOpen] = useState(false);
   const [communities, setCommunities] = useState([]);
+  const [shopCommunitySlug, setShopCommunitySlug] = useState(null);
   const { language, toggleLanguage, t, ct} = useTranslation();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, token } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const userMenuRef = useRef(null);
@@ -52,6 +54,31 @@ const Navbar = ({ community }) => {
     fetchCommunities();
   }, []);
 
+  // Fetch shop owner's community slug
+  useEffect(() => {
+    const fetchShopCommunity = async () => {
+      if (user?.role === 'SHOP_OWNER' && token) {
+        try {
+          const response = await api.get('/api/shops/me', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (response.data?.communityId) {
+            // Fetch community details to get slug
+            const communityResponse = await api.get(`/api/communities/${response.data.communityId}`);
+            setShopCommunitySlug(communityResponse.data.slug);
+          }
+        } catch (error) {
+          console.error('Failed to fetch shop community:', error);
+          setShopCommunitySlug(null);
+        }
+      } else {
+        // Clear slug when user is not shop owner or not logged in
+        setShopCommunitySlug(null);
+      }
+    };
+    fetchShopCommunity();
+  }, [user, token]);
+
   const handleLogout = () => {
     logout();
     setIsUserMenuOpen(false);
@@ -84,8 +111,9 @@ const Navbar = ({ community }) => {
                           !window.location.pathname.match(/^\/(dashboard|settings|login|register|platform-admin|community-admin)/);
 
     if (role === 'SHOP_OWNER') {
+      const shopSlug = shopCommunitySlug || community?.slug || 'loeng-him-kaw';
       return [
-        { to: isInCommunity ? 'shop/dashboard' : `/${community?.slug || 'loeng-him-kaw'}/shop/dashboard`, icon: LayoutDashboard, label: t('nav.shopDashboard') },
+        { to: isInCommunity ? 'shop/dashboard' : `/${shopSlug}/shop/dashboard`, icon: LayoutDashboard, label: t('nav.shopDashboard') },
         { to: isInCommunity ? 'settings' : '/settings', icon: Settings, label: t('nav.settings') }
       ];
     }

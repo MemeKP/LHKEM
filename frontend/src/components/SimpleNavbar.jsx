@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Globe, User, Settings, LogOut, LayoutDashboard, Shield, Info, Cog, Store } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useAuth } from '../hooks/useAuth';
+import api from '../services/api';
 
 /**
  * SimpleNavbar - Navbar สำหรับหน้าที่ไม่ได้อยู่ในชุมชน
@@ -11,8 +12,9 @@ import { useAuth } from '../hooks/useAuth';
 
 const SimpleNavbar = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [shopCommunitySlug, setShopCommunitySlug] = useState(null);
   const { language, toggleLanguage, t } = useTranslation();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, token } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const userMenuRef = useRef(null);
@@ -26,6 +28,31 @@ const SimpleNavbar = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Fetch shop owner's community slug
+  useEffect(() => {
+    const fetchShopCommunity = async () => {
+      if (user?.role === 'SHOP_OWNER' && token) {
+        try {
+          const response = await api.get('/api/shops/me', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (response.data?.communityId) {
+            // Fetch community details to get slug
+            const communityResponse = await api.get(`/api/communities/${response.data.communityId}`);
+            setShopCommunitySlug(communityResponse.data.slug);
+          }
+        } catch (error) {
+          console.error('Failed to fetch shop community:', error);
+          setShopCommunitySlug(null);
+        }
+      } else {
+        // Clear slug when user is not shop owner or not logged in
+        setShopCommunitySlug(null);
+      }
+    };
+    fetchShopCommunity();
+  }, [user, token]);
 
   const handleLogout = () => {
     logout();
@@ -53,9 +80,7 @@ const SimpleNavbar = () => {
     const { ct } = useTranslation();
 
     if (role === 'SHOP_OWNER') {
-      // For Shop Owner on Landing Page, redirect to their community
-      // TODO: Get actual community slug from user data when backend is ready
-      const communitySlug = 'loeng-him-kaw'; // Default community for now
+      const communitySlug = shopCommunitySlug || 'loeng-him-kaw'; // Fallback to default if not loaded yet
       return [
         { to: `/${communitySlug}/shop/dashboard`, icon: LayoutDashboard, label: t('nav.shopDashboard') },
         { to: '/settings', icon: Settings, label: t('nav.settings') }

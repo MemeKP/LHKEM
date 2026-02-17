@@ -73,6 +73,6 @@ export class EventsController {
   @Post(':id/join')
   @UseGuards(JwtAuthGuard)
   async joinEvent(@Param('id') id: string, @Req() req) {
-    return this.eventsService.joinEvent(id, req.user.userId);
+    return this.eventsService.joinEvent(id, req.user.userMongoId);
   }
 }

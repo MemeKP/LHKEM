@@ -90,10 +90,14 @@ async getPinDetail(pinId: string) {
     userId: string,
     dto: CreateMapPinDto,
   ) {
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new ForbiddenException('Invalid user identifier');
+    }
+
     const shop = await this.shopModel.findOne({
-    userId: new Types.ObjectId(userId),
-      });
-    console.log('shop:', shop);
+      userId: new Types.ObjectId(userId),
+    });
+    
     if (!shop) {
       throw new ForbiddenException('Shop not found');
     }

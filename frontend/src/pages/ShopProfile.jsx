@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useParams, useOutletContext } from 'react-router-dom';
 import { MapPin, Clock, Phone, Facebook, Globe, ArrowLeft, Store, Calendar, Users, Star } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import WorkshopModal from '../components/WorkshopModal';
 import ETicketModal from '../components/ETicketModal';
+import { getShopById } from '../services/shopService';
 
 /**
  * ShopProfile - หน้าโปรไฟล์ร้านค้าสำหรับลูกค้า
@@ -20,8 +21,24 @@ const ShopProfile = () => {
   const [activeWorkshop, setActiveWorkshop] = useState(null);
   const [currentBooking, setCurrentBooking] = useState(null);
   const [showETicket, setShowETicket] = useState(false);
+  const [shop, setShop] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock shop data - จะถูกแทนที่ด้วย API call
+  useEffect(() => {
+    const fetchShop = async () => {
+      try {
+        const data = await getShopById(shopId);
+        setShop(data);
+      } catch (error) {
+        console.error('Failed to fetch shop:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchShop();
+  }, [shopId]);
+
+  // Mock shop data for fallback
   const mockShop = {
     id: shopId,
     name: 'ร้านมีนา',
@@ -98,12 +115,42 @@ const ShopProfile = () => {
     setCurrentBooking(null);
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#fdf7ef] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+      </div>
+    );
+  }
+
+  if (!shop) {
+    return (
+      <div className="min-h-screen bg-[#fdf7ef] flex items-center justify-center">
+        <div className="text-center">
+          <Store className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500 text-lg">{ct('ไม่พบข้อมูลร้านค้า', 'Shop not found')}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const displayShop = shop || mockShop;
+
   return (
     <div className="min-h-screen bg-[#fdf7ef]">
       {/* Cover Banner */}
       <section className="relative h-64 md:h-80 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 overflow-hidden">
-        <div className={`absolute inset-0 bg-gradient-to-br ${mockShop.gradient} opacity-60`}></div>
-        <div className="absolute inset-0 bg-black/30"></div>
+        {displayShop.coverUrl ? (
+          <>
+            <img src={displayShop.coverUrl} alt={displayShop.shopName} className="absolute inset-0 w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-black/40"></div>
+          </>
+        ) : (
+          <>
+            <div className={`absolute inset-0 bg-gradient-to-br ${mockShop.gradient} opacity-60`}></div>
+            <div className="absolute inset-0 bg-black/30"></div>
+          </>
+        )}
         <div className="relative h-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-end pb-8">
           <Link
             to={`/${community.slug}/shops`}
@@ -114,10 +161,10 @@ const ShopProfile = () => {
           </Link>
           <div>
             <div className="inline-block bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold text-white mb-2">
-              {ct(mockShop.category, mockShop.category_en)}
+              {displayShop.status === 'ACTIVE' ? ct('เปิดให้บริการ', 'Active') : ct('รอการอนุมัติ', 'Pending')}
             </div>
             <h1 className="text-3xl md:text-4xl font-bold text-white drop-shadow-lg">
-              {ct(mockShop.name, mockShop.name_en)}
+              {displayShop.shopName}
             </h1>
           </div>
         </div>
@@ -129,7 +176,7 @@ const ShopProfile = () => {
           {/* Shop Description */}
           <div className="mb-6">
             <p className="text-lg text-[#3D3D3D] leading-relaxed">
-              {ct(mockShop.description, mockShop.description_en)}
+              {displayShop.description || ct('ไม่มีคำอธิบาย', 'No description available')}
             </p>
           </div>
 
@@ -146,7 +193,7 @@ const ShopProfile = () => {
                       {ct('ที่อยู่', 'Address')}
                     </p>
                     <p className="text-sm text-[#6B6B6B]">
-                      {ct(mockShop.location.address, mockShop.location.address_en)}
+                      {displayShop.location?.address || ct('ไม่ระบุที่อยู่', 'No address provided')}
                     </p>
                   </div>
                 </div>
@@ -159,10 +206,7 @@ const ShopProfile = () => {
                       {ct('เวลาทำการ', 'Opening Hours')}
                     </p>
                     <p className="text-sm text-[#6B6B6B]">
-                      {mockShop.openTime} - {mockShop.closeTime}
-                    </p>
-                    <p className="text-xs text-[#9CA3AF] mt-1">
-                      {ct(mockShop.openDays, mockShop.openDays_en)}
+                      {displayShop.openTime || '09:00'}{displayShop.closeTime ? ` - ${displayShop.closeTime}` : ' - 17:00'}
                     </p>
                   </div>
                 </div>
@@ -174,33 +218,41 @@ const ShopProfile = () => {
                     <p className="text-sm font-semibold text-[#2F4F2F] mb-1">
                       {ct('โทรศัพท์', 'Phone')}
                     </p>
-                    <a href={`tel:${mockShop.contactLinks.phone}`} className="text-sm text-[#E07B39] hover:text-[#D66B29]">
-                      {mockShop.contactLinks.phone}
+                    <a href={`tel:${displayShop.contact?.phone}`} className="text-sm text-[#E07B39] hover:text-[#D66B29]">
+                      {displayShop.contact?.phone || ct('ไม่ระบุ', 'N/A')}
                     </a>
                   </div>
                 </div>
 
-                {/* Social Links */}
-                <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
-                  <Globe className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-semibold text-[#2F4F2F] mb-2">
-                      {ct('ติดต่อเพิ่มเติม', 'Contact')}
-                    </p>
-                    <div className="flex gap-3">
-                      {mockShop.contactLinks.facebook && (
-                        <a href={mockShop.contactLinks.facebook} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700">
-                          <Facebook className="h-5 w-5" />
-                        </a>
-                      )}
-                      {mockShop.contactLinks.website && (
-                        <a href={mockShop.contactLinks.website} target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-gray-700">
-                          <Globe className="h-5 w-5" />
-                        </a>
-                      )}
+                {/* LINE ID */}
+                {displayShop.contact?.line && (
+                  <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
+                    <div className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0 font-bold">ไ</div>
+                    <div>
+                      <p className="text-sm font-semibold text-[#2F4F2F] mb-1">
+                        {ct('LINE ID', 'LINE ID')}
+                      </p>
+                      <p className="text-sm text-[#6B6B6B]">
+                        {displayShop.contact.line}
+                      </p>
                     </div>
                   </div>
-                </div>
+                )}
+
+                {/* Facebook */}
+                {displayShop.contact?.facebook && (
+                  <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
+                    <Facebook className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold text-[#2F4F2F] mb-1">
+                        {ct('Facebook', 'Facebook')}
+                      </p>
+                      <a href={displayShop.contact.facebook} target="_blank" rel="noopener noreferrer" className="text-sm text-[#E07B39] hover:text-[#D66B29]">
+                        {ct('เยี่ยมชมเพจ', 'Visit Page')}
+                      </a>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Call to Action Button */}
