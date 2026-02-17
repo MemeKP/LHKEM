@@ -34,7 +34,7 @@ export class AuthService {
       const relation = await this.communityAdminModel.findOne({ user_id: user._id });
       
       if (relation) {
-        community_id = relation.community_id.toString(); 
+        community_id = relation.community.toString(); 
       } else {
         console.warn(`User ${user._id.toString()} is COMMUNITY_ADMIN but has no community linked!`);
       }

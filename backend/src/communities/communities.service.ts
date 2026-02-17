@@ -63,11 +63,44 @@ export class CommunitiesService {
       }
     }
 
+    let highlights = createCommunityDto.cultural_highlights;
+
+    // หน้าบ้านตอนนี้ไม่มีให้เก็บจาก user ใช้ default ไปก่อน
+    if (!highlights || highlights.length === 0) {
+      highlights = [
+        {
+          title: "เป็นมิตรกับสิ่งแวดล้อม",
+          title_en: "Environmentally Friendly",
+          desc: "รักษาธรรมชาติอย่างยั่งยืน",
+          desc_en: "Preserve nature sustainably"
+        },
+        {
+          title: "สืบสานวัฒนธรรม",
+          title_en: "Cultural Heritage", 
+          desc: "เรียนรู้จากช่างฝีมือท้องถิ่น",
+          desc_en: "Learn from local artisans"
+        },
+        {
+          title: "ชุมชนเข้มแข็ง",
+          title_en: "Strong Community",
+          desc: "รายได้ 100% กลับสู่ผู้ประกอบการในชุมชน",
+          desc_en: "100% of income goes to local entrepreneurs"
+        },
+        {
+          title: "Slow Life",
+          title_en: "Slow Life",
+          desc: "หยุดพัก ผ่อนคลายและใช้เวลากับสิ่งที่รัก",
+          desc_en: "Relax and spend time doing what you love"
+        }
+      ];
+    }
+
     const dataToSave: any = {
       ...createCommunityDto,
       location: formattedLocation,
       contact_info: contactData,
       hero_section: heroData,
+      cultural_highlights: highlights,
     };
 
     await this.fillEnglishFields(dataToSave);
@@ -119,8 +152,8 @@ export class CommunitiesService {
 
         users.forEach(user => {
           adminDocs.push({
-            user_id: user._id,
-            community_id: savedCommunity._id,
+            user: user._id,
+            community: savedCommunity._id,
             assigned_by: new Types.ObjectId(userId),
             can_approve_workshop: adminPermissions.can_approve_workshop || false
           })
@@ -136,7 +169,7 @@ export class CommunitiesService {
   }
 
   async findAll(): Promise<Community[]> {
-    return this.communityModel.find()
+    return this.communityModel.find({is_active: true})
       .populate('shops')
       .populate('events')
       .populate('workshops')
@@ -157,12 +190,16 @@ export class CommunitiesService {
 
   async findByIdOrSlug(identifier: string): Promise<Community> {
     if (Types.ObjectId.isValid(identifier)) {
-      const doc = await this.communityModel.findById(identifier).exec();
+      const doc = await this.communityModel.findOne({
+        _id: identifier,
+        is_active: true 
+      }).exec();
       if (doc) return doc;
     }
     const decodedSlug = decodeURIComponent(identifier);
     const community = await this.communityModel.findOne({
-      $or: [{ slug: decodedSlug }, { name: decodedSlug }]
+      $or: [{ slug: decodedSlug }, { name: decodedSlug }],
+      is_active: true
     }).exec();
 
     if (!community) {
@@ -194,6 +231,25 @@ export class CommunitiesService {
     } catch (error) {
       throw new InternalServerErrorException('Something wrong during deletion!' + error)
     }
+  }
+
+  async close(id: string) {
+    // อัปเดต is_active เป็น false
+    const community = await this.communityModel.findByIdAndUpdate(
+      id,
+      { is_active: false },
+      { new: true } 
+    );
+    if (!community) {
+      throw new NotFoundException(`Community #${id} not found`);
+    }
+    await this.communityadminModel.deleteMany({ 
+        community: new Types.ObjectId(id) 
+    });
+    return { 
+      message: 'Community closed successfully', 
+      community 
+    };
   }
 
   async getMedia(id: string) {

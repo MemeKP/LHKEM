@@ -56,7 +56,7 @@ const createCommunity = async (formData) => {
   }
 
   formDataToSend.append('admin_permissions', JSON.stringify({
-     can_approve_workshop: formData.workshopApproval
+    can_approve_workshop: formData.workshopApproval
   }));
 
   const res = await api.post('/api/communities', formDataToSend, {
@@ -394,9 +394,15 @@ const PlatformCreateCommunity = () => {
               {ct('คำอธิบาย', 'Description')}
             </label>
             <textarea
-              name="hero_section"
+              name="heroSection"
               value={formData.hero_section.description}
-              onChange={handleInputChange}
+              onChange={(e) => setFormData({
+                ...formData,
+                hero_section: {
+                  ...formData.hero_section,
+                  description: e.target.value
+                }
+              })}
               placeholder={ct('คำอธิบายสั้น ๆ เกี่ยวกับชุมชนและสิ่งที่ทำให้ชุมชนนี้พิเศษ...', 'A brief description of the community and what makes it special...')}
               rows={4}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all resize-none"

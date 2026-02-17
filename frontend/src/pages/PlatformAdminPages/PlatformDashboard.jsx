@@ -18,17 +18,13 @@ const usePlatformDashboard = () => {
   })
 }
 
+
+
 const PlatformDashboard = () => {
   const { data, isLoading, error } = usePlatformDashboard();
   const { ct } = useTranslation();
   const navigate = useNavigate();
-  // const [communities, setCommunities] = useState([]);
-  // const [stats, setStats] = useState({
-  //   totalCommunities: 4,
-  //   newCommunities: 4,
-  //   totalParticipants: 161,
-  //   totalEvents: 74
-  // });  
+ 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FAF8F3]">
@@ -55,7 +51,6 @@ const PlatformDashboard = () => {
 //   console.log("DASHBOARD DATA:", data);
 // console.log("COMMUNITIES:", communities);
 
-  
   // const [activities, setActivities] = useState([]);
   // useEffect(() => {
   //   // Mock data for communities

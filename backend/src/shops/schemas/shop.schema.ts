@@ -2,6 +2,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 
+export type ShopDocument = Shop & Document;
+
 @Schema({ timestamps: true })
 export class Shop {
   @Prop({ required: true })

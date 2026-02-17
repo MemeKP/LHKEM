@@ -7,15 +7,15 @@ export type CommunityAdminDocument = CommunityAdmin & Document;
 export class CommunityAdmin {
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true, unique: true })
-  user_id: Types.ObjectId; 
+  user: Types.ObjectId; 
 
   @Prop({ type: Types.ObjectId, ref: 'Community', required: true })
-  community_id: Types.ObjectId;
+  community: Types.ObjectId;
   
   @Prop({ type: Boolean, default: false })
   can_approve_workshop: boolean;
 
-  @Prop({ type: Types.ObjectId, ref: 'User' }) // ใครเป็นคนแต่งตั้ง 
+  @Prop({ type: Types.ObjectId, ref: 'User' }) 
   assigned_by?: Types.ObjectId;
 }
 

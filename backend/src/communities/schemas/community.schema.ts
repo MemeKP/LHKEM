@@ -15,7 +15,7 @@ export class Community {
     name: string;
 
     @Prop({ trim: true })
-    name_en: string; 
+    name_en: string;
 
     @Prop({ trim: true })
     abbreviation: string;
@@ -118,8 +118,8 @@ export class Community {
             phone: String,
             email: String,
             facebook: {
-                name: String, 
-                link: String  
+                name: String,
+                link: String
             },
             line: {
                 name: String,
@@ -129,7 +129,7 @@ export class Community {
                 name: String,
                 link: String
             },
-            website: String 
+            website: String
         },
         required: true,
         _id: false
@@ -139,7 +139,7 @@ export class Community {
         email?: string;
         facebook?: { name: string; link: string };
         line?: { name: string; link: string };
-        ig?: {name:string, link:string};
+        ig?: { name: string, link: string };
         website?: string;
     }
 
@@ -151,6 +151,9 @@ export class Community {
 
     @Prop({ type: Date })
     updated_at: Date;
+
+    @Prop({ default: true }) // ตั้งค่าเริ่มต้นเป็น true (เปิดอยู่) <- soft delete จ้าแม่
+    is_active: boolean;
 }
 
 export const CommunitySchema = SchemaFactory.createForClass(Community);
