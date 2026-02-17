@@ -18,12 +18,19 @@ const PlatformCommunityDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [community, setCommunity] = useState(null);
+  const [formData, setFormData] = useState({
+    admins: [],
+    admin_email: '',
+    workshopApproval: true
+  });
 
-  const { data: communities, isLoading, error } = useQuery({
+
+  const { data: communities, isLoading, error, refetch } = useQuery({
     queryKey: ['platform-community', id],
     queryFn: () => fetchCommunityDetail(id),
     enabled: !!id,
   });
+
   const handleCloseCommunity = async () => {
     const result = await Swal.fire({
       title: 'คุณแน่ใจไหม?',
@@ -55,56 +62,133 @@ const PlatformCommunityDetail = () => {
     }
   };
 
-  useEffect(() => {
-    // Mock community data
-    const mockCommunity = {
-      id: id,
-      name: 'ชุมชนโหล่งฮิมคาว',
-      location: 'เชียงใหม่',
-      locationBadge: 'กำลังดำเนินการ',
-      description: 'ชุมชนท้องถิ่นที่มีวัฒนธรรมและประเพณีที่เก่าแก่ มีการทำงานร่วมกันของชาวบ้านในการอนุรักษ์วัฒนธรรม .slow life',
-      stats: {
-        shops: { current: 3, total: 4 },
-        admins: 3,
-        workshops: 18,
-        participants: 334,
-        growth: '+25%'
-      },
-      alerts: [
-        { type: 'warning', message: 'ร้านหนึ่งยังไม่ได้ยืนยันตัวตนภายใน 45 วัน', time: '15 นาทีที่แล้ว' },
-        { type: 'success', message: 'Workshop ได้รับอนุมัติแล้ว 75%', time: 'ก่อนหน้านี้' }
-      ],
-      shopsList: [
-        { name: 'ร้านหนึ่งในชุมชนหมู่บ้าน', workshops: 8, members: 124, status: 'active' },
-        { name: 'ร้านหนึ่งในชุมชนหมู่บ้าน', workshops: 6, members: 88, status: 'active' },
-        { name: 'ร้านหนึ่งในชุมชนหมู่บ้าน', workshops: 4, members: 67, status: 'active' },
-        { name: 'ร้านหนึ่งในชุมชนหมู่บ้าน', workshops: 2, members: 45, status: 'pending' }
-      ],
-      workshopsEvents: [
-        { type: 'workshop', label: 'Workshop ทั้งหมด', count: 18, color: 'green' },
-        { type: 'pending', label: 'รอการอนุมัติ', count: 3, color: 'orange' },
-        { type: 'ongoing', label: 'กำลังดำเนินการ', count: 5, color: 'orange' },
-        { type: 'completed', label: 'เสร็จสิ้น', count: 1, color: 'gray' }
-      ],
-      admins: [
-        { name: 'กฤษณพงศ์ ไชย', email: 'krissapong@gmail.com', role: 'Community Admin', joinDate: '2567' },
-        { name: 'กฤษณพงศ์ สุขสันต์', email: 'krissapong@gmail.com', role: 'Community Admin', joinDate: '2567' },
-        { name: 'กฤษณพงศ์ วิจิตร', email: 'krissapong@gmail.com', role: 'Community Admin', joinDate: '2567' }
-      ],
-      participantTypeData: [
-        { name: 'คนในพื้นที่', value: 60, color: '#16a34a' },
-        { name: 'นักท่องเที่ยว', value: 40, color: '#f97316' }
-      ],
-      popularActivityData: [
-        { name: 'แกะสลัก', value: 5 },
-        { name: 'เครื่องปั้น', value: 8 },
-        { name: 'ทำเนียม', value: 7 },
-        { name: 'วัฒนธรรม', value: 2 }
-      ]
-    };
+  const handleAddAdmin = async () => {
+    const { value: email } = await Swal.fire({
+      title: ct('เพิ่มผู้ดูแล', 'Add Community Admin'),
+      input: 'email',
+      inputLabel: ct('กรุณาระบุอีเมลของผู้ใช้งาน', 'Enter user email address'),
+      inputPlaceholder: 'user@example.com',
+      showCancelButton: true,
+      confirmButtonText: ct('เพิ่ม', 'Add'),
+      cancelButtonText: ct('ยกเลิก', 'Cancel'),
+      confirmButtonColor: '#16a34a',
+      showLoaderOnConfirm: true, 
+      preConfirm: async (email) => {
+        try {
+          await api.post(`/api/communities/${id}/admins`, { 
+            email
+          });
+          return email;
+        } catch (error) {
+          Swal.showValidationMessage(
+            error.response?.data?.message || 'ไม่สามารถเพิ่มผู้ดูแลได้'
+          );
+        }
+      }
+    });
+    if (email) {
+      await Swal.fire({
+        icon: 'success',
+        title: ct('สำเร็จ', 'Success'),
+        text: ct(`เพิ่ม ${email} เรียบร้อยแล้ว`, `Added ${email} successfully`),
+        timer: 1500,
+        showConfirmButton: false
+      });
+      
+      refetch(); 
+    }
+};
 
-    setCommunity(mockCommunity);
-  }, [id]);
+const handleDeleteAdmin = async (adminId, adminEmail) => {
+    const result = await Swal.fire({
+      title: 'คุณแน่ใจไหม?',
+      text: `ต้องการลบสิทธิ์ผู้ดูแลของ ${adminEmail} ใช่หรือไม่?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444', 
+      cancelButtonColor: '#6b7280', 
+      confirmButtonText: 'ใช่, ลบเลย',
+      cancelButtonText: 'ยกเลิก'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await api.delete(`/api/communities/${id}/admins/${adminId}`);
+
+        await Swal.fire(
+          'ลบสำเร็จ!',
+          'ผู้ใช้งานถูกลบสิทธิ์เรียบร้อยแล้ว',
+          'success'
+        );
+        refetch();
+      } catch (error) {
+        console.error(error);
+        Swal.fire('Error', 'ไม่สามารถลบผู้ดูแลได้', 'error');
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (communities) {
+      setCommunity(communities);
+      setFormData(prev => ({
+        ...prev,
+        admins: communities.admins?.map(a => a.email) || []
+      }));
+    }
+  }, [communities]);
+
+
+  // useEffect(() => {
+  //   // Mock community data
+  //   const mockCommunity = {
+  //     id: id,
+  //     name: 'ชุมชนโหล่งฮิมคาว',
+  //     location: 'เชียงใหม่',
+  //     locationBadge: 'กำลังดำเนินการ',
+  //     description: 'ชุมชนท้องถิ่นที่มีวัฒนธรรมและประเพณีที่เก่าแก่ มีการทำงานร่วมกันของชาวบ้านในการอนุรักษ์วัฒนธรรม .slow life',
+  //     stats: {
+  //       shops: { current: 3, total: 4 },
+  //       admins: 3,
+  //       workshops: 18,
+  //       participants: 334,
+  //       growth: '+25%'
+  //     },
+  //     alerts: [
+  //       { type: 'warning', message: 'ร้านหนึ่งยังไม่ได้ยืนยันตัวตนภายใน 45 วัน', time: '15 นาทีที่แล้ว' },
+  //       { type: 'success', message: 'Workshop ได้รับอนุมัติแล้ว 75%', time: 'ก่อนหน้านี้' }
+  //     ],
+  //     shopsList: [
+  //       { name: 'ร้านหนึ่งในชุมชนหมู่บ้าน', workshops: 8, members: 124, status: 'active' },
+  //       { name: 'ร้านหนึ่งในชุมชนหมู่บ้าน', workshops: 6, members: 88, status: 'active' },
+  //       { name: 'ร้านหนึ่งในชุมชนหมู่บ้าน', workshops: 4, members: 67, status: 'active' },
+  //       { name: 'ร้านหนึ่งในชุมชนหมู่บ้าน', workshops: 2, members: 45, status: 'pending' }
+  //     ],
+  //     workshopsEvents: [
+  //       { type: 'workshop', label: 'Workshop ทั้งหมด', count: 18, color: 'green' },
+  //       { type: 'pending', label: 'รอการอนุมัติ', count: 3, color: 'orange' },
+  //       { type: 'ongoing', label: 'กำลังดำเนินการ', count: 5, color: 'orange' },
+  //       { type: 'completed', label: 'เสร็จสิ้น', count: 1, color: 'gray' }
+  //     ],
+  //     admins: [
+  //       { name: 'กฤษณพงศ์ ไชย', email: 'krissapong@gmail.com', role: 'Community Admin', joinDate: '2567' },
+  //       { name: 'กฤษณพงศ์ สุขสันต์', email: 'krissapong@gmail.com', role: 'Community Admin', joinDate: '2567' },
+  //       { name: 'กฤษณพงศ์ วิจิตร', email: 'krissapong@gmail.com', role: 'Community Admin', joinDate: '2567' }
+  //     ],
+  //     participantTypeData: [
+  //       { name: 'คนในพื้นที่', value: 60, color: '#16a34a' },
+  //       { name: 'นักท่องเที่ยว', value: 40, color: '#f97316' }
+  //     ],
+  //     popularActivityData: [
+  //       { name: 'แกะสลัก', value: 5 },
+  //       { name: 'เครื่องปั้น', value: 8 },
+  //       { name: 'ทำเนียม', value: 7 },
+  //       { name: 'วัฒนธรรม', value: 2 }
+  //     ]
+  //   };
+
+  //   setCommunity(mockCommunity);
+  // }, [id]);
 
 
   const StatCard = ({ icon: Icon, value, label, sublabel, color = 'orange' }) => (
@@ -332,14 +416,14 @@ const PlatformCommunityDetail = () => {
           <div className="bg-white rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-900">{ct('ผู้ดูแล Community', 'Community Admins')}</h2>
-              <button className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition-colors">
+              <button onClick={handleAddAdmin} className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition-colors">
                 <UserPlus className="h-4 w-4" />
                 <span>{ct('เพิ่ม Admin', 'Add Admin')}</span>
               </button>
             </div>
             <div className="space-y-3">
               {communities.admins.map((admin, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div key={admin.id || index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center">
                       <span className="text-white font-semibold text-sm">{admin.name.charAt(0)}</span>
@@ -350,7 +434,8 @@ const PlatformCommunityDetail = () => {
                       <p className="text-xs text-gray-400">{ct('เข้าร่วมเมื่อ', 'Joined')} {admin.joinDate}</p>
                     </div>
                   </div>
-                  <button className="text-red-500 hover:text-red-600">
+                  <button onClick={() => handleDeleteAdmin(admin.id, admin.email)}
+                   className="text-red-500 hover:text-red-600">
                     <XCircle className="h-5 w-5" />
                   </button>
                 </div>
@@ -412,7 +497,6 @@ const PlatformCommunityDetail = () => {
                 <ResponsiveContainer width="100%" height={150}>
                   <BarChart data={communities.popularActivityData} layout="vertical" margin={{ left: 10 }}>
                     <XAxis type="number" hide />
-                    {/* ปรับ width ของ YAxis ให้พอดีกับชื่อ */}
                     <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 12 }} />
                     <Tooltip />
                     <Bar dataKey="value" fill="#f97316" radius={[0, 4, 4, 0]} barSize={20} />

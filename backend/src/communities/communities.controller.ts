@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe, UseGuards, UseInterceptors, UploadedFile, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe, UseGuards, UseInterceptors, UploadedFile, Req, UploadedFiles } from '@nestjs/common';
 import { CommunitiesService } from './communities.service';
 import { CreateCommunityDto } from './dto/create-community.dto';
 import { UpdateCommunityDto } from './dto/update-community.dto';
@@ -6,7 +6,7 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { UserRole } from 'src/common/enums/user-role.enum';
 import { Roles } from 'src/common/decorators/roles.decorator';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { randomBytes } from 'crypto';
@@ -100,9 +100,72 @@ export class CommunitiesController {
     return this.communitiesService.getChartStats(id);
   }
 
+  @Post(':id/admins')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PLATFORM_ADMIN)
+  async addAdminToCommunity(
+    @Param('id') id: string,
+    @Body('email') email: string,
+    @Req() req: any, 
+  ) {
+    return this.communitiesService.addAdminByEmail(id, email, req.user.userId);
+  }
+
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCommunityDto: UpdateCommunityDto) {
-    return this.communitiesService.update(id, updateCommunityDto);
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PLATFORM_ADMIN)
+  @UseInterceptors(
+    FilesInterceptor('files', 10, { 
+      storage: diskStorage({
+        destination: './uploads/communities', 
+        filename: (req, file, cb) => {
+          const randomName = randomBytes(16).toString('hex');
+          cb(null, `${randomName}${extname(file.originalname)}`);
+        },
+      }),
+    }),
+  )
+  async update(
+    @Param('id') id: string,
+    @Body() updateCommunityDto: UpdateCommunityDto,
+    @UploadedFiles() files: Array<Express.Multer.File>, 
+    @Req() req,
+  ) {
+  
+    if (typeof updateCommunityDto.location === 'string') {
+        updateCommunityDto.location = JSON.parse(updateCommunityDto.location);
+    }
+
+    if (typeof updateCommunityDto.contact_info === 'string') {
+        updateCommunityDto.contact_info = JSON.parse(updateCommunityDto.contact_info);
+    }
+
+    if (typeof updateCommunityDto.hero_section === 'string') {
+        updateCommunityDto.hero_section = JSON.parse(updateCommunityDto.hero_section);
+    }
+
+    if (typeof updateCommunityDto.admins === 'string') {
+        updateCommunityDto.admins = JSON.parse(updateCommunityDto.admins);
+    }
+
+    // if (typeof updateCommunityDto.admin_permissions === 'string') {
+    //     updateCommunityDto.admin_permissions = JSON.parse(updateCommunityDto.admin_permissions);
+    // }
+
+    if (updateCommunityDto.existing_images && typeof updateCommunityDto.existing_images === 'string') {
+       updateCommunityDto.existing_images = [updateCommunityDto.existing_images];
+    }
+    return this.communitiesService.update(id, req.user.userId, updateCommunityDto, files);
+  }
+
+  @Delete(':id/admins/:adminId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PLATFORM_ADMIN)
+  async removeAdminFromCommunity(
+    @Param('id') community_id: string, 
+    @Param('adminId') adminId: string, 
+  ) {
+    return this.communitiesService.removeAdmin(community_id, adminId);
   }
 
   @Delete(':id')

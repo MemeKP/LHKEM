@@ -31,7 +31,7 @@ export class AuthService {
     let community_id: string | null = null;
     // เช็ค Role: ถ้าเป็น Admin ชุมชน ให้วิ่งไปดูตาราง CommunityAdmin
    if ((user.role as string) === 'COMMUNITY_ADMIN') {
-      const relation = await this.communityAdminModel.findOne({ user_id: user._id });
+      const relation = await this.communityAdminModel.findOne({ user: user._id });
       
       if (relation) {
         community_id = relation.community.toString(); 

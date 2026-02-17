@@ -52,12 +52,12 @@ export async function seedCommunity(
     ],
 
     images: [
-      'communities/lhkem-1.jpg',
-      'communities/lhkem-2.png',
-      'communities/lhkem-3.png',
-      'communities/lhkem-4.png',
-      'communities/lhkem-profile.jpg',
-      'communities/lhkem-banner.png',
+      '/uploads/communities/lhkem-1.jpg',
+      '/uploads/communities/lhkem-2.jpg',
+      '/uploads/communities/lhkem-3.png',
+      '/uploads/communities/lhkem-4.png',
+      '/uploads/communities/lhkem-profile.jpg',
+      '/uploads/communities/lhkem-banner.png',
     ],
     videos: [],
 

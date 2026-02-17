@@ -6,7 +6,7 @@ export type CommunityAdminDocument = CommunityAdmin & Document;
 @Schema({ timestamps: true, collection: 'community_admins' })
 export class CommunityAdmin {
 
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true, unique: true })
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true})
   user: Types.ObjectId; 
 
   @Prop({ type: Types.ObjectId, ref: 'Community', required: true })
