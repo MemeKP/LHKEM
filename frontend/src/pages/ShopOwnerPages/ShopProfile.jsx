@@ -4,6 +4,8 @@ import { ArrowLeft, MapPin, Clock, Phone, Image as ImageIcon } from 'lucide-reac
 import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
 import { getMyShop, updateShop } from '../../services/shopService';
+import ShopMapPinModal from '../../components/ShopMapPinModal';
+import { saveShopMapPin, getMyShopMapPin } from '../../services/mapPinService';
 
 const ShopProfile = () => {
   const { user } = useAuth();
@@ -34,6 +36,10 @@ const ShopProfile = () => {
     images: []
   });
   const [shopId, setShopId] = useState(null);
+  const [communityId, setCommunityId] = useState('');
+  const [isPinModalOpen, setPinModalOpen] = useState(false);
+  const [selectedPinPosition, setSelectedPinPosition] = useState(null);
+  const [pinStatusMessage, setPinStatusMessage] = useState('');
 
   useEffect(() => {
     const fetchShop = async () => {
@@ -51,6 +57,9 @@ const ShopProfile = () => {
           iconUrl: shop.iconUrl || '',
           images: shop.images || []
         });
+        if (shop.communityId) {
+          setCommunityId(shop.communityId);
+        }
       } catch (error) {
         console.error('Failed to fetch shop:', error);
         if (error.response?.status === 404) {
@@ -62,6 +71,34 @@ const ShopProfile = () => {
     };
     fetchShop();
   }, [navigate, slug]);
+
+  useEffect(() => {
+    if (!shopId) return;
+
+    const loadPin = async () => {
+      try {
+        const result = await getMyShopMapPin();
+        if (result?.communityId && !communityId) {
+          setCommunityId(result.communityId);
+        }
+        if (result?.hasPin) {
+          setSelectedPinPosition({
+            x: result.position_x,
+            y: result.position_y,
+          });
+          setPinStatusMessage(
+            `${t('map-pin.status', { defaultValue: 'สถานะหมุด' })}: ${result.status || ''}`,
+          );
+        } else {
+          setPinStatusMessage(t('map-pin.no-pin', { defaultValue: 'ยังไม่มีหมุดตำแหน่งร้าน' }));
+        }
+      } catch (error) {
+        console.error('Failed to load shop pin', error);
+      }
+    };
+
+    loadPin();
+  }, [shopId, communityId, t]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -123,6 +160,29 @@ const ShopProfile = () => {
       }
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleOpenPinModal = () => {
+    if (!communityId) {
+      setMessage({ type: 'error', text: 'ยังไม่ทราบชุมชนของร้าน กรุณาตรวจสอบอีกครั้ง' });
+      return;
+    }
+    setPinModalOpen(true);
+  };
+
+  const handlePinConfirm = async (position) => {
+    try {
+      await saveShopMapPin({
+        position_x: position.x,
+        position_y: position.y,
+      });
+      setSelectedPinPosition(position);
+      setPinStatusMessage('บันทึกหมุดตำแหน่งใหม่เรียบร้อย (สถานะ: รออนุมัติ)');
+    } catch (error) {
+      console.error('Failed to save map pin', error);
+      const msg = error?.response?.data?.message || error.message || 'บันทึกหมุดไม่สำเร็จ';
+      setMessage({ type: 'error', text: Array.isArray(msg) ? msg.join(', ') : msg });
+    }
   };
 
   return (
@@ -266,10 +326,19 @@ const ShopProfile = () => {
                 <h3 className="text-lg font-semibold text-[#2F4F2F] mb-4">เลือกตำแหน่งบนแผนที่</h3>
                 <button
                   type="button"
+                  onClick={handleOpenPinModal}
                   className="mt-2 px-4 py-2 bg-[#4CAF50] text-white rounded-full text-sm font-medium hover:bg-[#45A049] transition-all hover:scale-105"
                 >
                   เปิดแผนที่
                 </button>
+                {selectedPinPosition && (
+                  <p className="text-sm text-[#2F4F2F] mt-3">
+                    X: {selectedPinPosition.x?.toFixed(1)}% • Y: {selectedPinPosition.y?.toFixed(1)}%
+                  </p>
+                )}
+                {pinStatusMessage && (
+                  <p className="text-xs text-[#256029] mt-1">{pinStatusMessage}</p>
+                )}
               </div>
             </div>
             <p className="text-xs text-[#6B6B6B] mt-2">ตำแหน่งจะช่วยให้ลูกค้าหาร้านของคุณได้ง่าย ๆ ที่นี่</p>
@@ -311,6 +380,13 @@ const ShopProfile = () => {
           </div>
         </form>
       </div>
+      <ShopMapPinModal
+        isOpen={isPinModalOpen}
+        onClose={() => setPinModalOpen(false)}
+        communityId={communityId}
+        initialPosition={selectedPinPosition}
+        onConfirm={handlePinConfirm}
+      />
     </div>
   );
 };

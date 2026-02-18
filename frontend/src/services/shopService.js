@@ -51,3 +51,9 @@ export const rejectShop = async (shopId) => {
   const response = await api.put(`/api/shops/${shopId}/reject`);
   return response.data;
 };
+
+// Get shop detail for admins (full data)
+export const getShopForAdmin = async (shopId) => {
+  const response = await api.get(`/api/shops/${shopId}/admin`);
+  return response.data;
+};

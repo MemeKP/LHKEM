@@ -42,6 +42,7 @@ import PlatformAdminLayout from './layouts/PlatformAdminLayout';
 import PlatformDashboard from './pages/PlatformAdminPages/PlatformDashboard';
 import PlatformOverview from './pages/PlatformAdminPages/PlatformOverview';
 import PlatformCommunityDetail from './pages/PlatformAdminPages/PlatformCommunityDetail';
+import PlatformShopApproval from './pages/PlatformAdminPages/PlatformShopApproval';
 import PlatformCreateCommunity from './pages/PlatformAdminPages/PlatformCreateCommunity';
 import PlatformEditCommunity from './pages/PlatformAdminPages/PlatformEditCommunity';
 
@@ -214,6 +215,11 @@ function App() {
               <Route path="communities/:id" element={
                 <ProtectedRoute allowedRoles={['PLATFORM_ADMIN']}>
                   <PlatformCommunityDetail />
+                </ProtectedRoute>
+              } />
+              <Route path="communities/:id/shops/:shopId/approval" element={
+                <ProtectedRoute allowedRoles={['PLATFORM_ADMIN']}>
+                  <PlatformShopApproval />
                 </ProtectedRoute>
               } />
               <Route path="communities/:id/edit" element={

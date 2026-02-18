@@ -102,10 +102,24 @@ const PlatformCreateCommunity = () => {
   });
 
   const [imagePreview, setImagePreview] = useState(null);
+  const [mapImage, setMapImage] = useState(null);
+  const [mapPreview, setMapPreview] = useState(null);
 
   const mutation = useMutation({
     mutationFn: createCommunity,
-    onSuccess: () => {
+    onSuccess: async (data) => {
+      // Upload map image if provided
+      if (mapImage && data._id) {
+        try {
+          const mapFormData = new FormData();
+          mapFormData.append('file', mapImage);
+          await api.post(`/api/admin/communities/${data._id}/map`, mapFormData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+        } catch (error) {
+          console.error('Failed to upload map:', error);
+        }
+      }
       navigate('/platform-admin/dashboard');
     },
     onError: (error) => {
@@ -129,6 +143,18 @@ const PlatformCreateCommunity = () => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleMapImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setMapImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setMapPreview(reader.result);
       };
       reader.readAsDataURL(file);
     }
@@ -360,34 +386,52 @@ const PlatformCreateCommunity = () => {
               />
             </div>
           </div>
+          {/* Community Map Upload */}
           <div className="mb-6">
-            <div
-              className="cursor-pointer border-2 border-orange-300 rounded-lg p-8 text-center bg-orange-50"
-            >
-              <MapPin className="h-12 w-12 text-orange-500 mx-auto mb-3" />
-              <p className="text-sm font-medium">
-                {formData.lat && formData.lng
-                  ? `Lat: ${formData.lat}, Lng: ${formData.lng}`
-                  : 'คลิกเพื่อเลือกตำแหน่งบนแผนที่'}
-              </p>
-            </div>
-          </div>
-
-          {/* Map Picker */}
-          {/* <div className="mb-6">
-            <div className="border-2 border-orange-300 rounded-lg p-8 text-center bg-orange-50">
-              <MapPin className="h-12 w-12 text-orange-500 mx-auto mb-3" />
-              <p className="text-sm font-medium text-gray-900 mb-1">
-                {ct('เลือกตำแหน่งที่ตั้ง (Google Maps API)', 'Select Location (Google Maps API)')}
-              </p>
-              <p className="text-xs text-gray-600">
-                {ct('คลิกเพื่อเปิดแผนที่และเลือกตำแหน่ง', 'Click to open map and select location')}
-              </p>
+            <label className="block text-sm font-semibold text-gray-900 mb-2">
+              {ct('รูปแผนที่ชุมชน (Interactive Map)', 'Community Map Image')}
+            </label>
+            <div className="border-2 border-dashed border-orange-300 rounded-lg p-6 text-center bg-orange-50">
+              {mapPreview ? (
+                <div className="relative">
+                  <img
+                    src={mapPreview}
+                    alt="Map Preview"
+                    className="max-h-64 mx-auto rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMapPreview(null);
+                      setMapImage(null);
+                    }}
+                    className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <label className="cursor-pointer">
+                  <MapPin className="h-12 w-12 text-orange-500 mx-auto mb-3" />
+                  <p className="text-sm font-medium text-gray-900 mb-1">
+                    {ct('อัปโหลดรูปแผนที่ชุมชน', 'Upload Community Map')}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    {ct('คลิกเพื่อเลือกไฟล์รูปภาพ (PNG, JPG)', 'Click to select image file (PNG, JPG)')}
+                  </p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleMapImageChange}
+                    className="hidden"
+                  />
+                </label>
+              )}
             </div>
             <p className="text-xs text-gray-500 mt-2">
-              {ct('ตำแหน่งที่เลือกจะใช้ใน 1 ที่', 'Selected location will be used in 1 place')}
+              {ct('รูปแผนที่นี้จะใช้สำหรับปักหมุดร้านค้าและสถานที่ต่างๆ ในชุมชน', 'This map will be used for pinning shops and locations in the community')}
             </p>
-          </div> */}
+          </div>
 
           {/* Additional Details */}
           <div className="mb-6">
