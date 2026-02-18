@@ -139,20 +139,7 @@ const EventList = () => {
     
     return matchesSearch && matchesStatus;
   });
-  /*
-  const handleDelete = async (eventId) => {
-    if (!confirm('คุณต้องการลบ Event นี้ใช่หรือไม่?')) return;
-    
-    try {
-      // TODO: Call API - DELETE /api/events/:id
-      console.log('Deleting event:', eventId);
-      alert('ลบ Event สำเร็จ!');
-      // Refresh list
-    } catch (error) {
-      console.error('Failed to delete event:', error);
-      alert('เกิดข้อผิดพลาดในการลบ Event');
-    }
-  };*/
+ 
   const handleDelete = async (eventId) => {
     if (!window.confirm('คุณต้องการลบ Event นี้ใช่หรือไม่? (การกระทำนี้ไม่สามารถย้อนกลับได้)')) return;
 

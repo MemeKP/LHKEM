@@ -24,7 +24,7 @@ export class EventsService {
     if (createEventDto.end_at < createEventDto.start_at) {
       throw new BadRequestException('End date must be after start date');
     }
- 
+
     const newEvent = new this.eventModel({
       ...createEventDto,
       community_id: new Types.ObjectId(community_id),
@@ -50,7 +50,18 @@ export class EventsService {
   async findAllByCommunity(communityId: string) {
     return this.eventModel
       .find({ community_id: new Types.ObjectId(communityId) })
-      .sort({ created_at: -1 }) // เรียงจากใหม่ไปเก่า
+      .sort({ created_at: -1 })
+      .exec();
+  }
+
+  async findAllByCommunities(communityIds: string[]) {
+    const objectIds = communityIds.map(id => new Types.ObjectId(id));
+    return this.eventModel
+      .find({
+        community_id: { $in: objectIds } 
+      })
+      .sort({ created_at: -1 }) 
+      .populate('created_by', 'firstname lastname email') 
       .exec();
   }
 

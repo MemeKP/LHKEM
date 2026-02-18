@@ -1,18 +1,23 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, UseGuards, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req, UseGuards, BadRequestException, ForbiddenException, Query } from '@nestjs/common';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { InjectModel } from '@nestjs/mongoose';
+import { CommunityAdmin } from 'src/community-admin/schemas/community-admin.schema';
+import { Model, Types } from 'mongoose';
 interface JwtPayload {
   userId: string;
-  role: string; 
+  role: string;
   email: string;
   community_id: string;
 }
 
 @Controller('api/events')
 export class EventsController {
-  constructor(private readonly eventsService: EventsService) { }
+  constructor(private readonly eventsService: EventsService,
+    @InjectModel(CommunityAdmin.name) private communityAdminModel: Model<CommunityAdmin>
+  ) { }
 
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -23,7 +28,7 @@ export class EventsController {
     const user = req.user;
     const targetCommunityId = user.community_id || '6952c7d7a6db8eb05e1908ed';
     if (!targetCommunityId) {
-       throw new BadRequestException('User does not belong to any community');
+      throw new BadRequestException('User does not belong to any community');
     }
     return this.eventsService.create(
       createEventDto,
@@ -41,16 +46,43 @@ export class EventsController {
 
   @UseGuards(JwtAuthGuard)
   @Get('/')
-  async findAll(@Req() req: Request & { user: JwtPayload }) {
+  async findAll(
+    @Req() req: any,
+    @Query('community_id') queryCommunityId?: string
+  ) {
     const user = req.user;
-    const targetCommunityId = user.community_id || '6952c7d7a6db8eb05e1908ed';
-    return this.eventsService.findAllByCommunity(targetCommunityId);
+    const targetUserId = user.userMongoId || user._id; 
+    const adminRecords = await this.communityAdminModel.find({ 
+        user: new Types.ObjectId(targetUserId) 
+    }).exec();
+    let managedCommunityIds: string[] = adminRecords.map(r => r.community.toString());
+    if (managedCommunityIds.length === 0) {
+      return [];
+    }
+
+    let targetIds: string[] = [];
+    if (queryCommunityId) {
+      if (!managedCommunityIds.includes(queryCommunityId)) {
+        throw new ForbiddenException('You do not have permission for this community');
+      }
+      targetIds = [queryCommunityId];
+    } else {
+      targetIds = managedCommunityIds;
+    }
+
+    return this.eventsService.findAllByCommunities(targetIds);
   }
 
   @Get(':id')
   @UseGuards(JwtAuthGuard)
-  findOne(@Param('id') id: string) {
-    return this.eventsService.findOne(id);
+  async findOne(@Req() req, @Param('id') id: string) {
+    const user = req.user;
+    const event = await this.eventsService.findOne(id);
+    const userCommunityId = user.community_id;
+    if (event.community_id.toString() !== userCommunityId) {
+      throw new ForbiddenException('You are not allowed to view this event');
+    }
+    return event;
   }
 
   @Patch(':id')

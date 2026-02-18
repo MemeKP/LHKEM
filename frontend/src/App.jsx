@@ -127,7 +127,6 @@ function App() {
               } />
             </Route>
             
-            
             {/* Community Admin Routes - With AdminLayoutWithNav (Navbar + Footer) */}
             <Route path="/community-admin" element={<AdminLayoutWithNav />}>
               <Route path="dashboard" element={
