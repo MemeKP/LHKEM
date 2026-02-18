@@ -179,34 +179,6 @@ const PlatformEditCommunity = () => {
     }
   }, [community]);
 
-  // useEffect(() => {
-  //   // Mock existing community data
-  //   const mockCommunity = {
-  //     id: id,
-  //     name: 'ชุมชนโหล่งฮิมคาว',
-  //     nameEn: 'Loeng Him Kaw',
-  //     description: 'ชุมชนท้องถิ่นที่มีวัฒนธรรมและประเพณีที่เก่าแก่',
-  //     location: 'เชียงใหม่, ประเทศไทย',
-  //     locationDetails: 'เดินทางโดยรถยนต์หรือรถโดยสารจากเชียงใหม่',
-  //     contactEmail: 'loenghimkaw@community.com',
-  //     coverImage: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800',
-  //     admins: ['admin1@lhkem.com', 'admin2@lhkem.com', 'admin3@lhkem.com']
-  //   };
-
-  //   setFormData({
-  //     name: mockCommunity.name,
-  //     nameEn: mockCommunity.nameEn,
-  //     description: mockCommunity.description,
-  //     location: mockCommunity.location,
-  //     locationDetails: mockCommunity.locationDetails,
-  //     contactEmail: mockCommunity.contactEmail,
-  //     coverImage: null,
-  //     admins: mockCommunity.admins,
-  //     adminEmail: ''
-  //   });
-  //   setExistingImage(mockCommunity.coverImage);
-  // }, [id]);
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     if (name.includes('.')) {
@@ -311,12 +283,20 @@ const PlatformEditCommunity = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const newImagesArray = coverImageFile ? [coverImageFile] : [];
-    const existingImagesArray = (existingImage && !coverImageFile) ? [existingImage] : [];
+    let existingImagesArray = community?.images || [];
+
+    // if (currentImages && currentImages.length > 0) {
+    //    existingImagesArray = [...currentImages]; 
+    // }
+    
+    //const existingImagesArray = (existingImage && !coverImageFile) ? [existingImage] : [];
 
     try {
+      // console.log("Sending Existing:", existingImagesArray); 
+      // console.log("Sending New:", newImagesArray);
       await updateCommunity(id, formData, newImagesArray, existingImagesArray);
 
-      // Upload map image if provided
+      // Upload map image if provided 
       if (mapImage) {
         try {
           const mapFormData = new FormData();

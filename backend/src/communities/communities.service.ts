@@ -229,7 +229,7 @@ export class CommunitiesService {
       const newImagePaths = files.map(file =>
         `/uploads/communities/${file.filename}`
       );
-      finalImages = [...finalImages, ...newImagePaths];
+      finalImages = [...newImagePaths, ...finalImages];
     }
 
     if (files?.length > 0 || updateCommunityDto.existing_images) {

@@ -155,7 +155,8 @@ export class CommunitiesController {
     if (updateCommunityDto.existing_images && typeof updateCommunityDto.existing_images === 'string') {
        updateCommunityDto.existing_images = [updateCommunityDto.existing_images];
     }
-    return this.communitiesService.update(id, req.user.userId, updateCommunityDto, files);
+    const mongoId = req.user.userMongoId || req.user._id;
+    return this.communitiesService.update(id, mongoId, updateCommunityDto, files);
   }
 
   @Delete(':id/admins/:adminId')
