@@ -15,7 +15,19 @@ const fetchPopularWorkshops = async (communityId) => {
     params: { limit: 3 }
   });
   return res.data;
-}
+};
+
+const fetchCommunityMap = async (communityId) => {
+  try {
+    const res = await api.get(`/api/communities/${communityId}/communitymap`);
+    return res.data;
+  } catch (error) {
+    if (error?.response?.status === 404) {
+      return null;
+    }
+    throw error;
+  }
+};
 
 const CommunityHome = () => {
   const { t, ct } = useTranslation();
@@ -72,7 +84,14 @@ const CommunityHome = () => {
     queryFn: () => fetchPopularWorkshops(community._id),
     enabled: !!community._id,
     initialData: []
-  })
+  });
+
+  const { data: communityMap, isLoading: mapPreviewLoading } = useQuery({
+    queryKey: ['community-map-preview', community._id],
+    queryFn: () => fetchCommunityMap(community._id),
+    enabled: !!community._id,
+    staleTime: 1000 * 60 * 5,
+  });
 
   const stats = [
     {
@@ -276,18 +295,31 @@ const CommunityHome = () => {
             <p className="text-gray-600 max-w-2xl mx-auto mb-8">{t('explore.description')}</p>
           </div>
 
-          {/* Larger Map Placeholder */}
+          {/* Community Map Preview */}
           <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-gray-200">
-            <div className="h-96 md:h-[500px] bg-gradient-to-br from-blue-100 via-green-50 to-yellow-50 flex items-center justify-center">
-              <div className="text-center">
-                <MapPin className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 text-lg font-medium">
-                  {ct('แผนที่ชุมชนแบบอินเทอร์แอคทีฟ', 'Interactive Community Map')}
-                </p>
-                <p className="text-gray-400 text-sm mt-2">
-                  {ct('(กำลังพัฒนา)', '(Coming Soon)')}
-                </p>
-              </div>
+            <div className="h-96 md:h-[500px]">
+              {mapPreviewLoading ? (
+                <div className="w-full h-full bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 flex items-center justify-center">
+                  <div className="text-center space-y-3 text-gray-500">
+                    <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin mx-auto"></div>
+                    <p>{ct('กำลังโหลดแผนที่ชุมชน...', 'Loading community map...')}</p>
+                  </div>
+                </div>
+              ) : communityMap?.map_image ? (
+                <div
+                  className="w-full h-full bg-cover bg-center"
+                  style={{ backgroundImage: `url(${communityMap.map_image})` }}
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-gray-100 via-gray-50 to-white flex items-center justify-center">
+                  <div className="text-center">
+                    <MapPin className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 text-lg font-medium">
+                      {ct('ยังไม่มีแผนที่สำหรับชุมชนนี้', 'Community map is not available yet.')}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* View Full Map Button Overlay */}

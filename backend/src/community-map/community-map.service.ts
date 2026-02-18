@@ -48,9 +48,19 @@ export class CommunityMapService {
         select: 'shopName description coverUrl iconUrl status',
       });
 
+    const filteredPins = pins.filter((pin) => {
+      const ownerShop = pin.ownerShop as unknown;
+      const shop =
+        ownerShop && typeof ownerShop === 'object' && 'status' in ownerShop
+          ? (ownerShop as Shop & { _id: Types.ObjectId })
+          : null;
+
+      return shop?.status === 'ACTIVE';
+    });
+
     return {
       map_image: map.imageUrl,
-      pins: pins.map((pin) => {
+      pins: filteredPins.map((pin) => {
         const ownerShop = pin.ownerShop as unknown;
         const shop =
           ownerShop && typeof ownerShop === 'object' && 'shopName' in ownerShop
