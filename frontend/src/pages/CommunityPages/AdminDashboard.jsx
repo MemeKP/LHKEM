@@ -35,7 +35,6 @@ const AdminDashboard = () => {
   const { ct } = useTranslation();
   const [activeTab, setActiveTab] = useState('workshops');
   const [taskTab, setTaskTab] = useState('events'); // Tab for Events/Shops section
-
   const isLoading = eventsQuery.isLoading;
 
   if (isLoading) return <div className="p-8 text-center">กำลังโหลดข้อมูล...</div>;
@@ -83,22 +82,6 @@ const AdminDashboard = () => {
       image: null
     }
   ];
-
-  // Mock data - Event รออนุมัติ
-  /*
-  const pendingEvents = [
-    {
-      id: 'e1',
-      title: 'Event ตลาดนัดหัตถกรรมล้านนา',
-      organizer: 'ชุมชนโหล่งฮิมคาว',
-      description: 'ตลาดนัดรวมผลิตภัณฑ์งานฝีมือจากช่างฝีมือในชุมชน',
-      date: '2024-02-10',
-      time: '08:00 - 16:00',
-      location: 'ลานกิจกรรมโหล่งฮิมคาว',
-      submittedAt: '2024-01-14T09:15:00',
-      status: 'รออนุมัติ'
-    }
-  ];*/
 
   // Mock data - ร้านค้ารออนุมัติ
   const pendingShops = [
