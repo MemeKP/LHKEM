@@ -373,7 +373,10 @@ const handleDeleteAdmin = async (adminId, adminEmail) => {
                         </span>
                       </td>
                       <td className="py-3 text-center">
-                        <button className="text-green-600 hover:text-green-700 text-sm font-medium">
+                        <button
+                          onClick={() => navigate(`/platform-admin/communities/${id}/shops/${shop.id}/approval`)}
+                          className="text-green-600 hover:text-green-700 text-sm font-medium"
+                        >
                           {ct('ดูข้อมูล', 'View')}
                         </button>
                       </td>

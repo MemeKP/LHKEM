@@ -120,6 +120,9 @@ const PlatformEditCommunity = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [existingImage, setExistingImage] = useState(null);
   const [coverImageFile, setCoverImageFile] = useState(null);
+  const [mapImage, setMapImage] = useState(null);
+  const [mapPreview, setMapPreview] = useState(null);
+  const [existingMapUrl, setExistingMapUrl] = useState(null);
 
   const { data: community, isLoading } = useQuery({
     queryKey: ['community-update', id],
@@ -160,6 +163,19 @@ const PlatformEditCommunity = () => {
       if (community.images && community.images.length > 0) {
         setExistingImage(community.images[0]);
       }
+
+      // Fetch existing community map
+      const fetchCommunityMap = async () => {
+        try {
+          const res = await api.get(`/api/communities/${community._id}/communitymap`);
+          if (res.data && res.data.map_image) {
+            setExistingMapUrl(res.data.map_image);
+          }
+        } catch (error) {
+          console.log('No existing map found');
+        }
+      };
+      fetchCommunityMap();
     }
   }, [community]);
 
@@ -262,6 +278,19 @@ const PlatformEditCommunity = () => {
     setExistingImage(null);
   };
 
+  const handleMapImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setMapImage(file);
+      setMapPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleRemoveMapImage = () => {
+    setMapImage(null);
+    setMapPreview(null);
+  };
+
   const handleAddAdmin = () => {
     if (formData.admin_email && formData.admin_email.includes('@')) {
       setFormData(prev => ({
@@ -286,6 +315,20 @@ const PlatformEditCommunity = () => {
 
     try {
       await updateCommunity(id, formData, newImagesArray, existingImagesArray);
+
+      // Upload map image if provided
+      if (mapImage) {
+        try {
+          const mapFormData = new FormData();
+          mapFormData.append('file', mapImage);
+          await api.post(`/api/admin/communities/${id}/map`, mapFormData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+        } catch (error) {
+          console.error('Failed to upload map:', error);
+          await Swal.fire('คำเตือน', 'บันทึกข้อมูลสำเร็จ แต่ไม่สามารถอัปโหลดแผนที่ได้', 'warning');
+        }
+      }
 
       await Swal.fire('สำเร็จ', 'บันทึกข้อมูลเรียบร้อยแล้ว', 'success');
       navigate(`/platform-admin/communities/${id}`);
@@ -489,31 +532,68 @@ const PlatformEditCommunity = () => {
             </div>
           </div>
 
-          {/* Map Picker */}
+          {/* Community Map Upload */}
           <div className="mb-6">
-            <div className="border-2 border-orange-300 rounded-lg p-6 bg-orange-50">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center space-x-3">
-                  <MapPin className="h-6 w-6 text-orange-500" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      {ct('ตำแหน่งปัจจุบัน: เชียงใหม่, ประเทศไทย', 'Current Location: Chiang Mai, Thailand')}
-                    </p>
-                    <p className="text-xs text-gray-600">
-                      {ct('คลิกเพื่อเปลี่ยนตำแหน่ง', 'Click to change location')}
-                    </p>
-                  </div>
+            <label className="block text-sm font-semibold text-gray-900 mb-2">
+              {ct('รูปแผนที่ชุมชน (Interactive Map)', 'Community Map Image')}
+            </label>
+            <div className="border-2 border-dashed border-orange-300 rounded-lg p-6 text-center bg-orange-50">
+              {mapPreview ? (
+                <div className="relative">
+                  <img
+                    src={mapPreview}
+                    alt="Map Preview"
+                    className="max-h-64 mx-auto rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleRemoveMapImage}
+                    className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  className="px-4 py-2 bg-white border border-orange-500 text-orange-500 font-medium rounded-lg hover:bg-orange-50 transition-colors"
-                >
-                  {ct('เปลี่ยนตำแหน่ง', 'Change Location')}
-                </button>
-              </div>
+              ) : existingMapUrl ? (
+                <div className="relative">
+                  <img
+                    src={`${API_URL}${existingMapUrl}`}
+                    alt="Existing Map"
+                    className="max-h-64 mx-auto rounded-lg"
+                  />
+                  <label
+                    htmlFor="map-image-edit"
+                    className="absolute top-2 right-2 bg-orange-500 text-white p-2 rounded-full hover:bg-orange-600 cursor-pointer"
+                  >
+                    <ImageIcon className="h-4 w-4" />
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleMapImageChange}
+                    className="hidden"
+                    id="map-image-edit"
+                  />
+                </div>
+              ) : (
+                <label className="cursor-pointer">
+                  <MapPin className="h-12 w-12 text-orange-500 mx-auto mb-3" />
+                  <p className="text-sm font-medium text-gray-900 mb-1">
+                    {ct('อัปโหลดรูปแผนที่ชุมชน', 'Upload Community Map')}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    {ct('คลิกเพื่อเลือกไฟล์รูปภาพ (PNG, JPG)', 'Click to select image file (PNG, JPG)')}
+                  </p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleMapImageChange}
+                    className="hidden"
+                  />
+                </label>
+              )}
             </div>
             <p className="text-xs text-gray-500 mt-2">
-              {ct('ตำแหน่งที่เลือกจะใช้ใน 1 ที่', 'Selected location will be used in 1 place')}
+              {ct('รูปแผนที่นี้จะใช้สำหรับปักหมุดร้านค้าและสถานที่ต่างๆ ในชุมชน', 'This map will be used for pinning shops and locations in the community')}
             </p>
           </div>
 

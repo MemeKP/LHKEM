@@ -110,6 +110,19 @@ export class ShopsService {
     });
   }
 
+  async findByIdAdmin(shopId: string) {
+    if (!Types.ObjectId.isValid(shopId)) {
+      throw new BadRequestException('Invalid shop identifier');
+    }
+
+    const shop = await this.shopModel.findById(shopId);
+    if (!shop) {
+      throw new NotFoundException('Shop not found');
+    }
+
+    return shop;
+  }
+
 
   async findByCommunity(communityId: string) {
     if (!Types.ObjectId.isValid(communityId)) {

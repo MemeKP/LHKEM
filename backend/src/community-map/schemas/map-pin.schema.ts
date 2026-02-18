@@ -48,6 +48,12 @@ export class MapPin extends Document {
 
   @Prop()
   approvedAt?: Date;
+
+  @Prop()
+  createdAt?: Date;
+
+  @Prop()
+  updatedAt?: Date;
 }
 
 export const MapPinSchema = SchemaFactory.createForClass(MapPin);

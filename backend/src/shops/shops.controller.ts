@@ -54,6 +54,13 @@ export class ShopController {
     return this.shopService.findPublic(id);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.PLATFORM_ADMIN)
+  @Get(':id/admin')
+  findAdmin(@Param('id') id: string) {
+    return this.shopService.findByIdAdmin(id);
+  }
+
   @Get('/community/:id')
   findByCommunity(@Param('id') id: string) {
     return this.shopService.findByCommunity(id);
@@ -61,7 +68,7 @@ export class ShopController {
 
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.PLATFORM_ADMIN)
   @Get('/community/:id/pending')
   findPending(@Param('id') id: string) {
     return this.shopService.findPendingByCommunity(id);
@@ -69,14 +76,14 @@ export class ShopController {
 
   // shop.controller.ts
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.PLATFORM_ADMIN)
   @Put(':id/approve')
   approve(@Param('id') id: string) {
     return this.shopService.approveShop(id);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.PLATFORM_ADMIN)
   @Put(':id/reject')
   reject(@Param('id') id: string) {
     return this.shopService.rejectShop(id);
