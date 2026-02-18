@@ -4,7 +4,8 @@ import { IsEnum, IsOptional } from 'class-validator';
 import { EventStatus } from '../events.types';
 
 export class UpdateEventDto extends PartialType(CreateEventDto) {
-    @IsOptional()
-    @IsEnum(EventStatus)
-    status?: EventStatus;
+  @IsOptional()
+  @IsEnum(EventStatus)
+  /* Optional status field for event state transitions */
+  status?: EventStatus;
 }
