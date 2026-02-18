@@ -42,27 +42,29 @@ const ShopProfile = () => {
   const [selectedPinPosition, setSelectedPinPosition] = useState(null);
   const [pinStatusMessage, setPinStatusMessage] = useState('');
 
+  const mapShopToState = (shop) => ({
+    shopName: shop?.shopName || '',
+    description: shop?.description || '',
+    address: shop?.address || shop?.location?.address || '',
+    openTime: shop?.openTime || '',
+    closeTime: shop?.closeTime || '',
+    location: {
+      address: shop?.location?.address || shop?.address || '',
+      lat: shop?.location?.lat || 0,
+      lng: shop?.location?.lng || 0,
+    },
+    contact: shop?.contact || { phone: '', line: '', facebook: '' },
+    coverUrl: shop?.coverUrl || '',
+    iconUrl: shop?.iconUrl || '',
+    images: shop?.images || [],
+  });
+
   useEffect(() => {
     const fetchShop = async () => {
       try {
         const shop = await getMyShop();
         setShopId(shop._id);
-        setShopData({
-          shopName: shop.shopName || '',
-          description: shop.description || '',
-          address: shop.address || shop.location?.address || '',
-          openTime: shop.openTime || '',
-          closeTime: shop.closeTime || '',
-          location: {
-            address: shop.location?.address || shop.address || '',
-            lat: shop.location?.lat || 0,
-            lng: shop.location?.lng || 0,
-          },
-          contact: shop.contact || { phone: '', line: '', facebook: '' },
-          coverUrl: shop.coverUrl || '',
-          iconUrl: shop.iconUrl || '',
-          images: shop.images || []
-        });
+        setShopData(mapShopToState(shop));
         if (shop.communityId) {
           setCommunityId(shop.communityId);
         }
@@ -138,6 +140,13 @@ const ShopProfile = () => {
     }
   };
 
+  const clearTimeField = (field) => {
+    setShopData((prev) => ({
+      ...prev,
+      [field]: '',
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!shopId) {
@@ -148,7 +157,17 @@ const ShopProfile = () => {
     setMessage({ type: '', text: '' });
 
     try {
-      await updateShop(shopId, shopData);
+      const payload = {
+        ...shopData,
+        openTime: shopData.openTime?.trim() ? shopData.openTime : null,
+        closeTime: shopData.closeTime?.trim() ? shopData.closeTime : null,
+      };
+      await updateShop(shopId, payload);
+      const refreshed = await getMyShop();
+      setShopData(mapShopToState(refreshed));
+      if (refreshed.communityId) {
+        setCommunityId(refreshed.communityId);
+      }
       setMessage({ type: 'success', text: 'บันทึกข้อมูลสำเร็จ' });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
@@ -381,27 +400,53 @@ const ShopProfile = () => {
           <div className="animate-fadeIn" style={{animationDelay: '0.7s'}}>
             <label className="block text-sm font-semibold text-[#3D3D3D] mb-3">🕐 เวลาทำการ</label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="relative">
-                <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#9CA3AF]" />
-                <input
-                  type="time"
-                  name="openTime"
-                  value={shopData.openTime}
-                  onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
-                />
-                <p className="text-xs text-[#9CA3AF] mt-1">เวลาเปิด (เว้นว่างหากไม่แน่นอน)</p>
+              <div>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#9CA3AF]" />
+                  <input
+                    type="time"
+                    name="openTime"
+                    value={shopData.openTime}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
+                  />
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-xs text-[#9CA3AF]">เวลาเปิด (เว้นว่างหากไม่แน่นอน)</p>
+                  {shopData.openTime && (
+                    <button
+                      type="button"
+                      onClick={() => clearTimeField('openTime')}
+                      className="text-xs text-[#E07B39] hover:underline"
+                    >
+                      ล้าง
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="relative">
-                <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#9CA3AF]" />
-                <input
-                  type="time"
-                  name="closeTime"
-                  value={shopData.closeTime}
-                  onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
-                />
-                <p className="text-xs text-[#9CA3AF] mt-1">เวลาปิด (เว้นว่างหากไม่แน่นอน)</p>
+              <div>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#9CA3AF]" />
+                  <input
+                    type="time"
+                    name="closeTime"
+                    value={shopData.closeTime}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
+                  />
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-xs text-[#9CA3AF]">เวลาปิด (เว้นว่างหากไม่แน่นอน)</p>
+                  {shopData.closeTime && (
+                    <button
+                      type="button"
+                      onClick={() => clearTimeField('closeTime')}
+                      className="text-xs text-[#E07B39] hover:underline"
+                    >
+                      ล้าง
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>

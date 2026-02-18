@@ -250,6 +250,10 @@
       "cancelled": "Cancelled",
       "rejected": "Rejected"
     },
+    "pending": {
+      "inlineTitle": "Your shop is waiting for approval",
+      "inlineDescription": "You can keep editing your shop profile. Workshop tools will unlock once the team approves your shop."
+    },
     "price": "Price",
     "seats": "Seats",
     "duration": "Duration",

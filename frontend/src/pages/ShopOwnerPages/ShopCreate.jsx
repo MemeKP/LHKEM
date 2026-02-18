@@ -80,6 +80,13 @@ const ShopCreate = () => {
     }
   };
 
+  const clearTimeField = (field) => {
+    setShopData((prev) => ({
+      ...prev,
+      [field]: '',
+    }));
+  };
+
   const { data: communities = [] } = useQuery({
     queryKey: ['communities'],
     queryFn: async () => {
@@ -102,8 +109,8 @@ const ShopCreate = () => {
         shopName: shopData.name,
         description: shopData.description,
         address: shopData.address || shopData.location.address,
-        openTime: shopData.openTime,
-        closeTime: shopData.closeTime,
+        openTime: shopData.openTime?.trim() ? shopData.openTime : null,
+        closeTime: shopData.closeTime?.trim() ? shopData.closeTime : null,
         picture: shopData.coverUrl,
         contact: {
           line: shopData.contactLinks.line,
@@ -351,27 +358,53 @@ const ShopCreate = () => {
           <div className="animate-fadeIn" style={{animationDelay: '0.7s'}}>
             <label className="block text-sm font-semibold text-[#3D3D3D] mb-3">🕐 เวลาทำการ</label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="relative">
-                <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#9CA3AF]" />
-                <input
-                  type="time"
-                  name="openTime"
-                  value={shopData.openTime}
-                  onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
-                />
-                <p className="text-xs text-[#9CA3AF] mt-1">เวลาเปิด (ปล่อยว่างหากไม่แน่นอน)</p>
+              <div>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#9CA3AF]" />
+                  <input
+                    type="time"
+                    name="openTime"
+                    value={shopData.openTime}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
+                  />
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-xs text-[#9CA3AF]">เวลาเปิด (ปล่อยว่างหากไม่แน่นอน)</p>
+                  {shopData.openTime && (
+                    <button
+                      type="button"
+                      onClick={() => clearTimeField('openTime')}
+                      className="text-xs text-[#E07B39] hover:underline"
+                    >
+                      ล้าง
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="relative">
-                <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#9CA3AF]" />
-                <input
-                  type="time"
-                  name="closeTime"
-                  value={shopData.closeTime}
-                  onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
-                />
-                <p className="text-xs text-[#9CA3AF] mt-1">เวลาปิด (เว้นว่างหากไม่แน่นอน)</p>
+              <div>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#9CA3AF]" />
+                  <input
+                    type="time"
+                    name="closeTime"
+                    value={shopData.closeTime}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
+                  />
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-xs text-[#9CA3AF]">เวลาปิด (เว้นว่างหากไม่แน่นอน)</p>
+                  {shopData.closeTime && (
+                    <button
+                      type="button"
+                      onClick={() => clearTimeField('closeTime')}
+                      className="text-xs text-[#E07B39] hover:underline"
+                    >
+                      ล้าง
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
