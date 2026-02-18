@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Clock, Users, Calendar, Plus, X, AlertCircle, Image as ImageIcon, Camera } from 'lucide-react';
+import { useMyShop } from '../../hooks/useMyShop';
+import ShopPendingApprovalNotice from '../../components/ShopPendingApprovalNotice';
 
 const ShopWorkshopEdit = () => {
   const { id, slug } = useParams();
   const navigate = useNavigate();
+  const { data: shop, isLoading: shopLoading } = useMyShop();
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [loading, setLoading] = useState(true);
@@ -126,7 +129,7 @@ const ShopWorkshopEdit = () => {
     }
   };
 
-  if (loading) {
+  if (shopLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -134,6 +137,27 @@ const ShopWorkshopEdit = () => {
           <p className="mt-4 text-gray-600">กำลังโหลดข้อมูล...</p>
         </div>
       </div>
+    );
+  }
+
+  if (shop && shop.status !== 'ACTIVE') {
+    return (
+      <ShopPendingApprovalNotice
+        title="ร้านค้าของคุณยังรอการอนุมัติ"
+        description="ไม่สามารถแก้ไข Workshop ได้จนกว่าร้านค้าจะได้รับการอนุมัติจากแพลตฟอร์ม"
+        actions={[
+          {
+            label: 'กลับไปแดชบอร์ด',
+            onClick: () => navigate(`/${slug}/shop/dashboard`),
+            variant: 'secondary',
+          },
+          {
+            label: 'แก้ไขข้อมูลร้าน',
+            onClick: () => navigate(`/${slug}/shop/profile`),
+            variant: 'primary',
+          },
+        ]}
+      />
     );
   }
 

@@ -172,6 +172,9 @@ const PlatformShopApproval = () => {
 
   const contact = shop.contact || {};
   const location = shop.location || {};
+  const addressValue = shop.address || location.address || ct('ไม่ระบุที่อยู่', 'No address provided');
+  const openTimeDisplay = shop.openTime || ct('ไม่ระบุ', 'Not specified');
+  const closeTimeDisplay = shop.closeTime || ct('ไม่ระบุ', 'Not specified');
 
   return (
     <div className="min-h-screen bg-[#FAF8F3]">
@@ -237,9 +240,9 @@ const PlatformShopApproval = () => {
                 {shop.description || ct('ไม่มีคำอธิบายร้านค้า', 'No description provided.')}
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <InfoRow label={ct('เวลาเปิด', 'Open time')} value={shop.openTime} />
-                <InfoRow label={ct('เวลาปิด', 'Close time')} value={shop.closeTime} />
-                <InfoRow label={ct('ที่อยู่', 'Address')} value={location.address} />
+                <InfoRow label={ct('เวลาเปิด', 'Open time')} value={openTimeDisplay} />
+                <InfoRow label={ct('เวลาปิด', 'Close time')} value={closeTimeDisplay} />
+                <InfoRow label={ct('ที่อยู่', 'Address')} value={addressValue} />
                 <InfoRow label={ct('รหัสร้าน', 'Shop ID')} value={shop._id} />
               </div>
             </div>

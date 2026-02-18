@@ -22,10 +22,13 @@ export class Shop {
   description: string;
 
   @Prop()
-  openTime: string;
+  address?: string;
 
-  @Prop()
-  closeTime?: string;
+  @Prop({ type: String, default: null })
+  openTime?: string | null;
+
+  @Prop({ type: String, default: null })
+  closeTime?: string | null;
 
   @Prop({
     type: {

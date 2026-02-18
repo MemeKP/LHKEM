@@ -277,18 +277,21 @@ const Shops = () => {
                   </p>
 
                   {/* Location */}
-                  {shop.location?.address && (
+                  {(shop.address || shop.location?.address) && (
                     <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
                       <MapPin className="h-4 w-4" />
-                      <span>{shop.location.address}</span>
+                      <span>{shop.address || shop.location?.address}</span>
                     </div>
                   )}
 
                   {/* Opening Hours */}
-                  {shop.openTime && (
+                  {(shop.openTime || shop.closeTime) && (
                     <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
                       <Clock className="h-4 w-4" />
-                      <span>{shop.openTime}{shop.closeTime ? ` - ${shop.closeTime}` : ''}</span>
+                      <span>
+                        {shop.openTime || ct('ไม่ระบุ', 'N/A')}
+                        {shop.closeTime ? ` - ${shop.closeTime}` : ''}
+                      </span>
                     </div>
                   )}
 

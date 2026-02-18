@@ -38,11 +38,12 @@ export class ShopsService {
     const payload: Partial<Shop> = {
       shopName: dto.shopName,
       description: dto.description,
+      address: dto.address,
       picture: dto.picture ?? dto.coverUrl,
       coverUrl: dto.coverUrl,
       iconUrl: dto.iconUrl,
-      openTime: dto.openTime,
-      closeTime: dto.closeTime,
+      openTime: this.normalizeTime(dto.openTime),
+      closeTime: this.normalizeTime(dto.closeTime),
       location: this.normalizeLocation(dto.location),
       contact: dto.contact,
       images: dto.images,
@@ -83,20 +84,18 @@ export class ShopsService {
       throw new ForbiddenException();
     }
 
-    const updates: Partial<Shop> = {
-      shopName: dto.shopName ?? shop.shopName,
-      description: dto.description ?? shop.description,
-      picture: dto.picture ?? shop.picture,
-      coverUrl: dto.coverUrl ?? shop.coverUrl,
-      iconUrl: dto.iconUrl ?? shop.iconUrl,
-      openTime: dto.openTime ?? shop.openTime,
-      closeTime: dto.closeTime ?? shop.closeTime,
-      location: dto.location ? this.normalizeLocation(dto.location) : shop.location,
-      contact: dto.contact ?? shop.contact,
-      images: dto.images ?? shop.images,
-    };
+    if (dto.shopName !== undefined) shop.shopName = dto.shopName;
+    if (dto.description !== undefined) shop.description = dto.description;
+    if (dto.address !== undefined) shop.address = dto.address;
+    if (dto.picture !== undefined) shop.picture = dto.picture;
+    if (dto.coverUrl !== undefined) shop.coverUrl = dto.coverUrl;
+    if (dto.iconUrl !== undefined) shop.iconUrl = dto.iconUrl;
+    if (dto.openTime !== undefined) shop.openTime = this.normalizeTime(dto.openTime);
+    if (dto.closeTime !== undefined) shop.closeTime = this.normalizeTime(dto.closeTime);
+    if (dto.location !== undefined) shop.location = this.normalizeLocation(dto.location);
+    if (dto.contact !== undefined) shop.contact = dto.contact;
+    if (dto.images !== undefined) shop.images = dto.images;
 
-    Object.assign(shop, updates);
     return shop.save();
   }
 
@@ -196,5 +195,13 @@ async rejectShop(shopId: string) {
       lat,
       lng,
     };
+  }
+
+  private normalizeTime(value?: string | null) {
+    if (value === undefined || value === null) {
+      return null;
+    }
+    const trimmed = value.trim();
+    return trimmed === '' ? null : trimmed;
   }
 }

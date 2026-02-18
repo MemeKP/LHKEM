@@ -19,6 +19,7 @@ const ShopProfile = () => {
   const [shopData, setShopData] = useState({
     shopName: '',
     description: '',
+    address: '',
     openTime: '',
     closeTime: '',
     location: {
@@ -49,9 +50,14 @@ const ShopProfile = () => {
         setShopData({
           shopName: shop.shopName || '',
           description: shop.description || '',
+          address: shop.address || shop.location?.address || '',
           openTime: shop.openTime || '',
           closeTime: shop.closeTime || '',
-          location: shop.location || { address: '', lat: 0, lng: 0 },
+          location: {
+            address: shop.location?.address || shop.address || '',
+            lat: shop.location?.lat || 0,
+            lng: shop.location?.lng || 0,
+          },
           contact: shop.contact || { phone: '', line: '', facebook: '' },
           coverUrl: shop.coverUrl || '',
           iconUrl: shop.iconUrl || '',
@@ -103,6 +109,18 @@ const ShopProfile = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     
+    if (name === 'address') {
+      setShopData(prev => ({
+        ...prev,
+        address: value,
+        location: {
+          ...prev.location,
+          address: value,
+        },
+      }));
+      return;
+    }
+
     if (name.includes('.')) {
       const [parent, child] = name.split('.');
       setShopData(prev => ({
@@ -274,6 +292,21 @@ const ShopProfile = () => {
             <p className="text-xs text-[#9CA3AF] mt-1">แนะนำให้เขียนอย่างน้อย 100 ตัวอักษร</p>
           </div>
 
+          {/* ที่อยู่ */}
+          <div className="animate-fadeIn" style={{animationDelay: '0.45s'}}>
+            <label className="block text-sm font-semibold text-[#3D3D3D] mb-2">📍 ที่อยู่ร้าน</label>
+            <textarea
+              name="address"
+              value={shopData.address}
+              onChange={handleChange}
+              rows="3"
+              placeholder="เช่น บ้านเลขที่ ถนน ตำบล อำเภอ จังหวัด"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
+              required
+            />
+            <p className="text-xs text-[#9CA3AF] mt-1">ข้อมูลนี้จะแสดงในหน้าร้านค้าและใช้กับหมุดบนแผนที่</p>
+          </div>
+
           {/* ข้อมูลติดต่อ */}
           <div className="animate-fadeIn" style={{animationDelay: '0.5s'}}>
             <label className="block text-sm font-semibold text-[#3D3D3D] mb-3">📞 ข้อมูลติดต่อ</label>
@@ -347,16 +380,29 @@ const ShopProfile = () => {
           {/* เวลาทำการ */}
           <div className="animate-fadeIn" style={{animationDelay: '0.7s'}}>
             <label className="block text-sm font-semibold text-[#3D3D3D] mb-3">🕐 เวลาทำการ</label>
-            <div className="relative">
-              <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#9CA3AF]" />
-              <input
-                type="text"
-                name="openTime"
-                value={shopData.openTime}
-                onChange={handleChange}
-                placeholder="เช่น 09:00 - 17:00"
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="relative">
+                <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#9CA3AF]" />
+                <input
+                  type="time"
+                  name="openTime"
+                  value={shopData.openTime}
+                  onChange={handleChange}
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
+                />
+                <p className="text-xs text-[#9CA3AF] mt-1">เวลาเปิด (เว้นว่างหากไม่แน่นอน)</p>
+              </div>
+              <div className="relative">
+                <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#9CA3AF]" />
+                <input
+                  type="time"
+                  name="closeTime"
+                  value={shopData.closeTime}
+                  onChange={handleChange}
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
+                />
+                <p className="text-xs text-[#9CA3AF] mt-1">เวลาปิด (เว้นว่างหากไม่แน่นอน)</p>
+              </div>
             </div>
           </div>
 

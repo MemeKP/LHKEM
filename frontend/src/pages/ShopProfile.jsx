@@ -136,6 +136,12 @@ const ShopProfile = () => {
   }
 
   const displayShop = shop || mockShop;
+  const shopAddress = displayShop.address || displayShop.location?.address;
+  const formattedHours = displayShop.openTime
+    ? displayShop.closeTime
+      ? `${displayShop.openTime} - ${displayShop.closeTime}`
+      : displayShop.openTime
+    : ct('ไม่ระบุ', 'Not specified');
 
   return (
     <div className="min-h-screen bg-[#fdf7ef]">
@@ -201,7 +207,7 @@ const ShopProfile = () => {
                       {ct('ที่อยู่', 'Address')}
                     </p>
                     <p className="text-sm text-[#6B6B6B]">
-                      {displayShop.location?.address || ct('ไม่ระบุที่อยู่', 'No address provided')}
+                      {shopAddress || ct('ไม่ระบุที่อยู่', 'No address provided')}
                     </p>
                   </div>
                 </div>
@@ -214,7 +220,7 @@ const ShopProfile = () => {
                       {ct('เวลาทำการ', 'Opening Hours')}
                     </p>
                     <p className="text-sm text-[#6B6B6B]">
-                      {displayShop.openTime || '09:00'}{displayShop.closeTime ? ` - ${displayShop.closeTime}` : ' - 17:00'}
+                      {formattedHours}
                     </p>
                   </div>
                 </div>
