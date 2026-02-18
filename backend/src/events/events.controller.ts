@@ -9,10 +9,11 @@ export class EventsController {
 
   @Post(':community_id/events')
   create(
-    @Param('community_id')community_id: string, 
+    @Param('community_id') community_id: string, 
     @Body() createEventDto: CreateEventDto,
     @Req() req
-) {
+  ) {
+    /* req.user.id and req.user.role are passed from auth middleware */
     return this.eventsService.create(createEventDto, req.user.id, req.user.role, community_id);
   }
 
@@ -28,7 +29,9 @@ export class EventsController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateEventDto: UpdateEventDto) {
-    return this.eventsService.update(+id, updateEventDto);
+    /** * REMOVED: +id conversion. MongoDB ObjectIds are strings. 
+     */
+    return this.eventsService.update(id, updateEventDto);
   }
 
   @Delete(':id')
