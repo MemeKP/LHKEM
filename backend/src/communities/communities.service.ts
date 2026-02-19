@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateCommunityDto } from './dto/create-community.dto';
 import { UpdateCommunityDto } from './dto/update-community.dto';
 import { Community, CommunityDocument } from './schemas/community.schema';
@@ -12,6 +12,7 @@ import { Workshopregistration } from 'src/workshopregistrations/schemas/workshop
 import { CommunityAdmin } from 'src/community-admin/schemas/community-admin.schema';
 import { LocationDto } from './dto/location.dto';
 import { User } from 'src/users/schemas/users.schema';
+import { UserRole } from 'src/common/enums/user-role.enum';
 
 @Injectable()
 export class CommunitiesService {
@@ -226,9 +227,24 @@ export class CommunitiesService {
   async update(
     id: string,
     userId: string,
+    userRole: UserRole,
     updateCommunityDto: UpdateCommunityDto,
     files: Array<Express.Multer.File>
   ) {
+
+    if (userRole === UserRole.ADMIN) {
+      const isAdmin = await this.communityadminModel.findOne({
+        community: new Types.ObjectId(id),
+        user: new Types.ObjectId(userId),
+      })
+
+      if (!isAdmin) {
+        throw new ForbiddenException('You are not an admin of this community')
+      }
+
+      // ถ้าไม่อยากให้ community admin มีสิทธ์แก้ไข admin lists
+      // delete updateCommunityDto.admins
+    }
 
     let finalImages: string[] = [];
 
@@ -253,6 +269,8 @@ export class CommunitiesService {
     const updateData: any = { ...updateCommunityDto };
     delete updateData.admins;
     delete updateData.existing_images;
+
+    // userRole === UserRole.PLATFORM_ADMIN && ถ้าอยากให้มีแค่ platform admin ที่แก้ admin lists ได้
     if (updateCommunityDto.admins !== undefined) {
       let adminsList: any = updateCommunityDto.admins;
       if (typeof adminsList === 'string') {

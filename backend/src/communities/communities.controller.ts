@@ -11,9 +11,6 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { randomBytes } from 'crypto';
 import { ParseFilePipe } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { CommunityAdmin } from 'src/community-admin/schemas/community-admin.schema';
-import { Model } from 'mongoose';
 
 @Controller('api/communities')
 export class CommunitiesController {
@@ -125,7 +122,7 @@ export class CommunitiesController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.PLATFORM_ADMIN)
+  @Roles(UserRole.PLATFORM_ADMIN, UserRole.ADMIN)
   @UseInterceptors(
     FilesInterceptor('files', 10, {
       storage: diskStorage({
@@ -168,7 +165,8 @@ export class CommunitiesController {
       updateCommunityDto.existing_images = [updateCommunityDto.existing_images];
     }
     const mongoId = req.user.userMongoId || req.user._id;
-    return this.communitiesService.update(id, mongoId, updateCommunityDto, files);
+    const userRole = req.user.role;
+    return this.communitiesService.update(id, mongoId, userRole, updateCommunityDto, files);
   }
 
   @Delete(':id/admins/:adminId')

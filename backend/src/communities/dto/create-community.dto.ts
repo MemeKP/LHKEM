@@ -30,10 +30,6 @@ export class CreateCommunityDto {
     @IsString()
     history_en?: string;
 
-    // @IsOptional()
-    // @ValidateNested()
-    // @Type(() => HeroSectionDto)
-    // hero_section?: HeroSectionDto;
     @Transform(({ value }) =>
         typeof value === 'string' ? JSON.parse(value) : value
     )
@@ -56,9 +52,6 @@ export class CreateCommunityDto {
     @IsArray()
     @IsString({ each: true })
     videos?: string[];
-
-    // @IsOptional()
-    // admins?: string[];
 
     @Transform(({ value }) =>
         typeof value === 'string' ? JSON.parse(value) : value

@@ -8,7 +8,7 @@ import Swal from 'sweetalert2'
 
 const fetchCommunityDetail = async (id) => {
   const res = await api.get(`/api/platform-admin/communities/${id}/for-update`);
-  return res.data;
+  return res.data; 
 };
 
 const updateCommunity = async (id, formData, newImages, existingImages) => {
@@ -172,7 +172,7 @@ const PlatformEditCommunity = () => {
             setExistingMapUrl(res.data.map_image);
           }
         } catch (error) {
-          console.log('No existing map found');
+          console.log('No existing map found', error);
         }
       };
       fetchCommunityMap();

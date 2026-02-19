@@ -41,7 +41,7 @@ export class PlatformAdminController {
 
   @Get('communities/:id/for-update')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.PLATFORM_ADMIN, UserRole.PLATFORM_ADMIN)
+  @Roles(UserRole.PLATFORM_ADMIN)
   async findOneForUpdate(@Param('id') id: string) {
     return this.platformAdminService.getCommunityForUpdate(id);
   }
