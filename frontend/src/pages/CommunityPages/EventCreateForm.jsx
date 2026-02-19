@@ -5,6 +5,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
 import api from '../../services/api';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import Swal from 'sweetalert2';
 
 /**
  * Event Create Form - สร้าง Event ใหม่สำหรับชุมชน
@@ -36,7 +37,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
  * - additional_info - ข้อมูลเพิ่มเติม
  */
 const createEventAPI = async (payload) => {
-  const response = await api.post('/api/events', payload);
+  const response = await api.post('/api/events', payload, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  })
   return response.data;
 };
 
@@ -47,10 +52,10 @@ const useCreateEvent = () => {
     mutationFn: createEventAPI,
     onSuccess: (data) => {
       console.log("Event Created for Community:", data.community_id);
-      
+
       if (data?.community_id) {
-        queryClient.invalidateQueries({ queryKey: ['events', 'pending'] }); 
-        queryClient.invalidateQueries({ queryKey: ['events', data.community_id] }); 
+        queryClient.invalidateQueries({ queryKey: ['events', 'pending'] });
+        queryClient.invalidateQueries({ queryKey: ['events', data.community_id] });
       }
     },
   });
@@ -63,6 +68,7 @@ const EventCreateForm = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
     titleEn: '',
@@ -77,10 +83,12 @@ const EventCreateForm = () => {
     target_audience: '',
     cost_type: 'free', // 'free' or 'paid'
     deposit_amount: '',
-    contact_phone: '',
-    contact_line: '',
-    contact_facebook: '',
-    coordinator_name: '',
+    contact: {
+      contact_phone: '',
+      contact_line: '',
+      contact_facebook: '',
+      coordinator_name: '',
+    },
     additional_info: '',
     seat_limit: '',
     status: 'OPEN',
@@ -96,61 +104,118 @@ const EventCreateForm = () => {
     }));
   };
 
+
   const handleSubmit = async (e) => {
-    e.preventDefault();  
+    e.preventDefault();
+
     if (!formData.event_date || !formData.start_time || !formData.end_time) {
-      alert("กรุณาระบุวันและเวลา");
+      Swal.fire({
+        icon: 'warning',
+        title: 'ข้อมูลไม่ครบถ้วน',
+        text: 'กรุณาระบุวันและเวลา',
+        confirmButtonColor: '#3085d6',
+      });
       return;
     }
+
+    const startDateTime = new Date(`${formData.event_date}T${formData.start_time}`);
+    const endDateTime = new Date(`${formData.event_date}T${formData.end_time}`);
+
+    if (endDateTime < startDateTime) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'เวลาไม่ถูกต้อง',
+        text: 'เวลาสิ้นสุดกิจกรรม ต้องอยู่หลังเวลาเริ่มกิจกรรม',
+        confirmButtonColor: '#3085d6',
+      });
+      return;
+    }
+
     try {
-      // Combine date and time
-      const startDateTime = new Date(`${formData.event_date}T${formData.start_time}`);
-      const endDateTime = new Date(`${formData.event_date}T${formData.end_time}`);
+      Swal.fire({
+        title: 'กำลังสร้างกิจกรรม...',
+        text: 'กรุณารอสักครู่ ระบบกำลังอัปโหลดข้อมูลและรูปภาพ',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
 
-      const payload = {
-        title: formData.title,
-        title_en: formData.titleEn || formData.title,
-        description: formData.description,
-        description_en: formData.descriptionEn || formData.description,
-        seat_limit: parseInt(formData.seat_limit) || 1,
-        deposit_amount: formData.cost_type === 'free' ? 0 : (parseFloat(formData.deposit_amount) || 0),
-        start_at: startDateTime.toISOString(),
-        end_at: endDateTime.toISOString(),
-        location: {
-          full_address: formData.location || "ไม่ระบุ",
-          province: "Chiang Mai",
-          coordinates: {
-            lat: 18.7883,
-            lng: 98.9853
-          }
-        },
-        images: "https://placehold.co/600x400?text=Event+Image",
-        status: formData.status,
-        is_featured: formData.is_featured,
-        is_pinned: formData.is_pinned,
+      const submitData = new FormData();
+      if (imageFile) {
+        submitData.append('image', imageFile);
+      }
+
+      submitData.append('title', formData.title);
+      submitData.append('title_en', formData.titleEn || formData.title);
+      submitData.append('description', formData.description);
+      submitData.append('description_en', formData.descriptionEn || formData.description);
+      submitData.append('seat_limit', parseInt(formData.seat_limit) || 1);
+      submitData.append('deposit_amount', formData.cost_type === 'free' ? 0 : (parseFloat(formData.deposit_amount) || 0));
+      submitData.append('start_at', startDateTime.toISOString());
+      submitData.append('end_at', endDateTime.toISOString());
+      submitData.append('status', formData.status);
+      submitData.append('is_featured', formData.is_featured);
+      submitData.append('is_pinned', formData.is_pinned);
+      submitData.append('event_type', formData.event_type || '');
+      submitData.append('target_audience', formData.target_audience || '');
+
+      submitData.append(
+        'workshops',
+        JSON.stringify(formData.workshops || [])
+      );
+
+      const contactData = {
+        phone: formData.contact_phone,
+        line: formData.contact_line,
+        facebook: formData.contact_facebook,
+        coordinator_name: formData.coordinator_name,
       };
-      console.log("Sending Payload:", payload); 
 
-      await createEvent(payload);
-      alert('สร้าง Event สำเร็จ!');
+      submitData.append('contact', JSON.stringify(contactData));
+
+      submitData.append('additional_info', formData.additional_info || '');
+
+
+      const locationData = {
+        full_address: formData.location || "ไม่ระบุ",
+      };
+      submitData.append('location', JSON.stringify(locationData));
+
+      await createEvent(submitData);
+
+      await Swal.fire({
+        icon: 'success',
+        title: 'สำเร็จ!',
+        text: 'สร้างกิจกรรมและอัปโหลดรูปสำเร็จแล้ว',
+        timer: 2000,
+        showConfirmButton: false
+      });
+
       navigate('/community-admin/dashboard');
+
     } catch (error) {
       console.error('Failed to create event:', error);
+
       const msg = error?.response?.data?.message;
-      alert(`เกิดข้อผิดพลาด: ${Array.isArray(msg) ? msg.join('\n') : msg}`);
+      const errorMessage = Array.isArray(msg) ? msg.join('\n') : (msg || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+
+      Swal.fire({
+        icon: 'error',
+        title: 'สร้างกิจกรรมไม่สำเร็จ',
+        text: errorMessage,
+        confirmButtonColor: '#d33',
+      });
     }
   };
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-[#F5EFE7] py-8">

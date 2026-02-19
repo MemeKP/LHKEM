@@ -258,7 +258,7 @@ const EventList = () => {
                         ? 'bg-gray-100 text-gray-800'
                         : 'bg-red-100 text-red-800'
                     }`}>
-                      {event.status === 'OPEN' ? 'เปิดรับสมัคร' : event.status === 'CLOSED' ? 'ปิดรับสมัคร' : 'ยกเลิก'}
+                      {event.status === 'OPEN' ? 'เปิดรับสมัคร' : event.status === 'CLOSED' ? 'ปิดรับสมัคร' : event.status === 'PENDING' ? 'รออนุมัติ' : 'ยกเลิก'}
                     </span>
                   </div>
                 </div>

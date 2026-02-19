@@ -7,4 +7,6 @@ export class UpdateEventDto extends PartialType(CreateEventDto) {
     @IsOptional()
     @IsEnum(EventStatus)
     status?: EventStatus;
+
+    existing_images?: string[] | string
 }

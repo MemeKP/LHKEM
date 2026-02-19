@@ -20,8 +20,37 @@ export class EventsService {
     private readonly eventModel: Model<EventDocument>,
   ) { }
 
-  async create(createEventDto: CreateEventDto, user_id: string, role: string, community_id: string): Promise<EventSchema> {
-    if (createEventDto.end_at < createEventDto.start_at) {
+  // async create(createEventDto: CreateEventDto, user_id: string, role: string, community_id: string): Promise<EventSchema> {
+  //   if (createEventDto.end_at < createEventDto.start_at) {
+  //     throw new BadRequestException('End date must be after start date');
+  //   }
+
+  //   const newEvent = new this.eventModel({
+  //     ...createEventDto,
+  //     community_id: new Types.ObjectId(community_id),
+  //     created_by: new Types.ObjectId(user_id),
+  //     created_by_role: role,
+  //     title: createEventDto.title,
+  //     images: createEventDto.images,
+  //     description: createEventDto.description,
+  //     location: createEventDto.location,
+  //     start_at: new Date(createEventDto.start_at),
+  //     end_at: new Date(createEventDto.end_at),
+  //     seat_limit: createEventDto.seat_limit,
+  //     deposit_amount: createEventDto.deposit_amount ?? 0,
+  //     status: EventStatus.OPEN,
+  //   })
+  //   return newEvent.save();
+  // }
+
+  async create(
+    createEventDto: CreateEventDto,
+    user_id: string,
+    role: string,
+    community_id: string
+  ): Promise<EventDocument> {
+
+    if (new Date(createEventDto.end_at) < new Date(createEventDto.start_at)) {
       throw new BadRequestException('End date must be after start date');
     }
 
@@ -30,18 +59,18 @@ export class EventsService {
       community_id: new Types.ObjectId(community_id),
       created_by: new Types.ObjectId(user_id),
       created_by_role: role,
-      title: createEventDto.title,
-      images: createEventDto.images,
-      description: createEventDto.description,
-      location: createEventDto.location,
+
       start_at: new Date(createEventDto.start_at),
       end_at: new Date(createEventDto.end_at),
-      seat_limit: createEventDto.seat_limit,
+
       deposit_amount: createEventDto.deposit_amount ?? 0,
-      status: EventStatus.OPEN,
-    })
+      images: createEventDto.images ?? [],
+      status: createEventDto.status ?? EventStatus.PENDING,
+    });
+
     return newEvent.save();
   }
+
 
   async findAll(): Promise<EventSchema[]> {
     return this.eventModel.find();
@@ -58,18 +87,21 @@ export class EventsService {
     const objectIds = communityIds.map(id => new Types.ObjectId(id));
     return this.eventModel
       .find({
-        community_id: { $in: objectIds } 
+        community_id: { $in: objectIds }
       })
-      .sort({ created_at: -1 }) 
-      .populate('created_by', 'firstname lastname email') 
+      .sort({ created_at: -1 })
+      .populate('created_by', 'firstname lastname email')
       .exec();
   }
 
   async findPending(communityId: string) {
     return this.eventModel.find({
-      community_id: communityId,
-      status: 'PENDING' // 'DRAFT'
-    }).exec();
+      // community_id: communityId,
+      community_id: new Types.ObjectId(communityId),
+      status: 'PENDING'
+    })
+      .sort({ created_at: 1 })
+      .exec();
   }
 
   async findOne(id: string): Promise<EventSchema> {
@@ -80,12 +112,32 @@ export class EventsService {
     return event;
   }
 
-  async update(id: number, updateEventDto: UpdateEventDto): Promise<EventSchema> {
+  async update(
+    id: string,
+    updateEventDto: UpdateEventDto,
+    image?: Express.Multer.File,
+  ): Promise<EventSchema> {
+
     if (updateEventDto.start_at && updateEventDto.end_at) {
       if (updateEventDto.end_at < updateEventDto.start_at) {
         throw new BadRequestException('End date must be after start date');
       }
     }
+
+    if (updateEventDto.location && typeof updateEventDto.location === 'string') {
+      updateEventDto.location = JSON.parse(updateEventDto.location);
+    }
+
+    if (image) {
+      const existingEvent = await this.eventModel.findById(id);
+
+      updateEventDto.existing_images = [
+        ...(existingEvent?.images || []),
+        `/uploads/events/${image.filename}`,
+      ];
+    }
+
+
     const updatedEvent = await this.eventModel.findByIdAndUpdate(
       id,
       { $set: updateEventDto },
@@ -95,6 +147,7 @@ export class EventsService {
     if (!updatedEvent) {
       throw new NotFoundException(`Event #${id} not found`);
     }
+
     return updatedEvent;
   }
 

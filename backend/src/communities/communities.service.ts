@@ -208,6 +208,21 @@ export class CommunitiesService {
     return community;
   }
 
+  async findMyCommunity(userId: string) {
+    const adminRecord = await this.communityadminModel.findOne({
+      user: new Types.ObjectId(userId)
+    }).exec();
+    if (!adminRecord) {
+      throw new NotFoundException('You are not in any community administrator.');
+    }
+    const community = await this.communityModel.findById(adminRecord.community).exec();
+    if (!community) {
+      throw new NotFoundException('Community not found');
+    }
+
+    return community;
+  }
+
   async update(
     id: string,
     userId: string,

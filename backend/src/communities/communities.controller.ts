@@ -11,10 +11,15 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { randomBytes } from 'crypto';
 import { ParseFilePipe } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { CommunityAdmin } from 'src/community-admin/schemas/community-admin.schema';
+import { Model } from 'mongoose';
 
 @Controller('api/communities')
 export class CommunitiesController {
-  constructor(private readonly communitiesService: CommunitiesService) { }
+  constructor(
+    private readonly communitiesService: CommunitiesService,
+  ) { }
 
   // @Post()
   // @UseGuards(JwtAuthGuard, RolesGuard)
@@ -58,6 +63,13 @@ export class CommunitiesController {
       createCommunityDto.admins = JSON.parse(createCommunityDto.admins);
     }
     return this.communitiesService.create(req.user.userMongoId, createCommunityDto);
+  }
+
+  @Get('my-community')
+  @UseGuards(JwtAuthGuard)
+  async findMyCommunity(@Req() req: any) {
+    const userId = req.user.userMongoId || req.user._id; 
+    return this.communitiesService.findMyCommunity(userId);
   }
 
   @Get()
@@ -106,7 +118,7 @@ export class CommunitiesController {
   async addAdminToCommunity(
     @Param('id') id: string,
     @Body('email') email: string,
-    @Req() req: any, 
+    @Req() req: any,
   ) {
     return this.communitiesService.addAdminByEmail(id, email, req.user.userId);
   }
@@ -115,9 +127,9 @@ export class CommunitiesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.PLATFORM_ADMIN)
   @UseInterceptors(
-    FilesInterceptor('files', 10, { 
+    FilesInterceptor('files', 10, {
       storage: diskStorage({
-        destination: './uploads/communities', 
+        destination: './uploads/communities',
         filename: (req, file, cb) => {
           const randomName = randomBytes(16).toString('hex');
           cb(null, `${randomName}${extname(file.originalname)}`);
@@ -128,24 +140,24 @@ export class CommunitiesController {
   async update(
     @Param('id') id: string,
     @Body() updateCommunityDto: UpdateCommunityDto,
-    @UploadedFiles() files: Array<Express.Multer.File>, 
+    @UploadedFiles() files: Array<Express.Multer.File>,
     @Req() req,
   ) {
-  
+
     if (typeof updateCommunityDto.location === 'string') {
-        updateCommunityDto.location = JSON.parse(updateCommunityDto.location);
+      updateCommunityDto.location = JSON.parse(updateCommunityDto.location);
     }
 
     if (typeof updateCommunityDto.contact_info === 'string') {
-        updateCommunityDto.contact_info = JSON.parse(updateCommunityDto.contact_info);
+      updateCommunityDto.contact_info = JSON.parse(updateCommunityDto.contact_info);
     }
 
     if (typeof updateCommunityDto.hero_section === 'string') {
-        updateCommunityDto.hero_section = JSON.parse(updateCommunityDto.hero_section);
+      updateCommunityDto.hero_section = JSON.parse(updateCommunityDto.hero_section);
     }
 
     if (typeof updateCommunityDto.admins === 'string') {
-        updateCommunityDto.admins = JSON.parse(updateCommunityDto.admins);
+      updateCommunityDto.admins = JSON.parse(updateCommunityDto.admins);
     }
 
     // if (typeof updateCommunityDto.admin_permissions === 'string') {
@@ -153,7 +165,7 @@ export class CommunitiesController {
     // }
 
     if (updateCommunityDto.existing_images && typeof updateCommunityDto.existing_images === 'string') {
-       updateCommunityDto.existing_images = [updateCommunityDto.existing_images];
+      updateCommunityDto.existing_images = [updateCommunityDto.existing_images];
     }
     const mongoId = req.user.userMongoId || req.user._id;
     return this.communitiesService.update(id, mongoId, updateCommunityDto, files);
@@ -163,8 +175,8 @@ export class CommunitiesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.PLATFORM_ADMIN)
   async removeAdminFromCommunity(
-    @Param('id') community_id: string, 
-    @Param('adminId') adminId: string, 
+    @Param('id') community_id: string,
+    @Param('adminId') adminId: string,
   ) {
     return this.communitiesService.removeAdmin(community_id, adminId);
   }
@@ -174,9 +186,9 @@ export class CommunitiesController {
     return this.communitiesService.remove(id);
   }
 
-  @Patch(':id/close') 
+  @Patch(':id/close')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.PLATFORM_ADMIN) 
+  @Roles(UserRole.PLATFORM_ADMIN)
   async closeCommunity(@Param('id') id: string) {
     return this.communitiesService.close(id);
   }

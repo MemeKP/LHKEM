@@ -9,17 +9,22 @@ import api from '../services/api';
  * Includes Navbar with Community Admin dropdown and Footer
  */
 
-const fetchDefaultCommunity = async () => {
-  // TODO: Get community from user's profile or default community
-  // For now, fetch the first community or a default one
-  const res = await api.get('/api/communities');
-  return res.data[0] || { slug: 'loeng-him-kaw', name: 'โหล่งฮิมคาว' };
-};
+// const fetchDefaultCommunity = async () => {
+//   // TODO: Get community from user's profile or default community
+//   // For now, fetch the first community or a default one
+//   const res = await api.get('/api/communities');
+//   return res.data[0] || { slug: 'loeng-him-kaw', name: 'โหล่งฮิมคาว' };
+// };
+
+const fetchMyCommunity = async () => {
+  const res = await api.get('/api/communities/my-community')
+  return res.data
+}
 
 const AdminLayoutWithNav = () => {
   const { data: community, isLoading, isError } = useQuery({
     queryKey: ['admin-community'],
-    queryFn: fetchDefaultCommunity,
+    queryFn: fetchMyCommunity,
   });
 
   if (isLoading) {
