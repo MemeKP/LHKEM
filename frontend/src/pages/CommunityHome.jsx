@@ -92,6 +92,7 @@ const CommunityHome = () => {
     queryFn: () => fetchCommunityMap(community._id),
     enabled: !!community._id,
     staleTime: 1000 * 60 * 5,
+    retry: false,
   });
 
   const stats = [
@@ -324,10 +325,7 @@ const CommunityHome = () => {
               ) : communityMap?.map_image ? (
                 <div
                   className="w-full h-full bg-cover bg-center"
-                  // style={{ backgroundImage: `url(${communityMap.map_image})` }}
-                  style={{
-                    backgroundImage: `url(${import.meta.env.VITE_API_URL}${communityMap.map_image})`
-                  }}
+                  style={{ backgroundImage: `url(${communityMap.map_image})` }}
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-gray-100 via-gray-50 to-white flex items-center justify-center">
