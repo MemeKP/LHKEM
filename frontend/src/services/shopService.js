@@ -22,6 +22,12 @@ export const getShopsByCommunity = async (communityId) => {
   return response.data;
 };
 
+// Get all shops by community ID (admin view)
+export const getAdminShopsByCommunity = async (communityId) => {
+  const response = await api.get(`/api/shops/community/${communityId}/all`);
+  return response.data;
+};
+
 // Create new shop
 export const createShop = async (shopData) => {
   const response = await api.post('/api/shops', shopData);

@@ -66,6 +66,13 @@ export class ShopController {
     return this.shopService.findByCommunity(id);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.PLATFORM_ADMIN)
+  @Get('/community/:id/all')
+  findAllForCommunity(@Param('id') id: string) {
+    return this.shopService.findAllByCommunity(id);
+  }
+
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.PLATFORM_ADMIN)
