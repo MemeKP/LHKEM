@@ -34,11 +34,17 @@ export class Event {
     @Prop({ required: true, trim: true })
     title: string;
 
+    @Prop({ trim: true })
+    title_en: string;
+
     @Prop()
-    images?: string;
+    images?: string[];
 
     @Prop({ required: true })
     description: string;
+
+    @Prop()
+    description_en: string;
 
     @Prop({
         type: {
@@ -60,6 +66,37 @@ export class Event {
         };
     };
 
+    @Prop({
+        type: {
+            phone: String,
+            line: String,
+            facebook: String,
+            coordinator_name: String,
+        },
+        _id: false,
+    })
+    contact: {
+        phone: string;
+        line: string;
+        facebook: string;
+        coordinator_name: string;
+    };
+
+
+    @Prop()
+    event_type: string;
+
+    @Prop({ type: [String], default: [] })
+    workshops: string[];
+
+    @Prop()
+    target_audience: string;
+
+
+    @Prop()
+    additional_info: string;
+
+
     @Prop({ required: true })
     start_at: Date;
 
@@ -80,12 +117,6 @@ export class Event {
     })
     status: EventStatus;
 
-    @Prop({ type: Date })
-    created_at: Date;
-
-    @Prop({ type: Date })
-    updated_at: Date;
-
     @Prop({ default: false, index: true })
     is_featured: boolean;
 
@@ -93,7 +124,7 @@ export class Event {
     is_pinned: boolean;
 
     @Prop([{
-        user: { type: Types.ObjectId, ref: 'User' }, 
+        user: { type: Types.ObjectId, ref: 'User' },
         joined_at: { type: Date, default: Date.now }, // วันที่กดเข้าร่วม
         status: { type: String, default: 'CONFIRMED' } // เผื่อไว้ (เช่น CANCELLED)
     }])

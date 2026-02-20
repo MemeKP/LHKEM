@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import {
   IsString,
   IsNotEmpty,
@@ -14,9 +14,6 @@ import { LocationDto } from 'src/communities/dto/location.dto';
 import { EventStatus } from '../events.types';
 
 export class CreateEventDto {
-  // @IsMongoId()
-  // community_id: string;
-
   @IsString()
   @IsNotEmpty()
   title: string;
@@ -27,7 +24,7 @@ export class CreateEventDto {
 
   @IsOptional()
   @IsString()
-  images?: string;
+  images?: string[];
 
   @IsString()
   @IsNotEmpty()
@@ -37,6 +34,16 @@ export class CreateEventDto {
   @IsNotEmpty()
   description_en: string;
 
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch (e) {
+        return value; 
+      }
+    }
+    return value;
+  })
   @ValidateNested()
   @Type(() => LocationDto)
   location: LocationDto;
@@ -47,11 +54,13 @@ export class CreateEventDto {
   @IsDateString()
   end_at: string;
 
+  @Type(() => Number)
   @IsNumber()
   @Min(1)
   seat_limit: number;
 
   @IsOptional()
+  @Type(() => Number) 
   @IsNumber()
   @Min(0)
   deposit_amount?: number;
@@ -60,11 +69,12 @@ export class CreateEventDto {
   status: EventStatus;
 
   @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true || value === '1')
   @IsBoolean()
   is_featured?: boolean;
 
   @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true || value === '1')
   @IsBoolean()
   is_pinned?: boolean;
-
 }

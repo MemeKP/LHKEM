@@ -110,6 +110,7 @@ const EventDetailPage = () => {
   const registeredCount = participants?.length || 0;
   const seatLimit = event.seat_limit || 0;
   const remainingSeats = seatLimit - registeredCount;
+  const API_URL = import.meta.env.VITE_API_URL
 
   return (
     <div className="min-h-screen bg-[#F5EFE7] py-8">
@@ -169,7 +170,7 @@ const EventDetailPage = () => {
               <div className="aspect-video bg-gradient-to-br from-orange-100 to-orange-200">
                 {event.images && event.images.length > 0 ? (
                   <img
-                    src={event.images[0]}
+                    src={`${API_URL}${event.images}`} 
                     alt={event.title}
                     className="w-full h-full object-cover"
                   />

@@ -1,88 +1,209 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, MapPin, Image as ImageIcon, Plus, X } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
+import api from '../../services/api';
+import { useQuery } from '@tanstack/react-query';
+import Swal from 'sweetalert2';
 
-/**
- * Admin Community Settings - แก้ไขข้อมูลชุมชน
- * ตาม Figma: Admin-edit community info.png
- * 
- * TODO: Backend APIs:
- * - GET /api/communities/:id - ดึงข้อมูลชุมชน
- * - PATCH /api/communities/:id - อัพเดทข้อมูลชุมชน
- * - POST /api/communities/:id/images - อัพโหลดรูปภาพ
- */
+// เหลือ map
+
+const fetchCommunityDetail = async () => {
+  const res = await api.get(`/api/community-admin/setting`);
+  console.log("DATA", res)
+  return res.data;
+};
+
+const updateCommunity = async (id, formData, newImages, existingImages) => {
+  const formDataToSend = new FormData();
+  formDataToSend.append('name', formData.name);
+  if (formData.name_en) formDataToSend.append('name_en', formData.name_en);
+  if (formData.history) formDataToSend.append('history', formData.history);
+  formDataToSend.append(
+    'location',
+    JSON.stringify({
+      full_address: formData.location.full_address || '',
+      province: formData.location.province || '',
+      district: formData.location.district || '',
+      sub_district: formData.location.sub_district || '',
+      postal_code: formData.location.postal_code || '',
+      coordinates: {
+        lat: formData.location.coordinates?.lat || 0,
+        lng: formData.location.coordinates?.lng || 0,
+      },
+    })
+  );
+
+  if (formData.contact_info) {
+    formDataToSend.append(
+      'contact_info',
+      JSON.stringify({
+        email: formData.contact_info.email || '',
+        phone: formData.contact_info.phone || '',
+        facebook: formData.contact_info.facebook || '',
+        line: formData.contact_info.line || '',
+        website: formData.contact_info.website || '',
+      })
+    );
+  }
+
+  if (formData.hero_section) {
+    formDataToSend.append(
+      'hero_section',
+      JSON.stringify({
+        description: formData.hero_section.description || ''
+      })
+    );
+  }
+
+  if (formData.admins && formData.admins.length > 0) {
+    const adminList = formData.admins.map(a => (typeof a === 'string' ? a : a.email));
+    formDataToSend.append('admins', JSON.stringify(adminList));
+  }
+
+  if (newImages && newImages.length > 0) {
+    newImages.forEach((file) => {
+      formDataToSend.append('files', file);
+    });
+  }
+
+  if (existingImages && existingImages.length > 0) {
+    existingImages.forEach((url) => {
+      formDataToSend.append('existing_images', url);
+    });
+  }
+
+  const res = await api.patch(`/api/communities/${id}`, formDataToSend, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return res.data;
+};
 
 const AdminCommunitySettings = () => {
   const navigate = useNavigate();
   const { ct } = useTranslation();
   const [formData, setFormData] = useState({
     name: '',
-    nameEn: '',
-    description: '',
-    location: '',
-    locationDetails: '',
-    contactEmail: '',
-    coverImage: null,
+    name_en: '',
+    hero_section: {
+      description: ''
+    },
+    history: '',
+    location: {
+      full_address: '',
+      district: '',
+      sub_district: '',
+      postal_code: '',
+      province: '',
+      coordinates: {
+        lat: 0,
+        lng: 0,
+      },
+    },
+    contact_info: {
+      phone: '',
+      email: '',
+      facebook: '',
+      line: '',
+      website: '',
+    },
+    images: null,
     admins: [],
-    adminEmail: ''
+    admin_email: '',
   });
+  const API_URL = import.meta.env.VITE_API_URL
   const [imagePreview, setImagePreview] = useState(null);
   const [existingImage, setExistingImage] = useState(null);
+  const [coverImageFile, setCoverImageFile] = useState(null);
+  const { data: community, isLoading } = useQuery({
+    queryKey: ['setting'],
+    queryFn: fetchCommunityDetail,
+    refetchOnWindowFocus: false,
+  });
 
   useEffect(() => {
-    // Mock existing data (replace with API fetch)
-    const mock = {
-      name: 'ชุมชนโหล่งฮิมคาว',
-      nameEn: 'Loeng Him Kaw',
-      description: 'ชุมชนท้องถิ่นที่มีวัฒนธรรมและประเพณีที่เก่าแก่',
-      location: 'เชียงใหม่, ประเทศไทย',
-      locationDetails: 'เดินทางโดยรถยนต์หรือรถโดยสารจากเชียงใหม่',
-      contactEmail: 'loenghimkaw@community.com',
-      coverImage: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800',
-      admins: ['admin1@lhkem.com', 'admin2@lhkem.com']
-    };
-
-    setFormData({
-      ...formData,
-      ...mock,
-      coverImage: null,
-      adminEmail: ''
-    });
-    setExistingImage(mock.coverImage);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  if (community) {
+    setFormData(prev => ({
+      ...prev,
+      ...community,
+      location: typeof community.location === 'string'
+        ? { ...prev.location, full_address: community.location }
+        : { ...prev.location, ...(community.location || {}) },
+      contact_info: typeof community.contact_info === 'string'
+        ? prev.contact_info
+        : { ...prev.contact_info, ...(community.contact_info || {}) },
+      hero_section: typeof community.hero_section === 'string'
+        ? { description: community.hero_section }
+        : { ...prev.hero_section, ...(community.hero_section || {}) },
+      admins: community.admins?.map(admin =>
+        typeof admin === 'string' ? admin : admin.email
+      ) || [],
+    }));
+    if (community.images && community.images.length > 0) {
+      setExistingImage(community.images[0]); 
+    }
+  }
+}, [community]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    if (name.includes('.')) {
+      const parts = name.split('.');
+      if (parts.length === 2) {
+        const [section, field] = parts;
+        setFormData(prev => ({
+          ...prev,
+          [section]: {
+            ...prev[section],
+            [field]: value
+          }
+        }));
+      }
+      else if (parts.length === 3) {
+        const [section, subsection, field] = parts;
+        setFormData(prev => ({
+          ...prev,
+          [section]: {
+            ...prev[section],
+            [subsection]: {
+              ...prev[section][subsection],
+              [field]: value
+            }
+          }
+        }));
+      }
+    }
+    else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setFormData(prev => ({ ...prev, coverImage: file }));
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-        setExistingImage(null);
-      };
-      reader.readAsDataURL(file);
+      setCoverImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+      setExistingImage(null);
     }
   };
 
   const handleRemoveImage = () => {
+    setCoverImageFile(null);
     setImagePreview(null);
     setExistingImage(null);
-    setFormData(prev => ({ ...prev, coverImage: null }));
   };
 
   const handleAddAdmin = () => {
-    if (formData.adminEmail && formData.adminEmail.includes('@')) {
+    if (formData.admin_email && formData.admin_email.includes('@')) {
       setFormData(prev => ({
         ...prev,
-        admins: [...prev.admins, prev.adminEmail],
-        adminEmail: ''
+        admins: [...prev.admins, prev.admin_email],
+        admin_email: ''
       }));
     }
   };
@@ -94,11 +215,24 @@ const AdminCommunitySettings = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Updating community:', formData);
-    navigate('/community-admin/dashboard');
+  
+    const newImagesArray = coverImageFile ? [coverImageFile] : [];
+    let existingImagesArray = community?.images || [];
+    try {
+      await updateCommunity(community._id, formData, newImagesArray, existingImagesArray);
+
+      await Swal.fire('สำเร็จ', 'บันทึกข้อมูลเรียบร้อยแล้ว', 'success');
+      navigate(`/community-admin/dashboard`);
+    } catch (error) {
+      console.error(error);
+      Swal.fire('Error', 'ไม่สามารถบันทึกข้อมูลได้', 'error');
+    }
   };
+
+
+  if (isLoading) return <div>Loading...</div>;
 
   return (
     <div className="min-h-screen bg-[#F5EFE7] animate-fadeIn py-8">
@@ -146,8 +280,8 @@ const AdminCommunitySettings = () => {
             </label>
             <input
               type="text"
-              name="nameEn"
-              value={formData.nameEn}
+              name="name_en"
+              value={formData.name_en}
               onChange={handleInputChange}
               placeholder="Loeng Him Kaw"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
@@ -161,8 +295,8 @@ const AdminCommunitySettings = () => {
               {ct('ประวัติ / เรื่องราว', 'History / Story')}
             </label>
             <textarea
-              name="description"
-              value={formData.description}
+              name="history"
+              value={formData.history}
               onChange={handleInputChange}
               placeholder={ct('เล่าเรื่องราวและเอกลักษณ์ของชุมชนของคุณ...', 'Tell the story and identity of your community...')}
               rows={5}
@@ -182,8 +316,8 @@ const AdminCommunitySettings = () => {
               <MapPin className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
               <input
                 type="text"
-                name="location"
-                value={formData.location}
+                name="location.full_address"
+                value={formData.location.full_address}
                 onChange={handleInputChange}
                 placeholder={ct('เช่น เชียงใหม่, ประเทศไทย', 'e.g., Chiang Mai, Thailand')}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
@@ -226,8 +360,8 @@ const AdminCommunitySettings = () => {
               {ct('คำอธิบาย', 'Description')}
             </label>
             <textarea
-              name="locationDetails"
-              value={formData.locationDetails}
+              name="hero_section.description"
+              value={formData.hero_section.description}
               onChange={handleInputChange}
               placeholder={ct('ทิศทาง เช่น เดินทางโดยรถยนต์หรือรถโดยสารจากเชียงใหม่...', 'Directions, e.g., Travel by car or bus from Chiang Mai...')}
               rows={4}
@@ -245,8 +379,8 @@ const AdminCommunitySettings = () => {
             </label>
             <input
               type="email"
-              name="contactEmail"
-              value={formData.contactEmail}
+              name="contact_info.email"
+              value={formData.contact_info.email}
               onChange={handleInputChange}
               placeholder="loenghimkaw@community.com"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
@@ -254,14 +388,22 @@ const AdminCommunitySettings = () => {
           </div>
 
           {/* Cover Image */}
-          <div>
+          <div className="mb-6">
             <label className="block text-sm font-semibold text-gray-900 mb-2">
               {ct('รูปภาพหน้าปก', 'Cover Image')}
             </label>
             {(existingImage || imagePreview) ? (
               <div className="relative rounded-lg overflow-hidden">
                 <img
-                  src={imagePreview || existingImage}
+                  src={
+                    imagePreview
+                      ? imagePreview
+                      : existingImage
+                        ? (existingImage.startsWith('/uploads') || existingImage.startsWith('uploads'))
+                          ? `${API_URL}${existingImage.startsWith('/') ? '' : '/'}${existingImage}`
+                          : `${API_URL}/uploads/${existingImage}`
+                        : 'path/to/placeholder.jpg'
+                  }
                   alt="Cover"
                   className="w-full h-64 object-cover"
                 />
@@ -294,7 +436,9 @@ const AdminCommunitySettings = () => {
                 <p className="text-sm font-medium text-gray-900 mb-1">
                   {ct('คลิกเพื่ออัปโหลดรูปภาพหรือลากไฟล์มาวาง', 'Click to upload or drag and drop')}
                 </p>
-                <p className="text-xs text-gray-600">PNG, JPG or JPEG (MAX. 5MB)</p>
+                <p className="text-xs text-gray-600">
+                  PNG, JPG or JPEG (MAX. 5MB)
+                </p>
                 <input
                   type="file"
                   accept="image/*"
@@ -351,8 +495,8 @@ const AdminCommunitySettings = () => {
             <div className="flex space-x-2">
               <input
                 type="email"
-                name="adminEmail"
-                value={formData.adminEmail}
+                name="admin_email"
+                value={formData.admin_email}
                 onChange={handleInputChange}
                 placeholder="admin@example.com"
                 className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"

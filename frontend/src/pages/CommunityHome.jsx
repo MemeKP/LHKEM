@@ -59,7 +59,8 @@ const CommunityHome = () => {
   }, [params.slug]);
   const API_URL = import.meta.env.VITE_API_URL;
 
-  // console.log("images: ", `${API_URL}/uploads/${community.images?.[1]}`)
+  // console.log("images: ", `${API_URL}${community.images?.[1]}`)
+  // console.log("DATA:", community)
 
   // ไว้แมชไอคอนกับชื่อไฮไลท
   const getIcon = (title) => {
@@ -132,61 +133,76 @@ const CommunityHome = () => {
     setCurrentBooking(null);
   };
 
+  const bannerImg = community?.images?.length > 0 ? community.images[0] : null;
+  const bannerFullUrl = bannerImg ? `${API_URL}${bannerImg}` : null;
+  const backgroundClass = bannerImg
+    ? "relative bg-gray-900"
+    : "bg-gradient-to-br from-[#0f3c4c] via-[#115b52] to-[#1d7a58]";
+
+    // console.log("banner ", bannerImg)
   return (
     <div className="min-h-screen bg-[#fdf7ef] animate-fadeIn">
       <section className=" relative py-16 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="bg-gradient-to-br from-[#0f3c4c] via-[#115b52] to-[#1d7a58] text-white rounded-[32px] p-10 shadow-xl">
-            <div className="text-center max-w-3xl mx-auto">
-              <div className="inline-flex items-center space-x-2 bg-white/15 border border-white/20 px-4 py-1 rounded-full text-sm font-medium mb-6">
-                <SparklesIcon className="h-4 w-4" />
-                <span>{t('hero.badge')}</span>
-              </div>
-              <h1 className="text-4xl md:text-5xl font-extrabold leading-tight mb-4">
-                {ct(
-                  community.hero_section?.title
-                    ? community.hero_section.title
-                    : `${community.name} ชุมชนแห่งความสุข`,
-                  community.hero_section?.title_en
-                    ? community.hero_section.title_en
-                    : `${community.name_en} Community of Happiness`
-                )}
-              </h1>
-              <p className="text-lg text-white/80 mb-8 line-clamp-2">
-                {ct(community.hero_section.description, community.hero_section.description_en)}
-              </p>
-              <div className="flex flex-col sm:flex-row justify-center gap-4">
-                <Link
-                  to={`/${community.slug}/workshops`}
-                  className="inline-flex items-center justify-center gap-2 bg-orange-400 hover:bg-orange-500 text-white font-semibold px-8 py-3 rounded-full shadow-lg transition"
-                >
-                  <BoxesIcon className="h-5 w-5" />
-                  {t('hero.viewWorkshops')}
-                </Link>
-                <Link
-                  to={`/${community.slug}/map`}
-                  className="inline-flex items-center justify-center gap-2 border border-white/40 text-white px-8 py-3 rounded-full hover:bg-white/10 transition"
-                >
-                  <MapPin className="h-5 w-5" />
-                  {t('hero.exploreMap')}
-                </Link>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-10">
-              {stats.map((stat, index) => (
-                <div key={index} className="bg-white/10 backdrop-blur-sm rounded-2xl px-6 py-4 text-center">
-                  <div className="text-3xl font-bold text-orange-300">{stat.number}</div>
-                  <p className="text-sm text-white/80">{stat.label}</p>
+          <div
+            className={`${backgroundClass} text-white rounded-[32px] p-10 shadow-xl overflow-hidden relative`}
+            style={bannerFullUrl ? {
+              backgroundImage: `url(${bannerFullUrl})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            } : {}}
+          >
+            {bannerFullUrl && (
+              <div className="absolute inset-0 bg-black/60 z-0"></div>
+            )}
+            <div className="relative z-10">
+              <div className="text-center max-w-3xl mx-auto">
+                <div className="inline-flex items-center space-x-2 bg-white/15 border border-white/20 px-4 py-1 rounded-full text-sm font-medium mb-6">
+                  <SparklesIcon className="h-4 w-4" />
+                  <span>{t('hero.badge')}</span>
                 </div>
-              ))}
+                <h1 className="text-4xl md:text-5xl font-extrabold leading-tight mb-4 drop-shadow-md">
+                  {ct(
+                    community.hero_section?.title || `${community.name} ชุมชนแห่งความสุข`,
+                    community.hero_section?.title_en || `${community.name_en} Community of Happiness`
+                  )}
+                </h1>
+                <p className="text-lg text-white/90 mb-8 line-clamp-2 drop-shadow-sm">
+                  {ct(community.hero_section?.description, community.hero_section?.description_en)}
+                </p>
+
+                <div className="flex flex-col sm:flex-row justify-center gap-4">
+                  <Link
+                    to={`/${community.slug}/workshops`}
+                    className="inline-flex items-center justify-center gap-2 bg-orange-400 hover:bg-orange-500 text-white font-semibold px-8 py-3 rounded-full shadow-lg transition"
+                  >
+                    <BoxesIcon className="h-5 w-5" />
+                    {t('hero.viewWorkshops')}
+                  </Link>
+                  <Link
+                    to={`/${community.slug}/map`}
+                    className="inline-flex items-center justify-center gap-2 border border-white/40 text-white px-8 py-3 rounded-full hover:bg-white/10 transition backdrop-blur-sm"
+                  >
+                    <MapPin className="h-5 w-5" />
+                    {t('hero.exploreMap')}
+                  </Link>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-10">
+                {stats.map((stat, index) => (
+                  <div key={index} className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl px-6 py-4 text-center">
+                    <div className="text-3xl font-bold text-orange-300">{stat.number}</div>
+                    <p className="text-sm text-white/80">{stat.label}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Image Gallery Section */}
-      <section className="px-4 py-16 bg-white">
+      {community.images && community.images.length >= 4 && <section className="px-4 py-16 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-8">
             <span className="inline-block bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-sm font-semibold mb-4">
@@ -239,7 +255,7 @@ const CommunityHome = () => {
             </div>
           </div>
         </div>
-      </section>
+      </section>}
 
       <section className="px-4 py-16">
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-10">
@@ -308,7 +324,10 @@ const CommunityHome = () => {
               ) : communityMap?.map_image ? (
                 <div
                   className="w-full h-full bg-cover bg-center"
-                  style={{ backgroundImage: `url(${communityMap.map_image})` }}
+                  // style={{ backgroundImage: `url(${communityMap.map_image})` }}
+                  style={{
+                    backgroundImage: `url(${import.meta.env.VITE_API_URL}${communityMap.map_image})`
+                  }}
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-gray-100 via-gray-50 to-white flex items-center justify-center">
@@ -435,14 +454,14 @@ const CommunityHome = () => {
                     'from-blue-300 via-blue-400 to-blue-500'
                   ];
                   const gradient = gradients[index % gradients.length];
-                  
+
                   return (
                     <Link key={shop._id} to={`/${community.slug}/shops/${shop._id}`} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition group">
                       <div className="relative h-48 overflow-hidden">
                         {shop.coverUrl ? (
-                          <img 
-                            src={`${import.meta.env.VITE_API_URL}/uploads/${shop.coverUrl}`} 
-                            alt={shop.shopName} 
+                          <img
+                            src={`${import.meta.env.VITE_API_URL}/uploads/${shop.coverUrl}`}
+                            alt={shop.shopName}
                             className="w-full h-full object-cover"
                             onError={(e) => {
                               e.target.style.display = 'none';

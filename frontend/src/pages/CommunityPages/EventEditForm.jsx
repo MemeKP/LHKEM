@@ -39,11 +39,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 const fetchEvent = async (eventId) => {
   const response = await api.get(`/api/events/${eventId}`);
-  return response.data;
-};
-
-const updateEventAPI = async ({ eventId, payload }) => {
-  const response = await api.put(`/api/events/${eventId}`, payload);
+  console.log("EVENT", response)
   return response.data;
 };
 
@@ -55,19 +51,28 @@ const useEvent = (eventId) => {
   });
 };
 
+const updateEventAPI  = async ({ eventId, payload }) => {
+  const response = await api.patch(
+    `/api/events/${eventId}`,
+    payload,
+     {headers: {
+      'Content-Type': 'multipart/form-data',
+    },}
+  );
+  return response.data;
+};
+
 const useUpdateEvent = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: updateEventAPI,
-    onSuccess: (data) => {
-      console.log("Event Updated:", data._id);
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
-      queryClient.invalidateQueries({ queryKey: ['event', data._id] });
-      queryClient.invalidateQueries({ queryKey: ['events', 'pending'] });
     },
   });
 };
+
 
 const EventEditForm = () => {
   const { id } = useParams();
@@ -78,6 +83,8 @@ const EventEditForm = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
+  const API_URL = import.meta.env.VITE_API_URL
   const [formData, setFormData] = useState({
     title: '',
     titleEn: '',
@@ -107,7 +114,7 @@ const EventEditForm = () => {
     if (event) {
       const startDate = new Date(event.start_at);
       const endDate = new Date(event.end_at);
-      
+
       setFormData({
         title: event.title || '',
         titleEn: event.title_en || '',
@@ -119,14 +126,14 @@ const EventEditForm = () => {
         location: typeof event.location === 'string' ? event.location : (event.location?.full_address || ''),
         event_type: '',
         workshops: [],
-        target_audience: '',
+        target_audience: event.target_audience || '',
         cost_type: event.deposit_amount > 0 ? 'paid' : 'free',
         deposit_amount: event.deposit_amount || '',
-        contact_phone: '',
-        contact_line: '',
-        contact_facebook: '',
-        coordinator_name: '',
-        additional_info: '',
+        contact_phone: event.contact?.phone || '',
+        contact_line: event.contact?.line || '',
+        contact_facebook: event.contact?.facebook || '',
+        coordinator_name: event.contact?.coordinator_name || '',
+        additional_info: event.additional_info || '',
         seat_limit: event.seat_limit || '',
         status: event.status || 'OPEN',
         is_featured: event.is_featured || false,
@@ -149,47 +156,77 @@ const EventEditForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!formData.event_date || !formData.start_time || !formData.end_time) {
       alert("กรุณาระบุวันและเวลา");
       return;
     }
+
     try {
+      setLoading(true);
+
       const startDateTime = new Date(`${formData.event_date}T${formData.start_time}`);
       const endDateTime = new Date(`${formData.event_date}T${formData.end_time}`);
 
-      const payload = {
-        title: formData.title,
-        title_en: formData.titleEn || formData.title,
-        description: formData.description,
-        description_en: formData.descriptionEn || formData.description,
-        seat_limit: parseInt(formData.seat_limit) || 1,
-        deposit_amount: formData.cost_type === 'free' ? 0 : (parseFloat(formData.deposit_amount) || 0),
-        start_at: startDateTime.toISOString(),
-        end_at: endDateTime.toISOString(),
-        location: {
-          full_address: formData.location || "ไม่ระบุ",
-          province: "Chiang Mai",
-          coordinates: {
-            lat: 18.7883,
-            lng: 98.9853
-          }
-        },
-        images: imagePreview || "https://placehold.co/600x400?text=Event+Image",
-        status: formData.status,
-        is_featured: formData.is_featured,
-        is_pinned: formData.is_pinned,
-      };
-      console.log("Updating Event:", payload);
+      const fd = new FormData();
 
-      await updateEvent({ eventId: id, payload });
-      alert('แก้ไข Event สำเร็จ!');
+      fd.append("title", formData.title);
+      fd.append("title_en", formData.titleEn || formData.title);
+      fd.append("description", formData.description);
+      fd.append("description_en", formData.descriptionEn || formData.description);
+
+      fd.append("seat_limit", parseInt(formData.seat_limit) || 1);
+      fd.append(
+        "deposit_amount",
+        formData.cost_type === "free"
+          ? 0
+          : parseFloat(formData.deposit_amount) || 0
+      );
+
+      fd.append("start_at", startDateTime.toISOString());
+      fd.append("end_at", endDateTime.toISOString());
+
+      fd.append("status", formData.status);
+      fd.append("is_featured", formData.is_featured);
+      fd.append("is_pinned", formData.is_pinned);
+
+      fd.append("event_type", formData.event_type);
+      fd.append("target_audience", formData.target_audience);
+      fd.append("cost_type", formData.cost_type);
+
+      fd.append("contact_phone", formData.contact_phone);
+      fd.append("contact_line", formData.contact_line);
+      fd.append("contact_facebook", formData.contact_facebook);
+      fd.append("coordinator_name", formData.coordinator_name);
+      fd.append("additional_info", formData.additional_info);
+
+
+      fd.append(
+        "location",
+        JSON.stringify({
+          full_address: formData.location || "ไม่ระบุ",
+        })
+      );
+
+      if (imageFile) {
+        fd.append("image", imageFile);
+      }
+
+      await updateEvent({
+        eventId: id,
+        payload: fd,
+      });
+
+      alert("แก้ไข Event สำเร็จ!");
       navigate(`/community-admin/events/${id}`);
     } catch (error) {
-      console.error('Failed to update event:', error);
-      const msg = error?.response?.data?.message;
-      alert(`เกิดข้อผิดพลาด: ${Array.isArray(msg) ? msg.join('\n') : msg}`);
+      console.error(error);
+      alert("เกิดข้อผิดพลาด");
+    } finally {
+      setLoading(false);
     }
   };
+
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -207,6 +244,9 @@ const EventEditForm = () => {
       <p className="text-[#666666]">กำลังโหลดข้อมูล...</p>
     </div>;
   }
+
+  console.log("event:", event);
+
 
   return (
     <div className="min-h-screen bg-[#F5EFE7] py-8">
@@ -259,7 +299,7 @@ const EventEditForm = () => {
             <div className="border-2 border-dashed border-[#E0E0E0] rounded-lg p-8 text-center bg-[#FAFAFA]">
               {imagePreview ? (
                 <div className="relative">
-                  <img src={imagePreview} alt="Preview" className="max-h-48 mx-auto rounded-lg" />
+                  <img src={`${API_URL}${imagePreview}`} alt="Preview" className="max-h-48 mx-auto rounded-lg" />
                   <button
                     type="button"
                     onClick={() => setImagePreview(null)}

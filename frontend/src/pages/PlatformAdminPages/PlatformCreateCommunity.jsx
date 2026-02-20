@@ -5,8 +5,6 @@ import { useTranslation } from '../../hooks/useTranslation';
 import api from '../../services/api';
 import { useMutation } from '@tanstack/react-query';
 
-// เหลือต่อ map
-
 const createCommunity = async (formData) => {
   const formDataToSend = new FormData();
   formDataToSend.append('name', formData.name);

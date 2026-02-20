@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { Calendar, Store, FileText, Users, Eye, AlertCircle, CheckCircle, XCircle, Edit, Plus, List } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useQuery } from '@tanstack/react-query';
@@ -16,8 +16,12 @@ import api from '../../services/api';
  * - GET /api/shops/pending?community_id=xxx
  */
 
- const usePendingData = () => {
+const usePendingData = () => {
   // shop
+  const shopsQuery = useQuery({
+    queryKey: ['shops', 'pending'],
+    queryFn: async () => (await api.get('/api/shop/pending')).data,
+  })
   // workshop
 
   // event
@@ -26,23 +30,26 @@ import api from '../../services/api';
     queryFn: async () => (await api.get('/api/events/pending')).data,
   });
 
-  return { eventsQuery };
+  return { eventsQuery, shopsQuery };
 };
 
 const AdminDashboard = () => {
-  const { eventsQuery } = usePendingData();
+  const { eventsQuery, shopsQuery } = usePendingData();
   const navigate = useNavigate();
   const { ct } = useTranslation();
   const [activeTab, setActiveTab] = useState('workshops');
   const [taskTab, setTaskTab] = useState('events'); // Tab for Events/Shops section
   const isLoading = eventsQuery.isLoading;
+  const { community } = useOutletContext()
 
   if (isLoading) return <div className="p-8 text-center">กำลังโหลดข้อมูล...</div>;
 
   const pendingEvents = eventsQuery.data || [];
+  const pendingShops = shopsQuery.data || []
 
   const pendingCounts = {
     events: pendingEvents.length,
+    shops: pendingShops.length,
     // total: pendingWorkshops.length + pendingEvents.length + pendingShops.length
   };
 
@@ -84,17 +91,17 @@ const AdminDashboard = () => {
   ];
 
   // Mock data - ร้านค้ารออนุมัติ
-  const pendingShops = [
-    {
-      id: 's1',
-      name: 'ร้านหัตถกรรมไม้ล้านนา',
-      owner: 'คุณสมชาย ใจดี',
-      category: 'งานไม้',
-      description: 'ร้านจำหน่ายและสอนงานไม้แกะสลักล้านนา',
-      submittedAt: '2024-01-13T16:45:00',
-      status: 'รออนุมัติ'
-    }
-  ];
+  // const pendingShops = [
+  //   {
+  //     id: 's1',
+  //     name: 'ร้านหัตถกรรมไม้ล้านนา',
+  //     owner: 'คุณสมชาย ใจดี',
+  //     category: 'งานไม้',
+  //     description: 'ร้านจำหน่ายและสอนงานไม้แกะสลักล้านนา',
+  //     submittedAt: '2024-01-13T16:45:00',
+  //     status: 'รออนุมัติ'
+  //   }
+  // ];
 
   const tabs = [
     { id: 'workshops', label: ct('Workshop', 'Workshop'), count: pendingCounts.workshops, icon: FileText },
@@ -108,14 +115,13 @@ const AdminDashboard = () => {
   //   return 'bg-red-100 text-red-800';
   // };
 
-  // Helper สำหรับสี Status
   const getStatusColor = (status) => {
     // ปรับตาม enum ของ back (PENDING, APPROVED)
     switch (status) {
-        case 'PENDING': return 'bg-yellow-100 text-yellow-800';
-        case 'APPROVED': return 'bg-green-100 text-green-800';
-        case 'REJECTED': return 'bg-red-100 text-red-800';
-        default: return 'bg-gray-100 text-gray-800';
+      case 'PENDING': return 'bg-yellow-100 text-yellow-800';
+      case 'APPROVED': return 'bg-green-100 text-green-800';
+      case 'REJECTED': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -126,7 +132,7 @@ const AdminDashboard = () => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold text-[#1A1A1A] mb-1">
-              {ct('ชุมชนโหล่งฮิมคาว', 'Loeng Him Kaw Community')}
+              {ct(community?.name, community?.name_en)}
             </h1>
           </div>
           <div className="flex gap-3">
@@ -164,7 +170,7 @@ const AdminDashboard = () => {
               <div className="w-10 h-10 bg-[#FFF9C4] rounded-lg flex items-center justify-center">
                 <FileText className="h-5 w-5 text-[#F9A825]" />
               </div>
-              <span className="text-2xl font-bold text-[#1A1A1A]">{pendingCounts.workshops }</span>
+              <span className="text-2xl font-bold text-[#1A1A1A]">{pendingCounts.workshops}</span>
             </div>
             <p className="text-sm font-medium text-[#666666]">{ct('รออนุมัติ', 'Workshops Pending')}</p>
           </div>
@@ -285,22 +291,20 @@ const AdminDashboard = () => {
             <div className="flex space-x-1 px-2 py-2">
               <button
                 onClick={() => setTaskTab('events')}
-                className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-2 ${
-                  taskTab === 'events'
+                className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-2 ${taskTab === 'events'
                     ? 'bg-[#4CAF50] text-white'
                     : 'text-[#666666] hover:bg-gray-100'
-                }`}
+                  }`}
               >
                 <Calendar className="h-4 w-4" />
                 {ct('อีเว้นท์', 'Events')}
               </button>
               <button
                 onClick={() => setTaskTab('shops')}
-                className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-2 ${
-                  taskTab === 'shops'
+                className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-2 ${taskTab === 'shops'
                     ? 'bg-[#4CAF50] text-white'
                     : 'text-[#666666] hover:bg-gray-100'
-                }`}
+                  }`}
               >
                 <Store className="h-4 w-4" />
                 {ct('ร้านค้า', 'Shops')}
@@ -338,16 +342,24 @@ const AdminDashboard = () => {
                         <h3 className="text-base font-bold text-[#1A1A1A] mb-2">{event.title}</h3>
                         <p className="text-sm text-[#666666] mb-4 line-clamp-2">{event.description}</p>
                         <div className="flex items-center gap-3 text-sm text-[#666666] mb-4">
-                          <span className="flex items-center gap-1">
+                          <span className="flex items-center gap-1 text-sm text-gray-500">
                             <Calendar className="h-4 w-4" />
-                            {new Date(event.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}
+                            {event.start_at ? (
+                              new Date(event.start_at).toLocaleDateString('th-TH', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric' 
+                              })
+                            ) : (
+                              'ไม่ระบุวันที่'
+                            )}
                           </span>
                           <span>•</span>
                           <span>{event.time}</span>
                         </div>
                         <div className="flex gap-2">
                           <button
-                            onClick={() => navigate(`/community-admin/events/${event.id}`)}
+                            onClick={() => navigate(`/community-admin/events/${event._id || event.id}`)}
                             className="flex-1 px-4 py-2 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-sm font-semibold rounded-lg transition-all"
                           >
                             {ct('ดูรายละเอียด', 'View Details')}

@@ -45,6 +45,7 @@ import PlatformCommunityDetail from './pages/PlatformAdminPages/PlatformCommunit
 import PlatformShopApproval from './pages/PlatformAdminPages/PlatformShopApproval';
 import PlatformCreateCommunity from './pages/PlatformAdminPages/PlatformCreateCommunity';
 import PlatformEditCommunity from './pages/PlatformAdminPages/PlatformEditCommunity';
+import EventEditForm from './pages/CommunityPages/EventEditForm';
 
 function App() {
   return (
@@ -178,7 +179,7 @@ function App() {
               } />
               <Route path="events/:id/edit" element={
                 <ProtectedRoute allowedRoles={['COMMUNITY_ADMIN']}>
-                  <EventCreateForm />
+                  <EventEditForm />
                 </ProtectedRoute>
               } />
               {/* Workshop Management Routes */}
