@@ -5,6 +5,7 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../services/api';
 import { getShopsByCommunity, getPendingShops } from '../../services/shopService';
+import { getShopCoverImage } from '../../utils/image';
 
 /**
  * Admin Dashboard - ศูนย์รวมการจัดการชุมชน (หน้าหลัก)
@@ -492,45 +493,57 @@ const AdminDashboard = () => {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {pendingShops.map((shop) => (
-                      <div key={shop._id || shop.id} className="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-md transition-all">
-                        <span className="inline-block px-3 py-1 bg-[#F3E5F5] text-[#8E24AA] rounded-md text-xs font-semibold mb-3">
-                          {ct('ร้านค้า', 'Shop')}
-                        </span>
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="text-base font-bold text-[#1A1A1A]">{shop.shopName}</h3>
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getStatusColor(shop.status)}`}>
-                            {statusLabel(shop.status)}
+                    {pendingShops.map((shop) => {
+                      const coverImage = getShopCoverImage(shop);
+                      return (
+                        <div key={shop._id || shop.id} className="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-md transition-all">
+                          {coverImage && (
+                            <div className="relative h-36 w-full mb-4 rounded-xl overflow-hidden bg-gray-100">
+                              <img
+                                src={coverImage}
+                                alt={shop.shopName}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          )}
+                          <span className="inline-block px-3 py-1 bg-[#F3E5F5] text-[#8E24AA] rounded-md text-xs font-semibold mb-3">
+                            {ct('ร้านค้า', 'Shop')}
                           </span>
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="text-base font-bold text-[#1A1A1A]">{shop.shopName}</h3>
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getStatusColor(shop.status)}`}>
+                              {statusLabel(shop.status)}
+                            </span>
+                          </div>
+                          <p className="text-xs text-orange-600 mb-2">
+                            {ct('สถานะ: ต้องตรวจสอบและอนุมัติก่อนจะปรากฏในแผนที่และหน้า Workshop', 'Pending approval: approve to show this shop on the map and listings.')}
+                          </p>
+                          <p className="text-sm text-[#666666] mb-4 line-clamp-2">{shop.description || ct('ยังไม่มีคำอธิบาย', 'No description')}</p>
+                          <div className="flex items-center gap-3 text-sm text-[#666666] mb-4">
+                            <span className="flex items-center gap-1">
+                              <Users className="h-4 w-4" />
+                              {shop.owner?.name || shop.ownerName || ct('ไม่ระบุ', 'Unknown')}
+                            </span>
+                            <span>•</span>
+                            <span>{shop.address ? shop.address.split(',')[0] : ct('ไม่ระบุที่อยู่', 'No address')}</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => navigate(`/community-admin/shops/${shop._id}/approval`)}
+                              className="flex-1 px-4 py-2 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-sm font-semibold rounded-lg transition-all"
+                            >
+                              {ct('ดูรายละเอียด', 'View Details')}
+                            </button>
+                            <button
+                              onClick={() => navigate(`/community-admin/shops/${shop._id}/approval`)}
+                              className="px-4 py-2 bg-[#1E293B] hover:bg-[#0F172A] text-white text-sm font-semibold rounded-lg transition-all"
+                            >
+                              {ct('ไปยังหน้าการอนุมัติ', 'Go to approval')}
+                            </button>
+                          </div>
                         </div>
-                        <p className="text-xs text-orange-600 mb-2">
-                          {ct('สถานะ: ต้องตรวจสอบและอนุมัติก่อนจะปรากฏในแผนที่และหน้า Workshop', 'Pending approval: approve to show this shop on the map and listings.')}
-                        </p>
-                        <p className="text-sm text-[#666666] mb-4 line-clamp-2">{shop.description || ct('ยังไม่มีคำอธิบาย', 'No description')}</p>
-                        <div className="flex items-center gap-3 text-sm text-[#666666] mb-4">
-                          <span className="flex items-center gap-1">
-                            <Users className="h-4 w-4" />
-                            {shop.owner?.name || shop.ownerName || ct('ไม่ระบุ', 'Unknown')}
-                          </span>
-                          <span>•</span>
-                          <span>{shop.address ? shop.address.split(',')[0] : ct('ไม่ระบุที่อยู่', 'No address')}</span>
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => navigate(`/community-admin/shops/${shop._id}/approval`)}
-                            className="flex-1 px-4 py-2 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-sm font-semibold rounded-lg transition-all"
-                          >
-                            {ct('ดูรายละเอียด', 'View Details')}
-                          </button>
-                          <button
-                            onClick={() => navigate(`/community-admin/shops/${shop._id}/approval`)}
-                            className="px-4 py-2 bg-[#1E293B] hover:bg-[#0F172A] text-white text-sm font-semibold rounded-lg transition-all"
-                          >
-                            {ct('ไปยังหน้าการอนุมัติ', 'Go to approval')}
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>

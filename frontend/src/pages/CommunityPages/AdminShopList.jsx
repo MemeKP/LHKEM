@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Store, MapPin, Users, Search, List, AlertCircle, Filter } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
 import { getAdminShopsByCommunity } from '../../services/shopService';
+import { getShopCoverImage } from '../../utils/image';
 
 const statusFilters = [
   { id: 'ALL', label: { th: 'ทั้งหมด', en: 'All' } },
@@ -148,8 +149,19 @@ const AdminShopList = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredShops.map((shop) => (
+            {filteredShops.map((shop) => {
+              const coverImage = getShopCoverImage(shop);
+              return (
               <div key={shop._id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all p-5 flex flex-col gap-4">
+                {coverImage && (
+                  <div className="w-full h-36 rounded-xl overflow-hidden bg-gray-100">
+                    <img
+                      src={coverImage}
+                      alt={shop.shopName}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">{ct('ร้านค้า', 'Shop')}</p>
@@ -190,7 +202,7 @@ const AdminShopList = () => {
                   </button>
                 </div>
               </div>
-            ))}
+            );})}
           </div>
         )}
       </div>

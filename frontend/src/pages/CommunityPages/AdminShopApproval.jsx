@@ -15,6 +15,7 @@ import Swal from 'sweetalert2';
 import { useTranslation } from '../../hooks/useTranslation';
 import { getShopForAdmin, approveShop, rejectShop } from '../../services/shopService';
 import { fetchCommunityMap, getShopPinForAdmin, approveMapPin } from '../../services/mapPinService';
+import { getShopCoverImage } from '../../utils/image';
 
 const statusStyles = {
   ACTIVE: 'bg-green-100 text-green-700 border border-green-200',
@@ -174,6 +175,7 @@ const AdminShopApproval = () => {
   const addressValue = shop.address || location.address || ct('ไม่ระบุที่อยู่', 'No address provided');
   const openTimeDisplay = shop.openTime || ct('ไม่ระบุ', 'Not specified');
   const closeTimeDisplay = shop.closeTime || ct('ไม่ระบุ', 'Not specified');
+  const coverImage = getShopCoverImage(shop);
 
   return (
     <div className="min-h-screen bg-[#FAF8F3]">
@@ -214,6 +216,15 @@ const AdminShopApproval = () => {
               )}
             </div>
           </div>
+          {coverImage && (
+            <div className="rounded-2xl overflow-hidden h-48 w-full">
+              <img
+                src={coverImage}
+                alt={shop.shopName}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
 
           <div className="flex flex-wrap gap-3">
             <button
@@ -241,6 +252,12 @@ const AdminShopApproval = () => {
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-2xl p-6 shadow-sm">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">{ct('ข้อมูลร้านค้า', 'Shop Information')}</h2>
+              {!coverImage && (
+                <div className="rounded-xl border border-dashed border-gray-200 p-4 flex items-center gap-3 text-sm text-gray-500 mb-4">
+                  <Store className="h-5 w-5 text-gray-400" />
+                  {ct('ร้านค้านี้ยังไม่ได้เพิ่มรูปปก', 'This shop has not provided a cover image.')}
+                </div>
+              )}
               <p className="text-gray-600 text-sm leading-relaxed mb-6">
                 {shop.description || ct('ไม่มีคำอธิบายร้านค้า', 'No description provided.')}
               </p>

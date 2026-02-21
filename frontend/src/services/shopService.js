@@ -40,6 +40,15 @@ export const updateShop = async (shopId, shopData) => {
   return response.data;
 };
 
+export const uploadShopImage = async (shopId, field, file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  const response = await api.post(`/api/shops/${shopId}/images/${field}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return response.data;
+};
+
 // Get pending shops (admin only)
 export const getPendingShops = async (communityId) => {
   const response = await api.get(`/api/shops/community/${communityId}/pending`);

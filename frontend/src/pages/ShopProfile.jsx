@@ -5,6 +5,7 @@ import { useTranslation } from '../hooks/useTranslation';
 import WorkshopModal from '../components/WorkshopModal';
 import ETicketModal from '../components/ETicketModal';
 import { getShopById } from '../services/shopService';
+import { getShopCoverImage } from '../utils/image';
 
 /**
  * ShopProfile - หน้าโปรไฟล์ร้านค้าสำหรับลูกค้า
@@ -136,6 +137,7 @@ const ShopProfile = () => {
   }
 
   const displayShop = shop || mockShop;
+  const coverImage = getShopCoverImage(displayShop);
   const shopAddress = displayShop.address || displayShop.location?.address;
   const formattedHours = displayShop.openTime
     ? displayShop.closeTime
@@ -147,14 +149,14 @@ const ShopProfile = () => {
     <div className="min-h-screen bg-[#fdf7ef]">
       {/* Cover Banner */}
       <section className="relative h-64 md:h-80 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 overflow-hidden">
-        {displayShop.coverUrl ? (
+        {coverImage ? (
           <>
             <img 
-              src={`${import.meta.env.VITE_API_URL}/uploads/${displayShop.coverUrl}`} 
+              src={coverImage} 
               alt={displayShop.shopName} 
               className="absolute inset-0 w-full h-full object-cover"
               onError={(e) => {
-                e.target.style.display = 'none';
+                e.currentTarget.style.display = 'none';
               }}
             />
             <div className="absolute inset-0 bg-black/40"></div>

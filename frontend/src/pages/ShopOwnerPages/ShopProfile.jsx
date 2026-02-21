@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, MapPin, Clock, Phone, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
-import { getMyShop, updateShop } from '../../services/shopService';
+import { getMyShop, updateShop, uploadShopImage } from '../../services/shopService';
 import ShopMapPinModal from '../../components/ShopMapPinModal';
 import { saveShopMapPin, getMyShopMapPin } from '../../services/mapPinService';
 
@@ -41,6 +41,7 @@ const ShopProfile = () => {
   const [isPinModalOpen, setPinModalOpen] = useState(false);
   const [selectedPinPosition, setSelectedPinPosition] = useState(null);
   const [pinStatusMessage, setPinStatusMessage] = useState('');
+  const [uploadingField, setUploadingField] = useState(null);
 
   const mapShopToState = (shop) => ({
     shopName: shop?.shopName || '',
@@ -186,17 +187,34 @@ const ShopProfile = () => {
     );
   }
 
-  const handleImageUpload = (type, file) => {
+  const handleImageUpload = async (type, file) => {
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      if (type === 'cover') {
-        setShopData(prev => ({ ...prev, coverUrl: reader.result }));
-      } else if (type === 'icon') {
-        setShopData(prev => ({ ...prev, iconUrl: reader.result }));
-      }
-    };
-    reader.readAsDataURL(file);
+    if (!shopId) {
+      setMessage({ type: 'error', text: 'ไม่พบรหัสร้านค้า โปรดลองใหม่' });
+      return;
+    }
+
+    const fieldKey = type === 'icon' ? 'iconUrl' : 'coverUrl';
+    const previousValue = shopData[fieldKey];
+    const previewUrl = URL.createObjectURL(file);
+
+    setUploadingField(type);
+    setShopData((prev) => ({ ...prev, [fieldKey]: previewUrl }));
+
+    try {
+      const updatedShop = await uploadShopImage(shopId, type, file);
+      setShopData(mapShopToState(updatedShop));
+      setMessage({ type: 'success', text: type === 'icon' ? 'อัปโหลดรูปไอคอนสำเร็จ' : 'อัปโหลดรูปหน้าปกสำเร็จ' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 2500);
+    } catch (error) {
+      console.error('Failed to upload image', error);
+      const errorMsg = error?.response?.data?.message || error.message || 'อัปโหลดรูปไม่สำเร็จ';
+      setMessage({ type: 'error', text: Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg });
+      setShopData((prev) => ({ ...prev, [fieldKey]: previousValue }));
+    } finally {
+      setUploadingField(null);
+      URL.revokeObjectURL(previewUrl);
+    }
   };
 
   const handleOpenPinModal = () => {
@@ -278,11 +296,11 @@ const ShopProfile = () => {
                 </div>
               )}
             </div>
-            <div className="flex gap-2 mt-3">
+            <div className="flex flex-col sm:flex-row gap-2 mt-3">
               <label className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-[#E07B39] text-[#E07B39] font-medium rounded-full cursor-pointer hover:bg-[#E07B39] hover:text-white transition-all hover:scale-105 shadow-sm">
                 <ImageIcon className="h-4 w-4" />
-                เปลี่ยนรูปหน้าปก
-                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload('cover', e.target.files?.[0])} />
+                {uploadingField === 'cover' ? 'กำลังอัปโหลด...' : 'เปลี่ยนรูปหน้าปก'}
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload('cover', e.target.files?.[0])} disabled={uploadingField === 'cover'} />
               </label>
               {shopData.coverUrl && (
                 <button
@@ -294,6 +312,9 @@ const ShopProfile = () => {
                 </button>
               )}
             </div>
+            {uploadingField === 'cover' && (
+              <p className="text-xs text-[#E07B39] mt-2">กำลังอัปโหลดรูปหน้าปก กรุณารอสักครู่...</p>
+            )}
           </div>
 
           {/* คำอธิบายร้าน */}

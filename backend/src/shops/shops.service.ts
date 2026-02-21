@@ -99,6 +99,38 @@ export class ShopsService {
     return shop.save();
   }
 
+  async updateShopImage(
+    shopId: string,
+    userId: string,
+    field: 'cover' | 'icon',
+    filePath: string,
+  ) {
+    if (!Types.ObjectId.isValid(shopId)) {
+      throw new BadRequestException('Invalid shop identifier');
+    }
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new BadRequestException('Invalid user identifier');
+    }
+
+    const shop = await this.shopModel.findById(shopId);
+    if (!shop) {
+      throw new NotFoundException('Shop not found');
+    }
+    if (shop.userId.toString() !== userId) {
+      throw new ForbiddenException();
+    }
+
+    if (field === 'cover') {
+      shop.coverUrl = filePath;
+      shop.picture = filePath;
+    } else if (field === 'icon') {
+      shop.iconUrl = filePath;
+    }
+
+    await shop.save();
+    return shop;
+  }
+
   async findPublic(shopId: string) {
     if (!Types.ObjectId.isValid(shopId)) {
       throw new BadRequestException('Invalid shop identifier');
