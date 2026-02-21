@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document } from "mongoose";
+import { Document, Types } from "mongoose";
 
 export type WorkshopDocument = Workshop & Document;
 
@@ -36,9 +36,19 @@ export class Workshop {
   })
   /* Registration status */
   status: string;
+
+  // ขออนุญาตินะยุยิ <3
+  @Prop({ type: Types.ObjectId, ref: 'Community', required: true, index: true })
+  communityId: Types.ObjectId;
+
+  @Prop({ type: Number, default: 0 })
+  current_participants: number;
 }
 
 export const WorkshopSchema = SchemaFactory.createForClass(Workshop);
 
 /* Index for searching workshops by date and status */
 WorkshopSchema.index({ date: 1, status: 1 });
+
+WorkshopSchema.index({ community_id: 1 });
+WorkshopSchema.index({ community_id: 1, category: 1 });

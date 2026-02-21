@@ -9,6 +9,7 @@ import { Workshop, WorkshopSchema } from './schemas/workshop.schema';
     /* Binds the Workshop schema to the Mongoose model for this module */
     MongooseModule.forFeature([{ name: Workshop.name, schema: WorkshopSchema }])
   ],
+  exports: [MongooseModule],
   controllers: [WorkshopsController],
   providers: [WorkshopsService],
 })

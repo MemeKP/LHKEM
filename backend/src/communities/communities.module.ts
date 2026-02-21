@@ -8,6 +8,8 @@ import { Shop, ShopSchema } from 'src/shops/schemas/shop.schema';
 import { Workshopregistration, WorkshopregistrationSchema } from 'src/workshopregistrations/schemas/workshopregistration.schema';
 import { CommunityAdmin, CommunityAdminSchema } from 'src/community-admin/schemas/community-admin.schema';
 import { User, UserSchema } from 'src/users/schemas/users.schema';
+import { DashboardService } from 'src/dashboard/dashboard.service';
+import { EventSchema } from 'src/events/schemas/event.schema';
 
 @Module({
   imports: [
@@ -17,11 +19,12 @@ import { User, UserSchema } from 'src/users/schemas/users.schema';
       { name: Shop.name, schema: ShopSchema },
       { name: Workshopregistration.name, schema: WorkshopregistrationSchema },
       { name: CommunityAdmin.name, schema: CommunityAdminSchema },
-      { name: User.name, schema: UserSchema},
+      { name: User.name, schema: UserSchema },
+      { name: Event.name, schema: EventSchema },
     ])
   ],
   controllers: [CommunitiesController],
-  providers: [CommunitiesService],
+  providers: [CommunitiesService, DashboardService],
   exports: [CommunitiesService]
 })
 export class CommunitiesModule { }

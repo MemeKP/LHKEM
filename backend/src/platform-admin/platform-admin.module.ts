@@ -9,9 +9,12 @@ import { EventSchema } from 'src/events/schemas/event.schema';
 import { Shop, ShopSchema } from 'src/shops/schemas/shop.schema';
 import { Workshop, WorkshopSchema } from 'src/workshops/schemas/workshop.schema';
 import { CommunityAdmin, CommunityAdminSchema } from 'src/community-admin/schemas/community-admin.schema';
+import { DashboardModule } from 'src/dashboard/dashboard.module';
+import { DashboardService } from 'src/dashboard/dashboard.service';
 
 @Module({
   imports: [
+    DashboardModule,
     MongooseModule.forFeature([
       { name: Community.name, schema: CommunitySchema },
       { name: User.name, schema: UserSchema },
@@ -23,6 +26,6 @@ import { CommunityAdmin, CommunityAdminSchema } from 'src/community-admin/schema
     ]),
   ],
   controllers: [PlatformAdminController],
-  providers: [PlatformAdminService],
+  providers: [PlatformAdminService, DashboardService],
 })
 export class PlatformAdminModule {}
