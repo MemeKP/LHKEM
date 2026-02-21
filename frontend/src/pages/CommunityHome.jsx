@@ -40,6 +40,7 @@ const CommunityHome = () => {
   const [currentBooking, setCurrentBooking] = useState(null);
   const [showETicket, setShowETicket] = useState(false);
   const [shops, setShops] = useState([]);
+  const [activeShopCount, setActiveShopCount] = useState(0);
 
   useEffect(() => {
     const fetchCommunity = async () => {
@@ -50,7 +51,8 @@ const CommunityHome = () => {
       if (communityData._id) {
         try {
           const shopsData = await getShopsByCommunity(communityData._id);
-          setShops(shopsData.slice(0, 3)); // Show only first 3 shops on home page
+          setActiveShopCount(Array.isArray(shopsData) ? shopsData.length : 0);
+          setShops((shopsData || []).slice(0, 3)); // Show only first 3 shops on home page
         } catch (error) {
           console.error('Failed to fetch shops:', error);
         }
@@ -102,8 +104,7 @@ const CommunityHome = () => {
       label: t('stats.workshops')
     },
     {
-      // ส่วน locations ตอนนี้ยังไม่มี collection ร้านค้าแยก
-      number: '1',
+      number: activeShopCount?.toString() || '0',
       label: t('stats.locations')
     },
     {
