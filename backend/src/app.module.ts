@@ -18,6 +18,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { EmailModule } from './email/email.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { DashboardService } from './dashboard/dashboard.service';
 
 @Module({
   imports: [ 
@@ -67,6 +68,6 @@ import { ServeStaticModule } from '@nestjs/serve-static';
     EmailModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, DashboardService],
 })
-export class AppModule { }
+export class AppModule { } 

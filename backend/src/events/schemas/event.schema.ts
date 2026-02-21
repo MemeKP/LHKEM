@@ -82,7 +82,6 @@ export class Event {
         coordinator_name: string;
     };
 
-
     @Prop()
     event_type: string;
 

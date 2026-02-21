@@ -28,7 +28,7 @@ interface CommunityAggregationResult {
   shopsCount: number;
   membersCount: number;
 }
-
+ 
 @Injectable()
 export class PlatformAdminService {
   constructor(

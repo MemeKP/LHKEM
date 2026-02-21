@@ -19,16 +19,17 @@ export class WorkshopregistrationsController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.workshopregistrationsService.findOne(+id);
+    /* The '+' converts the string ID to a number to match your service signature */
+    return this.workshopregistrationsService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateWorkshopregistrationDto: UpdateWorkshopregistrationDto) {
-    return this.workshopregistrationsService.update(+id, updateWorkshopregistrationDto);
+    return this.workshopregistrationsService.update(id, updateWorkshopregistrationDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.workshopregistrationsService.remove(+id);
+    return this.workshopregistrationsService.remove(id);
   }
 }
