@@ -2,11 +2,14 @@ import { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Clock, Users, CheckCircle, Calendar, DollarSign, Download, Edit, X, Share2, Pause, Eye, Mail } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useMyShop } from '../../hooks/useMyShop';
+import ShopPendingApprovalNotice from '../../components/ShopPendingApprovalNotice';
 
 const ShopWorkshopDetail = () => {
   const { id, slug } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { data: shop, isLoading: shopLoading } = useMyShop();
   const workshop = useMemo(() => {
     const draft = JSON.parse(localStorage.getItem('shopDraft') || '{}');
     return (draft.workshops || []).find(w => w.id === id) || null;
@@ -19,6 +22,38 @@ const ShopWorkshopDetail = () => {
     { id: 'e4', name: 'วิไล วรยมน', email: 'wilai@email.com', phone: '062-111-2222', date: '2026-01-13', status: 'ยืนยันแล้ว' },
     { id: 'e5', name: 'สุธีย์ เมฆ', email: 'sutee@email.com', phone: '091-333-4444', date: '2026-01-14', status: 'รอตอบรับ' },
   ]), []);
+
+  if (shopLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">กำลังโหลดข้อมูล...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (shop && shop.status !== 'ACTIVE') {
+    return (
+      <ShopPendingApprovalNotice
+        title="ร้านค้าของคุณยังรอการอนุมัติ"
+        description="ไม่สามารถดูรายละเอียด Workshop ได้จนกว่าร้านค้าจะได้รับการอนุมัติ"
+        actions={[
+          {
+            label: 'กลับไปแดชบอร์ด',
+            onClick: () => navigate(`/${slug}/shop/dashboard`),
+            variant: 'secondary',
+          },
+          {
+            label: 'แก้ไขข้อมูลร้าน',
+            onClick: () => navigate(`/${slug}/shop/profile`),
+            variant: 'primary',
+          },
+        ]}
+      />
+    );
+  }
 
   if (!workshop) {
     return (

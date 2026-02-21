@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useOutletContext } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft,
@@ -14,14 +14,12 @@ import {
 import Swal from 'sweetalert2';
 import { useTranslation } from '../../hooks/useTranslation';
 import { getShopForAdmin, approveShop, rejectShop } from '../../services/shopService';
-import {
-  fetchCommunityMap,
-  getShopPinForAdmin,
-  approveMapPin,
-} from '../../services/mapPinService';
+import { fetchCommunityMap, getShopPinForAdmin, approveMapPin } from '../../services/mapPinService';
+import { getShopCoverImage } from '../../utils/image';
 
 const statusStyles = {
   ACTIVE: 'bg-green-100 text-green-700 border border-green-200',
+  APPROVED: 'bg-green-100 text-green-700 border border-green-200',
   PENDING: 'bg-yellow-100 text-yellow-800 border border-yellow-200',
   REJECTED: 'bg-red-100 text-red-700 border border-red-200',
 };
@@ -35,18 +33,20 @@ const InfoRow = ({ label, value }) => (
   </div>
 );
 
-const PlatformShopApproval = () => {
+const AdminShopApproval = () => {
+  const { community } = useOutletContext();
+  const communityId = community?._id;
   const { ct } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { id: communityId, shopId } = useParams();
+  const { shopId } = useParams();
 
   const {
     data: shop,
     isLoading: shopLoading,
     error: shopError,
   } = useQuery({
-    queryKey: ['platform-shop', shopId],
+    queryKey: ['community-admin-shop', shopId],
     queryFn: () => getShopForAdmin(shopId),
     enabled: !!shopId,
     staleTime: 1000 * 30,
@@ -56,7 +56,7 @@ const PlatformShopApproval = () => {
     data: pin,
     isLoading: pinLoading,
   } = useQuery({
-    queryKey: ['platform-shop-pin', shopId],
+    queryKey: ['community-admin-shop-pin', shopId],
     queryFn: () => getShopPinForAdmin(shopId),
     enabled: !!shopId,
     staleTime: 1000 * 15,
@@ -66,7 +66,7 @@ const PlatformShopApproval = () => {
     data: mapData,
     isLoading: mapLoading,
   } = useQuery({
-    queryKey: ['community-map', communityId],
+    queryKey: ['community-admin-map', communityId],
     queryFn: () => fetchCommunityMap(communityId),
     enabled: !!communityId,
     staleTime: 1000 * 60,
@@ -96,8 +96,8 @@ const PlatformShopApproval = () => {
   const approveShopMutation = useMutation({
     mutationFn: () => approveShop(shopId),
     onSuccess: () => {
-      queryClient.invalidateQueries(['platform-shop', shopId]);
-      queryClient.invalidateQueries(['platform-community', communityId]);
+      queryClient.invalidateQueries(['community-admin-shop', shopId]);
+      queryClient.invalidateQueries(['community-shops', communityId]);
       handleSuccessToast(ct('อนุมัติร้านค้าเรียบร้อยแล้ว', 'Shop approved successfully.'));
     },
     onError: (error) => {
@@ -109,8 +109,8 @@ const PlatformShopApproval = () => {
   const rejectShopMutation = useMutation({
     mutationFn: () => rejectShop(shopId),
     onSuccess: () => {
-      queryClient.invalidateQueries(['platform-shop', shopId]);
-      queryClient.invalidateQueries(['platform-community', communityId]);
+      queryClient.invalidateQueries(['community-admin-shop', shopId]);
+      queryClient.invalidateQueries(['community-shops', communityId]);
       handleSuccessToast(ct('ปฏิเสธร้านค้าเรียบร้อยแล้ว', 'Shop rejected successfully.'));
     },
     onError: (error) => {
@@ -122,8 +122,8 @@ const PlatformShopApproval = () => {
   const approvePinMutation = useMutation({
     mutationFn: () => approveMapPin(pin?.pinId),
     onSuccess: () => {
-      queryClient.invalidateQueries(['platform-shop-pin', shopId]);
-      queryClient.invalidateQueries(['community-map', communityId]);
+      queryClient.invalidateQueries(['community-admin-shop-pin', shopId]);
+      queryClient.invalidateQueries(['community-admin-map', communityId]);
       handleSuccessToast(ct('อนุมัติหมุดบนแผนที่เรียบร้อยแล้ว', 'Map pin approved successfully.'));
     },
     onError: (error) => {
@@ -160,10 +160,10 @@ const PlatformShopApproval = () => {
         <div className="text-center space-y-4">
           <p className="text-gray-700">{ct('ไม่พบข้อมูลร้านค้านี้', 'Unable to load shop data.')}</p>
           <button
-            onClick={() => navigate(`/platform-admin/communities/${communityId}`)}
+            onClick={() => navigate('/community-admin/shops')}
             className="px-4 py-2 text-sm font-semibold text-white bg-orange-500 rounded-lg"
           >
-            {ct('กลับไปหน้าก่อนหน้า', 'Go back')}
+            {ct('กลับไปรายชื่อร้านค้า', 'Back to shop list')}
           </button>
         </div>
       </div>
@@ -175,16 +175,17 @@ const PlatformShopApproval = () => {
   const addressValue = shop.address || location.address || ct('ไม่ระบุที่อยู่', 'No address provided');
   const openTimeDisplay = shop.openTime || ct('ไม่ระบุ', 'Not specified');
   const closeTimeDisplay = shop.closeTime || ct('ไม่ระบุ', 'Not specified');
+  const coverImage = getShopCoverImage(shop);
 
   return (
     <div className="min-h-screen bg-[#FAF8F3]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <button
-          onClick={() => navigate(`/platform-admin/communities/${communityId}`)}
+          onClick={() => navigate('/community-admin/shops')}
           className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
-          <span className="font-medium">{ct('กลับไปหน้าชุมชน', 'Back to community')}</span>
+          <span className="font-medium">{ct('กลับไปหน้าร้านค้า', 'Back to shops')}</span>
         </button>
 
         <div className="bg-white rounded-2xl p-6 shadow-sm space-y-4">
@@ -195,7 +196,7 @@ const PlatformShopApproval = () => {
               </p>
               <h1 className="text-3xl font-bold text-gray-900">{shop.shopName}</h1>
               <p className="text-sm text-gray-500 mt-2">
-                {ct('ชุมชน', 'Community')}: {communityId}
+                {ct('ชุมชน', 'Community')}: {ct(community?.name, community?.name_en)}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -203,12 +204,27 @@ const PlatformShopApproval = () => {
                 {ct('สถานะร้าน', 'Shop Status')}: {formatStatus(shopStatus)}
               </span>
               {pin?.hasPin && (
-                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${pinStatus === 'APPROVED' ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-yellow-100 text-yellow-800 border border-yellow-200'}`}>
+                <span
+                  className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                    pinStatus === 'APPROVED'
+                      ? 'bg-green-100 text-green-700 border border-green-200'
+                      : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                  }`}
+                >
                   {ct('สถานะหมุด', 'Pin Status')}: {formatStatus(pinStatus)}
                 </span>
               )}
             </div>
           </div>
+          {coverImage && (
+            <div className="rounded-2xl overflow-hidden h-48 w-full">
+              <img
+                src={coverImage}
+                alt={shop.shopName}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
 
           <div className="flex flex-wrap gap-3">
             <button
@@ -236,6 +252,12 @@ const PlatformShopApproval = () => {
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-2xl p-6 shadow-sm">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">{ct('ข้อมูลร้านค้า', 'Shop Information')}</h2>
+              {!coverImage && (
+                <div className="rounded-xl border border-dashed border-gray-200 p-4 flex items-center gap-3 text-sm text-gray-500 mb-4">
+                  <Store className="h-5 w-5 text-gray-400" />
+                  {ct('ร้านค้านี้ยังไม่ได้เพิ่มรูปปก', 'This shop has not provided a cover image.')}
+                </div>
+              )}
               <p className="text-gray-600 text-sm leading-relaxed mb-6">
                 {shop.description || ct('ไม่มีคำอธิบายร้านค้า', 'No description provided.')}
               </p>
@@ -280,7 +302,9 @@ const PlatformShopApproval = () => {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold text-gray-900">{ct('หมุดบนแผนที่', 'Map Pin')}</h2>
                 {pin?.hasPin && (
-                  <span className="text-sm text-gray-500">{ct('พิกัด', 'Coordinates')}: X {pin.position_x?.toFixed?.(2) ?? pin.position_x}, Y {pin.position_y?.toFixed?.(2) ?? pin.position_y}</span>
+                  <span className="text-sm text-gray-500">
+                    {ct('พิกัด', 'Coordinates')}: X {pin.position_x?.toFixed?.(2) ?? pin.position_x}, Y {pin.position_y?.toFixed?.(2) ?? pin.position_y}
+                  </span>
                 )}
               </div>
               <div className="rounded-2xl border border-gray-100 overflow-hidden">
@@ -298,7 +322,9 @@ const PlatformShopApproval = () => {
                       {mapPins.map((mapPin) => (
                         <div
                           key={mapPin.id}
-                          className={`absolute w-3 h-3 rounded-full border-2 border-white ${mapPin.isCurrent ? 'bg-orange-500 shadow-lg' : 'bg-gray-400/80'}`}
+                          className={`absolute w-3 h-3 rounded-full border-2 border-white ${
+                            mapPin.isCurrent ? 'bg-orange-500 shadow-lg' : 'bg-gray-400/80'
+                          }`}
                           style={{
                             top: `${mapPin.y}%`,
                             left: `${mapPin.x}%`,
@@ -342,7 +368,11 @@ const PlatformShopApproval = () => {
                     >
                       {approvePinMutation.isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
                       <CheckCircle className="h-4 w-4" />
-                      <span>{pinStatus === 'APPROVED' ? ct('หมุดได้รับการอนุมัติแล้ว', 'Pin already approved') : ct('อนุมัติหมุดบนแผนที่', 'Approve map pin')}</span>
+                      <span>
+                        {pinStatus === 'APPROVED'
+                          ? ct('หมุดได้รับการอนุมัติแล้ว', 'Pin already approved')
+                          : ct('อนุมัติหมุดบนแผนที่', 'Approve map pin')}
+                      </span>
                     </button>
                   </>
                 ) : (
@@ -361,4 +391,4 @@ const PlatformShopApproval = () => {
   );
 };
 
-export default PlatformShopApproval;
+export default AdminShopApproval;

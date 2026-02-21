@@ -32,10 +32,18 @@ const Map = () => {
   const { data: mapData, isLoading: mapLoading } = useQuery({
     queryKey: ['communityMap', communityId],
     queryFn: async () => {
-      const res = await api.get(`/api/communities/${communityId}/communitymap`);
-      return res.data;
+      try {
+        const res = await api.get(`/api/communities/${communityId}/communitymap`);
+        return res.data;
+      } catch (error) {
+        if (error?.response?.status === 404) {
+          return null;
+        }
+        throw error;
+      }
     },
     enabled: !!communityId,
+    retry: false,
   });
 
   const locations = useMemo(() => {

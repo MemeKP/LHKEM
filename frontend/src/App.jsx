@@ -33,6 +33,8 @@ import AdminDashboard from './pages/CommunityPages/AdminDashboard';
 import AdminCommunityInfo from './pages/CommunityPages/AdminCommunityInfo';
 import AdminCommunitySettings from './pages/CommunityPages/AdminCommunitySettings';
 import AdminWorkshopConfirmation from './pages/CommunityPages/AdminWorkshopConfirmation';
+import AdminShopList from './pages/CommunityPages/AdminShopList';
+import AdminShopApproval from './pages/CommunityPages/AdminShopApproval';
 import EventCreateForm from './pages/CommunityPages/EventCreateForm';
 import EventList from './pages/CommunityPages/EventList';
 import EventDetailPage from './pages/CommunityPages/EventDetailPage';
@@ -191,6 +193,16 @@ function App() {
               <Route path="workshops/:id" element={
                 <ProtectedRoute allowedRoles={['COMMUNITY_ADMIN']}>
                   <WorkshopApprovalPage />
+                </ProtectedRoute>
+              } />
+              <Route path="shops" element={
+                <ProtectedRoute allowedRoles={['COMMUNITY_ADMIN']}>
+                  <AdminShopList />
+                </ProtectedRoute>
+              } />
+              <Route path="shops/:shopId/approval" element={
+                <ProtectedRoute allowedRoles={['COMMUNITY_ADMIN']}>
+                  <AdminShopApproval />
                 </ProtectedRoute>
               } />
             </Route>

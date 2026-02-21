@@ -3,6 +3,7 @@ import { Link, useOutletContext } from 'react-router-dom';
 import { Store, MapPin, Clock, Phone, Search, Filter, ArrowRight } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import { getShopsByCommunity } from '../services/shopService';
+import { getShopCoverImage } from '../utils/image';
 
 /**
  * Shops Page - แสดงรายการร้านค้าทั้งหมดในชุมชน
@@ -235,6 +236,7 @@ const Shops = () => {
                 'from-rose-300 via-rose-400 to-rose-500'
               ];
               const gradient = gradients[index % gradients.length];
+              const coverImage = getShopCoverImage(shop);
               
               return (
               <Link
@@ -244,14 +246,14 @@ const Shops = () => {
               >
                 {/* Shop Image/Gradient */}
                 <div className="relative h-48 overflow-hidden">
-                  {shop.coverUrl ? (
+                  {coverImage ? (
                     <img 
-                      src={`${import.meta.env.VITE_API_URL}/uploads/${shop.coverUrl}`} 
+                      src={coverImage} 
                       alt={shop.shopName} 
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.parentElement.innerHTML = `<div class="w-full h-full bg-gradient-to-br ${gradient}"><div class="absolute inset-0 flex items-center justify-center"><svg class="h-16 w-16 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg></div></div>`;
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.parentElement.innerHTML = `<div class=\"w-full h-full bg-gradient-to-br ${gradient}\"><div class=\"absolute inset-0 flex items-center justify-center\"><svg class=\"h-16 w-16 text-white/50\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6\" /></svg></div></div>`;
                       }}
                     />
                   ) : (
@@ -277,18 +279,21 @@ const Shops = () => {
                   </p>
 
                   {/* Location */}
-                  {shop.location?.address && (
+                  {(shop.address || shop.location?.address) && (
                     <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
                       <MapPin className="h-4 w-4" />
-                      <span>{shop.location.address}</span>
+                      <span>{shop.address || shop.location?.address}</span>
                     </div>
                   )}
 
                   {/* Opening Hours */}
-                  {shop.openTime && (
+                  {(shop.openTime || shop.closeTime) && (
                     <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
                       <Clock className="h-4 w-4" />
-                      <span>{shop.openTime}{shop.closeTime ? ` - ${shop.closeTime}` : ''}</span>
+                      <span>
+                        {shop.openTime || ct('ไม่ระบุ', 'N/A')}
+                        {shop.closeTime ? ` - ${shop.closeTime}` : ''}
+                      </span>
                     </div>
                   )}
 

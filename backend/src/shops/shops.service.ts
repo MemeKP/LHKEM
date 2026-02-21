@@ -38,11 +38,12 @@ export class ShopsService {
     const payload: Partial<Shop> = {
       shopName: dto.shopName,
       description: dto.description,
+      address: dto.address,
       picture: dto.picture ?? dto.coverUrl,
       coverUrl: dto.coverUrl,
       iconUrl: dto.iconUrl,
-      openTime: dto.openTime,
-      closeTime: dto.closeTime,
+      openTime: this.normalizeTime(dto.openTime),
+      closeTime: this.normalizeTime(dto.closeTime),
       location: this.normalizeLocation(dto.location),
       contact: dto.contact,
       images: dto.images,
@@ -83,21 +84,51 @@ export class ShopsService {
       throw new ForbiddenException();
     }
 
-    const updates: Partial<Shop> = {
-      shopName: dto.shopName ?? shop.shopName,
-      description: dto.description ?? shop.description,
-      picture: dto.picture ?? shop.picture,
-      coverUrl: dto.coverUrl ?? shop.coverUrl,
-      iconUrl: dto.iconUrl ?? shop.iconUrl,
-      openTime: dto.openTime ?? shop.openTime,
-      closeTime: dto.closeTime ?? shop.closeTime,
-      location: dto.location ? this.normalizeLocation(dto.location) : shop.location,
-      contact: dto.contact ?? shop.contact,
-      images: dto.images ?? shop.images,
-    };
+    if (dto.shopName !== undefined) shop.shopName = dto.shopName;
+    if (dto.description !== undefined) shop.description = dto.description;
+    if (dto.address !== undefined) shop.address = dto.address;
+    if (dto.picture !== undefined) shop.picture = dto.picture;
+    if (dto.coverUrl !== undefined) shop.coverUrl = dto.coverUrl;
+    if (dto.iconUrl !== undefined) shop.iconUrl = dto.iconUrl;
+    if (dto.openTime !== undefined) shop.openTime = this.normalizeTime(dto.openTime);
+    if (dto.closeTime !== undefined) shop.closeTime = this.normalizeTime(dto.closeTime);
+    if (dto.location !== undefined) shop.location = this.normalizeLocation(dto.location);
+    if (dto.contact !== undefined) shop.contact = dto.contact;
+    if (dto.images !== undefined) shop.images = dto.images;
 
-    Object.assign(shop, updates);
     return shop.save();
+  }
+
+  async updateShopImage(
+    shopId: string,
+    userId: string,
+    field: 'cover' | 'icon',
+    filePath: string,
+  ) {
+    if (!Types.ObjectId.isValid(shopId)) {
+      throw new BadRequestException('Invalid shop identifier');
+    }
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new BadRequestException('Invalid user identifier');
+    }
+
+    const shop = await this.shopModel.findById(shopId);
+    if (!shop) {
+      throw new NotFoundException('Shop not found');
+    }
+    if (shop.userId.toString() !== userId) {
+      throw new ForbiddenException();
+    }
+
+    if (field === 'cover') {
+      shop.coverUrl = filePath;
+      shop.picture = filePath;
+    } else if (field === 'icon') {
+      shop.iconUrl = filePath;
+    }
+
+    await shop.save();
+    return shop;
   }
 
   async findPublic(shopId: string) {
@@ -128,10 +159,28 @@ export class ShopsService {
     if (!Types.ObjectId.isValid(communityId)) {
       throw new BadRequestException('Invalid community identifier');
     }
-    return this.shopModel.find({
-      communityId: new Types.ObjectId(communityId),
-      status: 'ACTIVE',
-    });
+    const shops = await this.shopModel
+      .find({
+        communityId: new Types.ObjectId(communityId),
+        status: 'ACTIVE',
+      })
+      .populate('userId', 'firstname lastname email phone')
+      .lean();
+    return shops.map((shop) => this.attachOwnerMetadata(shop));
+  }
+
+  async findAllByCommunity(communityId: string) {
+    if (!Types.ObjectId.isValid(communityId)) {
+      throw new BadRequestException('Invalid community identifier');
+    }
+
+    const shops = await this.shopModel
+      .find({
+        communityId: new Types.ObjectId(communityId),
+      })
+      .populate('userId', 'firstname lastname email phone')
+      .lean();
+    return shops.map((shop) => this.attachOwnerMetadata(shop));
   }
 
   async findActiveShopByUser(userId: string) {
@@ -159,10 +208,14 @@ async findPendingByCommunity(communityId: string) {
   if (!Types.ObjectId.isValid(communityId)) {
     throw new BadRequestException('Invalid community identifier');
   }
-  return this.shopModel.find({
-    communityId: new Types.ObjectId(communityId),
-    status: 'PENDING',
-  });
+  const shops = await this.shopModel
+    .find({
+      communityId: new Types.ObjectId(communityId),
+      status: 'PENDING',
+    })
+    .populate('userId', 'firstname lastname email phone')
+    .lean();
+  return shops.map((shop) => this.attachOwnerMetadata(shop));
 }
 // shop.service.ts
 async approveShop(shopId: string) {
@@ -187,6 +240,29 @@ async rejectShop(shopId: string) {
   return shop.save();
 }
 
+  private attachOwnerMetadata(shop: any) {
+    if (!shop) return shop;
+    const owner = this.buildOwnerFromUserDoc(shop.userId);
+    return {
+      ...shop,
+      owner,
+      ownerName: shop.ownerName || owner?.name || owner?.email || shop.ownerName,
+    };
+  }
+
+  private buildOwnerFromUserDoc(userDoc?: any) {
+    if (!userDoc) return null;
+    const first = userDoc.firstname?.trim?.() || '';
+    const last = userDoc.lastname?.trim?.() || '';
+    const fullName = [first, last].filter(Boolean).join(' ').trim();
+    return {
+      id: userDoc._id?.toString?.() || userDoc.id || null,
+      name: fullName || userDoc.email || null,
+      email: userDoc.email || null,
+      phone: userDoc.phone || null,
+    };
+  }
+
   private normalizeLocation(location?: CreateShopDto['location']) {
     if (!location) return undefined;
     const lat = location.lat != null ? Number(location.lat) : undefined;
@@ -196,5 +272,13 @@ async rejectShop(shopId: string) {
       lat,
       lng,
     };
+  }
+
+  private normalizeTime(value?: string | null) {
+    if (value === undefined || value === null) {
+      return null;
+    }
+    const trimmed = value.trim();
+    return trimmed === '' ? null : trimmed;
   }
 }

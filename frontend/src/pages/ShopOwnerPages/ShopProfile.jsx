@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, MapPin, Clock, Phone, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
-import { getMyShop, updateShop } from '../../services/shopService';
+import { getMyShop, updateShop, uploadShopImage } from '../../services/shopService';
 import ShopMapPinModal from '../../components/ShopMapPinModal';
 import { saveShopMapPin, getMyShopMapPin } from '../../services/mapPinService';
 
@@ -19,6 +19,7 @@ const ShopProfile = () => {
   const [shopData, setShopData] = useState({
     shopName: '',
     description: '',
+    address: '',
     openTime: '',
     closeTime: '',
     location: {
@@ -40,23 +41,31 @@ const ShopProfile = () => {
   const [isPinModalOpen, setPinModalOpen] = useState(false);
   const [selectedPinPosition, setSelectedPinPosition] = useState(null);
   const [pinStatusMessage, setPinStatusMessage] = useState('');
+  const [uploadingField, setUploadingField] = useState(null);
+
+  const mapShopToState = (shop) => ({
+    shopName: shop?.shopName || '',
+    description: shop?.description || '',
+    address: shop?.address || shop?.location?.address || '',
+    openTime: shop?.openTime || '',
+    closeTime: shop?.closeTime || '',
+    location: {
+      address: shop?.location?.address || shop?.address || '',
+      lat: shop?.location?.lat || 0,
+      lng: shop?.location?.lng || 0,
+    },
+    contact: shop?.contact || { phone: '', line: '', facebook: '' },
+    coverUrl: shop?.coverUrl || '',
+    iconUrl: shop?.iconUrl || '',
+    images: shop?.images || [],
+  });
 
   useEffect(() => {
     const fetchShop = async () => {
       try {
         const shop = await getMyShop();
         setShopId(shop._id);
-        setShopData({
-          shopName: shop.shopName || '',
-          description: shop.description || '',
-          openTime: shop.openTime || '',
-          closeTime: shop.closeTime || '',
-          location: shop.location || { address: '', lat: 0, lng: 0 },
-          contact: shop.contact || { phone: '', line: '', facebook: '' },
-          coverUrl: shop.coverUrl || '',
-          iconUrl: shop.iconUrl || '',
-          images: shop.images || []
-        });
+        setShopData(mapShopToState(shop));
         if (shop.communityId) {
           setCommunityId(shop.communityId);
         }
@@ -103,6 +112,18 @@ const ShopProfile = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     
+    if (name === 'address') {
+      setShopData(prev => ({
+        ...prev,
+        address: value,
+        location: {
+          ...prev.location,
+          address: value,
+        },
+      }));
+      return;
+    }
+
     if (name.includes('.')) {
       const [parent, child] = name.split('.');
       setShopData(prev => ({
@@ -120,6 +141,13 @@ const ShopProfile = () => {
     }
   };
 
+  const clearTimeField = (field) => {
+    setShopData((prev) => ({
+      ...prev,
+      [field]: '',
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!shopId) {
@@ -130,7 +158,17 @@ const ShopProfile = () => {
     setMessage({ type: '', text: '' });
 
     try {
-      await updateShop(shopId, shopData);
+      const payload = {
+        ...shopData,
+        openTime: shopData.openTime?.trim() ? shopData.openTime : null,
+        closeTime: shopData.closeTime?.trim() ? shopData.closeTime : null,
+      };
+      await updateShop(shopId, payload);
+      const refreshed = await getMyShop();
+      setShopData(mapShopToState(refreshed));
+      if (refreshed.communityId) {
+        setCommunityId(refreshed.communityId);
+      }
       setMessage({ type: 'success', text: 'บันทึกข้อมูลสำเร็จ' });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
@@ -149,17 +187,34 @@ const ShopProfile = () => {
     );
   }
 
-  const handleImageUpload = (type, file) => {
+  const handleImageUpload = async (type, file) => {
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      if (type === 'cover') {
-        setShopData(prev => ({ ...prev, coverUrl: reader.result }));
-      } else if (type === 'icon') {
-        setShopData(prev => ({ ...prev, iconUrl: reader.result }));
-      }
-    };
-    reader.readAsDataURL(file);
+    if (!shopId) {
+      setMessage({ type: 'error', text: 'ไม่พบรหัสร้านค้า โปรดลองใหม่' });
+      return;
+    }
+
+    const fieldKey = type === 'icon' ? 'iconUrl' : 'coverUrl';
+    const previousValue = shopData[fieldKey];
+    const previewUrl = URL.createObjectURL(file);
+
+    setUploadingField(type);
+    setShopData((prev) => ({ ...prev, [fieldKey]: previewUrl }));
+
+    try {
+      const updatedShop = await uploadShopImage(shopId, type, file);
+      setShopData(mapShopToState(updatedShop));
+      setMessage({ type: 'success', text: type === 'icon' ? 'อัปโหลดรูปไอคอนสำเร็จ' : 'อัปโหลดรูปหน้าปกสำเร็จ' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 2500);
+    } catch (error) {
+      console.error('Failed to upload image', error);
+      const errorMsg = error?.response?.data?.message || error.message || 'อัปโหลดรูปไม่สำเร็จ';
+      setMessage({ type: 'error', text: Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg });
+      setShopData((prev) => ({ ...prev, [fieldKey]: previousValue }));
+    } finally {
+      setUploadingField(null);
+      URL.revokeObjectURL(previewUrl);
+    }
   };
 
   const handleOpenPinModal = () => {
@@ -241,11 +296,11 @@ const ShopProfile = () => {
                 </div>
               )}
             </div>
-            <div className="flex gap-2 mt-3">
+            <div className="flex flex-col sm:flex-row gap-2 mt-3">
               <label className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-[#E07B39] text-[#E07B39] font-medium rounded-full cursor-pointer hover:bg-[#E07B39] hover:text-white transition-all hover:scale-105 shadow-sm">
                 <ImageIcon className="h-4 w-4" />
-                เปลี่ยนรูปหน้าปก
-                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload('cover', e.target.files?.[0])} />
+                {uploadingField === 'cover' ? 'กำลังอัปโหลด...' : 'เปลี่ยนรูปหน้าปก'}
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload('cover', e.target.files?.[0])} disabled={uploadingField === 'cover'} />
               </label>
               {shopData.coverUrl && (
                 <button
@@ -257,6 +312,9 @@ const ShopProfile = () => {
                 </button>
               )}
             </div>
+            {uploadingField === 'cover' && (
+              <p className="text-xs text-[#E07B39] mt-2">กำลังอัปโหลดรูปหน้าปก กรุณารอสักครู่...</p>
+            )}
           </div>
 
           {/* คำอธิบายร้าน */}
@@ -272,6 +330,21 @@ const ShopProfile = () => {
               required
             />
             <p className="text-xs text-[#9CA3AF] mt-1">แนะนำให้เขียนอย่างน้อย 100 ตัวอักษร</p>
+          </div>
+
+          {/* ที่อยู่ */}
+          <div className="animate-fadeIn" style={{animationDelay: '0.45s'}}>
+            <label className="block text-sm font-semibold text-[#3D3D3D] mb-2">📍 ที่อยู่ร้าน</label>
+            <textarea
+              name="address"
+              value={shopData.address}
+              onChange={handleChange}
+              rows="3"
+              placeholder="เช่น บ้านเลขที่ ถนน ตำบล อำเภอ จังหวัด"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
+              required
+            />
+            <p className="text-xs text-[#9CA3AF] mt-1">ข้อมูลนี้จะแสดงในหน้าร้านค้าและใช้กับหมุดบนแผนที่</p>
           </div>
 
           {/* ข้อมูลติดต่อ */}
@@ -347,16 +420,55 @@ const ShopProfile = () => {
           {/* เวลาทำการ */}
           <div className="animate-fadeIn" style={{animationDelay: '0.7s'}}>
             <label className="block text-sm font-semibold text-[#3D3D3D] mb-3">🕐 เวลาทำการ</label>
-            <div className="relative">
-              <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#9CA3AF]" />
-              <input
-                type="text"
-                name="openTime"
-                value={shopData.openTime}
-                onChange={handleChange}
-                placeholder="เช่น 09:00 - 17:00"
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#9CA3AF]" />
+                  <input
+                    type="time"
+                    name="openTime"
+                    value={shopData.openTime}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
+                  />
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-xs text-[#9CA3AF]">เวลาเปิด (เว้นว่างหากไม่แน่นอน)</p>
+                  {shopData.openTime && (
+                    <button
+                      type="button"
+                      onClick={() => clearTimeField('openTime')}
+                      className="text-xs text-[#E07B39] hover:underline"
+                    >
+                      ล้าง
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#9CA3AF]" />
+                  <input
+                    type="time"
+                    name="closeTime"
+                    value={shopData.closeTime}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
+                  />
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-xs text-[#9CA3AF]">เวลาปิด (เว้นว่างหากไม่แน่นอน)</p>
+                  {shopData.closeTime && (
+                    <button
+                      type="button"
+                      onClick={() => clearTimeField('closeTime')}
+                      className="text-xs text-[#E07B39] hover:underline"
+                    >
+                      ล้าง
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 

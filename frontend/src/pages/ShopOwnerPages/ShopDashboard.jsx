@@ -1,37 +1,22 @@
 import { useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, Edit, Trash2, Eye, Users, DollarSign, Clock, CheckCircle, XCircle, AlertCircle, Camera, Settings as SettingsIcon, Bell, Calendar, TrendingUp, Star } from 'lucide-react';
-import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
-import api from '../../services/api';
+import { useMyShop } from '../../hooks/useMyShop';
 
 const ShopDashboard = () => {
-  const { user, token } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { slug } = useParams();
-  const queryClient = useQueryClient();
-  
-  const { data: shop, isLoading: shopLoading } = useQuery({
-    queryKey: ['shop/me', user?.id],
-    queryFn: async () => {
-      const res = await api.get('/api/shops/me', {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      return res.data;
-    },
-    enabled: !!token && !!user,
-    retry: 1,
-    staleTime: 0,
-  });
+  const { data: shop, isLoading: shopLoading, clearShopCache } = useMyShop();
+  const isPendingShop = !shopLoading && shop && shop.status !== 'ACTIVE';
 
   // Clear shop cache when user changes
   useEffect(() => {
     return () => {
-      queryClient.removeQueries(['shop/me']);
+      clearShopCache();
     };
-  }, [user?.id, queryClient]);
+  }, [clearShopCache]);
 
   useEffect(() => {
     if (!shopLoading && !shop) {
@@ -152,7 +137,7 @@ const ShopDashboard = () => {
               <h1 className="text-3xl font-bold text-[#2F4F2F]">{profile.name || t('shopDashboard.title')}</h1>
               <p className="text-[#6B6B6B]">{profile.description}</p>
             </div>
-            <div className="flex justify-end gap-3">
+            <div className="flex flex-col sm:flex-row justify-end gap-3">
               <button
                 onClick={() => navigate(`/${slug}/shop/profile`)}
                 className="flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-[#E07B39] text-[#E07B39] font-medium rounded-full hover:bg-[#E07B39] hover:text-white transition-all hover:scale-105 shadow-sm"
@@ -161,8 +146,16 @@ const ShopDashboard = () => {
                 แก้ไขข้อมูลร้าน
               </button>
               <button
-                onClick={() => navigate(`/${slug}/shop/workshops/create`)}
-                className="flex items-center gap-2 px-5 py-2.5 bg-[#4CAF50] text-white font-medium rounded-full hover:bg-[#45A049] shadow-md hover:shadow-lg transition-all hover:scale-105"
+                onClick={() => {
+                  if (isPendingShop) return;
+                  navigate(`/${slug}/shop/workshops/create`);
+                }}
+                disabled={isPendingShop}
+                className={`flex items-center gap-2 px-5 py-2.5 font-medium rounded-full shadow-md transition-all hover:shadow-lg ${
+                  isPendingShop
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-[#4CAF50] text-white hover:bg-[#45A049] hover:scale-105'
+                }`}
               >
                 <Plus className="h-4 w-4" />
                 สร้าง Workshop ใหม่
@@ -170,6 +163,23 @@ const ShopDashboard = () => {
             </div>
           </div>
         </div>
+
+        {isPendingShop && (
+          <div className="mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-4 flex gap-3 items-start">
+            <AlertCircle className="h-6 w-6 text-amber-600 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-amber-900">
+                {t('shopDashboard.pending.inlineTitle', 'ร้านค้าของคุณกำลังรอตรวจสอบ')}
+              </p>
+              <p className="text-sm text-amber-800">
+                {t(
+                  'shopDashboard.pending.inlineDescription',
+                  'คุณสามารถแก้ไขข้อมูลร้านได้ แต่การสร้าง/จัดการ Workshop จะเปิดให้ใช้งานหลังจากได้รับการอนุมัติ'
+                )}
+              </p>
+            </div>
+          </div>
+        )}
 
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 animate-stagger">
@@ -291,11 +301,19 @@ const ShopDashboard = () => {
                   {t('shopDashboard.noWorkshops.description')}
                 </p>
                 <button
-                  onClick={() => navigate(`/${slug}/shop/workshops/create`)}
-                  className="inline-flex items-center px-6 py-3 bg-[#4CAF50] text-white font-semibold rounded-full hover:bg-[#45A049] transition-all hover:scale-105 shadow-md"
+                  onClick={() => {
+                    if (isPendingShop) return;
+                    navigate(`/${slug}/shop/workshops/create`);
+                  }}
+                  disabled={isPendingShop}
+                  className={`inline-flex items-center px-6 py-3 font-semibold rounded-full shadow-md transition-all ${
+                    isPendingShop
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-[#4CAF50] text-white hover:bg-[#45A049] hover:scale-105'
+                  }`}
                 >
                   <Plus className="h-5 w-5 mr-2" />
-                  {t('shopDashboard.createWorkshop')}
+                  {isPendingShop ? t('shopDashboard.pending.waitApproval', 'รอการอนุมัติร้าน') : t('shopDashboard.createWorkshop')}
                 </button>
               </div>
             ) : (
@@ -334,16 +352,32 @@ const ShopDashboard = () => {
                           <div className="text-xl font-bold text-[#E07B39]">฿{workshop.price || 0}</div>
                           <div className="flex gap-2">
                             <button
-                              onClick={() => navigate(`/${slug}/shop/workshops/${workshop.id}`)}
-                              className="px-4 py-2 bg-[#E07B39] text-white rounded-full hover:bg-[#D66B29] text-sm font-medium transition-all hover:scale-105 shadow-sm"
+                              onClick={() => {
+                                if (isPendingShop) return;
+                                navigate(`/${slug}/shop/workshops/${workshop.id}`);
+                              }}
+                              disabled={isPendingShop}
+                              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                                isPendingShop
+                                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                  : 'bg-[#E07B39] text-white hover:bg-[#D66B29] hover:scale-105 shadow-sm'
+                              }`}
                             >
-                              ดูรายละเอียด
+                              {isPendingShop ? t('shopDashboard.pending.disabled', 'รออนุมัติ') : 'ดูรายละเอียด'}
                             </button>
                             <button
-                              onClick={() => handleDeleteWorkshop(workshop.id)}
-                              className="px-4 py-2 bg-red-50 text-red-600 rounded-full hover:bg-red-100 text-sm font-medium transition-all hover:scale-105"
+                              onClick={() => {
+                                if (isPendingShop) return;
+                                handleDeleteWorkshop(workshop.id);
+                              }}
+                              disabled={isPendingShop}
+                              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                                isPendingShop
+                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                  : 'bg-red-50 text-red-600 hover:bg-red-100 hover:scale-105'
+                              }`}
                             >
-                              ลบ
+                              {t('delete', 'ลบ')}
                             </button>
                           </div>
                         </div>

@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { Calendar, Store, FileText, Users, Eye, AlertCircle, CheckCircle, XCircle, Edit, Plus, List } from 'lucide-react';
+import { Calendar, Store, FileText, Users, Eye, AlertCircle, CheckCircle, XCircle, Edit, Plus, List, MapPin } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../services/api';
+import { getShopsByCommunity, getPendingShops } from '../../services/shopService';
+import { getShopCoverImage } from '../../utils/image';
 
 /**
  * Admin Dashboard - ศูนย์รวมการจัดการชุมชน (หน้าหลัก)
@@ -16,12 +18,25 @@ import api from '../../services/api';
  * - GET /api/shops/pending?community_id=xxx
  */
 
-const usePendingData = () => {
+const usePendingData = (communityId) => {
   // shop
   const shopsQuery = useQuery({
-    queryKey: ['shops', 'pending'],
-    queryFn: async () => (await api.get('/api/shop/pending')).data,
-  })
+    queryKey: ['community-shops', communityId],
+    queryFn: async () => {
+      if (!communityId) return [];
+      return await getShopsByCommunity(communityId);
+    },
+    enabled: !!communityId,
+  });
+
+  const pendingShopsQuery = useQuery({
+    queryKey: ['community-pending-shops', communityId],
+    queryFn: async () => {
+      if (!communityId) return [];
+      return await getPendingShops(communityId);
+    },
+    enabled: !!communityId,
+  });
   // workshop
 
   // event
@@ -30,37 +45,25 @@ const usePendingData = () => {
     queryFn: async () => (await api.get('/api/events/pending')).data,
   });
 
-  return { eventsQuery, shopsQuery };
+  return { eventsQuery, shopsQuery, pendingShopsQuery };
 };
 
 const AdminDashboard = () => {
-  const { eventsQuery, shopsQuery } = usePendingData();
+  const { community } = useOutletContext();
+  const { eventsQuery, shopsQuery, pendingShopsQuery } = usePendingData(community?._id);
   const navigate = useNavigate();
   const { ct } = useTranslation();
   const [activeTab, setActiveTab] = useState('workshops');
   const [taskTab, setTaskTab] = useState('events'); // Tab for Events/Shops section
-  const isLoading = eventsQuery.isLoading;
-  const { community } = useOutletContext()
+  const isLoading = eventsQuery.isLoading || shopsQuery.isLoading || pendingShopsQuery.isLoading;
 
   if (isLoading) return <div className="p-8 text-center">กำลังโหลดข้อมูล...</div>;
 
   const pendingEvents = eventsQuery.data || [];
-  const pendingShops = shopsQuery.data || []
-
-  const pendingCounts = {
-    events: pendingEvents.length,
-    shops: pendingShops.length,
-    // total: pendingWorkshops.length + pendingEvents.length + pendingShops.length
-  };
-
-  // TODO: Fetch from API
-  /*
-  const pendingCounts = {
-    workshops: 2,
-    events: 1,
-    shops: 1,
-    total: 4
-  };*/
+  const communityShops = shopsQuery.data || [];
+  const pendingShops = pendingShopsQuery.data || communityShops.filter(
+    (shop) => ((shop.status || 'PENDING').toUpperCase()) !== 'ACTIVE'
+  );
 
   // Mock data - Workshop รออนุมัติ
   const pendingWorkshops = [
@@ -90,6 +93,22 @@ const AdminDashboard = () => {
     }
   ];
 
+  const pendingCounts = {
+    workshops: pendingWorkshops.length,
+    events: pendingEvents.length,
+    shops: pendingShops.length,
+    total: pendingWorkshops.length + pendingEvents.length + pendingShops.length,
+  };
+
+  // TODO: Fetch from API
+  /*
+  const pendingCounts = {
+    workshops: 2,
+    events: 1,
+    shops: 1,
+    total: 4
+  };*/
+
   // Mock data - ร้านค้ารออนุมัติ
   // const pendingShops = [
   //   {
@@ -117,12 +136,23 @@ const AdminDashboard = () => {
 
   const getStatusColor = (status) => {
     // ปรับตาม enum ของ back (PENDING, APPROVED)
-    switch (status) {
-      case 'PENDING': return 'bg-yellow-100 text-yellow-800';
-      case 'APPROVED': return 'bg-green-100 text-green-800';
-      case 'REJECTED': return 'bg-red-100 text-red-800';
+    switch ((status || '').toUpperCase()) {
+      case 'PENDING':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'APPROVED':
+      case 'ACTIVE':
+        return 'bg-green-100 text-green-800';
+      case 'REJECTED':
+        return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const statusLabel = (status) => {
+    const value = status || 'PENDING';
+    if (value === 'ACTIVE') return ct('อนุมัติแล้ว', 'Approved');
+    if (value === 'REJECTED') return ct('ถูกปฏิเสธ', 'Rejected');
+    return ct('รออนุมัติ', 'Pending');
   };
 
   return (
@@ -162,7 +192,7 @@ const AdminDashboard = () => {
               </div>
               <span className="text-2xl font-bold text-[#1A1A1A]">{pendingCounts.total}</span>
             </div>
-            <p className="text-sm font-medium text-[#666666]">{ct('รออนุมัติทั้งหมด', 'To Review')}</p>
+            <p className="text-sm font-medium text-[#666666]">{ct('Workshops รออนุมัติ', 'Workshops Pending')}</p>
           </div>
 
           <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
@@ -172,7 +202,7 @@ const AdminDashboard = () => {
               </div>
               <span className="text-2xl font-bold text-[#1A1A1A]">{pendingCounts.workshops}</span>
             </div>
-            <p className="text-sm font-medium text-[#666666]">{ct('รออนุมัติ', 'Workshops Pending')}</p>
+            <p className="text-sm font-medium text-[#666666]">{ct('Workshops รอการแก้ไข', 'Workshops Review')}</p>
           </div>
 
           <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
@@ -192,8 +222,73 @@ const AdminDashboard = () => {
               </div>
               <span className="text-2xl font-bold text-[#1A1A1A]">{pendingCounts.shops}</span>
             </div>
-            <p className="text-sm font-medium text-[#666666]">{ct('ร้านค้า', 'Shops')}</p>
+            <p className="text-sm font-medium text-[#666666]">{ct('ร้านค้าที่รอการอนุมัติ', 'Shops Pending')}</p>
           </div>
+        </div>
+
+        {/* Community Shops Overview */}
+        <div className="mb-10">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-xl font-bold text-[#1A1A1A]">{ct('ร้านค้าในชุมชน', 'Community Shop')}</h2>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => navigate('/community-admin/shops')}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-[#1A1A1A] text-sm font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <List className="h-4 w-4" />
+                {ct('ดูร้านค้าทั้งหมด', 'View all shops')}
+              </button>
+            </div>
+          </div>
+
+          {communityShops.length === 0 ? (
+            <div className="bg-white border border-dashed border-gray-300 rounded-2xl p-8 text-center">
+              <Store className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-600">{ct('ยังไม่มีร้านค้าในชุมชนของคุณ', 'No shops have been created in this community yet.')}</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {communityShops.slice(0, 6).map((shop) => (
+                <div key={shop._id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all p-5 flex flex-col gap-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">{ct('ร้านค้า', 'Shop')}</p>
+                      <h3 className="text-lg font-semibold text-[#1A1A1A]">{shop.shopName}</h3>
+                      <p className="text-sm text-[#666666] line-clamp-2">{shop.description || ct('ยังไม่มีคำอธิบาย', 'No description')}</p>
+                    </div>
+                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(shop.status)}`}>
+                      {statusLabel(shop.status)}
+                    </span>
+                  </div>
+                  <div className="text-sm text-[#666666] flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-[#8E24AA]" />
+                      <span className="line-clamp-1">{shop.address || shop.location?.address || ct('ยังไม่ระบุที่อยู่', 'No address provided')}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-[#8E24AA]" />
+                      <span>{shop.owner?.name || shop.ownerName || ct('ยังไม่ระบุเจ้าของร้าน', 'Owner not specified')}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <span>{ct('เปิด', 'Open')}: {shop.openTime || '-'}</span>
+                      <span>•</span>
+                      <span>{ct('ปิด', 'Close')}: {shop.closeTime || '-'}</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => navigate(`/community-admin/shops/${shop._id}/approval`)}
+                      className="px-4 py-2 bg-[#1E293B] text-white rounded-full text-sm font-semibold hover:bg-[#0F172A] transition"
+                    >
+                      {ct('ตรวจสอบ', 'Review')}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Workshop Section Title with CTA */}
@@ -378,6 +473,9 @@ const AdminDashboard = () => {
             {/* Shops Tab */}
             {taskTab === 'shops' && (
               <div>
+                <p className="text-sm text-[#8E24AA] font-medium mb-4">
+                  {ct('รายชื่อต่อไปนี้ยังไม่ผ่านการอนุมัติ โปรดตรวจสอบและดำเนินการ', 'These shops are still pending approval. Review the details and approve or reject each one.')}
+                </p>
                 {pendingShops.length === 0 ? (
                   <div className="bg-[#F5F5F5] rounded-xl p-8 flex flex-col items-center justify-center min-h-[280px]">
                     <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center mb-4">
@@ -392,45 +490,60 @@ const AdminDashboard = () => {
                     <p className="text-sm text-[#666666] text-center mb-4">
                       {ct('ยังไม่มีร้านค้าที่ต้องจัดการในขณะนี้', 'No shops to manage at the moment')}
                     </p>
-                    <div className="flex gap-2">
-                      <button className="px-4 py-2 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-sm font-semibold rounded-lg transition-all">
-                        {ct('ดูรายละเอียด', 'View Details')}
-                      </button>
-                      <button className="px-4 py-2 bg-[#1E293B] hover:bg-[#0F172A] text-white text-sm font-semibold rounded-lg transition-all">
-                        {ct('อนุมัติ', 'Approve')}
-                      </button>
-                    </div>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {pendingShops.map((shop) => (
-                      <div key={shop.id} className="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-md transition-all">
-                        <span className="inline-block px-3 py-1 bg-[#F3E5F5] text-[#8E24AA] rounded-md text-xs font-semibold mb-3">
-                          {ct('ร้านค้า', 'Shop')}
-                        </span>
-                        <h3 className="text-base font-bold text-[#1A1A1A] mb-2">{shop.name}</h3>
-                        <p className="text-sm text-[#666666] mb-4 line-clamp-2">{shop.description}</p>
-                        <div className="flex items-center gap-3 text-sm text-[#666666] mb-4">
-                          <span className="flex items-center gap-1">
-                            <Users className="h-4 w-4" />
-                            {shop.owner}
+                    {pendingShops.map((shop) => {
+                      const coverImage = getShopCoverImage(shop);
+                      return (
+                        <div key={shop._id || shop.id} className="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-md transition-all">
+                          {coverImage && (
+                            <div className="relative h-36 w-full mb-4 rounded-xl overflow-hidden bg-gray-100">
+                              <img
+                                src={coverImage}
+                                alt={shop.shopName}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          )}
+                          <span className="inline-block px-3 py-1 bg-[#F3E5F5] text-[#8E24AA] rounded-md text-xs font-semibold mb-3">
+                            {ct('ร้านค้า', 'Shop')}
                           </span>
-                          <span>•</span>
-                          <span>{shop.category}</span>
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="text-base font-bold text-[#1A1A1A]">{shop.shopName}</h3>
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getStatusColor(shop.status)}`}>
+                              {statusLabel(shop.status)}
+                            </span>
+                          </div>
+                          <p className="text-xs text-orange-600 mb-2">
+                            {ct('สถานะ: ต้องตรวจสอบและอนุมัติก่อนจะปรากฏในแผนที่และหน้า Workshop', 'Pending approval: approve to show this shop on the map and listings.')}
+                          </p>
+                          <p className="text-sm text-[#666666] mb-4 line-clamp-2">{shop.description || ct('ยังไม่มีคำอธิบาย', 'No description')}</p>
+                          <div className="flex items-center gap-3 text-sm text-[#666666] mb-4">
+                            <span className="flex items-center gap-1">
+                              <Users className="h-4 w-4" />
+                              {shop.owner?.name || shop.ownerName || ct('ไม่ระบุ', 'Unknown')}
+                            </span>
+                            <span>•</span>
+                            <span>{shop.address ? shop.address.split(',')[0] : ct('ไม่ระบุที่อยู่', 'No address')}</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => navigate(`/community-admin/shops/${shop._id}/approval`)}
+                              className="flex-1 px-4 py-2 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-sm font-semibold rounded-lg transition-all"
+                            >
+                              {ct('ดูรายละเอียด', 'View Details')}
+                            </button>
+                            <button
+                              onClick={() => navigate(`/community-admin/shops/${shop._id}/approval`)}
+                              className="px-4 py-2 bg-[#1E293B] hover:bg-[#0F172A] text-white text-sm font-semibold rounded-lg transition-all"
+                            >
+                              {ct('ไปยังหน้าการอนุมัติ', 'Go to approval')}
+                            </button>
+                          </div>
                         </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => navigate(`/community-admin/shops/${shop.id}/approve`)}
-                            className="flex-1 px-4 py-2 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-sm font-semibold rounded-lg transition-all"
-                          >
-                            {ct('ดูรายละเอียด', 'View Details')}
-                          </button>
-                          <button className="px-4 py-2 bg-[#1E293B] hover:bg-[#0F172A] text-white text-sm font-semibold rounded-lg transition-all">
-                            {ct('อนุมัติ', 'Approve')}
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>

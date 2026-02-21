@@ -12,6 +12,10 @@ export class UpdateShopDto {
 
   @IsString()
   @IsOptional()
+  address?: string;
+
+  @IsString()
+  @IsOptional()
   picture?: string;
 
   @IsString()
@@ -22,13 +26,13 @@ export class UpdateShopDto {
   @IsOptional()
   iconUrl?: string;
 
-  @IsString()
   @IsOptional()
-  openTime?: string;
+  @IsString()
+  openTime?: string | null;
 
-  @IsString()
   @IsOptional()
-  closeTime?: string;
+  @IsString()
+  closeTime?: string | null;
 
   @IsObject()
   @IsOptional()

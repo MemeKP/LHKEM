@@ -22,6 +22,12 @@ export const getShopsByCommunity = async (communityId) => {
   return response.data;
 };
 
+// Get all shops by community ID (admin view)
+export const getAdminShopsByCommunity = async (communityId) => {
+  const response = await api.get(`/api/shops/community/${communityId}/all`);
+  return response.data;
+};
+
 // Create new shop
 export const createShop = async (shopData) => {
   const response = await api.post('/api/shops', shopData);
@@ -31,6 +37,15 @@ export const createShop = async (shopData) => {
 // Update shop
 export const updateShop = async (shopId, shopData) => {
   const response = await api.put(`/api/shops/${shopId}`, shopData);
+  return response.data;
+};
+
+export const uploadShopImage = async (shopId, field, file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  const response = await api.post(`/api/shops/${shopId}/images/${field}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
   return response.data;
 };
 
