@@ -9,6 +9,7 @@ import { Workshop, WorkshopSchema } from 'src/workshops/schemas/workshop.schema'
 import { Shop, ShopSchema } from 'src/shops/schemas/shop.schema';
 import { DashboardService } from 'src/dashboard/dashboard.service';
 import { User, UserSchema } from 'src/users/schemas/users.schema';
+import { CommunityView, CommunityViewSchema } from 'src/community-view/schemas/community-view.schema';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { User, UserSchema } from 'src/users/schemas/users.schema';
       { name: Shop.name, schema: ShopSchema },
       { name: CommunityAdmin.name, schema: CommunityAdminSchema },
       { name: User.name, schema: UserSchema },
+      { name: CommunityView.name, schema: CommunityViewSchema },
 
     ]),
   ],

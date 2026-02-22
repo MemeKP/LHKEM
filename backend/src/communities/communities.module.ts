@@ -10,6 +10,7 @@ import { CommunityAdmin, CommunityAdminSchema } from 'src/community-admin/schema
 import { User, UserSchema } from 'src/users/schemas/users.schema';
 import { DashboardService } from 'src/dashboard/dashboard.service';
 import { EventSchema } from 'src/events/schemas/event.schema';
+import { CommunityView, CommunityViewSchema } from 'src/community-view/schemas/community-view.schema';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { EventSchema } from 'src/events/schemas/event.schema';
       { name: CommunityAdmin.name, schema: CommunityAdminSchema },
       { name: User.name, schema: UserSchema },
       { name: Event.name, schema: EventSchema },
+      { name: CommunityView.name, schema: CommunityViewSchema },
     ])
   ],
   controllers: [CommunitiesController],

@@ -75,8 +75,9 @@ export class CommunitiesController {
   }
 
   @Get(':idOrSlug')
-  findOne(@Param('idOrSlug') idOrSlug: string) {
-    return this.communitiesService.findByIdOrSlug(idOrSlug);
+  findOne(@Param('idOrSlug') idOrSlug: string, @Req() req) {
+    const userId = req.user?.userMongoId || req.user?._id || null;
+    return this.communitiesService.findByIdOrSlug(idOrSlug, userId);
   }
 
   @Get(':id/media')

@@ -43,6 +43,14 @@ export class Workshop {
 
   @Prop({ type: Number, default: 0 })
   current_participants: number;
+
+  @Prop({
+    type: String,
+    enum: ['งานฝีมือ', 'อาหาร', 'ศิลปะ', 'วัฒนธรรม'],
+    default: 'งานฝีมือ',
+    index: true,
+  })
+  category: string;
 }
 
 export const WorkshopSchema = SchemaFactory.createForClass(Workshop);

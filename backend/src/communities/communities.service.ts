@@ -13,6 +13,7 @@ import { CommunityAdmin } from 'src/community-admin/schemas/community-admin.sche
 import { LocationDto } from './dto/location.dto';
 import { User } from 'src/users/schemas/users.schema';
 import { UserRole } from 'src/common/enums/user-role.enum';
+import { CommunityView } from 'src/community-view/schemas/community-view.schema';
 
 @Injectable()
 export class CommunitiesService {
@@ -23,6 +24,7 @@ export class CommunitiesService {
     @InjectModel(Workshopregistration.name) private registrationModel: Model<Workshopregistration>,
     @InjectModel(CommunityAdmin.name) private communityadminModel: Model<CommunityAdmin>,
     @InjectModel(User.name) private userModel: Model<User>,
+    @InjectModel(CommunityView.name) private communityViewModel: Model<CommunityView>,
 
   ) { }
 
@@ -177,7 +179,7 @@ export class CommunitiesService {
       .exec();
   }
 
-  async findOne(id: string): Promise<Community> {
+  async findOne(id: string, userId?: string): Promise<Community> {
     const community = await this.communityModel.findById(id)
       .populate('shops')
       .populate('events')
@@ -186,10 +188,15 @@ export class CommunitiesService {
     if (!community) {
       throw new NotFoundException(`Community with ID ${id} not found`);
     }
+    await this.communityViewModel.create({
+      community: new Types.ObjectId(id),
+      user: userId ? new Types.ObjectId(userId) : null,
+    });
+    
     return community;
   }
 
-  async findByIdOrSlug(identifier: string): Promise<Community> {
+  async findByIdOrSlug(identifier: string, userId?: string): Promise<Community> {
     if (Types.ObjectId.isValid(identifier)) {
       const doc = await this.communityModel.findOne({
         _id: identifier,
@@ -206,6 +213,12 @@ export class CommunitiesService {
     if (!community) {
       throw new NotFoundException('Community not found');
     }
+    // console.log('recording view for:', identifier, 'user:', userId); 
+
+    await this.communityViewModel.create({
+      community: community._id,
+      user: userId ? new Types.ObjectId(userId) : null,
+    });
     return community;
   }
 

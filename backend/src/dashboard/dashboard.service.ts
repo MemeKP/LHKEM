@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { EventStatus } from 'src/common/enums/event.enum';
 import { Community } from 'src/communities/schemas/community.schema';
+import { CommunityView } from 'src/community-view/schemas/community-view.schema';
 import { Shop } from 'src/shops/schemas/shop.schema';
 import { User } from 'src/users/schemas/users.schema';
 import { Workshop } from 'src/workshops/schemas/workshop.schema';
@@ -14,6 +16,7 @@ export class DashboardService {
         @InjectModel(Shop.name) private readonly shopModel: Model<Shop>,
         @InjectModel(User.name) private readonly userModel: Model<User>,
         @InjectModel(Community.name) private readonly communityModel: Model<Community>,
+        @InjectModel(CommunityView.name) private communityViewModel: Model<CommunityView>,
     ) { }
 
     private calculateGrowth(current: number, previous: number) {
@@ -451,5 +454,262 @@ export class DashboardService {
         }
 
         return monthlyData;
+    }
+
+    // COMMUNITY ADMIN
+    async getCommunityOverviewStats(communityId: string, timeFilter: 'week' | 'month' | 'year') {
+        const now = new Date();
+        const startDate = {
+            week: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+            month: new Date(now.getFullYear(), now.getMonth(), 1),
+            year: new Date(now.getFullYear(), 0, 1),
+        }[timeFilter];
+
+        const communityObjectId = new Types.ObjectId(communityId);
+        const dateFilter = { $gte: startDate };
+
+        const [visitors, workshops, events, shops] = await Promise.all([
+            // ผู้เข้าชม
+            this.communityViewModel.countDocuments({
+                community: communityObjectId,
+                viewed_at: dateFilter,
+            }),
+
+            // Workshop
+            this.workshopModel.countDocuments({
+                communityId: communityObjectId,
+                date: dateFilter,
+                status: { $ne: 'CANCELLED' }, // ตอนนี้ให้นับหมดยกเว้น CANCELLED
+            }),
+
+            // Event
+            this.eventModel.countDocuments({
+                community_id: communityObjectId,
+                start_at: dateFilter,
+                status: { $ne: EventStatus.CANCELLED },
+            }),
+
+            // shop ไม่ได้กรองด้วย date เพราะร้านค้าไม่ได้มี timestamp การเปิด
+            this.shopModel.countDocuments({
+                communityId: communityObjectId,
+                status: { $ne: 'REJECTED' }, // ตอนนี้ให้นับทั้ง PENDING และ ACTIVE
+            }),
+        ]);
+
+        return { visitors, workshops, events, shops };
+    }
+
+    async getWorkshopsByCategory(communityId: string, timeFilter: 'week' | 'month' | 'year') {
+        const now = new Date();
+        const startDate = {
+            week: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+            month: new Date(now.getFullYear(), now.getMonth(), 1),
+            year: new Date(now.getFullYear(), 0, 1),
+        }[timeFilter];
+
+        const result = await this.workshopModel.aggregate([
+            {
+                $match: {
+                    communityId: new Types.ObjectId(communityId),
+                    date: { $gte: startDate },
+                    status: { $ne: 'CANCELLED' },
+                },
+            },
+            {
+                $group: {
+                    _id: '$category',
+                    count: { $sum: 1 },
+                },
+            },
+            {
+                $project: {
+                    _id: 0,
+                    type: '$_id',
+                    count: 1,
+                },
+            },
+        ]);
+
+        const categories = ['งานฝีมือ', 'อาหาร', 'ศิลปะ', 'วัฒนธรรม'];
+        return categories.map(cat => ({
+            type: cat,
+            count: result.find(r => r.type === cat)?.count ?? 0,
+        }));
+    }
+
+    async getTopWorkshops(communityId: string, timeFilter: 'week' | 'month' | 'year') {
+        const now = new Date();
+        const startDate = {
+            week: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+            month: new Date(now.getFullYear(), now.getMonth(), 1),
+            year: new Date(now.getFullYear(), 0, 1),
+        }[timeFilter];
+
+        return this.workshopModel
+            .find({
+                communityId: new Types.ObjectId(communityId),
+                date: { $gte: startDate },
+                status: { $ne: 'CANCELLED' },
+            })
+            .sort({ current_participants: -1 })
+            .limit(5)
+            .select('title category current_participants capacity date')
+            .lean();
+    }
+
+    async getWorkshopStatus(communityId: string, timeFilter: 'week' | 'month' | 'year') {
+        const now = new Date();
+        const startDate = {
+            week: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+            month: new Date(now.getFullYear(), now.getMonth(), 1),
+            year: new Date(now.getFullYear(), 0, 1),
+        }[timeFilter];
+
+        const result = await this.workshopModel.aggregate([
+            {
+                $match: {
+                    communityId: new Types.ObjectId(communityId),
+                    date: { $gte: startDate },
+                },
+            },
+            {
+                $group: {
+                    _id: '$status',
+                    count: { $sum: 1 },
+                },
+            },
+            {
+                $project: { _id: 0, status: '$_id', count: 1 },
+            },
+        ]);
+
+        const statuses = ['OPEN', 'CLOSED', 'FULL', 'CANCELLED'];
+        return statuses.map(s => ({
+            status: s,
+            count: result.find(r => r.status === s)?.count ?? 0,
+        }));
+    }
+
+    async getCategoryEngagement(communityId: string, timeFilter: 'week' | 'month' | 'year') {
+        const now = new Date();
+        const startDate = {
+            week: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+            month: new Date(now.getFullYear(), now.getMonth(), 1),
+            year: new Date(now.getFullYear(), 0, 1),
+        }[timeFilter];
+
+        const result = await this.workshopModel.aggregate([
+            {
+                $match: {
+                    communityId: new Types.ObjectId(communityId),
+                    date: { $gte: startDate },
+                    status: { $ne: 'CANCELLED' },
+                    capacity: { $gt: 0 },
+                },
+            },
+            {
+                $group: {
+                    _id: '$category',
+                    totalParticipants: { $sum: '$current_participants' },
+                    totalCapacity: { $sum: '$capacity' },
+                },
+            },
+            {
+                $project: {
+                    _id: 0,
+                    category: '$_id',
+                    value: {
+                        $round: [
+                            { $multiply: [{ $divide: ['$totalParticipants', '$totalCapacity'] }, 100] },
+                            0,
+                        ],
+                    },
+                },
+            },
+        ]);
+
+        const categories = ['งานฝีมือ', 'อาหาร', 'ศิลปะ', 'วัฒนธรรม'];
+        return categories.map(cat => ({
+            category: cat,
+            value: result.find(r => r.category === cat)?.value ?? 0,
+        }));
+    }
+
+    async getCommunityGrowth(communityId: string) {
+        const now = new Date();
+        const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+        const prevSixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+        const communityObjectId = new Types.ObjectId(communityId);
+
+        const [
+            currentVisitors, prevVisitors,
+            currentWorkshops, prevWorkshops,
+            currentParticipants, prevParticipants,
+        ] = await Promise.all([
+            // ผู้เข้าชม 6 เดือนล่าสุด
+            this.communityViewModel.countDocuments({
+                community: communityObjectId,
+                viewed_at: { $gte: sixMonthsAgo },
+            }),
+            // ผู้เข้าชม 6 เดือนก่อนหน้า
+            this.communityViewModel.countDocuments({
+                community: communityObjectId,
+                viewed_at: { $gte: prevSixMonthsAgo, $lt: sixMonthsAgo },
+            }),
+
+            // Workshop 6 เดือนล่าสุด
+            this.workshopModel.countDocuments({
+                communityId: communityObjectId,
+                date: { $gte: sixMonthsAgo },
+                status: { $ne: 'CANCELLED' },
+            }),
+            // Workshop 6 เดือนก่อนหน้า
+            this.workshopModel.countDocuments({
+                communityId: communityObjectId,
+                date: { $gte: prevSixMonthsAgo, $lt: sixMonthsAgo },
+                status: { $ne: 'CANCELLED' },
+            }),
+
+            // ผู้เข้าร่วม 6 เดือนล่าสุด
+            this.workshopModel.aggregate([
+                { $match: { communityId: communityObjectId, date: { $gte: sixMonthsAgo }, status: { $ne: 'CANCELLED' } } },
+                { $group: { _id: null, total: { $sum: '$current_participants' } } },
+            ]),
+            // ผู้เข้าร่วม 6 เดือนก่อนหน้า
+            this.workshopModel.aggregate([
+                { $match: { communityId: communityObjectId, date: { $gte: prevSixMonthsAgo, $lt: sixMonthsAgo }, status: { $ne: 'CANCELLED' } } },
+                { $group: { _id: null, total: { $sum: '$current_participants' } } },
+            ]),
+        ]);
+
+        const calcChange = (current: number, prev: number) => {
+            if (prev === 0) return current > 0 ? '+100%' : '0%';
+            const pct = ((current - prev) / prev * 100).toFixed(1);
+            return `${Number(pct) >= 0 ? '+' : ''}${pct}%`;
+        };
+
+        const curParticipantsTotal = currentParticipants[0]?.total ?? 0;
+        const prevParticipantsTotal = prevParticipants[0]?.total ?? 0;
+
+        return [
+            {
+                key: 'visitors',
+                value: currentVisitors.toLocaleString(),
+                change: calcChange(currentVisitors, prevVisitors),
+                trend: currentVisitors >= prevVisitors ? 'up' : 'down',
+            },
+            {
+                key: 'workshops',
+                value: currentWorkshops.toLocaleString(),
+                change: calcChange(currentWorkshops, prevWorkshops),
+                trend: currentWorkshops >= prevWorkshops ? 'up' : 'down',
+            },
+            {
+                key: 'participants',
+                value: curParticipantsTotal.toLocaleString(),
+                change: calcChange(curParticipantsTotal, prevParticipantsTotal),
+                trend: curParticipantsTotal >= prevParticipantsTotal ? 'up' : 'down',
+            },
+        ];
     }
 }

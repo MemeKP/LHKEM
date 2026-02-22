@@ -11,6 +11,7 @@ import { Workshop, WorkshopSchema } from 'src/workshops/schemas/workshop.schema'
 import { CommunityAdmin, CommunityAdminSchema } from 'src/community-admin/schemas/community-admin.schema';
 import { DashboardModule } from 'src/dashboard/dashboard.module';
 import { DashboardService } from 'src/dashboard/dashboard.service';
+import { CommunityView, CommunityViewSchema } from 'src/community-view/schemas/community-view.schema';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { DashboardService } from 'src/dashboard/dashboard.service';
       { name: Shop.name, schema: ShopSchema},
       { name: Workshop.name, schema: WorkshopSchema}, 
       { name: CommunityAdmin.name, schema: CommunityAdminSchema},
+      { name: CommunityView.name, schema: CommunityViewSchema },
     ]),
   ],
   controllers: [PlatformAdminController],

@@ -19,6 +19,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
 import { EmailModule } from './email/email.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { DashboardService } from './dashboard/dashboard.service';
+import { CommunityViewModule } from './community-view/community-view.module';
 
 @Module({
   imports: [ 
@@ -66,6 +67,7 @@ import { DashboardService } from './dashboard/dashboard.service';
     CommunityMapModule,
     PlatformAdminModule,
     EmailModule,
+    CommunityViewModule,
   ],
   controllers: [AppController],
   providers: [AppService, DashboardService],

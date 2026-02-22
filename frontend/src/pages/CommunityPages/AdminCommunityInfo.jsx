@@ -2,69 +2,173 @@ import { useState } from 'react';
 import { BarChart, Bar, PieChart as RechartsPie, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { TrendingUp, Users, Store, Calendar, Award } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
+import api from '../../services/api';
+import { useQuery } from '@tanstack/react-query';
 
-/**
- * Admin Community Info - ภาพรวมสถิติและข้อมูลชุมชน
- * ตาม Figma: Admin-dashboard.png
- * หน้าแสดงข้อมูลและสถิติของชุมชน (ดูอย่างเดียว)
- * 
- * TODO: Backend APIs:
- * - GET /api/communities/:id/dashboard/stats - สถิติภาพรวม
- * - GET /api/communities/:id/dashboard/charts - ข้อมูล charts
- * - GET /api/communities/:id/dashboard/top-workshops - Workshop ยอดนิยม
- */
- 
+const fetchCommunityStats = async (period) => {
+  const res = await api.get('/api/community-admin/community-stats', {
+    params: { period }
+  });
+  return res.data;
+};
+
+const fetchWorkshopsByCategory = async (period) => {
+  const res = await api.get('/api/community-admin/workshop-by-category', {
+    params: { period }
+  });
+  return res.data;
+};
+
+const fetchTopWorkshops = async (period) => {
+  const res = await api.get('/api/community-admin/top-workshops', { params: { period } });
+  return res.data;
+};
+
 const AdminCommunityInfo = () => {
   const { ct } = useTranslation();
   const [timeRange, setTimeRange] = useState('month'); // week, month, year
 
-  // TODO: Fetch from API
+  const { data: statsData, isLoading } = useQuery({
+    queryKey: ['community-stats', timeRange],
+    queryFn: () => fetchCommunityStats(timeRange),
+    refetchOnWindowFocus: false,
+  });
+
+  const { data: categoryRaw = [] } = useQuery({
+    queryKey: ['workshop-by-category', timeRange],
+    queryFn: () => fetchWorkshopsByCategory(timeRange),
+    refetchOnWindowFocus: false,
+  });
+
+  const { data: topWorkshops = [] } = useQuery({
+    queryKey: ['top-workshops', timeRange],
+    queryFn: () => fetchTopWorkshops(timeRange),
+    refetchOnWindowFocus: false,
+  });
+
+  const workshopRankingData = topWorkshops.map((w, index) => ({
+    rank: index + 1,
+    name: w.title,
+    participants: w.current_participants,
+    type: w.category,
+    capacity: w.capacity,
+    rating: w.capacity > 0
+      ? Math.round((w.current_participants / w.capacity) * 100)
+      : 0,
+  }));
+
   const stats = {
-    totalVisitors: 324,
-    totalWorkshops: 2847,
-    totalEvents: 42,
-    totalShops: 15
+    totalVisitors: statsData?.visitors ?? 0,
+    totalWorkshops: statsData?.workshops ?? 0,
+    totalEvents: statsData?.events ?? 0,
+    totalShops: statsData?.shops ?? 0,
   };
 
+
   // Workshop by Category
-  const workshopCategoryData = [
-    { name: ct('งานฝีมือ', 'Crafts'), value: 45, fill: '#16a34a' },
-    { name: ct('อาหาร', 'Food'), value: 30, fill: '#f97316' },
-    { name: ct('ศิลปะ', 'Art'), value: 15, fill: '#eab308' },
-    { name: ct('อื่นๆ', 'Others'), value: 10, fill: '#8b5cf6' }
-  ];
+  // const workshopCategoryData = [
+  //   { name: ct('งานฝีมือ', 'Crafts'), value: 45, fill: '#16a34a' },
+  //   { name: ct('อาหาร', 'Food'), value: 30, fill: '#f97316' },
+  //   { name: ct('ศิลปะ', 'Art'), value: 15, fill: '#eab308' },
+  //   { name: ct('อื่นๆ', 'Others'), value: 10, fill: '#8b5cf6' }
+  // ];
+  const CATEGORY_CONFIG = {
+    งานฝีมือ: { label: ct('งานฝีมือ', 'Crafts'), fill: '#16a34a' },
+    อาหาร: { label: ct('อาหาร', 'Food'), fill: '#f97316' },
+    ศิลปะ: { label: ct('ศิลปะ', 'Art'), fill: '#eab308' },
+    วัฒนธรรม: { label: ct('วัฒนธรรม', 'Culture'), fill: '#8b5cf6' },
+  };
+
+  const workshopCategoryData = categoryRaw.map(item => ({
+    name: CATEGORY_CONFIG[item.type]?.label ?? item.type,
+    value: item.count,
+    fill: CATEGORY_CONFIG[item.type]?.fill ?? '#94a3b8',
+  }));
 
   // Workshop Status
-  const workshopStatusData = [
-    { name: ct('อนุมัติแล้ว', 'Approved'), value: 42, fill: '#16a34a' },
-    { name: ct('รออนุมัติ', 'Pending'), value: 15, fill: '#eab308' }
-  ];
+  // const workshopStatusData = [
+  //   { name: ct('อนุมัติแล้ว', 'Approved'), value: 42, fill: '#16a34a' },
+  //   { name: ct('รออนุมัติ', 'Pending'), value: 15, fill: '#eab308' }
+  // ];
+  const STATUS_CONFIG = {
+    OPEN: { label: ct('เปิดรับสมัคร', 'Open'), fill: '#16a34a' },
+    CLOSED: { label: ct('ปิดรับสมัคร', 'Closed'), fill: '#6b7280' },
+    FULL: { label: ct('เต็มแล้ว', 'Full'), fill: '#f97316' },
+    CANCELLED: { label: ct('ยกเลิก', 'Cancelled'), fill: '#dc2626' },
+  };
+  const { data: statusRaw = [] } = useQuery({
+    queryKey: ['workshop-status', timeRange],
+    queryFn: () => api.get('/api/community-admin/workshop-status', { params: { period: timeRange } }).then(r => r.data),
+    refetchOnWindowFocus: false,
+  });
+  const workshopStatusData = statusRaw.map(s => ({
+    name: STATUS_CONFIG[s.status]?.label ?? s.status,
+    value: s.count,
+    fill: STATUS_CONFIG[s.status]?.fill ?? '#94a3b8',
+  }));
 
   // Top Workshops
-  const topWorkshops = [
-    { rank: 1, name: ct('ย้อมผ้าครามธรรมชาติ', 'Natural Indigo Dyeing'), participants: 156, rating: 4.8 },
-    { rank: 2, name: ct('ทำขนมไทยโบราณ', 'Traditional Thai Desserts'), participants: 142, rating: 4.7 },
-    { rank: 3, name: ct('ปั้นดินเผาล้านนา', 'Lanna Pottery'), participants: 128, rating: 4.9 },
-    { rank: 4, name: ct('ทอผ้าพื้นเมือง', 'Traditional Weaving'), participants: 115, rating: 4.6 },
-    { rank: 5, name: ct('แกะสลักไม้', 'Wood Carving'), participants: 98, rating: 4.5 }
-  ];
+  // const topWorkshops = [
+  //   { rank: 1, name: ct('ย้อมผ้าครามธรรมชาติ', 'Natural Indigo Dyeing'), participants: 156, rating: 4.8 },
+  //   { rank: 2, name: ct('ทำขนมไทยโบราณ', 'Traditional Thai Desserts'), participants: 142, rating: 4.7 },
+  //   { rank: 3, name: ct('ปั้นดินเผาล้านนา', 'Lanna Pottery'), participants: 128, rating: 4.9 },
+  //   { rank: 4, name: ct('ทอผ้าพื้นเมือง', 'Traditional Weaving'), participants: 115, rating: 4.6 },
+  //   { rank: 5, name: ct('แกะสลักไม้', 'Wood Carving'), participants: 98, rating: 4.5 }
+  // ];
 
   // Engagement by Category
-  const engagementData = [
-    { category: ct('งานฝีมือ', 'Crafts'), value: 85 },
-    { category: ct('อาหาร', 'Food'), value: 72 },
-    { category: ct('ศิลปะ', 'Art'), value: 68 },
-    { category: ct('วัฒนธรรม', 'Culture'), value: 54 }
-  ];
+  // const engagementData = [
+  //   { category: ct('งานฝีมือ', 'Crafts'), value: 85 },
+  //   { category: ct('อาหาร', 'Food'), value: 72 },
+  //   { category: ct('ศิลปะ', 'Art'), value: 68 },
+  //   { category: ct('วัฒนธรรม', 'Culture'), value: 54 }
+  // ];
+  const { data: engagementRaw = [] } = useQuery({
+    queryKey: ['category-engagement', timeRange],
+    queryFn: () => api.get('/api/community-admin/category-engagement', {
+      params: { period: timeRange }
+    }).then(r => r.data),
+    refetchOnWindowFocus: false,
+  });
+
+  const CATEGORY_LABELS = {
+    งานฝีมือ: ct('งานฝีมือ', 'Crafts'),
+    อาหาร: ct('อาหาร', 'Food'),
+    ศิลปะ: ct('ศิลปะ', 'Art'),
+    วัฒนธรรม: ct('วัฒนธรรม', 'Culture'),
+  };
+
+  const engagementData = engagementRaw.map(item => ({
+    category: CATEGORY_LABELS[item.category] ?? item.category,
+    value: item.value,
+  }));
 
 
   // Growth Metrics
-  const growthMetrics = [
-    { label: ct('จำนวนผู้เข้าชม', 'Total Visitors'), value: '48,500', change: '+12.5%', trend: 'up' },
-    { label: ct('Workshop ที่จัด', 'Workshops Held'), value: '1,154', change: '+8.3%', trend: 'up' },
-    { label: ct('ผู้เข้าร่วม', 'Participants'), value: '7,396', change: '+15.2%', trend: 'up' },
-    { label: ct('อัตราความพึงพอใจ', 'Satisfaction Rate'), value: '87%', change: '+2.1%', trend: 'up' }
-  ];
+  // const growthMetrics = [
+  //   { label: ct('จำนวนผู้เข้าชม', 'Total Visitors'), value: '48,500', change: '+12.5%', trend: 'up' },
+  //   { label: ct('Workshop ที่จัด', 'Workshops Held'), value: '1,154', change: '+8.3%', trend: 'up' },
+  //   { label: ct('ผู้เข้าร่วม', 'Participants'), value: '7,396', change: '+15.2%', trend: 'up' },
+  //   { label: ct('อัตราความพึงพอใจ', 'Satisfaction Rate'), value: '87%', change: '+2.1%', trend: 'up' }
+  // ];
+  const GROWTH_LABELS = {
+    visitors: ct('จำนวนผู้เข้าชม', 'Total Visitors'),
+    workshops: ct('Workshop ที่จัด', 'Workshops Held'),
+    participants: ct('ผู้เข้าร่วม', 'Participants'),
+  };
+
+  const { data: growthRaw = [] } = useQuery({
+    queryKey: ['community-growth'],
+    queryFn: () => api.get('/api/community-admin/community-growth').then(r => r.data),
+    refetchOnWindowFocus: false,
+  });
+
+  const growthMetrics = growthRaw.map(item => ({
+    label: GROWTH_LABELS[item.key] ?? item.key,
+    value: item.value,
+    change: item.change,
+    trend: item.trend,
+  }));
 
   return (
     <div className="min-h-screen bg-[#F5EFE7] py-8">
@@ -86,11 +190,10 @@ const AdminCommunityInfo = () => {
               <button
                 key={range}
                 onClick={() => setTimeRange(range)}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition ${
-                  timeRange === range
-                    ? 'bg-orange-500 text-white'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition ${timeRange === range
+                  ? 'bg-orange-500 text-white'
+                  : 'text-gray-700 hover:bg-gray-100'
+                  }`}
               >
                 {range === 'week' && ct('สัปดาห์', 'Week')}
                 {range === 'month' && ct('เดือน', 'Month')}
@@ -148,7 +251,11 @@ const AdminCommunityInfo = () => {
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="value" fill="#f97316" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="value" radius={[8, 8, 0, 0]}>
+                  {workshopCategoryData.map((entry, index) => (
+                    <Cell key={index} fill={entry.fill} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -159,14 +266,13 @@ const AdminCommunityInfo = () => {
               {ct('Workshop ยอดนิยม 5 อันดับแรก', 'Top 5 Workshops')}
             </h3>
             <div className="space-y-3">
-              {topWorkshops.map((workshop) => (
+              {workshopRankingData.map((workshop) => (
                 <div key={workshop.rank} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
                   <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${
-                      workshop.rank === 1 ? 'bg-yellow-500' :
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${workshop.rank === 1 ? 'bg-yellow-500' :
                       workshop.rank === 2 ? 'bg-gray-400' :
-                      workshop.rank === 3 ? 'bg-orange-600' : 'bg-gray-300'
-                    }`}>
+                        workshop.rank === 3 ? 'bg-orange-600' : 'bg-gray-300'
+                      }`}>
                       {workshop.rank}
                     </div>
                     <div>
@@ -191,25 +297,32 @@ const AdminCommunityInfo = () => {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               {ct('สถานะ Workshop', 'Workshop Status')}
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <RechartsPie>
-                <Pie
-                  data={workshopStatusData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {workshopStatusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </RechartsPie>
-            </ResponsiveContainer>
+
+            {/* ✅ กรองเฉพาะที่มีข้อมูลก่อน render */}
+            {workshopStatusData.some(s => s.value > 0) ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <RechartsPie>
+                  <Pie
+                    data={workshopStatusData.filter(s => s.value > 0)} // ✅ ไม่ส่ง 0 เข้า pie
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={100}
+                    dataKey="value"
+                  >
+                    {workshopStatusData.filter(s => s.value > 0).map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </RechartsPie>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[300px] text-gray-400 text-sm">
+                {ct('ไม่มีข้อมูลในช่วงเวลานี้', 'No data for this period')}
+              </div>
+            )}
           </div>
 
           {/* Engagement by Category */}

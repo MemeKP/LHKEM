@@ -17,10 +17,30 @@ export class CommunityAdminController {
     private readonly communityAdminService: CommunityAdminService,
     private readonly dashboardService: DashboardService,
     @InjectModel(CommunityAdmin.name) private readonly communityAdminModel: Model<CommunityAdmin>
-  ) {}
+  ) { }
   @Post()
   create(@Body() createCommunityAdminDto: CreateCommunityAdminDto) {
     return this.communityAdminService.create(createCommunityAdminDto);
+  }
+
+  @Get('community-stats')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async getCommunityStats(
+    @Query('period') period: 'week' | 'month' | 'year' = 'month',
+    @Req() req,
+  ) {
+    const userId = req.user.userMongoId || req.user._id;
+    const adminRecord = await this.communityAdminModel.findOne({
+      user: new Types.ObjectId(userId),
+    }).lean();
+
+    if (!adminRecord) throw new ForbiddenException('You are not a community admin');
+
+    return this.dashboardService.getCommunityOverviewStats(
+      adminRecord.community.toString(),
+      period,
+    );
   }
 
   @Get('stats')
@@ -43,10 +63,104 @@ export class CommunityAdminController {
 
     return this.dashboardService.getDashboardStats(communityId, timeRange);
   }
- 
+
+  @Get('workshop-by-category')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async getWorkshopsByCategory(
+    @Query('period') period: 'week' | 'month' | 'year' = 'month',
+    @Req() req,
+  ) {
+    const userId = req.user.userMongoId || req.user._id;
+    const adminRecord = await this.communityAdminModel
+      .findOne({ user: new Types.ObjectId(userId) })
+      .lean();
+
+    if (!adminRecord) throw new ForbiddenException('You are not a community admin');
+
+    return this.dashboardService.getWorkshopsByCategory(
+      adminRecord.community.toString(),
+      period,
+    );
+  }
+
+  @Get('top-workshops')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async getTopWorkshops(
+    @Query('period') period: 'week' | 'month' | 'year' = 'month',
+    @Req() req,
+  ) {
+    const userId = req.user.userMongoId || req.user._id;
+    const adminRecord = await this.communityAdminModel
+      .findOne({ user: new Types.ObjectId(userId) })
+      .lean();
+
+    if (!adminRecord) throw new ForbiddenException('You are not a community admin');
+
+    return this.dashboardService.getTopWorkshops(
+      adminRecord.community.toString(),
+      period,
+    );
+  }
+
+  @Get('workshop-status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async getWorkshopStatus(
+    @Query('period') period: 'week' | 'month' | 'year' = 'month',
+    @Req() req,
+  ) {
+    const userId = req.user.userMongoId || req.user._id;
+    const adminRecord = await this.communityAdminModel
+      .findOne({ user: new Types.ObjectId(userId) })
+      .lean();
+
+    if (!adminRecord) throw new ForbiddenException('You are not a community admin');
+
+    return this.dashboardService.getWorkshopStatus(
+      adminRecord.community.toString(),
+      period,
+    );
+  }
+
+  @Get('category-engagement')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async getCategoryEngagement(
+    @Query('period') period: 'week' | 'month' | 'year' = 'month',
+    @Req() req,
+  ) {
+    const userId = req.user.userMongoId || req.user._id;
+    const adminRecord = await this.communityAdminModel
+      .findOne({ user: new Types.ObjectId(userId) })
+      .lean();
+
+    if (!adminRecord) throw new ForbiddenException('You are not a community admin');
+
+    return this.dashboardService.getCategoryEngagement(
+      adminRecord.community.toString(),
+      period,
+    );
+  }
+
+  @Get('community-growth')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async getCommunityGrowth(@Req() req) {
+    const userId = req.user.userMongoId || req.user._id;
+    const adminRecord = await this.communityAdminModel
+      .findOne({ user: new Types.ObjectId(userId) })
+      .lean();
+
+    if (!adminRecord) throw new ForbiddenException('You are not a community admin');
+
+    return this.dashboardService.getCommunityGrowth(adminRecord.community.toString());
+  }
+
   @Get('setting')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN) 
+  @Roles(UserRole.ADMIN)
   async findOneForUpdate(@Req() req) {
     const userId = req.user.userMongoId || req.user._id
     return this.communityAdminService.getCommunityForUpdate(userId);

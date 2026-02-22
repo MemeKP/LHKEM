@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Users, Store, Calendar, TrendingUp, AlertCircle, CheckCircle, ChevronRight } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend, Tooltip } from 'recharts';
