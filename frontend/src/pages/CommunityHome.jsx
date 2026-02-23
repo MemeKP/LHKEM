@@ -141,7 +141,6 @@ const CommunityHome = () => {
     ? "relative bg-gray-900"
     : "bg-gradient-to-br from-[#0f3c4c] via-[#115b52] to-[#1d7a58]";
 
-    // console.log("banner ", bannerImg)
   return (
     <div className="min-h-screen bg-[#fdf7ef] animate-fadeIn">
       <section className=" relative py-16 px-4">

@@ -1,19 +1,34 @@
 import { useOutletContext, Link } from 'react-router-dom';
-import { MapPin, Palette, Leaf, Users } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useEffect, useRef } from 'react';
+import { MapPin, Calendar, Heart, Leaf, Users, Palette, HomeIcon, List, BookXIcon, Box, BoxesIcon, Sparkle, SparklesIcon, Clock, Users as UsersIcon, Star, Store, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 
-/**
- * About Page - หน้าเกี่ยวกับชุมชน
- * แสดงประวัติ, ค่านิยม Slow Life, และแผนที่ชุมชน
- * TODO: Backend API
- * - GET /api/communities/:id - ดึงข้อมูลชุมชนเพิ่มเติม
- */
+// เหลือต่อ map
 
 const About = () => {
   const { t, ct } = useTranslation();
   const { community } = useOutletContext();
   const observerRef = useRef(null);
+  const highlights = community.cultural_highlights || []
+    const API_URL = import.meta.env.VITE_API_URL;
+
+
+  const getIcon = (title) => {
+    if (!title) return <Star className="h-4 w-4 text-yellow-300" />
+    const text = title.toLowerCase()
+    if (text.includes('สิ่งแวดล้อม') || text.includes('environment') || text.includes('eco')) {
+      return <Leaf className="h-5 w-5 text-green-600" />
+    }
+    if (text.includes('วัฒนธรรม') || text.includes('culture')) {
+      return <Heart className="h-5 w-5 text-rose-500" />
+    }
+    if (text.includes('ชุมชน') || text.includes('craft')) {
+      return <Palette className="h-5 w-5 text-indigo-500" />
+    }
+    if (text.includes('หยุดพัก') || text.includes('slow life')) {
+      return <SparklesIcon className="h-5 w-5 text-yellow-500" />
+    }
+  }
 
   useEffect(() => {
     observerRef.current = new IntersectionObserver(
@@ -72,16 +87,25 @@ const About = () => {
       <section className="relative bg-gradient-to-br from-[#2d5a4d] via-[#3d6b5c] to-[#4d7c6b] text-white py-20 px-4 animate-fadeIn">
         <div className="max-w-4xl mx-auto text-center">
           <p className="text-sm font-semibold text-green-200 mb-4 tracking-wide uppercase">
-            {ct('รู้จัก "โหล่งฮิมคาว"', 'About "Loeng Him Kaw"')}
+            {/* {ct('รู้จัก "โหล่งฮิมคาว"', 'About "Loeng Him Kaw"')} */}
+            {ct(
+              `รู้จัก "${community.name}" `,
+              `About "${community.name_en}"`
+            )}
           </p>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-            {ct('Loeng Him Kaw Atmosphere', 'Loeng Him Kaw Atmosphere')}
+            {ct(
+              `บรรยากาศ ณ ${community.name} `,
+              `${community.name_en} Atmosphere`
+            )}
+            {/* {ct('Loeng Him Kaw Atmosphere', 'Loeng Him Kaw Atmosphere')} */}
           </h1>
           <p className="text-lg md:text-xl text-white/90 max-w-3xl mx-auto leading-relaxed">
-            {ct(
+            {/* {ct(
               'ชุมชนเล็กๆ ที่ซ่อนตัวอยู่อย่างเงียบสงบ ณ สันกำแพง เชียงใหม่',
               'A small peaceful community that was hidden in Chiang Mai'
-            )}
+            )} */}
+            {ct(community.hero_section?.description, community.hero_section?.description_en)}
           </p>
         </div>
       </section>
@@ -96,9 +120,13 @@ const About = () => {
                 {ct('HISTORY & ORIGIN', 'HISTORY & ORIGIN')}
               </span>
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-                {ct('จากป่ารกร้าง สู่ชุมชนงานคราฟต์', 'From abandoned woods, to the community')}
+                {/* {ct('จากป่ารกร้าง สู่ชุมชนงานคราฟต์', 'From abandoned woods, to the community')} */}
+                {ct(
+                  community.hero_section?.title || `รู้จัก "${community.name}" `,
+                  community.hero_section?.title_en || `About "${community.name_en}"`
+                )}
               </h2>
-              <div className="space-y-4 text-gray-700 leading-relaxed">
+              {/* <div className="space-y-4 text-gray-700 leading-relaxed">
                 <p className="font-semibold text-gray-900">
                   {ct(
                     '"โหล่งฮิมคาว" เป็นภาษาเหนือที่มีความหมายลึกซึ้ง',
@@ -129,24 +157,38 @@ const About = () => {
                     'Alls meaning "A community by the edge of the river Kaw" created by Mr. Chatchaval Thongdeelee and a group of artists who want to change the abandoned area into a green community that emphasizes simple living, self-sufficiency, and nature conservation.' 
                   )}
                 </p>
+              </div> */}
+              <div className="space-y-4 text-gray-700 leading-relaxed">
+                {ct(community.history, community.history_en)
+                  ?.split('\n')
+                  .filter(Boolean)
+                  .map((paragraph, i) => (
+                    <p key={i}>{paragraph}</p>
+                  ))
+                }
               </div>
             </div>
 
             {/* Image Placeholder */}
             <div className="relative animate-on-scroll opacity-0 translate-y-8 transition-all duration-700 delay-200">
               <div className="aspect-square rounded-3xl bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 overflow-hidden shadow-xl flex items-center justify-center">
-                <p className="text-gray-400 text-lg font-medium">
+                {/* <p className="text-gray-400 text-lg font-medium">
                   {ct('Community History', 'Community History')}
-                </p>
+                </p> */}
+                 <img
+                    src={`${API_URL}${community.images?.[0]}`}
+                    alt={ct('รูปภาพ 2', 'Image 2')}
+                    className="w-full h-full object-cover"
+                  />
                 {/* 30+ Badge - Bottom Right Corner */}
-                <div className="absolute bottom-6 right-6">
+                {/* <div className="absolute bottom-6 right-6">
                   <div className="bg-white/95 backdrop-blur-sm px-6 py-4 rounded-2xl shadow-xl border border-gray-200">
                     <p className="text-5xl font-bold text-orange-600 mb-1">30+</p>
                     <p className="text-gray-700 font-semibold text-sm">
                       {ct('ปีแห่งการก่อตั้งและพัฒนาชุมชน', 'Years of Community History')}
                     </p>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
@@ -158,7 +200,11 @@ const About = () => {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12 animate-on-scroll opacity-0 translate-y-8 transition-all duration-700">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              {ct('วิถีชีวิต "Slow Life"', 'The "Slow Life" Way')}
+              {/* {ct('วิถีชีวิต "Slow Life"', 'The "Slow Life" Way')} */}
+              {ct(
+                  community.hero_section?.title,
+                  community.hero_section?.title_en
+                )}
             </h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               {ct(
@@ -169,23 +215,23 @@ const About = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {slowLifeValues.map((value, index) => (
+            {highlights.map((feature, index) => (
               <div
                 key={index}
-                className={`bg-white rounded-2xl p-6 shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300 ${value.borderColor} animate-on-scroll opacity-0 translate-y-8`}
+                className={`bg-white rounded-2xl p-6 shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300 ${feature.borderColor} animate-on-scroll opacity-0 translate-y-8`}
                 style={{ transitionDelay: `${index * 150}ms` }}
               >
                 <div className="mb-4">
-                  <span className="text-4xl">{value.emoji}</span>
-                  <h3 className="text-lg font-bold text-gray-900 mt-3 mb-2">
-                    {value.emoji === '🎨' && ct('Arts & Crafts', 'Arts & Crafts')}
-                    {value.emoji === '🌿' && ct('Green Living', 'Green Living')}
-                    {value.emoji === '🏪' && ct('Kad Ton Yon', 'Kad Ton Yon')}
+                  <div className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center mb-4">
+                    {getIcon(feature.title)}
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    {ct(feature.title, feature.title_en)}
                   </h3>
+                  <p className="text-sm text-gray-500">
+                    {ct(feature.desc, feature.desc_en)}
+                  </p>
                 </div>
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  {ct(value.description_th, value.description)}
-                </p>
               </div>
             ))}
           </div>
@@ -201,9 +247,9 @@ const About = () => {
             </h2>
             <p className="text-gray-600">
               {ct(
-                'บ้านมอญ ต.สันกลาง อ.สันกำแพง จ.เชียงใหม่ (ห่างจากตัวเมืองเพียง 15 นาที)',
-                'Loeng Him Kaw Community is located in Ban Moen, San Kamphaeng District, Chiang Mai Province, approximately 15 minutes from Chiang Mai city center'
-              )}
+                  community.location?.full_address,
+                  community.location?.full_address_en
+                )}
             </p>
           </div>
 
