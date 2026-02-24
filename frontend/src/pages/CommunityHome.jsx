@@ -9,7 +9,7 @@ import api from '../services/api';
 import { useQuery } from '@tanstack/react-query';
 import { communityEventsMock } from '../data/eventsMock';
 import { getShopsByCommunity } from '../services/shopService';
-import { getShopCoverImage } from '../utils/image';
+import { getShopCoverImage, resolveImageUrl } from '../utils/image';
 
 const fetchPopularWorkshops = async (communityId) => {
   const res = await api.get(`/api/communities/${communityId}/workshops`, {
@@ -220,7 +220,8 @@ const CommunityHome = () => {
             {/* Top Large Image - Full Width */}
             <div className="h-[300px] md:h-[400px] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow relative">
               <img
-                src={`${API_URL}${community.images?.[1]}`}
+                // src={`${API_URL}${community.images?.[1]}`}
+                 src={resolveImageUrl(community.images?.[1])}
                 alt={ct('รูปภาพหลัก', 'Main Image')}
                 className="w-full h-full object-cover"
               />
@@ -231,7 +232,8 @@ const CommunityHome = () => {
               {/* Large image - Left side */}
               <div className="h-full rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow relative">
                 <img
-                  src={`${API_URL}${community.images?.[0]}`}
+                  //src={`${API_URL}${community.images?.[0]}`}
+                  src={resolveImageUrl(community.images?.[0])}
                   alt={ct('รูปภาพหลัก 2', 'Main Image 2')}
                   className="w-full h-full object-cover"
                 />
@@ -241,14 +243,16 @@ const CommunityHome = () => {
               <div className="grid grid-rows-2 gap-4 h-full">
                 <div className="rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow relative">
                   <img
-                    src={`${API_URL}${community.images?.[2]}`}
+                    // src={`${API_URL}${community.images?.[2]}`}
+                    src={resolveImageUrl(community.images?.[2])}
                     alt={ct('รูปภาพ 2', 'Image 2')}
                     className="w-full h-full object-cover"
                   />
                 </div>
                 <div className="rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow relative">
                   <img
-                    src={`${API_URL}${community.images?.[3]}`}
+                    // src={`${API_URL}${community.images?.[3]}`}
+                    src={resolveImageUrl(community.images?.[3])}
                     alt={ct('รูปภาพ 3', 'Image 3')}
                     className="w-full h-full object-cover"
                   />
@@ -326,7 +330,8 @@ const CommunityHome = () => {
               ) : communityMap?.map_image ? (
                 <div
                   className="w-full h-full bg-cover bg-center"
-                  style={{ backgroundImage: `url(${communityMap.map_image})` }}
+                  //style={{ backgroundImage: `url(${communityMap.map_image})` }}
+                  style={{ backgroundImage: `url(${resolveImageUrl(communityMap.map_image)})` }}
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-gray-100 via-gray-50 to-white flex items-center justify-center">

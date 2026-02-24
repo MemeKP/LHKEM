@@ -4,6 +4,7 @@ import { MapPin, Store, Map as MapIcon } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
+import { resolveImageUrl } from '../utils/image';
 
 const Map = () => {
   const { t, ct } = useTranslation();
@@ -82,7 +83,8 @@ const Map = () => {
             <div 
               className="w-full h-full relative bg-cover bg-center"
               style={{ 
-                backgroundImage: `url(${mapData.map_image})`,
+                // backgroundImage: `url(${mapData.map_image})`,
+                backgroundImage: `url(${resolveImageUrl(mapData.map_image)})`,
               }}
             >
               {locations.map((location) => (

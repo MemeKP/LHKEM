@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Plus, Edit, Trash2, Eye, Users, DollarSign, Clock, CheckCircle, XCircle, AlertCircle, Camera, Settings as SettingsIcon, Bell, Calendar, TrendingUp, Star } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useMyShop } from '../../hooks/useMyShop';
+import { resolveImageUrl } from '../../utils/image';
 
 const ShopDashboard = () => {
   const { t } = useTranslation();
@@ -128,7 +129,11 @@ const ShopDashboard = () => {
           <div className="relative rounded-xl overflow-hidden animate-slideDown">
             <div className="aspect-[16/6] w-full bg-gray-200">
               {profile.coverUrl && (
-                <img src={profile.coverUrl} alt="cover" className="w-full h-full object-cover" />
+                <img 
+                // src={profile.coverUrl} 
+                src={resolveImageUrl(profile.coverUrl)}
+                alt="cover" 
+                className="w-full h-full object-cover" />
               )}
             </div>
           </div>

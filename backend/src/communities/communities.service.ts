@@ -572,11 +572,22 @@ export class CommunitiesService {
     return dto;
   }
 
-  async getShops(id: string) {
-    const community = await this.communityModel.findById(id);
-    if (!community) throw new NotFoundException('Community not found');
+  async getShops(identifier: string) {
+    let community;
+
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(identifier);
+
+    if (isObjectId) {
+      community = await this.communityModel.findById(identifier);
+    } else {
+      community = await this.communityModel.findOne({ slug: identifier }); 
+    }
+    if (!community) {
+      throw new NotFoundException('ไม่พบข้อมูลชุมชนนี้');
+    }
+
     const shops = await this.shopModel
-      .find({ community: community._id })
+      .find({ communityId: community._id })
       .sort({ createdAt: -1 })
       .exec();
 

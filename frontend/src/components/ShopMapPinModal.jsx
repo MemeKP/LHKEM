@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 import { X, MapPin, Loader2, AlertCircle } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import { fetchCommunityMap } from '../services/mapPinService';
+import { resolveImageUrl } from '../utils/image';
 
 const formatPercent = (value) => {
   if (value === null || value === undefined || Number.isNaN(value)) return '-';
@@ -163,7 +164,9 @@ const ShopMapPinModal = ({
               ) : mapData?.map_image ? (
                 <div
                   className="w-full h-full bg-cover bg-center cursor-crosshair"
-                  style={{ backgroundImage: `url(${mapData.map_image})` }}
+                  //style={{ backgroundImage: `url(${mapData.map_image})` }}
+                  style={{ backgroundImage: `url(${resolveImageUrl(mapData.map_image)})`, }}
+                  
                   onClick={handleMapClick}
                 >
                   {renderPins}

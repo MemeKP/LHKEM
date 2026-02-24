@@ -6,6 +6,7 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { getMyShop, updateShop, uploadShopImage } from '../../services/shopService';
 import ShopMapPinModal from '../../components/ShopMapPinModal';
 import { saveShopMapPin, getMyShopMapPin } from '../../services/mapPinService';
+import { resolveImageUrl } from '../../utils/image';
 
 const ShopProfile = () => {
   const { user } = useAuth();
@@ -286,7 +287,11 @@ const ShopProfile = () => {
             <div className="border-2 border-dashed border-[#E07B39] rounded-xl p-8 bg-[#FFF7ED] hover:bg-[#FFEDD5] transition-colors">
               {shopData.coverUrl ? (
                 <div className="relative aspect-video w-full rounded-lg overflow-hidden">
-                  <img src={shopData.coverUrl} alt="cover" className="w-full h-full object-cover" />
+                  <img 
+                  src={resolveImageUrl(shopData.coverUrl)}
+                  // src={shopData.coverUrl} 
+                  alt="cover" className="w-full h-full object-cover" 
+                  />
                 </div>
               ) : (
                 <div className="text-center">

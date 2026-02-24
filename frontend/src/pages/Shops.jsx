@@ -1,38 +1,43 @@
 import { useState, useEffect } from 'react';
-import { Link, useOutletContext } from 'react-router-dom';
+import { data, Link, useOutletContext, useParams } from 'react-router-dom';
 import { Store, MapPin, Clock, Phone, Search, Filter, ArrowRight } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import { getShopsByCommunity } from '../services/shopService';
 import { getShopCoverImage } from '../utils/image';
-
-/**
- * Shops Page - แสดงรายการร้านค้าทั้งหมดในชุมชน
- * TODO: Backend API
- * - GET /api/communities/:id/shops - ดึงรายการร้านค้าในชุมชน
- */
+import api from '../services/api';
+import { useQuery } from '@tanstack/react-query';
 
 const Shops = () => {
   const { t, ct } = useTranslation();
   const { community } = useOutletContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [shops, setShops] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // const [shops, setShops] = useState([]);
+  // const [loading, setLoading] = useState(true);
+  const { slug } = useParams();
 
-  useEffect(() => {
-    const fetchShops = async () => {
-      if (!community?._id) return;
-      try {
-        const data = await getShopsByCommunity(community._id);
-        setShops(data);
-      } catch (error) {
-        console.error('Failed to fetch shops:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchShops();
-  }, [community]);
+  const { data: shops = [], isLoading } = useQuery({
+    queryKey: ['communityShops', slug],
+    queryFn: async () => {
+      const res = await api.get(`/api/communities/${slug}/shops`); 
+      return res.data;
+    }
+  });
+
+  // useEffect(() => {
+  //   const fetchShops = async () => {
+  //     if (!community?._id) return;
+  //     try {
+  //       const data = await getShopsByCommunity(community._id);
+  //       setShops(data);
+  //     } catch (error) {
+  //       console.error('Failed to fetch shops:', error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+  //   fetchShops();
+  // }, [community]);
 
   // Mock data for fallback
   const mockShops = [
@@ -148,7 +153,7 @@ const Shops = () => {
     return matchesSearch && matchesCategory;
   });
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-[#fdf7ef] flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
