@@ -1,23 +1,19 @@
 import { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft,
-  CheckCircle,
-  XCircle,
   MapPin,
   Phone,
   MessageSquare,
   Facebook,
   Loader2,
 } from 'lucide-react';
-import Swal from 'sweetalert2';
 import { useTranslation } from '../../hooks/useTranslation';
-import { getShopForAdmin, approveShop, rejectShop } from '../../services/shopService';
+import { getShopForAdmin } from '../../services/shopService';
 import {
   fetchCommunityMap,
   getShopPinForAdmin,
-  approveMapPin,
 } from '../../services/mapPinService';
 
 const statusStyles = {
@@ -38,7 +34,6 @@ const InfoRow = ({ label, value }) => (
 const PlatformShopApproval = () => {
   const { ct } = useTranslation();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const { id: communityId, shopId } = useParams();
 
   const {
@@ -74,64 +69,6 @@ const PlatformShopApproval = () => {
 
   const shopStatus = shop?.status || 'PENDING';
   const pinStatus = pin?.status || 'PENDING';
-
-  const handleSuccessToast = (message) => {
-    Swal.fire({
-      icon: 'success',
-      title: ct('สำเร็จ', 'Success'),
-      text: message,
-      timer: 1500,
-      showConfirmButton: false,
-    });
-  };
-
-  const handleErrorToast = (errorMessage) => {
-    Swal.fire({
-      icon: 'error',
-      title: ct('เกิดข้อผิดพลาด', 'Error'),
-      text: errorMessage,
-    });
-  };
-
-  const approveShopMutation = useMutation({
-    mutationFn: () => approveShop(shopId),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['platform-shop', shopId]);
-      queryClient.invalidateQueries(['platform-community', communityId]);
-      handleSuccessToast(ct('อนุมัติร้านค้าเรียบร้อยแล้ว', 'Shop approved successfully.'));
-    },
-    onError: (error) => {
-      const message = error?.response?.data?.message || error.message;
-      handleErrorToast(message);
-    },
-  });
-
-  const rejectShopMutation = useMutation({
-    mutationFn: () => rejectShop(shopId),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['platform-shop', shopId]);
-      queryClient.invalidateQueries(['platform-community', communityId]);
-      handleSuccessToast(ct('ปฏิเสธร้านค้าเรียบร้อยแล้ว', 'Shop rejected successfully.'));
-    },
-    onError: (error) => {
-      const message = error?.response?.data?.message || error.message;
-      handleErrorToast(message);
-    },
-  });
-
-  const approvePinMutation = useMutation({
-    mutationFn: () => approveMapPin(pin?.pinId),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['platform-shop-pin', shopId]);
-      queryClient.invalidateQueries(['community-map', communityId]);
-      handleSuccessToast(ct('อนุมัติหมุดบนแผนที่เรียบร้อยแล้ว', 'Map pin approved successfully.'));
-    },
-    onError: (error) => {
-      const message = error?.response?.data?.message || error.message;
-      handleErrorToast(message);
-    },
-    retry: 0,
-  });
 
   const mapPins = useMemo(() => {
     if (!mapData?.pins?.length) return [];
@@ -191,7 +128,7 @@ const PlatformShopApproval = () => {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <p className="text-sm uppercase tracking-wide text-orange-500 font-semibold mb-1">
-                {ct('การอนุมัติร้านค้า', 'Shop Approval')}
+                {ct('การตรวจสอบข้อมูลร้านค้า', 'Shop Review')}
               </p>
               <h1 className="text-3xl font-bold text-gray-900">{shop.shopName}</h1>
               <p className="text-sm text-gray-500 mt-2">
@@ -209,26 +146,11 @@ const PlatformShopApproval = () => {
               )}
             </div>
           </div>
-
-          <div className="flex flex-wrap gap-3">
-            <button
-              disabled={shopStatus === 'ACTIVE' || approveShopMutation.isLoading}
-              onClick={() => approveShopMutation.mutate()}
-              className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-green-600 text-white font-semibold shadow-sm hover:bg-green-700 disabled:opacity-50"
-            >
-              {approveShopMutation.isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-              <CheckCircle className="h-4 w-4" />
-              <span>{ct('อนุมัติร้าน', 'Approve Shop')}</span>
-            </button>
-            <button
-              disabled={shopStatus === 'REJECTED' || rejectShopMutation.isLoading}
-              onClick={() => rejectShopMutation.mutate()}
-              className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-red-500 text-white font-semibold shadow-sm hover:bg-red-600 disabled:opacity-50"
-            >
-              {rejectShopMutation.isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-              <XCircle className="h-4 w-4" />
-              <span>{ct('ปฏิเสธร้าน', 'Reject Shop')}</span>
-            </button>
+          <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
+            {ct(
+              'แพลตฟอร์มแอดมินสามารถตรวจสอบข้อมูลร้านและหมุดได้เท่านั้น การอนุมัติจะดำเนินการโดยผู้ดูแลชุมชน',
+              'Platform admins can review shop and pin information here. Approvals are handled by the community admin.'
+            )}
           </div>
         </div>
 
@@ -331,20 +253,12 @@ const PlatformShopApproval = () => {
 
               <div className="mt-4 space-y-3">
                 {pin?.hasPin ? (
-                  <>
-                    <p className="text-sm text-gray-600">
-                      {ct('ตรวจสอบตำแหน่งหมุดก่อนทำการอนุมัติ หากถูกต้องให้กดปุ่มด้านล่าง', 'Review the pin location before approving.')}
-                    </p>
-                    <button
-                      disabled={pinStatus === 'APPROVED' || approvePinMutation.isLoading}
-                      onClick={() => approvePinMutation.mutate()}
-                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-orange-500 text-white font-semibold hover:bg-orange-600 disabled:opacity-50"
-                    >
-                      {approvePinMutation.isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-                      <CheckCircle className="h-4 w-4" />
-                      <span>{pinStatus === 'APPROVED' ? ct('หมุดได้รับการอนุมัติแล้ว', 'Pin already approved') : ct('อนุมัติหมุดบนแผนที่', 'Approve map pin')}</span>
-                    </button>
-                  </>
+                  <p className="text-sm text-gray-600">
+                    {ct(
+                      'การอนุมัติหมุดจะถูกจัดการโดยผู้ดูแลชุมชน หากต้องการแก้ไขหรืออนุมัติ โปรดติดต่อผู้ดูแลชุมชน',
+                      'Map pin approvals are handled by community admins. Contact them if updates or approval are needed.'
+                    )}
+                  </p>
                 ) : (
                   <div className="rounded-2xl bg-gray-50 border border-dashed border-gray-200 p-4 text-center">
                     <p className="text-sm text-gray-500">

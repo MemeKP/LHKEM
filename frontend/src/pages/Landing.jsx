@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Users, Calendar, ArrowRight } from 'lucide-react';
+import { MapPin, Users, Calendar, ArrowRight, StoreIcon } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
 import { useTranslation } from '../hooks/useTranslation';
@@ -14,12 +14,41 @@ const Landing = () => {
   const navigate = useNavigate();
   const { t, ct, language } = useTranslation();
   const [selectedFilter, setSelectedFilter] = useState('ทั้งหมด');
+  const [shopCounts, setShopCounts] = useState({});
 
   const { data: communities = [], isLoading } = useQuery({
     queryKey: ['communities'],
     queryFn: fetchCommunities,
     initialData: []
   });
+
+  useEffect(() => {
+    if (!communities.length) {
+      setShopCounts({});
+      return;
+    }
+
+    const loadShopCounts = async () => {
+      const results = await Promise.all(
+        communities.map(async (community) => {
+          try {
+            const res = await api.get(`/api/shops/community/${community._id}`);
+            const activeCount = Array.isArray(res.data)
+              ? res.data.filter((shop) => (shop.status || '').toUpperCase() === 'ACTIVE').length
+              : 0;
+            return [community._id, activeCount];
+          } catch (error) {
+            console.error('Failed to fetch shops for community:', community._id, error);
+            return [community._id, 0];
+          }
+        })
+      );
+
+      setShopCounts(Object.fromEntries(results));
+    };
+
+    loadShopCounts();
+  }, [communities]);
 
   const { data: platformStats } = useQuery({
     queryKey: ['platform-stats'],
@@ -139,23 +168,6 @@ const Landing = () => {
             </p>
           </div>
 
-          {/* Filter Tags */}
-          <div className="flex flex-wrap justify-center gap-2 mb-10">
-            {filterTags.map((tag, index) => (
-              <button
-                key={tag}
-                onClick={() => setSelectedFilter(tag)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all hover:scale-105 animate-fadeIn ${selectedFilter === tag
-                  ? 'bg-[#E07B39] text-white shadow-md'
-                  : 'bg-white text-[#3D3D3D] hover:bg-gray-100 border border-gray-200'
-                  }`}
-                style={{ animationDelay: `${index * 0.05}s` }}
-              >
-                {tag}
-              </button>
-            ))}
-          </div>
-
           {/* Loading State */}
           {isLoading && (
             <div className="text-center py-20">
@@ -205,10 +217,6 @@ const Landing = () => {
                           <MapPin className="h-16 w-16 text-gray-400" />
                         </div>
                       )}
-                      {/* Favorite Badge */}
-                      <div className="absolute top-3 right-3 w-10 h-10 bg-[#E07B39] rounded-full flex items-center justify-center shadow-lg">
-                        <span className="text-white text-xl">♥</span>
-                      </div>
                     </div>
 
                     {/* Community Info */}
@@ -226,24 +234,11 @@ const Landing = () => {
                         )}
                       </p>
 
-                      {/* Tags */}
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        <span className="px-3 py-1 bg-gray-100 text-[#3D3D3D] text-xs rounded-full hover:bg-[#E07B39] hover:text-white transition-colors">
-                          {ct('กิจกรรม', 'Activities')}
-                        </span>
-                        <span className="px-3 py-1 bg-gray-100 text-[#3D3D3D] text-xs rounded-full hover:bg-[#E07B39] hover:text-white transition-colors">
-                          {ct('ร้านค้า', 'Shops')}
-                        </span>
-                        <span className="px-3 py-1 bg-gray-100 text-[#3D3D3D] text-xs rounded-full hover:bg-[#E07B39] hover:text-white transition-colors">
-                          {ct('วัฒนธรรม', 'Culture')}
-                        </span>
-                      </div>
-
                       {/* Stats */}
                       <div className="flex items-center gap-4 text-xs text-[#6B6B6B] mb-4">
                         <div className="flex items-center gap-1">
-                          <Users className="h-3.5 w-3.5" />
-                          <span>{community.workshops?.length || 0}</span>
+                          <StoreIcon className="h-3.5 w-3.5" />
+                          <span>{shopCounts[community._id] ?? 0}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3.5 w-3.5" />
