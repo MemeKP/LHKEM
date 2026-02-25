@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Globe, User, Settings, LogOut, LayoutDashboard, Shield, Info, Cog, Store } from 'lucide-react';
+import { Globe, User, Settings, LogOut, LayoutDashboard, Shield, Info, Cog, Menu, X } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useAuth } from '../hooks/useAuth';
 import api from '../services/api';
@@ -12,8 +12,9 @@ import api from '../services/api';
 
 const SimpleNavbar = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [shopCommunitySlug, setShopCommunitySlug] = useState(null);
-  const { language, toggleLanguage, t } = useTranslation();
+  const { language, toggleLanguage, t, ct } = useTranslation();
   const { user, isAuthenticated, logout, token } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -77,7 +78,6 @@ const SimpleNavbar = () => {
 
   const getRoleSpecificMenuItems = () => {
     const role = user?.role;
-    const { ct } = useTranslation();
 
     if (role === 'SHOP_OWNER') {
       const communitySlug = shopCommunitySlug || 'loeng-him-kaw'; // Fallback to default if not loaded yet
@@ -126,7 +126,7 @@ const SimpleNavbar = () => {
           </Link>
 
           {/* Right Side */}
-          <div className="flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-4">
             {/* Language Toggle */}
             <button
               onClick={toggleLanguage}
@@ -233,8 +233,88 @@ const SimpleNavbar = () => {
               </div>
             )}
           </div>
+
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="md:hidden"
+            style={{ color: '#374151' }}
+          >
+            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
         </div>
       </div>
+
+      {isMenuOpen && (
+        <div className="md:hidden pb-4 space-y-3">
+          <button
+            onClick={toggleLanguage}
+            className="flex items-center space-x-1 pl-4"
+            style={{ color: '#4b5563' }}
+          >
+            <Globe className="h-4 w-4" />
+            <span className="text-sm font-medium">{language} / {language === 'TH' ? 'EN' : 'TH'}</span>
+          </button>
+
+          {isAuthenticated ? (
+            <>
+              <div className="pl-4 py-2 font-medium" style={{ color: '#111827' }}>
+                <User className="h-4 w-4 inline mr-2" />
+                {getUserDisplayName()}
+              </div>
+              <div className="space-y-1">
+                {getRoleSpecificMenuItems().map((item, index) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={`${item.to}-${index}`}
+                      to={item.to}
+                      className="block font-medium pl-4 py-2"
+                      style={{ color: '#374151' }}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Icon className="h-4 w-4 inline mr-2" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setIsMenuOpen(false);
+                }}
+                className="block font-medium pl-4 py-2 w-full text-left"
+                style={{ color: '#dc2626' }}
+              >
+                <LogOut className="h-4 w-4 inline mr-2" />
+                {t('nav.logout')}
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                state={{ from: location }}
+                className="block font-medium pl-4"
+                style={{ color: '#374151' }}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {t('nav.login')}
+              </Link>
+              <Link
+                to="/register"
+                className="block text-white font-semibold px-6 py-2 rounded-full text-center transition-colors ml-4 mr-4"
+                style={{ backgroundColor: '#f97316' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#ea580c'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f97316'}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {t('nav.register')}
+              </Link>
+            </>
+          )}
+        </div>
+      )}
     </nav>
   );
 };

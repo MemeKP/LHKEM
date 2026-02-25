@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { BarChart, Bar, PieChart as RechartsPie, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { TrendingUp, Users, Store, Calendar, Award } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
 import api from '../../services/api';
 import { useQuery } from '@tanstack/react-query';
+import CommunityAssignmentNotice from '../../components/CommunityAssignmentNotice';
 
 const fetchCommunityStats = async (period) => {
   const res = await api.get('/api/community-admin/community-stats', {
@@ -26,24 +28,29 @@ const fetchTopWorkshops = async (period) => {
 
 const AdminCommunityInfo = () => {
   const { ct } = useTranslation();
+  const { hasCommunity } = useOutletContext();
   const [timeRange, setTimeRange] = useState('month'); // week, month, year
+  const queryEnabled = !!hasCommunity;
 
-  const { data: statsData, isLoading } = useQuery({
+  const { data: statsData, isLoading: statsLoading } = useQuery({
     queryKey: ['community-stats', timeRange],
     queryFn: () => fetchCommunityStats(timeRange),
     refetchOnWindowFocus: false,
+    enabled: queryEnabled,
   });
 
   const { data: categoryRaw = [] } = useQuery({
     queryKey: ['workshop-by-category', timeRange],
     queryFn: () => fetchWorkshopsByCategory(timeRange),
     refetchOnWindowFocus: false,
+    enabled: queryEnabled,
   });
 
   const { data: topWorkshops = [] } = useQuery({
     queryKey: ['top-workshops', timeRange],
     queryFn: () => fetchTopWorkshops(timeRange),
     refetchOnWindowFocus: false,
+    enabled: queryEnabled,
   });
 
   const workshopRankingData = topWorkshops.map((w, index) => ({
@@ -100,6 +107,7 @@ const AdminCommunityInfo = () => {
     queryKey: ['workshop-status', timeRange],
     queryFn: () => api.get('/api/community-admin/workshop-status', { params: { period: timeRange } }).then(r => r.data),
     refetchOnWindowFocus: false,
+    enabled: queryEnabled,
   });
   const workshopStatusData = statusRaw.map(s => ({
     name: STATUS_CONFIG[s.status]?.label ?? s.status,
@@ -129,6 +137,7 @@ const AdminCommunityInfo = () => {
       params: { period: timeRange }
     }).then(r => r.data),
     refetchOnWindowFocus: false,
+    enabled: queryEnabled,
   });
 
   const CATEGORY_LABELS = {
@@ -161,7 +170,20 @@ const AdminCommunityInfo = () => {
     queryKey: ['community-growth'],
     queryFn: () => api.get('/api/community-admin/community-growth').then(r => r.data),
     refetchOnWindowFocus: false,
+    enabled: queryEnabled,
   });
+
+  if (!hasCommunity) {
+    return <CommunityAssignmentNotice />;
+  }
+
+  if (statsLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#F5EFE7]">
+        <p className="text-gray-600">{ct('กำลังโหลดข้อมูล...', 'Loading data...')}</p>
+      </div>
+    );
+  }
 
   const growthMetrics = growthRaw.map(item => ({
     label: GROWTH_LABELS[item.key] ?? item.key,

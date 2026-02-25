@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useOutletContext } from 'react-router-dom';
 import { ArrowLeft, MapPin, Image as ImageIcon, Plus, X } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
 import api from '../../services/api';
 import { useQuery } from '@tanstack/react-query';
 import Swal from 'sweetalert2';
+import CommunityAssignmentNotice from '../../components/CommunityAssignmentNotice';
 
 // เหลือ map
 
@@ -84,6 +85,7 @@ const updateCommunity = async (id, formData, newImages, existingImages) => {
 const AdminCommunitySettings = () => {
   const navigate = useNavigate();
   const { ct } = useTranslation();
+  const { hasCommunity } = useOutletContext();
   const [formData, setFormData] = useState({
     name: '',
     name_en: '',
@@ -124,6 +126,7 @@ const AdminCommunitySettings = () => {
     queryKey: ['setting'],
     queryFn: fetchCommunityDetail,
     refetchOnWindowFocus: false,
+    enabled: hasCommunity,
   });
 
   useEffect(() => {
@@ -282,9 +285,11 @@ const AdminCommunitySettings = () => {
       Swal.fire('Error', 'ไม่สามารถบันทึกข้อมูลได้', 'error');
     }
   };
+  if (!hasCommunity) {
+    return <CommunityAssignmentNotice />;
+  }
 
-
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <div className="flex items-center justify-center min-h-screen bg-[#F5EFE7]">{ct('กำลังโหลดข้อมูล...', 'Loading data...')}</div>;
 
   return (
     <div className="min-h-screen bg-[#F5EFE7] animate-fadeIn py-8">

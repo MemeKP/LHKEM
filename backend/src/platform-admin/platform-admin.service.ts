@@ -22,11 +22,12 @@ interface CommunityAggregationResult {
   name: string;
   location: {
     province: string;
+    full_address?: string;
   };
   images: string[];
   created_at: Date;
   shopsCount: number;
-  membersCount: number;
+  adminsCount: number;
 }
  
 @Injectable()
@@ -254,16 +255,29 @@ export class PlatformAdminService {
         $lookup: {
           from: 'shops',
           localField: '_id',
-          foreignField: 'community',
+          foreignField: 'communityId',
           as: 'shops'
         }
       },
       {
+        $addFields: {
+          activeShops: {
+            $filter: {
+              input: '$shops',
+              as: 'shop',
+              cond: {
+                $eq: [ { $toUpper: '$$shop.status' }, 'ACTIVE' ]
+              }
+            }
+          }
+        }
+      },
+      {
         $lookup: {
-          from: 'users',
+          from: 'community_admins',
           localField: '_id',
           foreignField: 'community',
-          as: 'members'
+          as: 'admins'
         }
       },
       {
@@ -271,10 +285,11 @@ export class PlatformAdminService {
           id: '$_id',
           name: 1,
           'location.province': 1,
+          'location.full_address': '$location.full_address',
           images: 1, // array ของรูป
           created_at: 1,
-          shopsCount: { $size: '$shops' },
-          membersCount: { $size: '$members' }
+          shopsCount: { $size: '$activeShops' },
+          adminsCount: { $size: '$admins' }
         }
       },
       { $sort: { created_at: -1 } }
@@ -284,23 +299,32 @@ export class PlatformAdminService {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(today.getDate() - 30);
 
-    const backendUrl = process.env.BACKEND_URL
+    const backendUrl = process.env.BACKEND_URL || process.env.API_URL || '';
+
+    const resolveCommunityImage = (imagePath: string) => {
+      if (!imagePath) return '';
+      const isAbsolute = imagePath.startsWith('http://') || imagePath.startsWith('https://');
+      if (isAbsolute) return imagePath;
+      const normalized = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+      if (!backendUrl) return normalized;
+      return `${backendUrl}${normalized}`;
+    };
 
     const communities = communitiesData.map(c => {
       const createdDate = new Date(c.created_at || c['createdAt'] || Date.now());
-      const imagePath = c.images?.[0] || '';
+      const imagePath = Array.isArray(c.images) ? c.images[0] : c.images;
       // community ที่พึ่งสร้างเมื่อ 30 วันที่ผ่านมา
       const isNew = createdDate > thirtyDaysAgo;
 
       return {
         id: c._id.toString(),
         name: c.name,
-        location: c.location?.province || 'N/A',
-        image: imagePath ? `${backendUrl}${imagePath}` : '',
+        location: c.location?.province || c.location?.full_address || 'N/A',
+        image: resolveCommunityImage(imagePath || ''),
         status: isNew ? 'NEW' : null,
         stats: {
           shops: c.shopsCount || 0,
-          members: c.membersCount || 0
+          admins: c.adminsCount || 0
         }
       }
     });

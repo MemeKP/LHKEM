@@ -1,8 +1,9 @@
 import { Outlet } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
+import CommunityAssignmentNotice from '../components/CommunityAssignmentNotice';
 
 /**
  * AdminLayoutWithNav - Layout for Community Admin pages
@@ -21,11 +22,48 @@ const fetchMyCommunity = async () => {
   return res.data
 }
 
+const fallbackCommunity = {
+  slug: '',
+  name: 'Community',
+  name_en: 'Community',
+  hero_section: { description: '', description_en: '' },
+  contact_info: {},
+  location: {},
+};
+
+const assignmentSensitiveKeys = [
+  ['community-stats'],
+  ['workshop-by-category'],
+  ['top-workshops'],
+  ['workshop-status'],
+  ['category-engagement'],
+  ['community-growth'],
+  ['community-shops'],
+  ['community-pending-shops'],
+  ['setting'],
+];
+
 const AdminLayoutWithNav = () => {
-  const { data: community, isLoading, isError } = useQuery({
+  const queryClient = useQueryClient();
+  const {
+    data: community,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
     queryKey: ['admin-community'],
     queryFn: fetchMyCommunity,
+    retry: false,
+    refetchInterval: 60000,
   });
+
+  const noAssignment = (!isLoading && !community && !isError) || (isError && error?.response?.status === 404);
+
+  if (noAssignment) {
+    assignmentSensitiveKeys.forEach((queryKey) => {
+      queryClient.removeQueries({ queryKey, exact: false });
+    });
+  }
 
   if (isLoading) {
     return (
@@ -38,7 +76,7 @@ const AdminLayoutWithNav = () => {
     );
   }
 
-  if (isError || !community) {
+  if (isError && !noAssignment) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#FAF8F3]">
         <div className="text-center">
@@ -48,13 +86,21 @@ const AdminLayoutWithNav = () => {
     );
   }
 
+  const hasCommunity = !noAssignment && !!community;
+  const resolvedCommunity = hasCommunity ? community : fallbackCommunity;
+  const outletContext = { community: hasCommunity ? community : null, hasCommunity };
+
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF8F3]">
-      <Navbar community={community} />
+      <Navbar community={resolvedCommunity} />
       <main className="flex-grow">
-        <Outlet context={{ community }} />
+        {hasCommunity ? (
+          <Outlet context={outletContext} />
+        ) : (
+          <CommunityAssignmentNotice />
+        )}
       </main>
-      <Footer community={community} />
+      <Footer community={resolvedCommunity} />
     </div>
   );
 };

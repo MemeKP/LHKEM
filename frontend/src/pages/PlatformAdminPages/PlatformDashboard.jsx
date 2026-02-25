@@ -52,16 +52,16 @@ const PlatformDashboard = () => {
   // console.log("images: ", `${API_URL}/uploads/${communities.image?.[1]}`)
 
   const getImageUrl = (img) => {
-  if (!img) return null;
-  if (img.startsWith("http://") || img.startsWith("https://")) {
-    return img;
-  }
-  const cleanPath = img.startsWith("/") ? img : `/${img}`;
-  if (!cleanPath.startsWith("/uploads")) {
-    return `${API_URL}/uploads${cleanPath}`;
-  }
-  return `${API_URL}${cleanPath}`;
-};
+    if (!img) return null;
+    if (img.startsWith('http://') || img.startsWith('https://')) {
+      return img;
+    }
+    const cleanPath = img.startsWith('/') ? img : `/${img}`;
+    if (!cleanPath.startsWith('/uploads')) {
+      return `${API_URL}${cleanPath}`;
+    }
+    return `${API_URL}${cleanPath}`;
+  };
 
   const StatCard = ({ icon: Icon, value, label, color = 'orange' }) => (
     <div className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
@@ -81,6 +81,8 @@ const PlatformDashboard = () => {
 
   const CommunityCard = ({ community }) => {
     const imageSrc = getImageUrl(community.image);
+    const shopCount = community.stats?.shops ?? 0;
+    const adminCount = community.stats?.admins ?? community.stats?.members ?? 0;
 
     return (
       <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all">
@@ -116,11 +118,11 @@ const PlatformDashboard = () => {
             <div className="flex items-center space-x-4">
               <div className="flex items-center">
                 <Store className="h-4 w-4 mr-1" />
-                <span>{community.stats.shops} ร้าน</span>
+                <span>{shopCount} {ct('ร้าน', 'shops')}</span>
               </div>
               <div className="flex items-center">
                 <UserIcon className="h-4 w-4 mr-1" />
-                <span>{community.stats.members}</span>
+                <span>{adminCount} {ct('แอดมิน', 'admins')}</span>
               </div>
             </div>
           </div>
@@ -218,43 +220,18 @@ const PlatformDashboard = () => {
           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Communities Grid */}
-          <div className="lg:col-span-2">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              {ct('Community ทั้งหมด', 'All Communities')}
-            </h2>
-            <p className="text-sm text-gray-600 mb-6">
-              {communities.length} {ct('ชุมชนในระบบ', 'communities in system')}
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {communities.map((community) => (
-                <CommunityCard key={community.id} community={community} />
-              ))}
-              <CreateCommunityCard />
-            </div>
-          </div>
-
-          {/* Activities Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm p-6 sticky top-24">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-900">
-                  {ct('กิจกรรมล่าสุด', 'Recent Activities')}
-                </h3>
-              </div>
-              <p className="text-sm text-gray-600 mb-4">
-                {ct('ติดตามกิจกรรมทั้งหมด', 'Track all activities')}
-              </p>
-              <div className="space-y-2">
-                {activities.map((activity) => (
-                  <ActivityItem key={activity.id} activity={activity} />
-                ))}
-              </div>
-              <button className="w-full mt-4 text-orange-500 hover:text-orange-600 font-medium text-sm py-2 transition-colors">
-                {ct('ดูกิจกรรมทั้งหมด', 'View All Activities')}
-              </button>
-            </div>
+        <div className="mt-10">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            {ct('Community ทั้งหมด', 'All Communities')}
+          </h2>
+          <p className="text-sm text-gray-600 mb-6">
+            {communities.length} {ct('ชุมชนในระบบ', 'communities in system')}
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {communities.map((community) => (
+              <CommunityCard key={community.id} community={community} />
+            ))}
+            <CreateCommunityCard />
           </div>
         </div>
       </div>

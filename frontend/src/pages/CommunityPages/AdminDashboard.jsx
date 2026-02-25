@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '../../services/api';
 import { getShopsByCommunity, getPendingShops } from '../../services/shopService';
 import { getShopCoverImage } from '../../utils/image';
+import CommunityAssignmentNotice from '../../components/CommunityAssignmentNotice';
 
 /**
  * Admin Dashboard - ศูนย์รวมการจัดการชุมชน (หน้าหลัก)
@@ -41,21 +42,26 @@ const usePendingData = (communityId) => {
 
   // event
   const eventsQuery = useQuery({
-    queryKey: ['events', 'pending'],
-    queryFn: async () => (await api.get('/api/events/pending')).data,
+    queryKey: ['events', 'pending', communityId],
+    queryFn: async () => (await api.get('/api/events/pending', { params: { communityId } })).data,
+    enabled: !!communityId,
   });
 
   return { eventsQuery, shopsQuery, pendingShopsQuery };
 };
 
 const AdminDashboard = () => {
-  const { community } = useOutletContext();
+  const { community, hasCommunity } = useOutletContext();
   const { eventsQuery, shopsQuery, pendingShopsQuery } = usePendingData(community?._id);
   const navigate = useNavigate();
   const { ct } = useTranslation();
   const [activeTab, setActiveTab] = useState('workshops');
   const [taskTab, setTaskTab] = useState('events'); // Tab for Events/Shops section
   const isLoading = eventsQuery.isLoading || shopsQuery.isLoading || pendingShopsQuery.isLoading;
+
+  if (!hasCommunity) {
+    return <CommunityAssignmentNotice />;
+  }
 
   if (isLoading) return <div className="p-8 text-center">กำลังโหลดข้อมูล...</div>;
 

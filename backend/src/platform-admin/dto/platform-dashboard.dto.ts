@@ -24,7 +24,8 @@ export class CommunitySummaryDto {
   status: string | null;
   stats: {
     shops: number;
-    members: number;
+    members?: number;
+    admins?: number;
   };
 }
 

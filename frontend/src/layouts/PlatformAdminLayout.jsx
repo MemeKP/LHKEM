@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { Bell, Plus, ChevronDown, Settings, LogOut, Home } from 'lucide-react';
+import { Plus, ChevronDown, Settings, LogOut, Home } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from '../hooks/useTranslation';
 
@@ -36,14 +36,7 @@ const PlatformAdminLayout = () => {
                 onClick={toggleLanguage}
                 className="px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-orange-500 transition-colors"
               >
-                {language === 'th' ? 'EN' : 'TH'}
-              </button>
-              {/* Notification Bell */}
-              <button className="relative p-2 text-gray-600 hover:text-gray-900 transition-colors">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-1 right-1 bg-orange-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                  3
-                </span>
+                {language?.toUpperCase() === 'TH' ? 'TH' : 'EN'}
               </button>
 
               {/* User Info with Dropdown */}
