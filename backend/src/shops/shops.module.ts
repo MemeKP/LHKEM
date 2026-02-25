@@ -9,6 +9,7 @@ import { Shop, ShopSchema } from './schemas/shop.schema';
   imports: [
     MongooseModule.forFeature([{ name: Shop.name, schema: ShopSchema }]),
   ],
+  exports: [MongooseModule],
   controllers: [ShopController],
   providers: [ShopsService],
 })

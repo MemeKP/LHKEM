@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { X, AlertCircle } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useAuth } from '../hooks/useAuth';
+import api from '../services/api';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -16,8 +17,6 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const from = location.state?.from || '/dashboard';
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -27,7 +26,66 @@ const Login = () => {
       const result = await login(formData.email, formData.password);
       
       if (result.success) {
-        navigate(from, { replace: true });
+        // Redirect based on user role
+        const userRole = result.user?.role;
+        const from = location.state?.from?.pathname;
+        let redirectPath;
+        
+        if (userRole === 'COMMUNITY_ADMIN') {
+          // Community Admin: return to previous page if public, otherwise dashboard
+          const protectedPaths = ['/dashboard', '/settings', '/shop', '/platform-admin'];
+          const isProtectedPath = from && protectedPaths.some(path => from.startsWith(path));
+          redirectPath = (from && !isProtectedPath) ? from : '/community-admin/dashboard';
+        } else if (userRole === 'SHOP_OWNER') {
+          // Shop Owner: fetch their shop's community and redirect to shop dashboard
+          const protectedPaths = ['/dashboard', '/settings', '/platform-admin', '/community-admin'];
+          const isProtectedPath = from && protectedPaths.some(path => from.startsWith(path));
+          
+          // Fetch shop owner's community slug
+          try {
+            const shopResponse = await api.get('/api/shops/me', {
+              headers: { Authorization: `Bearer ${result.token}` }
+            });
+            
+            if (shopResponse.data?.communityId) {
+              const communityResponse = await api.get(`/api/communities/${shopResponse.data.communityId}`);
+              const shopSlug = communityResponse.data.slug;
+              
+              // If on community page, stay there; otherwise go to shop dashboard
+              if (from && !isProtectedPath) {
+                redirectPath = from;
+              } else {
+                redirectPath = `/${shopSlug}/shop/dashboard`;
+              }
+            } else {
+              // No shop found, redirect to create shop page (no slug needed)
+              redirectPath = '/shop/create';
+            }
+          } catch (error) {
+            console.error('Failed to fetch shop community:', error);
+            // Fallback to create shop page
+            redirectPath = '/shop/create';
+          }
+        } else if (userRole === 'PLATFORM_ADMIN') {
+          // Platform Admin: return to previous page if public, otherwise admin dashboard
+          const protectedPaths = ['/dashboard', '/settings', '/shop', '/community-admin'];
+          const isProtectedPath = from && protectedPaths.some(path => from.startsWith(path));
+          redirectPath = (from && !isProtectedPath) ? from : '/platform-admin/dashboard';
+        } else {
+          // Tourist/User: return to previous page if it was public, otherwise go to landing
+          const protectedPaths = ['/dashboard', '/settings', '/community-admin', '/shop', '/platform-admin'];
+          const isProtectedPath = from && protectedPaths.some(path => from.startsWith(path));
+          
+          if (from && !isProtectedPath) {
+            // Return to the public page they were viewing
+            redirectPath = from;
+          } else {
+            // Go to landing page for protected or undefined paths
+            redirectPath = '/';
+          }
+        }
+        
+        navigate(redirectPath, { replace: true });
       } else {
         setError(result.message || 'Login failed');
       }
@@ -50,7 +108,7 @@ const Login = () => {
       {/* Left Side - Image */}
       <div className="hidden lg:flex lg:w-1/2 relative">
         <img
-          src="/path/to/login-image.jpg"
+          src="/images/login_bg.jpg"
           alt={t('auth.communityName')}
           className="w-full h-full object-cover"
         />

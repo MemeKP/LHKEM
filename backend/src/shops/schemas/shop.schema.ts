@@ -2,6 +2,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 
+export type ShopDocument = Shop & Document;
+
 @Schema({ timestamps: true })
 export class Shop {
   @Prop({ required: true })
@@ -11,10 +13,36 @@ export class Shop {
   picture: string;
 
   @Prop()
+  coverUrl?: string;
+
+  @Prop()
+  iconUrl?: string;
+
+  @Prop()
   description: string;
 
   @Prop()
-  openTime: string;
+  address?: string;
+
+  @Prop({ type: String, default: null })
+  openTime?: string | null;
+
+  @Prop({ type: String, default: null })
+  closeTime?: string | null;
+
+  @Prop({
+    type: {
+      address: { type: String },
+      lat: { type: Number },
+      lng: { type: Number },
+    },
+    _id: false,
+  })
+  location?: {
+    address?: string;
+    lat?: number;
+    lng?: number;
+  };
 
   @Prop({
     type: {
@@ -22,6 +50,7 @@ export class Shop {
       facebook: String,
       phone: String,
     },
+    _id: false,
   })
   contact: {
     line?: string;
@@ -29,11 +58,14 @@ export class Shop {
     phone?: string;
   };
 
+  @Prop({ type: [String], default: [] })
+  images?: string[];
+
   @Prop({ type: Types.ObjectId, ref: 'User', unique: true })
   userId: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Community', required: true })
-communityId: Types.ObjectId;
+  communityId: Types.ObjectId;
 
   @Prop({
   type: String,

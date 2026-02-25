@@ -1,24 +1,69 @@
-import { useState } from 'react';
-import { Link, useOutletContext } from 'react-router-dom';
-import { MapPin, Calendar, Heart, Leaf, Users, Palette, HomeIcon, List, BookXIcon, Box, BoxesIcon, Sparkle, SparklesIcon, Clock, Users as UsersIcon, Star } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Link, useOutletContext, useParams } from 'react-router-dom';
+import { MapPin, Calendar, Heart, Leaf, Users, Palette, HomeIcon, List, BookXIcon, Box, BoxesIcon, Sparkle, SparklesIcon, Clock, Users as UsersIcon, Star, Store, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import workshopData from '../data/workshops';
 import WorkshopModal from '../components/WorkshopModal';
+import ETicketModal from '../components/ETicketModal';
 import api from '../services/api';
 import { useQuery } from '@tanstack/react-query';
+import { communityEventsMock } from '../data/eventsMock';
+import { getShopsByCommunity } from '../services/shopService';
+import { getShopCoverImage, resolveImageUrl } from '../utils/image';
 
 const fetchPopularWorkshops = async (communityId) => {
   const res = await api.get(`/api/communities/${communityId}/workshops`, {
     params: { limit: 3 }
   });
   return res.data;
-}
+};
+
+const fetchCommunityMap = async (communityId) => {
+  try {
+    const res = await api.get(`/api/communities/${communityId}/communitymap`);
+    return res.data;
+  } catch (error) {
+    if (error?.response?.status === 404) {
+      return null;
+    }
+    throw error;
+  }
+};
 
 const CommunityHome = () => {
   const { t, ct } = useTranslation();
   const { community } = useOutletContext()
   const highlights = community.cultural_highlights || []
   const workshopCount = community.workshops?.length || 0;
+  const params = useParams();
+  const [activeWorkshop, setActiveWorkshop] = useState(null);
+  const [currentBooking, setCurrentBooking] = useState(null);
+  const [showETicket, setShowETicket] = useState(false);
+  const [shops, setShops] = useState([]);
+  const [activeShopCount, setActiveShopCount] = useState(0);
+
+  useEffect(() => {
+    const fetchCommunity = async () => {
+      const response = await api.get(`/api/communities/${params.slug}`);
+      const communityData = response.data;
+
+      // Fetch shops for this community
+      if (communityData._id) {
+        try {
+          const shopsData = await getShopsByCommunity(communityData._id);
+          setActiveShopCount(Array.isArray(shopsData) ? shopsData.length : 0);
+          setShops((shopsData || []).slice(0, 3)); // Show only first 3 shops on home page
+        } catch (error) {
+          console.error('Failed to fetch shops:', error);
+        }
+      }
+    };
+    fetchCommunity();
+  }, [params.slug]);
+  const API_URL = import.meta.env.VITE_API_URL;
+
+  // console.log("images: ", `${API_URL}${community.images?.[1]}`)
+  // console.log("DATA:", community)
 
   // ไว้แมชไอคอนกับชื่อไฮไลท
   const getIcon = (title) => {
@@ -43,76 +88,180 @@ const CommunityHome = () => {
     queryFn: () => fetchPopularWorkshops(community._id),
     enabled: !!community._id,
     initialData: []
-  })
+  });
+
+  const { data: communityMap, isLoading: mapPreviewLoading } = useQuery({
+    queryKey: ['community-map-preview', community._id],
+    queryFn: () => fetchCommunityMap(community._id),
+    enabled: !!community._id,
+    staleTime: 1000 * 60 * 5,
+    retry: false,
+  });
 
   const stats = [
-  { 
-    number: workshopCount > 0 ? `${workshopCount}+` : '0', 
-    label: t('stats.workshops') 
-  },
-  { 
-    // ส่วน locations ตอนนี้ยังไม่มี collection ร้านค้าแยก
-    number: '1', 
-    label: t('stats.locations') 
-  },
-  { 
-    // ให้ static เหมือนกันหมด
-    number: '100%', 
-    label: 'Eco-Friendly' 
-  }
-];
+    {
+      number: workshopCount > 0 ? `${workshopCount}+` : '0',
+      label: t('stats.workshops')
+    },
+    {
+      number: activeShopCount?.toString() || '0',
+      label: t('stats.locations')
+    },
+    {
+      // ให้ static เหมือนกันหมด
+      number: '100%',
+      label: 'Eco-Friendly'
+    }
+  ];
 
   const workshopCards = workshopData.slice(0, 3);
-  const [activeWorkshop, setActiveWorkshop] = useState(null);
+  const eventCards = communityEventsMock.map((ev) => ({
+    ...ev,
+    title: ct(ev.title, ev.title_en),
+    description: ct(ev.description, ev.description_en),
+    date: ct(ev.date, ev.date_en),
+    location: ct(ev.location, ev.location_en),
+  }));
 
   const handleOpenModal = (workshop) => setActiveWorkshop(workshop);
   const handleCloseModal = () => setActiveWorkshop(null);
+
+  const handleBookingSuccess = (booking) => {
+    setCurrentBooking(booking);
+    setShowETicket(true);
+  };
+
+  const handleCloseETicket = () => {
+    setShowETicket(false);
+    setCurrentBooking(null);
+  };
+
+  const bannerImg = community?.images?.length > 0 ? community.images[0] : null;
+  const bannerFullUrl = bannerImg ? `${API_URL}${bannerImg}` : null;
+  const backgroundClass = bannerImg
+    ? "relative bg-gray-900"
+    : "bg-gradient-to-br from-[#0f3c4c] via-[#115b52] to-[#1d7a58]";
 
   return (
     <div className="min-h-screen bg-[#fdf7ef] animate-fadeIn">
       <section className=" relative py-16 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="bg-gradient-to-br from-[#0f3c4c] via-[#115b52] to-[#1d7a58] text-white rounded-[32px] p-10 shadow-xl">
-            <div className="text-center max-w-3xl mx-auto">
-              <div className="inline-flex items-center space-x-2 bg-white/15 border border-white/20 px-4 py-1 rounded-full text-sm font-medium mb-6">
-                <SparklesIcon className="h-4 w-4" />
-                <span>{t('hero.badge')}</span>
-              </div>
-              <h1 className="text-4xl md:text-5xl font-extrabold leading-tight mb-4">
-                {ct(community.hero_section.title, community.hero_section.title_en)}
-              </h1>
-              <p className="text-lg text-white/80 mb-8 line-clamp-2">
-              {ct(community.hero_section.description, community.hero_section.description_en)}
-              </p>
-              <div className="flex flex-col sm:flex-row justify-center gap-4">
-                <Link
-                  to={`/${community.slug}/workshops`}
-                  className="inline-flex items-center justify-center gap-2 bg-orange-400 hover:bg-orange-500 text-white font-semibold px-8 py-3 rounded-full shadow-lg transition"
-                >
-                  <BoxesIcon className="h-5 w-5" />
-                  {t('hero.viewWorkshops')}
-                </Link>
-                <Link
-                  to={`/${community.slug}/map`}
-                  className="inline-flex items-center justify-center gap-2 border border-white/40 text-white px-8 py-3 rounded-full hover:bg-white/10 transition"
-                >
-                  <MapPin className="h-5 w-5" />
-                  {t('hero.exploreMap')}
-                </Link>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-10">
-              {stats.map((stat, index) => (
-                <div key={index} className="bg-white/10 backdrop-blur-sm rounded-2xl px-6 py-4 text-center">
-                  <div className="text-3xl font-bold text-orange-300">{stat.number}</div>
-                  <p className="text-sm text-white/80">{stat.label}</p>
+          <div
+            className={`${backgroundClass} text-white rounded-[32px] p-10 shadow-xl overflow-hidden relative`}
+            style={bannerFullUrl ? {
+              backgroundImage: `url(${bannerFullUrl})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            } : {}}
+          >
+            {bannerFullUrl && (
+              <div className="absolute inset-0 bg-black/60 z-0"></div>
+            )}
+            <div className="relative z-10">
+              <div className="text-center max-w-3xl mx-auto">
+                <div className="inline-flex items-center space-x-2 bg-white/15 border border-white/20 px-4 py-1 rounded-full text-sm font-medium mb-6">
+                  <SparklesIcon className="h-4 w-4" />
+                  <span>{t('hero.badge')}</span>
                 </div>
-              ))}
+                <h1 className="text-4xl md:text-5xl font-extrabold leading-tight mb-4 drop-shadow-md">
+                  {ct(
+                    community.hero_section?.title || `${community.name} ชุมชนแห่งความสุข`,
+                    community.hero_section?.title_en || `${community.name_en} Community of Happiness`
+                  )}
+                </h1>
+                <p className="text-lg text-white/90 mb-8 line-clamp-2 drop-shadow-sm">
+                  {ct(community.hero_section?.description, community.hero_section?.description_en)}
+                </p>
+
+                <div className="flex flex-col sm:flex-row justify-center gap-4">
+                  <Link
+                    to={`/${community.slug}/workshops`}
+                    className="inline-flex items-center justify-center gap-2 bg-orange-400 hover:bg-orange-500 text-white font-semibold px-8 py-3 rounded-full shadow-lg transition"
+                  >
+                    <BoxesIcon className="h-5 w-5" />
+                    {t('hero.viewWorkshops')}
+                  </Link>
+                  <Link
+                    to={`/${community.slug}/map`}
+                    className="inline-flex items-center justify-center gap-2 border border-white/40 text-white px-8 py-3 rounded-full hover:bg-white/10 transition backdrop-blur-sm"
+                  >
+                    <MapPin className="h-5 w-5" />
+                    {t('hero.exploreMap')}
+                  </Link>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-10">
+                {stats.map((stat, index) => (
+                  <div key={index} className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl px-6 py-4 text-center">
+                    <div className="text-3xl font-bold text-orange-300">{stat.number}</div>
+                    <p className="text-sm text-white/80">{stat.label}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </section>
+
+      {/* Image Gallery Section */}
+      {community.images && community.images.length >= 4 && <section className="px-4 py-16 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-8">
+            <span className="inline-block bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+              {ct('ภาพบรรยากาศ', 'Gallery')}
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
+              {ct('สัมผัสบรรยากาศชุมชน', 'Experience Our Community')}
+            </h2>
+          </div>
+
+          {/* Gallery Grid */}
+          <div className="grid grid-cols-1 gap-4">
+            {/* Top Large Image - Full Width */}
+            <div className="h-[300px] md:h-[400px] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow relative">
+              <img
+                // src={`${API_URL}${community.images?.[1]}`}
+                 src={resolveImageUrl(community.images?.[1])}
+                alt={ct('รูปภาพหลัก', 'Main Image')}
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            {/* Bottom Row: 1 Large Left + 2 Small Right */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[700px] md:h-[850px]">
+              {/* Large image - Left side */}
+              <div className="h-full rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow relative">
+                <img
+                  //src={`${API_URL}${community.images?.[0]}`}
+                  src={resolveImageUrl(community.images?.[0])}
+                  alt={ct('รูปภาพหลัก 2', 'Main Image 2')}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              {/* Small images - Right side, stacked */}
+              <div className="grid grid-rows-2 gap-4 h-full">
+                <div className="rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow relative">
+                  <img
+                    // src={`${API_URL}${community.images?.[2]}`}
+                    src={resolveImageUrl(community.images?.[2])}
+                    alt={ct('รูปภาพ 2', 'Image 2')}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow relative">
+                  <img
+                    // src={`${API_URL}${community.images?.[3]}`}
+                    src={resolveImageUrl(community.images?.[3])}
+                    alt={ct('รูปภาพ 3', 'Image 3')}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>}
 
       <section className="px-4 py-16">
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-10">
@@ -157,21 +306,253 @@ const CommunityHome = () => {
         </div>
       </section>
 
-      <section className="py-20 px-4">
+      {/* Map Section - Enlarged */}
+      <section className="py-16 px-4 bg-gradient-to-b from-gray-50 to-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-8">
+            <span className="inline-block bg-orange-50 text-orange-600 font-semibold text-sm px-4 py-2 rounded-full mb-4">
+              {t('explore.badge')}
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">{t('explore.title')}</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto mb-8">{t('explore.description')}</p>
+          </div>
+
+          {/* Community Map Preview */}
+          <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-gray-200">
+            <div className="h-96 md:h-[500px]">
+              {mapPreviewLoading ? (
+                <div className="w-full h-full bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 flex items-center justify-center">
+                  <div className="text-center space-y-3 text-gray-500">
+                    <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin mx-auto"></div>
+                    <p>{ct('กำลังโหลดแผนที่ชุมชน...', 'Loading community map...')}</p>
+                  </div>
+                </div>
+              ) : communityMap?.map_image ? (
+                <div
+                  className="w-full h-full bg-cover bg-center"
+                  //style={{ backgroundImage: `url(${communityMap.map_image})` }}
+                  style={{ backgroundImage: `url(${resolveImageUrl(communityMap.map_image)})` }}
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-gray-100 via-gray-50 to-white flex items-center justify-center">
+                  <div className="text-center">
+                    <MapPin className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 text-lg font-medium">
+                      {ct('ยังไม่มีแผนที่สำหรับชุมชนนี้', 'Community map is not available yet.')}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* View Full Map Button Overlay */}
+            <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
+              <Link
+                to={`/${community.slug}/map`}
+                className="inline-flex items-center justify-center gap-2 bg-white text-gray-900 px-8 py-4 rounded-full font-semibold hover:bg-gray-100 transition shadow-xl border-2 border-gray-200"
+              >
+                <MapPin className="h-5 w-5" />
+                {t('explore.viewMap')}
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Events Section */}
+      <section className="py-20 px-4 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <span className="inline-block bg-orange-50 text-orange-600 px-4 py-2 rounded-full text-sm font-semibold">
+            <span className="inline-block bg-orange-50 text-orange-600 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+              {ct('กิจกรรมในชุมชน', 'Community Events')}
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+              {ct('กำลังจะจัดขึ้น', 'Upcoming Events')}
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              {ct('ติดตามกิจกรรมพิเศษ เทศกาล และงานชุมชนที่กำลังจะเกิดขึ้น', 'See festivals and special events happening in the community')}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {eventCards.map((event) => (
+              <Link
+                to={`/${community.slug}/events/${event.id}`}
+                key={event.id}
+                className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition block"
+              >
+                <div className={`relative h-44 bg-gradient-to-br ${event.gradient}`}>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Calendar className="h-16 w-16 text-white/60" />
+                  </div>
+                  <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 rounded-full text-xs font-semibold text-gray-700">
+                    {event.date}
+                  </div>
+                </div>
+                <div className="p-6 space-y-3">
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <Clock className="h-4 w-4" />
+                    <span>{event.time}</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 leading-snug line-clamp-2">
+                    {event.title}
+                  </h3>
+                  <p className="text-sm text-gray-600 line-clamp-2">{event.description}</p>
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <MapPin className="h-4 w-4" />
+                    <span className="line-clamp-1">{event.location}</span>
+                  </div>
+                  <div className="flex items-center justify-between pt-2">
+                    <span className="text-sm font-semibold text-orange-600">{ct('ดูรายละเอียด', 'View details')}</span>
+                    <button className="px-4 py-2 bg-gray-900 text-white rounded-full text-sm font-semibold hover:bg-gray-800 transition">
+                      {ct('เข้าร่วม', 'Join')}
+                    </button>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          <div className="text-center mt-10">
+            <Link
+              to={`/${community.slug}/events`}
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 border-2 border-gray-300 rounded-full text-gray-700 hover:border-gray-400 hover:bg-gray-50 transition font-semibold"
+            >
+              {ct('ดู Event ทั้งหมด', 'View All Events')}
+              <ArrowRight className="h-5 w-5" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Shops Section */}
+      <section className="py-20 px-4 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <span className="inline-block bg-green-50 text-green-600 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+              {ct('ร้านค้าในชุมชน', 'Local Shops')}
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+              {ct('ร้านค้าและผู้ให้บริการ', 'Shops & Service Providers')}
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              {ct('ร้านค้าท้องถิ่นที่เปิดให้บริการเวิร์กช็อปและประสบการณ์ทางวัฒนธรรม', 'Local shops offering workshops and cultural experiences')}
+            </p>
+          </div>
+
+          {/* Shops Grid */}
+          <div className="relative">
+            {shops.length === 0 ? (
+              <div className="text-center py-12 bg-white rounded-2xl border border-gray-200">
+                <Store className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500">
+                  {ct('ยังไม่มีร้านค้าในชุมชนนี้', 'No shops available yet')}
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {shops.map((shop, index) => {
+                  const gradients = [
+                    'from-orange-300 via-orange-400 to-orange-500',
+                    'from-green-300 via-green-400 to-green-500',
+                    'from-blue-300 via-blue-400 to-blue-500'
+                  ];
+                  const gradient = gradients[index % gradients.length];
+                  const coverImage = getShopCoverImage(shop);
+
+                  return (
+                    <Link key={shop._id} to={`/${community.slug}/shops/${shop._id}`} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition group">
+                      <div className="relative h-48 overflow-hidden">
+                        {coverImage ? (
+                          <img
+                            src={coverImage}
+                            alt={shop.shopName}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.parentElement.innerHTML = `<div class="w-full h-full bg-gradient-to-br ${gradient}"><div class="absolute inset-0 flex items-center justify-center"><svg class="h-16 w-16 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg></div></div>`;
+                            }}
+                          />
+                        ) : (
+                          <div className={`w-full h-full bg-gradient-to-br ${gradient}`}>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <Store className="h-16 w-16 text-white/50" />
+                            </div>
+                          </div>
+                        )}
+                        <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 rounded-full text-xs font-semibold text-gray-700">
+                          {shop.status === 'ACTIVE' ? ct('เปิดให้บริการ', 'Active') : ct('รอการอนุมัติ', 'Pending')}
+                        </div>
+                      </div>
+                      <div className="p-6">
+                        <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition">
+                          {shop.shopName}
+                        </h3>
+                        <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                          {shop.description || ct('ไม่มีคำอธิบาย', 'No description')}
+                        </p>
+                        {shop.location?.address && (
+                          <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+                            <MapPin className="h-4 w-4" />
+                            <span className="line-clamp-1">{shop.location.address}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between">
+                          {shop.openTime && (
+                            <div className="flex items-center gap-1 text-sm text-gray-500">
+                              <Clock className="h-4 w-4" />
+                              <span>{shop.openTime}</span>
+                            </div>
+                          )}
+                          <span className="px-4 py-2 bg-gray-900 text-white rounded-full text-sm font-semibold group-hover:bg-gray-800 transition">
+                            {ct('ดูร้าน', 'View Shop')}
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* View All Shops Button */}
+          <div className="text-center mt-10">
+            <Link
+              to={`/${community.slug}/shops`}
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 border-2 border-gray-300 rounded-full text-gray-700 hover:border-gray-400 hover:bg-gray-50 transition font-semibold"
+            >
+              {ct('ดูร้านค้าทั้งหมด', 'View All Shops')}
+              <ArrowRight className="h-5 w-5" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Workshop Section */}
+      <section className="py-20 px-4 bg-[#fdf7ef]">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <span className="inline-block bg-orange-50 text-orange-600 px-4 py-2 rounded-full text-sm font-semibold mb-4">
               {t('workshopSection.badge')}
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-4 mb-3">{t('workshopSection.title')}</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">{t('workshopSection.description')}</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+              {t('workshopSection.title')}
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              {t('workshopSection.description')}
+            </p>
           </div>
 
           {isLoading ? (
-            <div className="text-center py-20 text-gray-400">{t('workshops.loading')}</div>
-          ) : workshops.length === 0 ? (
-            <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed">
-              {t('workshops.noData')}
+            <div className="text-center py-20">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+              <p className="text-gray-500 mt-4">{t('workshops.loading')}</p>
+            </div>
+          ) : workshopCards.length === 0 ? (
+            <div className="text-center py-20">
+              <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500 text-lg">{t('workshops.noData')}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -234,27 +615,17 @@ const CommunityHome = () => {
         </div>
       </section>
 
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto bg-white rounded-3xl border border-gray-100 p-10 text-center">
-          <span className="inline-block bg-orange-50 text-orange-600 font-semibold text-sm px-4 py-2 rounded-full mb-4">
-            {t('explore.badge')}
-          </span>
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">{t('explore.title')}</h2>
-          <p className="text-gray-600 max-w-2xl mx-auto mb-8">{t('explore.description')}</p>
-          <div className="h-64 rounded-2xl border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-gray-400 mb-8">
-            Interactive Map Component (Coming Soon)
-          </div>
-          <Link
-            to={`/${community.slug}/map`}
-            className="inline-flex items-center justify-center gap-2 bg-orange-400 text-white px-8 py-3 rounded-full font-semibold hover:bg-orange-500 transition"
-          >
-            <MapPin className="h-5 w-5" />
-            {t('explore.viewMap')}
-          </Link>
-        </div>
-      </section>
-
-      <WorkshopModal workshop={activeWorkshop} isOpen={!!activeWorkshop} onClose={handleCloseModal} />
+      <WorkshopModal
+        workshop={activeWorkshop}
+        isOpen={!!activeWorkshop}
+        onClose={handleCloseModal}
+        onBookingSuccess={handleBookingSuccess}
+      />
+      <ETicketModal
+        booking={currentBooking}
+        isOpen={showETicket}
+        onClose={handleCloseETicket}
+      />
     </div>
   );
 };

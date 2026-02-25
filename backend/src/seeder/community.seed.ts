@@ -2,6 +2,10 @@ import { Model, Types } from 'mongoose';
 import { CommunityDocument } from '../communities/schemas/community.schema';
 import { CommunitiesService } from 'src/communities/communities.service';
 import { LocationData } from 'src/communities/dto/types.dto';
+import { UserDocument } from 'src/users/schemas/users.schema';
+import { ShopDocument } from 'src/shops/schemas/shop.schema';
+import { EventDocument } from 'src/events/schemas/event.schema';
+import * as bcrypt from 'bcrypt';
 
 function getEnglishLocation(location: LocationData): LocationData {
   return {
@@ -29,6 +33,7 @@ export async function seedCommunity(
     name: 'โหล่งฮิมคาว',
     name_en: 'Loeng Him Kaw',
     slug: 'loeng-him-kaw',
+    is_active: true,
 
     history:
       'โหล่งฮิมคาว มีที่ตั้งอยู่ที่บ้านมอญ ตำบลสันกลาง อำเภอสันกำแพง จังหวัดเชียงใหม่คำว่า “โหล่ง” แปลว่า ย่าน ชุมชน หรือที่พื้นที่ว่างกว้าง ส่วนคำว่า “ฮิมคาว” คือ ริมคาว ซึ่ง “คาว” มาจากแม่น้ำคาว ทำให้ความหมายของโหล่งฮิมคาวคือชุมชนริมแม่น้ำคาว ชัชวาลย์ ทองดีเลิศ ประธานชุมชนโหล่งฮิมคาวและเป็นผู้ก่อตั้งโฮงเฮียนสืบสานภูมิปัญญาล้านนา เล่าว่า “จุดเริ่มต้นของชุมชนนี้ต้องย้อนกลับไปตั้งแต่ปี พ.ศ. 2529 สมัยรัฐบาลชาติชายตอนนั้นพื้นที่แถวนี้เป็นเพียงพื้นที่ป่าและนาเปล่า ๆ สำหรับเลี้ยงควายทั่วพื้นที่เป็นดินลูกรัง และถูกทิ้งให้รกร้าง ทำให้เกิดแนวคิดที่อยากจะสร้างพื้นที่สีเขียวจึงชักชวนเพื่อนคนที่รู้จักและรักในธรรมชาติ ศิลปะและวัฒนธรรม มาร่วมกันสร้างหมู่บ้าน และกลายเป็นชุมชนยอดฮิตของผู้ที่สนใจในงานฝีมือ วิถีชีวิต และวัฒนธรรมล้านนา”',
@@ -46,7 +51,14 @@ export async function seedCommunity(
       { title: 'Slow Life', desc: 'หยุดพัก ผ่อนคลายและใช้เวลากับสิ่งที่รัก' },
     ],
 
-    images: [],
+    images: [
+      '/uploads/communities/lhkem-1.jpg',
+      '/uploads/communities/lhkem-2.jpg',
+      '/uploads/communities/lhkem-3.png',
+      '/uploads/communities/lhkem-4.png',
+      '/uploads/communities/lhkem-profile.jpg',
+      '/uploads/communities/lhkem-banner.png',
+    ],
     videos: [],
 
     location: {
@@ -106,6 +118,7 @@ export async function seedCommunity(
   );
 
   console.log(`--- Community seeded: ${community.name} (${community.slug}) ---`);
+
   return community;
 }
 

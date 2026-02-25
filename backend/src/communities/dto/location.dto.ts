@@ -1,11 +1,16 @@
-import { IsString, IsNumber, IsOptional } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsString, IsNumber, IsOptional, ValidateNested } from 'class-validator';
 
 export class CoordinatesDto {
+  @IsOptional()
+  @Type(() => Number)
   @IsNumber()
-  lat: number;
+  lat?: number;
 
+  @IsOptional()
+  @Type(() => Number)
   @IsNumber()
-  lng: number;
+  lng?: number;
 }
 
 export class LocationDto {
@@ -42,5 +47,7 @@ export class LocationDto {
   @IsString()
   postal_code?: string;
 
-  coordinates: CoordinatesDto;
+ @ValidateNested()
+  @Type(() => CoordinatesDto)
+  coordinates?: CoordinatesDto;
 }

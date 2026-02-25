@@ -2,6 +2,7 @@
   "nav": {
     "home": "Home",
     "workshops": "Workshops",
+    "shops": "Shops",
     "map": "Map",
     "about": "About Us",
     "login": "Login",
@@ -130,7 +131,11 @@
     "loginButton": "Login",
     "registerButton": "Register",
     "verifyButton": "Verify Code",
-    "resendOtp": "Resend?"
+    "resendOtp": "Resend?",
+    "role": "Role",
+    "roleTourist": "Tourist",
+    "roleShop": "Shop Owner",
+    "roleAdmin": "Admin"
   },
   "dashboard": {
     "title": "My Dashboard",
@@ -244,6 +249,10 @@
       "closed": "Closed",
       "cancelled": "Cancelled",
       "rejected": "Rejected"
+    },
+    "pending": {
+      "inlineTitle": "Your shop is waiting for approval",
+      "inlineDescription": "You can keep editing your shop profile. Workshop tools will unlock once the team approves your shop."
     },
     "price": "Price",
     "seats": "Seats",

@@ -1,8 +1,8 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+const ProtectedRoute = ({ children, allowedRoles = [] }) => {
+  const { isAuthenticated, loading, user } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -18,6 +18,22 @@ const ProtectedRoute = ({ children }) => {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // Check role-based access if allowedRoles is specified
+  if (allowedRoles.length > 0 && user?.role) {
+    if (!allowedRoles.includes(user.role)) {
+      // Redirect unauthorized users to appropriate page based on their role
+      const roleRedirects = {
+        'COMMUNITY_ADMIN': '/community-admin/dashboard',
+        'SHOP_OWNER': '/shop/dashboard',
+        'PLATFORM_ADMIN': '/admin/dashboard',
+        'TOURIST': '/'
+      };
+      
+      const redirectPath = roleRedirects[user.role] || '/';
+      return <Navigate to={redirectPath} replace />;
+    }
   }
 
   return children;

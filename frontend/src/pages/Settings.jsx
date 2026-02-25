@@ -10,32 +10,28 @@ const Settings = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('profile');
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState({ type: '', text: '' });
-  
-  const [profileData, setProfileData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    shopName: '',
-    communityName: ''
-  });
-
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
+  const [message, setMessage] = useState({ type: '', text: '' });
+  
+  const [profileData, setProfileData] = useState({
+    firstname: '',
+    lastname: '',
+    email: '',
+    phone: ''
+  });
+
 
   useEffect(() => {
     if (user) {
       setProfileData({
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
+        firstname: user.firstname || '',
+        lastname: user.lastname || '',
         email: user.email || '',
-        phone: user.phone || '',
-        shopName: user.shopName || '',
-        communityName: user.communityName || ''
+        phone: user.phone || ''
       });
     }
   }, [user]);
@@ -54,13 +50,19 @@ const Settings = () => {
     });
   };
 
+
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage({ type: '', text: '' });
 
     try {
-      const result = await updateUser(profileData);
+      const result = await updateUser({
+        firstname: profileData.firstname,
+        lastname: profileData.lastname,
+        email: profileData.email,
+        phone: profileData.phone
+      });
       
       if (result.success) {
         setMessage({ type: 'success', text: t('settings.messages.updateSuccess') });
@@ -92,6 +94,23 @@ const Settings = () => {
     setMessage({ type: '', text: '' });
 
     try {
+      const response = await fetch('/api/users/me/password', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Password update failed');
+      }
+
       setMessage({ type: 'success', text: t('settings.messages.passwordSuccess') });
       setPasswordData({
         currentPassword: '',
@@ -99,22 +118,23 @@ const Settings = () => {
         confirmPassword: ''
       });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-    } catch {
-      setMessage({ type: 'error', text: t('settings.messages.passwordError') });
+    } catch (error) {
+      setMessage({ type: 'error', text: error.message || t('settings.messages.passwordError') });
     } finally {
       setLoading(false);
     }
   };
 
+
   const getRoleBadge = (role) => {
     const roleConfig = {
-      tourist: { label: t('settings.roles.tourist'), color: 'bg-blue-100 text-blue-700' },
-      shop: { label: t('settings.roles.shop'), color: 'bg-green-100 text-green-700' },
-      community_admin: { label: t('settings.roles.communityAdmin'), color: 'bg-purple-100 text-purple-700' },
-      platform_admin: { label: t('settings.roles.platformAdmin'), color: 'bg-red-100 text-red-700' }
+      TOURIST: { label: t('settings.roles.tourist'), color: 'bg-blue-100 text-blue-700' },
+      SHOP_OWNER: { label: t('settings.roles.shop'), color: 'bg-green-100 text-green-700' },
+      COMMUNITY_ADMIN: { label: t('settings.roles.communityAdmin'), color: 'bg-purple-100 text-purple-700' },
+      PLATFORM_ADMIN: { label: t('settings.roles.platformAdmin'), color: 'bg-red-100 text-red-700' }
     };
 
-    const config = roleConfig[role] || roleConfig.tourist;
+    const config = roleConfig[role] || roleConfig.TOURIST;
     return (
       <span className={`px-3 py-1 rounded-full text-xs font-medium ${config.color}`}>
         {config.label}
@@ -185,17 +205,9 @@ const Settings = () => {
             {activeTab === 'profile' && (
               <div>
                 <div className="mb-8 flex items-center space-x-4 pb-6 border-b border-gray-200">
-                  <div className="relative">
-                    <div className="h-20 w-20 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-2xl font-bold">
-                      {user?.firstName?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
-                    </div>
-                    <button className="absolute bottom-0 right-0 p-1.5 bg-white rounded-full shadow-lg border border-gray-200 hover:bg-gray-50 transition">
-                      <Camera className="h-3.5 w-3.5 text-gray-600" />
-                    </button>
-                  </div>
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">
-                      {user?.firstName} {user?.lastName}
+                      {user?.firstname} {user?.lastname}
                     </h3>
                     <p className="text-sm text-gray-600">{user?.email}</p>
                     <div className="mt-2">
@@ -214,8 +226,8 @@ const Settings = () => {
                         <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                         <input
                           type="text"
-                          name="firstName"
-                          value={profileData.firstName}
+                          name="firstname"
+                          value={profileData.firstname}
                           onChange={handleProfileChange}
                           className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                           required
@@ -231,8 +243,8 @@ const Settings = () => {
                         <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                         <input
                           type="text"
-                          name="lastName"
-                          value={profileData.lastName}
+                          name="lastname"
+                          value={profileData.lastname}
                           onChange={handleProfileChange}
                           className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                           required
@@ -275,42 +287,6 @@ const Settings = () => {
                       />
                     </div>
                   </div>
-
-                  {user?.role === 'shop' && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t('settings.fields.shopName')}
-                      </label>
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                        <input
-                          type="text"
-                          name="shopName"
-                          value={profileData.shopName}
-                          onChange={handleProfileChange}
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {user?.role === 'community_admin' && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t('settings.fields.communityName')}
-                      </label>
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                        <input
-                          type="text"
-                          name="communityName"
-                          value={profileData.communityName}
-                          onChange={handleProfileChange}
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        />
-                      </div>
-                    </div>
-                  )}
 
                   <div className="flex justify-end pt-4">
                     <button

@@ -1,49 +1,55 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, Eye, Users, DollarSign, Clock, CheckCircle, XCircle, AlertCircle, Camera, Settings as SettingsIcon } from 'lucide-react';
-import { useAuth } from '../../hooks/useAuth';
+import { useEffect, useMemo } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Plus, Edit, Trash2, Eye, Users, DollarSign, Clock, CheckCircle, XCircle, AlertCircle, Camera, Settings as SettingsIcon, Bell, Calendar, TrendingUp, Star } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
-// Frontend-only prototype: use localStorage instead of API
+import { useMyShop } from '../../hooks/useMyShop';
+import { resolveImageUrl } from '../../utils/image';
 
 const ShopDashboard = () => {
-  const { user } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const initialDraft = JSON.parse(localStorage.getItem('shopDraft') || '{}');
-  const initialWorkshops = Array.isArray(initialDraft.workshops) ? initialDraft.workshops : [];
-  const [workshops, setWorkshops] = useState(initialWorkshops);
-  const [activeTab, setActiveTab] = useState('all');
-  const [showSettings, setShowSettings] = useState(false);
-  const [profile, setProfile] = useState({
-    name: initialDraft.name || '',
-    description: initialDraft.description || '',
-    openTime: initialDraft.openTime || '',
-    closeTime: initialDraft.closeTime || '',
-    contactLinks: initialDraft.contactLinks || { phone: '', line: '' , facebook: '', website: ''},
-    location: initialDraft.location || { address: '' },
-    iconUrl: initialDraft.iconUrl || '',
-    coverUrl: initialDraft.coverUrl || '',
-  });
+  const { slug } = useParams();
+  const { data: shop, isLoading: shopLoading, clearShopCache } = useMyShop();
+  const isPendingShop = !shopLoading && shop && shop.status !== 'ACTIVE';
+
+  // Clear shop cache when user changes
+  useEffect(() => {
+    return () => {
+      clearShopCache();
+    };
+  }, [clearShopCache]);
 
   useEffect(() => {
-    const hasSetup = localStorage.getItem('shopHasSetup') === 'true';
-    if (!user?.shopId && !hasSetup) {
+    if (!shopLoading && !shop) {
       navigate('/shop/create');
-      return;
     }
-  }, [user, navigate]);
+  }, [shop, shopLoading, navigate]);
 
-  // no-op for prototype
+  const profile = {
+    name: shop?.shopName || '',
+    description: shop?.description || '',
+    openTime: shop?.openTime || '',
+    contactLinks: shop?.contact || { phone: '', line: '', facebook: '', website: '' },
+    location: shop?.location || { address: '' },
+    iconUrl: shop?.iconUrl || '',
+    coverUrl: shop?.picture || '',
+    status: shop?.status || 'PENDING',
+  };
+
+  const workshops = [];
+  const activeTab = 'all';
 
   const stats = useMemo(() => {
     const active = workshops.filter(w => w.status === 'ACTIVE');
+    const pending = workshops.filter(w => w.status === 'PENDING');
     return {
       totalWorkshops: workshops.length,
       activeWorkshops: active.length,
       totalBookings: workshops.reduce((sum, w) => sum + (w.seatsBooked || 0), 0),
       totalRevenue: workshops.reduce((sum, w) => sum + ((w.seatsBooked || 0) * (w.price || 0)), 0),
       averageRating: 0,
-      pendingApprovals: workshops.filter(w => w.status === 'PENDING').length
+      pendingApprovals: pending.length,
+      pendingWorkshops: pending
     };
   }, [workshops]);
   const handleDeleteWorkshop = async (id) => {
@@ -117,162 +123,170 @@ const ShopDashboard = () => {
   // always render directly in prototype
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 animate-fadeIn">
+    <div className="min-h-screen bg-[#F5EFE7] py-8 animate-fadeIn">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
           <div className="relative rounded-xl overflow-hidden animate-slideDown">
             <div className="aspect-[16/6] w-full bg-gray-200">
               {profile.coverUrl && (
-                <img src={profile.coverUrl} alt="cover" className="w-full h-full object-cover" />
+                <img 
+                // src={profile.coverUrl} 
+                src={resolveImageUrl(profile.coverUrl)}
+                alt="cover" 
+                className="w-full h-full object-cover" />
               )}
             </div>
           </div>
           <div className="flex items-center justify-between mt-4 animate-slideUp">
-            <div className="flex items-center gap-4">
-              <div className="h-24 w-24 rounded-full bg-white shadow ring-2 ring-white overflow-hidden flex items-center justify-center text-orange-600 text-3xl font-bold">
-                {profile.iconUrl ? <img src={profile.iconUrl} alt="icon" className="h-full w-full object-cover" /> : (profile.name?.charAt(0) || 'S')}
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">{profile.name || t('shopDashboard.title')}</h1>
-                <p className="text-gray-600">{profile.description}</p>
-              </div>
+            <div>
+              <h1 className="text-3xl font-bold text-[#2F4F2F]">{profile.name || t('shopDashboard.title')}</h1>
+              <p className="text-[#6B6B6B]">{profile.description}</p>
             </div>
-            <div className="flex justify-end gap-3">
+            <div className="flex flex-col sm:flex-row justify-end gap-3">
               <button
-                onClick={() => setShowSettings(s => !s)}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700"
+                onClick={() => navigate(`/${slug}/shop/profile`)}
+                className="flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-[#E07B39] text-[#E07B39] font-medium rounded-full hover:bg-[#E07B39] hover:text-white transition-all hover:scale-105 shadow-sm"
               >
                 <SettingsIcon className="h-4 w-4" />
-                {t('shopDashboard.manageProfile')}
+                แก้ไขข้อมูลร้าน
               </button>
               <button
-                onClick={() => navigate('/shop/workshops/create')}
-                className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
+                onClick={() => {
+                  if (isPendingShop) return;
+                  navigate(`/${slug}/shop/workshops/create`);
+                }}
+                disabled={isPendingShop}
+                className={`flex items-center gap-2 px-5 py-2.5 font-medium rounded-full shadow-md transition-all hover:shadow-lg ${
+                  isPendingShop
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-[#4CAF50] text-white hover:bg-[#45A049] hover:scale-105'
+                }`}
               >
                 <Plus className="h-4 w-4" />
-                {t('shopDashboard.createWorkshop')}
+                สร้าง Workshop ใหม่
               </button>
             </div>
           </div>
         </div>
 
-        {showSettings && (
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-8 animate-scaleIn">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-2 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">ชื่อร้าน</label>
-                  <input name="name" value={profile.name} onChange={handleProfileChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">คำอธิบาย</label>
-                  <textarea name="description" value={profile.description} onChange={handleProfileChange} rows={3} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">เปิด</label>
-                    <input name="openTime" value={profile.openTime} onChange={handleProfileChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">ปิด</label>
-                    <input name="closeTime" value={profile.closeTime} onChange={handleProfileChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" />
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">ภาพหน้าปก</label>
-                  <div className="aspect-[16/9] w-full bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
-                    {profile.coverUrl ? <img src={profile.coverUrl} alt="cover" className="w-full h-full object-cover" /> : <div className="text-gray-400">ตัวอย่างภาพ</div>}
-                  </div>
-                  <label className="mt-2 inline-flex items-center px-3 py-2 bg-gray-800 text-white rounded-lg cursor-pointer hover:bg-gray-700">
-                    <Camera className="h-4 w-4 mr-2" />
-                    อัปโหลด
-                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImagePick('coverUrl', e.target.files?.[0])} />
-                  </label>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Icon ร้าน</label>
-                  <div className="h-20 w-20 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center text-orange-600 text-2xl font-bold">
-                    {profile.iconUrl ? <img src={profile.iconUrl} alt="icon" className="h-full w-full object-cover" /> : (profile.name?.charAt(0) || 'S')}
-                  </div>
-                  <label className="mt-2 inline-flex items-center px-3 py-2 bg-gray-800 text-white rounded-lg cursor-pointer hover:bg-gray-700">
-                    <Camera className="h-4 w-4 mr-2" />
-                    อัปโหลด
-                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImagePick('iconUrl', e.target.files?.[0])} />
-                  </label>
-                </div>
-                <div className="flex justify-end">
-                  <button onClick={saveProfile} className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600">บันทึก</button>
-                </div>
-              </div>
+        {isPendingShop && (
+          <div className="mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-4 flex gap-3 items-start">
+            <AlertCircle className="h-6 w-6 text-amber-600 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-amber-900">
+                {t('shopDashboard.pending.inlineTitle', 'ร้านค้าของคุณกำลังรอตรวจสอบ')}
+              </p>
+              <p className="text-sm text-amber-800">
+                {t(
+                  'shopDashboard.pending.inlineDescription',
+                  'คุณสามารถแก้ไขข้อมูลร้านได้ แต่การสร้าง/จัดการ Workshop จะเปิดให้ใช้งานหลังจากได้รับการอนุมัติ'
+                )}
+              </p>
             </div>
           </div>
         )}
 
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-stagger">
-            <div className="bg-white rounded-lg shadow-sm p-6 animate-scaleIn">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">{t('shopDashboard.stats.totalWorkshops')}</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalWorkshops}</p>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 animate-stagger">
+            <div className="bg-white rounded-xl shadow-sm p-5 animate-fadeIn border border-gray-100 hover:shadow-md transition-all hover:scale-[1.02]" style={{animationDelay: '0.1s'}}>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-[#FFF7ED] rounded-lg">
+                  <Calendar className="h-5 w-5 text-[#E07B39]" />
                 </div>
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <Clock className="h-6 w-6 text-blue-600" />
-                </div>
+                <p className="text-xs font-semibold text-[#6B6B6B]">Workshop ทั้งหมด</p>
               </div>
+              <p className="text-2xl font-bold text-[#3D3D3D]">{stats.totalWorkshops}</p>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm p-6 animate-scaleIn">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">{t('shopDashboard.stats.activeWorkshops')}</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{stats.activeWorkshops}</p>
+            <div className="bg-white rounded-xl shadow-sm p-5 animate-fadeIn border border-gray-100 hover:shadow-md transition-all hover:scale-[1.02]" style={{animationDelay: '0.2s'}}>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-[#E8F5E9] rounded-lg">
+                  <Users className="h-5 w-5 text-[#4CAF50]" />
                 </div>
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <CheckCircle className="h-6 w-6 text-green-600" />
-                </div>
+                <p className="text-xs font-semibold text-[#6B6B6B]">ผู้เข้าร่วมทั้งหมด</p>
               </div>
+              <p className="text-2xl font-bold text-[#3D3D3D]">{stats.totalBookings}</p>
             </div>
-
-            <div className="bg-white rounded-lg shadow-sm p-6 animate-scaleIn">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">{t('shopDashboard.stats.totalBookings')}</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalBookings}</p>
+            <div className="bg-white rounded-xl shadow-sm p-5 animate-fadeIn border border-gray-100 hover:shadow-md transition-all hover:scale-[1.02]" style={{animationDelay: '0.4s'}}>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-[#E3F2FD] rounded-lg">
+                  <TrendingUp className="h-5 w-5 text-[#2196F3]" />
                 </div>
-                <div className="p-3 bg-purple-100 rounded-lg">
-                  <Users className="h-6 w-6 text-purple-600" />
-                </div>
+                <p className="text-xs font-semibold text-[#6B6B6B]">Workshop ที่รออนุมัติ</p>
               </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-sm p-6 animate-scaleIn">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">{t('shopDashboard.stats.totalRevenue')}</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">฿{stats.totalRevenue.toLocaleString()}</p>
-                </div>
-                <div className="p-3 bg-orange-100 rounded-lg">
-                  <DollarSign className="h-6 w-6 text-orange-600" />
-                </div>
-              </div>
+              <p className="text-2xl font-bold text-[#3D3D3D]">{stats.pendingApprovals}</p>
             </div>
           </div>
         )}
 
+        {/* Notifications Section */}
+        <div className="mb-8 animate-slideUp">
+          <div className="flex items-center gap-2 mb-4">
+            <Bell className="h-5 w-5 text-orange-600" />
+            <h2 className="text-lg font-semibold text-[#2F4F2F]">การแจ้งเตือน</h2>
+          </div>
+          <div className="space-y-3">
+            {stats.pendingApprovals > 0 && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-yellow-900">Workshop ที่รอการยืนยัน</p>
+                  <p className="text-sm text-yellow-700 mt-1">
+                    คุณมี Workshop ที่รอการยืนยันจากแอดมิน {stats.pendingApprovals} รายการ
+                  </p>
+                </div>
+              </div>
+            )}
+            {workshops.filter(w => w.status === 'ACTIVE').length > 0 && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
+                <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-green-900">Workshop ที่เปิดสอนอยู่</p>
+                  <p className="text-sm text-green-700 mt-1">
+                    กำลังเปิดสอน Workshop อยู่ {workshops.filter(w => w.status === 'ACTIVE').length} รายการ ตรวจสอบผู้เข้าร่วมได้ที่รายละเอียด Workshop
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Quick Actions Section */}
+        <div className="mb-8 animate-slideUp">
+          <div className="flex items-center gap-2 mb-4">
+            <Star className="h-5 w-5 text-orange-600" />
+            <h2 className="text-lg font-semibold text-[#2F4F2F]">ข้อมูลเสริม</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition-shadow">
+              <h3 className="font-semibold text-[#2F4F2F] mb-2">กลยุทธ์ของคุณได้ผล!</h3>
+              <p className="text-sm text-[#6B6B6B] mb-3">
+                การตั้งราคาและคำอธิบายที่ดีจะช่วยให้ Workshop ของคุณดึงดูดผู้เข้าร่วมมากขึ้น
+              </p>
+            </div>
+            <div className="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition-shadow">
+              <h3 className="font-semibold text-[#2F4F2F] mb-2">เคล็ดลับ</h3>
+              <p className="text-sm text-[#6B6B6B]">
+                ลูกค้ามักจะชอบ Workshop ที่มีรูปภาพสวยและคำอธิบายชัดเจน
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div className="bg-white rounded-lg shadow-sm">
+          <div className="px-6 pt-6 pb-4">
+            <h2 className="text-xl font-bold text-[#2F4F2F] mb-4">Workshop ของร้านคุณ</h2>
+          </div>
           <div className="border-b border-gray-200">
             <div className="flex space-x-8 px-6">
               {['all', 'active', 'pending', 'closed'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  className={`py-4 px-1 border-b-2 font-medium text-sm transition-all ${
                     activeTab === tab
-                      ? 'border-orange-500 text-orange-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'border-[#E07B39] text-[#E07B39]'
+                      : 'border-transparent text-[#6B6B6B] hover:text-[#3D3D3D] hover:border-gray-300'
                   }`}
                 >
                   {t(`shopDashboard.tabs.${tab}`)}
@@ -285,66 +299,92 @@ const ShopDashboard = () => {
             {filteredWorkshops.length === 0 ? (
               <div className="text-center py-12">
                 <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <h3 className="text-lg font-medium text-[#2F4F2F] mb-2">
                   {t('shopDashboard.noWorkshops.title')}
                 </h3>
                 <p className="text-gray-600 mb-6">
                   {t('shopDashboard.noWorkshops.description')}
                 </p>
                 <button
-                  onClick={() => navigate('/shop/workshops/create')}
-                  className="inline-flex items-center px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors"
+                  onClick={() => {
+                    if (isPendingShop) return;
+                    navigate(`/${slug}/shop/workshops/create`);
+                  }}
+                  disabled={isPendingShop}
+                  className={`inline-flex items-center px-6 py-3 font-semibold rounded-full shadow-md transition-all ${
+                    isPendingShop
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-[#4CAF50] text-white hover:bg-[#45A049] hover:scale-105'
+                  }`}
                 >
                   <Plus className="h-5 w-5 mr-2" />
-                  {t('shopDashboard.createWorkshop')}
+                  {isPendingShop ? t('shopDashboard.pending.waitApproval', 'รอการอนุมัติร้าน') : t('shopDashboard.createWorkshop')}
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-stagger">
+              <div className="space-y-4 animate-stagger">
                 {filteredWorkshops.map((workshop) => (
-                  <div key={workshop.id} className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 animate-scaleIn transition-transform hover:scale-[1.01]">
-                    <div className="relative aspect-video bg-gray-100">
-                      {workshop.imageUrl && (
-                        <img src={workshop.imageUrl} alt={workshop.title} className="w-full h-full object-cover" />
-                      )}
-                      <div className="absolute top-3 left-3 px-2 py-1 bg-white rounded-full text-xs font-semibold shadow">
-                        {workshop.rating ? Number(workshop.rating).toFixed(1) : '4.9'}
+                  <div key={workshop.id} className="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition-shadow animate-scaleIn">
+                    <div className="flex gap-4">
+                      <div className="relative w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+                        {workshop.imageUrl && (
+                          <img src={workshop.imageUrl} alt={workshop.title} className="w-full h-full object-cover" />
+                        )}
                       </div>
-                    </div>
-                    <div className="p-4">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs text-orange-600">งานช่าง</span>
-                        {getStatusBadge(workshop.status)}
-                      </div>
-                      <h3 className="text-lg font-semibold text-gray-900">{workshop.title}</h3>
-                      <p className="text-gray-600 text-sm mt-1">
-                        {workshop.description}
-                      </p>
-                      <div className="flex items-center gap-4 text-sm text-gray-700 mt-3">
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          <span>{workshop.duration ? `${workshop.duration} นาที` : '3 ชม.'}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-4 mb-2">
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-[#2F4F2F] mb-1">{workshop.title}</h3>
+                            <p className="text-sm text-[#6B6B6B] line-clamp-2">{workshop.description || 'ไม่มีคำอธิบาย'}</p>
+                          </div>
+                          {getStatusBadge(workshop.status)}
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Users className="h-4 w-4" />
-                          <span>สูงสุด {workshop.seatLimit || 8} คน</span>
+                        <div className="flex items-center gap-6 text-sm text-gray-600 mt-3">
+                          <div className="flex items-center gap-1">
+                            <Star className="h-4 w-4 text-yellow-500" />
+                            <span>{workshop.rating ? Number(workshop.rating).toFixed(1) : '4.9'} คะแนน</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-4 w-4" />
+                            <span>{workshop.duration ? `${workshop.duration} นาที` : '180 นาที'}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Users className="h-4 w-4" />
+                            <span>{workshop.seatsBooked || 0} / {workshop.seatLimit || 10} คน</span>
+                          </div>
                         </div>
-                      </div>
-                      <div className="mt-4 flex items-center justify-between">
-                        <div className="text-orange-600 font-bold">฿{workshop.price || 880}</div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => navigate(`/shop/workshops/${workshop.id}`)}
-                            className="px-3 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 text-sm"
-                          >
-                            {t('shopDashboard.view')}
-                          </button>
-                          <button
-                            onClick={() => handleDeleteWorkshop(workshop.id)}
-                            className="px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 text-sm"
-                          >
-                            {t('shopDashboard.delete')}
-                          </button>
+                        <div className="flex items-center justify-between mt-4">
+                          <div className="text-xl font-bold text-[#E07B39]">฿{workshop.price || 0}</div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                if (isPendingShop) return;
+                                navigate(`/${slug}/shop/workshops/${workshop.id}`);
+                              }}
+                              disabled={isPendingShop}
+                              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                                isPendingShop
+                                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                  : 'bg-[#E07B39] text-white hover:bg-[#D66B29] hover:scale-105 shadow-sm'
+                              }`}
+                            >
+                              {isPendingShop ? t('shopDashboard.pending.disabled', 'รออนุมัติ') : 'ดูรายละเอียด'}
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (isPendingShop) return;
+                                handleDeleteWorkshop(workshop.id);
+                              }}
+                              disabled={isPendingShop}
+                              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                                isPendingShop
+                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                  : 'bg-red-50 text-red-600 hover:bg-red-100 hover:scale-105'
+                              }`}
+                            >
+                              {t('delete', 'ลบ')}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>

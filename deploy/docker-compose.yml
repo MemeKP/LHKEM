@@ -25,6 +25,8 @@ services:
       PORT: ${PORT:-3000}
     ports:
       - "${PORT:-3000}:3000"
+    volumes:
+      - ../backend/uploads:/app/uploads
     depends_on:
       - mongo
     networks:
@@ -32,7 +34,10 @@ services:
   
   frontend:
     container_name: frontend
-    build: ../frontend
+    build:
+      context: ../frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
     ports:
       - ${FRONTEND_PORT:-5173}:80
     environment:
@@ -45,6 +50,8 @@ services:
 
 volumes:
   mongo-data:
+    driver: local
+  backend-uploads:
     driver: local
 
 networks:

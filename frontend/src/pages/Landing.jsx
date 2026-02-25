@@ -1,16 +1,9 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Users, Calendar, ArrowRight, Sparkles } from 'lucide-react';
+import { MapPin, Users, Calendar, ArrowRight, StoreIcon } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
 import { useTranslation } from '../hooks/useTranslation';
-
-/**
- * Landing Page - หน้าแรกของแพลตฟอร์ม
- * แสดงรายการชุมชนทั้งหมดให้ผู้ใช้เลือก
- * 
- * TODO: Backend API
- * - GET /api/communities - ดึงรายการชุมชนทั้งหมด ✅ พร้อมใช้งาน
- */
 
 const fetchCommunities = async () => {
   const res = await api.get('/api/communities');
@@ -19,7 +12,9 @@ const fetchCommunities = async () => {
 
 const Landing = () => {
   const navigate = useNavigate();
-  const { t, language } = useTranslation();
+  const { t, ct, language } = useTranslation();
+  const [selectedFilter, setSelectedFilter] = useState('ทั้งหมด');
+  const [shopCounts, setShopCounts] = useState({});
 
   const { data: communities = [], isLoading } = useQuery({
     queryKey: ['communities'],
@@ -27,68 +22,111 @@ const Landing = () => {
     initialData: []
   });
 
+  useEffect(() => {
+    if (!communities.length) {
+      setShopCounts({});
+      return;
+    }
+
+    const loadShopCounts = async () => {
+      const results = await Promise.all(
+        communities.map(async (community) => {
+          try {
+            const res = await api.get(`/api/shops/community/${community._id}`);
+            const activeCount = Array.isArray(res.data)
+              ? res.data.filter((shop) => (shop.status || '').toUpperCase() === 'ACTIVE').length
+              : 0;
+            return [community._id, activeCount];
+          } catch (error) {
+            console.error('Failed to fetch shops for community:', community._id, error);
+            return [community._id, 0];
+          }
+        })
+      );
+
+      setShopCounts(Object.fromEntries(results));
+    };
+
+    loadShopCounts();
+  }, [communities]);
+
+  const { data: platformStats } = useQuery({
+    queryKey: ['platform-stats'],
+    queryFn: async () => {
+      const communitiesRes = await api.get('/api/communities');
+
+      const totalWorkshops = communitiesRes.data.reduce((sum, comm) =>
+        sum + (comm.workshops?.length || 0), 0
+      );
+
+      // Count active shops from all communities
+      let totalShops = 0;
+      for (const comm of communitiesRes.data) {
+        try {
+          const shopsRes = await api.get(`/api/shops/community/${comm._id}`);
+          totalShops += shopsRes.data.filter(shop => shop.status === 'ACTIVE').length;
+        } catch (err) {
+          console.error('Failed to fetch shops for community:', comm._id);
+        }
+      }
+
+      return [
+        { number: `${communitiesRes.data.length}`, label: ct('ชุมชน', 'Communities') },
+        { number: `${totalWorkshops}`, label: ct('กิจกรรม', 'Workshops') },
+        { number: `${totalShops}`, label: ct('ร้านค้า', 'Shops') }
+      ];
+    },
+    initialData: [
+      { number: '0', label: ct('ชุมชน', 'Communities') },
+      { number: '0', label: ct('กิจกรรม', 'Workshops') },
+      { number: '0', label: ct('ร้านค้า', 'Shops') }
+    ]
+  });
+
   const handleCommunityClick = (slug) => {
     navigate(`/${slug}`);
   };
 
-  // Platform stats - TODO: อาจจะมี API สำหรับดึงสถิติรวม
-  const platformStats = [
-    { number: communities.length > 0 ? `${communities.length}+` : '0', label: 'ชุมชน', label_en: 'Communities' },
-    { number: '50+', label: 'กิจกรรม', label_en: 'Activities' },
-    { number: '15+', label: 'ร้านค้า', label_en: 'Shops' }
+  // Filter tags
+  const filterTags = [
+    'ทั้งหมด', 'กิจกรรม', 'เครื่องจักร', 'ร้าน', 'ร้านอาหาร', 'ท่องเที่ยว', 'สถานที่',
+    'วัด', 'ศาลา', 'ผลิตภัณฑ์', 'ผ้า', 'งานฝีมือ', 'จักสาน'
   ];
 
+  const API_URL = import.meta.env.VITE_API_URL
+
   return (
-    <div className="min-h-screen bg-[#fdf7ef]">
+
+    <div className="min-h-screen bg-[#F5EFE7]">
       {/* Hero Section */}
-      <section className="relative py-20 px-4">
+      <section className="relative py-16 px-4">
         <div className="max-w-6xl mx-auto text-center">
-          {/* Badge */}
-          <div className="inline-flex items-center space-x-2 bg-orange-100 border border-orange-200 px-4 py-2 rounded-full text-sm font-semibold text-orange-700 mb-6">
-            <Sparkles className="h-4 w-4" />
-            <span>
-              {language === 'th' ? 'สำรวจชุมชนท้องถิ่น' : 'Explore Local Communities'}
-            </span>
-          </div>
-
           {/* Main Heading */}
-          <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 mb-6 leading-tight">
-            {language === 'th' ? (
-              <>
-                สำรวจชุมชนท้องถิ่น
-                <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600">
-                  และ ประสบการณ์วัฒนธรรม
-                </span>
-              </>
-            ) : (
-              <>
-                Explore Local Communities
-                <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600">
-                  and Cultural Experiences
-                </span>
-              </>
-            )}
+          <h1 className="text-4xl md:text-5xl font-bold text-[#2F4F2F] mb-3 tracking-wide animate-fadeIn">
+            THE COMMUNITY
           </h1>
-
-          {/* Description */}
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-10 leading-relaxed">
-            {language === 'th' 
-              ? 'ค้นพบกิจกรรมเวิร์กช็อปและประสบการณ์ทางวัฒนธรรมที่น่าสนใจจากชุมชนท้องถิ่นทั่วประเทศ ร่วมสัมผัสวิถีชีวิตและภูมิปัญญาท้องถิ่นอันงดงาม'
-              : 'Discover exciting workshops and cultural experiences from local communities across the country. Experience the beautiful local way of life and wisdom.'
-            }
+          <p className="text-sm text-[#6B6B6B] mb-8 animate-fadeIn" style={{ animationDelay: '0.1s' }}>
+            {ct('ยินดีต้อนรับสู่ โหล่งฮิมคาว', 'Welcome to Loeng Him Kaw')}
           </p>
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto mb-12">
-            {platformStats.map((stat, index) => (
-              <div key={index} className="text-center p-8 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-orange-200 hover:border-orange-300 transform hover:scale-105">
-                <div className="text-4xl font-bold text-orange-600 mb-2">{stat.number}</div>
-                <div className="text-gray-700 font-medium">{language === 'th' ? stat.label : stat.label_en}</div>
-              </div>
-            ))}
-          </div>
+          {/* Thai Description */}
+          <h2 className="text-2xl md:text-3xl font-bold text-[#2F4F2F] mb-2 animate-fadeIn" style={{ animationDelay: '0.2s' }}>
+            {ct('สำรวจชุมชนท้องถิ่น', 'Explore Local Communities')}
+          </h2>
+          <h3 className="text-xl text-[#E07B39] md:text-2xl font-semibold mb-6 animate-fadeIn" style={{ animationDelay: '0.3s' }}>
+            {ct('และ ', 'and ')}
+            <span className="text-[#6B6B6B]">
+              {ct('ประสบการณ์วัฒนธรรม', 'Cultural Experiences')}
+            </span>
+          </h3>
+
+          {/* Description */}
+          <p className="text-base font-semibold max-w-2xl mx-auto mb-8 leading-relaxed animate-fadeIn" style={{ animationDelay: '0.4s' }}>
+            {ct(
+              'แพลตฟอร์มที่รวมชมชนท้องถิ่นต่างๆไว้ในที่เดียว เพื่อให้คุณสัมผัส วิถึชีวิต วัฒนธรรม และภูมิปัญญาท้องถิ่น',
+              'A platform that brings together local communities in one place, allowing you to experience the local way of life, culture, and traditional knowledge.'
+            )}
+          </p>
 
           {/* CTA Button */}
           <button
@@ -96,30 +134,37 @@ const Landing = () => {
               const element = document.getElementById('communities-section');
               element?.scrollIntoView({ behavior: 'smooth' });
             }}
-            className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-8 py-4 rounded-full shadow-lg transition-all hover:shadow-xl"
+            className="inline-flex items-center gap-2 bg-[#E07B39] hover:bg-[#D66B29] text-white font-semibold px-8 py-3 rounded-full shadow-md transition-all hover:scale-105 hover:shadow-lg mb-12 animate-fadeIn"
+            style={{ animationDelay: '0.5s' }}
           >
-            {language === 'th' ? 'เริ่มสำรวจชุมชน' : 'Start Exploring'}
-            <ArrowRight className="h-5 w-5" />
+            {ct('เริ่มสำรวจชุมชน', 'Start Exploring')}
           </button>
+
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-8 max-w-md mx-auto">
+            {platformStats.map((stat, index) => (
+              <div key={index} className="text-center animate-fadeIn" style={{ animationDelay: `${0.6 + index * 0.1}s` }}>
+                <div className="text-3xl font-bold text-[#E07B39] mb-1 hover:scale-110 transition-transform">{stat.number}</div>
+                <div className="text-sm text-[#6B6B6B]">{stat.label}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* Communities Section */}
-      <section id="communities-section" className="py-20 px-4 bg-white border-t border-gray-200">
+      <section id="communities-section" className="py-16 px-4 bg-[#EBE4D8]">
         <div className="max-w-6xl mx-auto">
           {/* Section Header */}
-          <div className="text-center mb-12">
-            <span className="inline-block bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-semibold mb-4">
-              {language === 'th' ? 'ชุมชนของเรา' : 'Our Communities'}
-            </span>
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              {language === 'th' ? 'เลือกชุมชนที่คุณสนใจ' : 'Choose Your Community'}
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-[#2F4F2F] mb-2">
+              {ct('ชุมชนของเรา', 'Our Communities')}
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              {language === 'th'
-                ? 'แต่ละชุมชนมีเอกลักษณ์และกิจกรรมที่น่าสนใจรอคุณอยู่'
-                : 'Each community has unique characteristics and exciting activities waiting for you'
-              }
+            <p className="text-[#6B6B6B] font-semibold mb-6">
+              {ct(
+                'เลือกชุมชนที่คุณสนใจ เพื่อค้นพบกิจกรรมและประสบการณ์ที่น่าสนใจ',
+                'Choose your community to discover exciting activities and experiences'
+              )}
             </p>
           </div>
 
@@ -128,7 +173,7 @@ const Landing = () => {
             <div className="text-center py-20">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent"></div>
               <p className="mt-4 text-gray-600">
-                {language === 'th' ? 'กำลังโหลดชุมชน...' : 'Loading communities...'}
+                {ct('กำลังโหลดชุมชน...', 'Loading communities...')}
               </p>
             </div>
           )}
@@ -137,108 +182,106 @@ const Landing = () => {
           {!isLoading && communities.length === 0 && (
             <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300">
               <p className="text-gray-600 text-lg">
-                {language === 'th' ? 'ยังไม่มีชุมชนในระบบ' : 'No communities available yet'}
+                {ct('ยังไม่มีชุมชนในระบบ', 'No communities available yet')}
               </p>
             </div>
           )}
 
           {/* Community Cards */}
           {!isLoading && communities.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {communities.map((community) => (
-                <div
-                  key={community._id}
-                  onClick={() => handleCommunityClick(community.slug)}
-                  className="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer border-2 border-gray-200 hover:border-orange-300 transform hover:scale-105 animate-fadeIn"
-                >
-                  {/* Community Image */}
-                  <div className="aspect-video bg-gradient-to-br from-orange-100 via-orange-200 to-orange-300 relative overflow-hidden">
-                    {community.hero_section?.image ? (
-                      <img
-                        src={community.hero_section.image}
-                        alt={language === 'th' ? community.name : community.name_en}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <MapPin className="h-20 w-20 text-orange-400" />
-                      </div>
-                    )}
-                    {/* Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+              {communities.map((community, index) => {
+                const imgSrc = community.images?.length > 0 ? community.images[0] : null;
+                const imgSrcFullUrl = imgSrc ? `${API_URL}${imgSrc}` : null;
 
-                  {/* Community Info */}
-                  <div className="p-6">
-                    {/* Community Name */}
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors">
-                      {language === 'th' ? community.name : community.name_en || community.name}
-                    </h3>
-
-                    {/* Description */}
-                    <p className="text-gray-600 mb-4 line-clamp-2 leading-relaxed">
-                      {language === 'th' 
-                        ? community.hero_section?.description || community.history
-                        : community.hero_section?.description_en || community.history_en || community.hero_section?.description
-                      }
-                    </p>
-
-                    {/* Stats */}
-                    <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        <span>{community.workshops?.length || 0} {language === 'th' ? 'กิจกรรม' : 'activities'}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Users className="h-4 w-4" />
-                        <span>{community.events?.length || 0} {language === 'th' ? 'อีเวนต์' : 'events'}</span>
-                      </div>
+                return (
+                  <div
+                    key={community._id}
+                    className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 animate-fadeIn"
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    {/* Community Image */}
+                    <div className="aspect-video bg-gray-200 relative overflow-hidden">
+                      {imgSrcFullUrl ? (
+                        <img
+                          src={imgSrcFullUrl}
+                          alt={language === 'th' ? community.name : community.name_en}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            e.target.style.display = 'none'; // ซ่อนรูปถ้าโหลดไม่ได้
+                          
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                          <MapPin className="h-16 w-16 text-gray-400" />
+                        </div>
+                      )}
                     </div>
 
-                    {/* Location */}
-                    {community.location?.address && (
-                      <div className="flex items-start gap-2 text-sm text-gray-500 mb-4">
-                        <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                        <span className="line-clamp-1">
-                          {language === 'th' 
-                            ? community.location.address 
-                            : community.location.address_en || community.location.address
-                          }
-                        </span>
-                      </div>
-                    )}
+                    {/* Community Info */}
+                    <div className="p-5">
+                      {/* Community Name */}
+                      <h3 className="text-xl font-bold text-[#3D3D3D] mb-2 group-hover:text-[#E07B39] transition-colors">
+                        {ct(community.name, community.name_en || community.name)}
+                      </h3>
 
-                    {/* CTA Button */}
-                    <button className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-gray-900 to-gray-800 hover:from-orange-500 hover:to-orange-600 text-white font-semibold py-3 rounded-full transition-all duration-300 shadow-md hover:shadow-lg group-hover:from-orange-500 group-hover:to-orange-600">
-                      {language === 'th' ? 'เข้าชมชุมชน' : 'Visit Community'}
-                      <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                    </button>
+                      {/* Description */}
+                      <p className="text-sm text-[#6B6B6B] mb-4 line-clamp-2">
+                        {ct(
+                          community.hero_section?.description || community.history,
+                          community.hero_section?.description_en || community.history_en || community.hero_section?.description
+                        )}
+                      </p>
+
+                      {/* Stats */}
+                      <div className="flex items-center gap-4 text-xs text-[#6B6B6B] mb-4">
+                        <div className="flex items-center gap-1">
+                          <StoreIcon className="h-3.5 w-3.5" />
+                          <span>{shopCounts[community._id] ?? 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3.5 w-3.5" />
+                          <span>{community.events?.length || 0}</span>
+                        </div>
+                      </div>
+
+                      {/* CTA Button */}
+                      <button
+                        onClick={() => handleCommunityClick(community.slug)}
+                        className="w-full bg-[#E07B39] hover:bg-[#D66B29] text-white font-medium py-2.5 rounded-full transition-all duration-300 shadow-sm hover:shadow-md hover:scale-105"
+                      >
+                        {ct('เข้าชมชุมชน', 'Visit Community')}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ); 
+              })}
             </div>
           )}
         </div>
       </section>
 
       {/* Call to Action Section */}
-      <section className="py-20 px-4 bg-gradient-to-b from-gray-50 to-white">
-        <div className="max-w-4xl mx-auto bg-gradient-to-br from-orange-500 to-orange-600 rounded-3xl p-12 text-center text-white shadow-2xl border-4 border-orange-400 animate-scaleIn">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            {language === 'th' ? 'พร้อมที่จะ เริ่มต้น แล้วหรือยัง?' : 'Ready to Get Started?'}
+      <section className="py-16 px-4 bg-[#F5EFE7]">
+        <div className="max-w-2xl mx-auto bg-white rounded-2xl p-10 text-center shadow-md hover:shadow-xl transition-all duration-300 animate-fadeIn">
+          <h2 className="text-2xl md:text-3xl font-bold text-[#2F4F2F] mb-3">
+            {ct('พร้อมที่จะ เริ่มต้น แล้วหรือยัง?', 'Ready to Get Started?')}
           </h2>
-          <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
-            {language === 'th'
-              ? 'สมัครสมาชิกวันนี้เพื่อเข้าถึงกิจกรรมและประสบการณ์พิเศษจากชุมชนท้องถิ่น'
-              : 'Sign up today to access special activities and experiences from local communities'
-            }
+          <p className="text-base text-[#6B6B6B] font-semibold mb-6">
+            {ct(
+              'สำรวจชุมชนท้องถิ่นและค้นพบกิจกรรมที่น่าสนใจรอคุณอยู่',
+              'Explore local communities and discover exciting activities waiting for you'
+            )}
           </p>
           <button
-            onClick={() => navigate('/register')}
-            className="inline-flex items-center gap-2 bg-white text-orange-600 hover:bg-gray-100 font-semibold px-8 py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 border-2 border-white hover:border-gray-200"
+            onClick={() => {
+              const element = document.getElementById('communities-section');
+              element?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="inline-flex items-center gap-2 bg-[#E07B39] hover:bg-[#D66B29] text-white font-semibold px-8 py-3 rounded-full shadow-md transition-all hover:scale-105 hover:shadow-lg"
           >
-            {language === 'th' ? 'สมัครสมาชิกฟรี' : 'Sign Up Free'}
-            <ArrowRight className="h-5 w-5" />
+            {ct('สำรวจชุมชน', 'Explore Communities')}
           </button>
         </div>
       </section>

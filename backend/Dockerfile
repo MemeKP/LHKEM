@@ -10,6 +10,8 @@ COPY . .
 
 RUN npm run build
 
+RUN mkdir -p /app/uploads
+
 EXPOSE 3000
 
 # CMD ["npm", "run", "start:dev"]

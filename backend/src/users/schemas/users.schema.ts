@@ -1,13 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Document } from 'mongoose';
+import { HydratedDocument, Document, Types } from 'mongoose';
 import { UserRole } from 'src/common/enums/user-role.enum';
 
 export type UserDocument = User & Document;
 
-
 @Schema({ timestamps: true, collection: 'users' })
 export class User {
-    @Prop({unique: true }) //backend สร้าง user_id เอง
+    @Prop({ unique: true }) //backend สร้าง user_id เอง
     user_id: string;
 
     @Prop({ required: true })

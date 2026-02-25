@@ -8,7 +8,9 @@ RUN npm install
 
 COPY . .
 
-RUN npm run build
+# RUN npm run build
+ARG VITE_API_URL=http://localhost:3000
+RUN VITE_API_URL=$VITE_API_URL npm run build
 
 FROM nginx:alpine
 

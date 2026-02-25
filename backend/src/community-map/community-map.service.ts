@@ -1,5 +1,6 @@
 // src/community-map/community-map.service.ts
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -30,25 +31,62 @@ export class CommunityMapService {
   // =========================
   async getCommunityMap(communityId: string) {
     const communityObjectId = new Types.ObjectId(communityId);
-    
+    const communityIdString = communityObjectId.toString();
+
     const map = await this.communityMapModel.findOne({
-    communityId: communityObjectId,
+      communityId: communityObjectId,
     });
     if (!map) throw new NotFoundException('Map not found');
 
-    const pins = await this.mapPinModel.find({
-      communityId : communityObjectId,
-      status: MapPinStatus.APPROVED,
+    const pins = await this.mapPinModel
+      .find({
+        communityId: { $in: [communityObjectId, communityIdString] },
+        status: MapPinStatus.APPROVED,
+      })
+      .populate({
+        path: 'ownerShop',
+        select: 'shopName description coverUrl iconUrl status',
+      });
+
+    const filteredPins = pins.filter((pin) => {
+      const ownerShop = pin.ownerShop as unknown;
+      const shop =
+        ownerShop && typeof ownerShop === 'object' && 'status' in ownerShop
+          ? (ownerShop as Shop & { _id: Types.ObjectId })
+          : null;
+
+      return shop?.status === 'ACTIVE';
     });
 
     return {
       map_image: map.imageUrl,
-      pins: pins.map(p => ({
-      id: p._id,
-      x: p.positionX,
-      y: p.positionY,
-      shopId: p.ownerShop,
-    })),
+      pins: filteredPins.map((pin) => {
+        const ownerShop = pin.ownerShop as unknown;
+        const shop =
+          ownerShop && typeof ownerShop === 'object' && 'shopName' in ownerShop
+            ? (ownerShop as Shop & { _id: Types.ObjectId })
+            : null;
+
+        return {
+          id: pin._id,
+          positionX: pin.positionX,
+          positionY: pin.positionY,
+          status:
+            pin.status === MapPinStatus.APPROVED
+              ? 'ACTIVE'
+              : pin.status,
+          ownerShop: shop
+            ? {
+                _id: shop._id,
+                name: shop.shopName,
+                description: shop.description,
+                coverUrl: shop.coverUrl,
+                iconUrl: shop.iconUrl,
+                status: shop.status,
+              }
+            : null,
+        };
+      }),
     };
   }
 
@@ -90,10 +128,14 @@ async getPinDetail(pinId: string) {
     userId: string,
     dto: CreateMapPinDto,
   ) {
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new ForbiddenException('Invalid user identifier');
+    }
+
     const shop = await this.shopModel.findOne({
-    userId: new Types.ObjectId(userId),
-      });
-    console.log('shop:', shop);
+      userId: new Types.ObjectId(userId),
+    });
+    
     if (!shop) {
       throw new ForbiddenException('Shop not found');
     }
@@ -110,6 +152,64 @@ async getPinDetail(pinId: string) {
       },
       { upsert: true, new: true },
     );
+  }
+
+  async getShopPinByUser(userId: string) {
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new ForbiddenException('Invalid user identifier');
+    }
+
+    const shop = await this.shopModel.findOne({
+      userId: new Types.ObjectId(userId),
+    });
+
+    if (!shop) {
+      throw new NotFoundException('Shop not found');
+    }
+
+    const pin = await this.mapPinModel.findOne({ ownerShop: shop._id });
+
+    if (!pin) {
+      return {
+        hasPin: false,
+        communityId: shop.communityId,
+      };
+    }
+
+    return {
+      hasPin: true,
+      communityId: shop.communityId,
+      pinId: pin._id,
+      position_x: pin.positionX,
+      position_y: pin.positionY,
+      status: pin.status,
+      updatedAt: pin.updatedAt,
+    };
+  }
+
+  async getShopPinForAdmin(shopId: string) {
+    if (!Types.ObjectId.isValid(shopId)) {
+      throw new BadRequestException('Invalid shop identifier');
+    }
+
+    const shopObjectId = new Types.ObjectId(shopId);
+    const pin = await this.mapPinModel.findOne({ ownerShop: shopObjectId });
+
+    if (!pin) {
+      return {
+        hasPin: false,
+        communityId: null,
+      };
+    }
+
+    return {
+      hasPin: true,
+      communityId: pin.communityId?.toString() || null,
+      pinId: pin._id,
+      position_x: pin.positionX,
+      position_y: pin.positionY,
+      status: pin.status,
+    };
   }
 
   // =========================

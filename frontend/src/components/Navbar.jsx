@@ -1,18 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Globe, User, Settings, LogOut, LayoutDashboard, Store, Users, Shield, ChevronDown } from 'lucide-react';
+import { Menu, X, Globe, User, Settings, LogOut, LayoutDashboard, Store, Users, Shield, ChevronDown, Info, Cog } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useAuth } from '../hooks/useAuth';
 import { getLogo } from '../utils/getLogo';
 import axios from 'axios';
+import api from '../services/api';
 
 const Navbar = ({ community }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isCommunityMenuOpen, setIsCommunityMenuOpen] = useState(false);
   const [communities, setCommunities] = useState([]);
+  const [shopCommunitySlug, setShopCommunitySlug] = useState(null);
   const { language, toggleLanguage, t, ct} = useTranslation();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, token } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const userMenuRef = useRef(null);
@@ -26,6 +28,19 @@ const Navbar = ({ community }) => {
     }
     return location.pathname.startsWith(fullPath);
   };
+
+  const getCommunityPath = (sectionKey = '') => {
+    if (!community?.slug) return '/';
+    return sectionKey ? `/${community.slug}/${sectionKey}` : `/${community.slug}`;
+  };
+
+  const communityNavLinks = [
+    { key: '', label: t('nav.home') },
+    { key: 'shops', label: t('nav.shops') },
+    { key: 'workshops', label: t('nav.workshops') },
+    { key: 'map', label: t('nav.map') },
+    { key: 'about', label: t('nav.about') },
+  ];
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -52,10 +67,45 @@ const Navbar = ({ community }) => {
     fetchCommunities();
   }, []);
 
+  // Fetch shop owner's community slug
+  useEffect(() => {
+    const fetchShopCommunity = async () => {
+      if (user?.role === 'SHOP_OWNER' && token) {
+        try {
+          const response = await api.get('/api/shops/me', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (response.data?.communityId) {
+            // Fetch community details to get slug
+            const communityResponse = await api.get(`/api/communities/${response.data.communityId}`);
+            setShopCommunitySlug(communityResponse.data.slug);
+          }
+        } catch (error) {
+          console.error('Failed to fetch shop community:', error);
+          setShopCommunitySlug(null);
+        }
+      } else {
+        // Clear slug when user is not shop owner or not logged in
+        setShopCommunitySlug(null);
+      }
+    };
+    fetchShopCommunity();
+  }, [user, token]);
+
   const handleLogout = () => {
     logout();
     setIsUserMenuOpen(false);
-    navigate('/');
+    // Stay on current page after logout if it's a public page
+    const currentPath = window.location.pathname;
+    const publicPaths = ['/', '/login', '/register'];
+    const isPublicOrCommunity = publicPaths.includes(currentPath) || 
+                                currentPath.match(/^\/[^\/]+/) && 
+                                !currentPath.match(/^\/(dashboard|settings|platform-admin|community-admin|shop)/);
+    
+    if (!isPublicOrCommunity) {
+      navigate('/');
+    }
+    // Otherwise stay on current page
   };
 
   const getUserDisplayName = () => {
@@ -68,31 +118,40 @@ const Navbar = ({ community }) => {
   const getRoleSpecificMenuItems = () => {
     const role = user?.role;
 
+    // Check if we're in a community context (has slug in URL)
+    // Match /slug or /slug/anything but NOT / or /dashboard or /settings
+    const isInCommunity = window.location.pathname.match(/^\/[^\/]+/) && 
+                          !window.location.pathname.match(/^\/(dashboard|settings|login|register|platform-admin|community-admin)/);
+
     if (role === 'SHOP_OWNER') {
+      const shopSlug = shopCommunitySlug || community?.slug || 'loeng-him-kaw';
       return [
-        { to: '/shop/dashboard', icon: LayoutDashboard, label: t('nav.shopDashboard') },
-        { to: '/settings', icon: Settings, label: t('nav.settings') }
+        { to: isInCommunity ? 'shop/dashboard' : `/${shopSlug}/shop/dashboard`, icon: LayoutDashboard, label: t('nav.shopDashboard') },
+        { to: isInCommunity ? 'settings' : '/settings', icon: Settings, label: t('nav.settings') }
       ];
     }
 
     if (role === 'COMMUNITY_ADMIN') {
       return [
-        { to: '/community-admin/dashboard', icon: LayoutDashboard, label: t('nav.communityDashboard') },
-        { to: '/settings', icon: Settings, label: t('nav.settings') }
+        { to: '/community-admin/dashboard', icon: LayoutDashboard, label: ct('จัดการข้อมูลชุมชน', 'Manage Community') },
+        { to: '/community-admin/info', icon: Info, label: ct('ดูแดชบอร์ด', 'View Dashboard') },
+        { to: '/community-admin/settings', icon: Cog, label: ct('ตั้งค่าชุมชน', 'Community Settings') },
+        { to: isInCommunity ? 'settings' : '/settings', icon: Settings, label: ct('ตั้งค่าบัญชี', 'Account Settings') }
       ];
     }
 
     if (role === 'PLATFORM_ADMIN') {
       return [
-        { to: '/admin/dashboard', icon: Shield, label: t('nav.adminDashboard') },
-        { to: '/settings', icon: Settings, label: t('nav.settings') }
+        { to: '/platform-admin/dashboard', icon: LayoutDashboard, label: ct('แดชบอร์ดแพลตฟอร์ม', 'Platform Dashboard') },
+        { to: '/platform-admin/overview', icon: Shield, label: ct('ภาพรวมแพลตฟอร์ม', 'Platform Overview') },
+        { to: '/platform-admin/settings', icon: Settings, label: ct('ตั้งค่า', 'Settings') }
       ];
     }
 
     // Default for TOURIST
     return [
-      { to: '/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
-      { to: '/settings', icon: Settings, label: t('nav.settings') }
+      { to: isInCommunity ? 'dashboard' : '/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
+      { to: isInCommunity ? 'settings' : '/settings', icon: Settings, label: t('nav.settings') }
     ];
   };
 
@@ -113,129 +172,50 @@ const Navbar = ({ community }) => {
           </Link>
 
           <div className="hidden md:flex items-center space-x-8">
-            <Link
-              to={`/${community.slug}`}
-              className={`font-medium transition-colors border-b-2 pb-1 ${isActive('') ? '' : 'border-transparent'}`}
-              style={{
-                color: isActive('') ? '#111827' : '#4b5563',
-                borderColor: isActive('') ? '#ea580c' : 'transparent'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#ea580c'}
-              onMouseLeave={(e) => e.currentTarget.style.color = isActive('') ? '#111827' : '#4b5563'}
-            >
-              {t('nav.home')}
-            </Link>
-
-            {communities.length > 1 && (
-              <div className="relative" ref={communityMenuRef}>
-                <button
-                  onClick={() => setIsCommunityMenuOpen(!isCommunityMenuOpen)}
-                  className={`font-medium transition-colors border-b-2 pb-1 ${isCommunityMenuOpen ? '' : 'border-transparent'}`}
-                  style={{
-                    color: isCommunityMenuOpen ? '#111827' : '#4b5563',
-                    borderColor: isCommunityMenuOpen ? '#ea580c' : 'transparent'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#ea580c'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = isCommunityMenuOpen ? '#111827' : '#4b5563'}
-                >
-                  {t('nav.communities') || 'ชุมชน'}
-                </button>
-
-                {isCommunityMenuOpen && (
-                  <div className="absolute left-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 animate-slideDown">
-                    <div className="px-4 py-2 border-b border-gray-200">
-                      <p className="text-xs font-semibold text-gray-500">{t('nav.selectCommunity') || 'เลือกชุมชน'}</p>
-                    </div>
-                    {communities.map((comm) => (
-                      <Link
-                        key={comm._id}
-                        to={`/${comm.slug}`}
-                        onClick={() => {
-                          setIsCommunityMenuOpen(false);
-                        }}
-                        className={`block px-4 py-2.5 transition-colors ${
-                          comm._id === community._id ? 'bg-orange-50' : ''
-                        }`}
-                        style={{ 
-                          color: comm._id === community._id ? '#ea580c' : '#374151'
-                        }}
-                        onMouseEnter={(e) => {
-                          if (comm._id !== community._id) {
-                            e.currentTarget.style.backgroundColor = '#f3f4f6';
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (comm._id !== community._id) {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                          }
-                        }}
-                      >
-                        <div className="font-medium">{comm.name}</div>
-                        <div className="text-xs text-gray-500 mt-0.5">
-                          {comm.location?.province || ''} {comm.location?.district || ''}
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            <Link
-              to={`/${community.slug}/workshops`}
-              className={`font-medium transition-colors border-b-2 pb-1 ${isActive('workshops') ? '' : 'border-transparent'}`}
-              style={{
-                color: isActive('workshops') ? '#111827' : '#4b5563',
-                borderColor: isActive('workshops') ? '#ea580c' : 'transparent'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#ea580c'}
-              onMouseLeave={(e) => e.currentTarget.style.color = isActive('workshops') ? '#111827' : '#4b5563'}
-            >
-              {t('nav.workshops')}
-            </Link>
-            <Link
-              to={`/${community.slug}/map`}
-              className={`font-medium transition-colors border-b-2 pb-1 ${isActive('map') ? '' : 'border-transparent'}`}
-              style={{
-                color: isActive('map') ? '#111827' : '#4b5563',
-                borderColor: isActive('map') ? '#ea580c' : 'transparent'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#ea580c'}
-              onMouseLeave={(e) => e.currentTarget.style.color = isActive('map') ? '#111827' : '#4b5563'}
-            >
-              {t('nav.map')}
-            </Link>
-            <Link
-              to={`/${community.slug}/about`}
-              className={`font-medium transition-colors border-b-2 pb-1 ${isActive('about') ? '' : 'border-transparent'}`}
-              style={{
-                color: isActive('about') ? '#111827' : '#4b5563',
-                borderColor: isActive('about') ? '#ea580c' : 'transparent'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#ea580c'}
-              onMouseLeave={(e) => e.currentTarget.style.color = isActive('about') ? '#111827' : '#4b5563'}
-            >
-              {t('nav.about')}
-            </Link>
+            {communityNavLinks.map(({ key, label }) => (
+              <Link
+                key={key || 'home'}
+                to={getCommunityPath(key)}
+                className={`font-medium transition-colors border-b-2 pb-1 ${isActive(key) ? '' : 'border-transparent'}`}
+                style={{
+                  color: isActive(key) ? '#111827' : '#4b5563',
+                  borderColor: isActive(key) ? '#ea580c' : 'transparent'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#ea580c'}
+                onMouseLeave={(e) => e.currentTarget.style.color = isActive(key) ? '#111827' : '#4b5563'}
+              >
+                {label}
+              </Link>
+            ))}
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
+            {/* Language Toggle */}
             <button
               onClick={toggleLanguage}
-              className="flex items-center space-x-1 transition-colors"
+              className="flex items-center space-x-2 px-3 py-2 rounded-full transition-colors border border-transparent"
               style={{ color: '#4b5563' }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#111827'}
-              onMouseLeave={(e) => e.currentTarget.style.color = '#4b5563'}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#111827';
+                e.currentTarget.style.borderColor = '#e5e7eb';
+                e.currentTarget.style.backgroundColor = '#f3f4f6';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = '#4b5563';
+                e.currentTarget.style.borderColor = 'transparent';
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
             >
               <Globe className="h-4 w-4" />
               <span className="text-sm font-medium">{language} / {language === 'TH' ? 'EN' : 'TH'}</span>
             </button>
 
+            {/* User Menu */}
             {isAuthenticated ? (
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center space-x-2 font-medium transition-colors px-3 py-2 rounded-lg"
+                  className="flex items-center space-x-2 font-medium transition-colors px-4 py-2 rounded-full"
                   style={{ color: '#374151' }}
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
@@ -245,7 +225,7 @@ const Navbar = ({ community }) => {
                 </button>
 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 animate-slideDown">
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                     <div className="px-4 py-2 border-b border-gray-200">
                       <p className="text-xs text-gray-500">{t('nav.signedInAs')}</p>
                       <p className="text-sm font-semibold text-gray-900 truncate">{user?.email}</p>
@@ -296,10 +276,11 @@ const Navbar = ({ community }) => {
                 )}
               </div>
             ) : (
-              <>
+              <div className="flex items-center space-x-2">
                 <Link
                   to="/login"
-                  className="font-medium transition-colors"
+                  state={{ from: location }}
+                  className="font-medium transition-colors px-4 py-2 rounded-full"
                   style={{ color: '#374151' }}
                   onMouseEnter={(e) => e.currentTarget.style.color = '#111827'}
                   onMouseLeave={(e) => e.currentTarget.style.color = '#374151'}
@@ -315,7 +296,7 @@ const Navbar = ({ community }) => {
                 >
                   {t('nav.register')}
                 </Link>
-              </>
+              </div>
             )}
           </div>
 
@@ -330,58 +311,22 @@ const Navbar = ({ community }) => {
 
         {isMenuOpen && (
           <div className="md:hidden pb-4 space-y-3">
-            <Link
-              to="/"
-              className={`block font-medium transition-colors ${isActive('/') ? 'border-l-4 pl-3' : 'pl-4'}`}
-              style={{
-                color: isActive('/') ? '#ea580c' : '#111827',
-                borderColor: isActive('/') ? '#ea580c' : 'transparent'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#ea580c'}
-              onMouseLeave={(e) => e.currentTarget.style.color = isActive('/') ? '#ea580c' : '#111827'}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              {t('nav.home')}
-            </Link>
-            <Link
-              to="/workshops"
-              className={`block font-medium transition-colors ${isActive('/workshops') ? 'border-l-4 pl-3' : 'pl-4'}`}
-              style={{
-                color: isActive('/workshops') ? '#ea580c' : '#4b5563',
-                borderColor: isActive('/workshops') ? '#ea580c' : 'transparent'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#ea580c'}
-              onMouseLeave={(e) => e.currentTarget.style.color = isActive('/workshops') ? '#ea580c' : '#4b5563'}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              {t('nav.workshops')}
-            </Link>
-            <Link
-              to="/map"
-              className={`block font-medium transition-colors ${isActive('/map') ? 'border-l-4 pl-3' : 'pl-4'}`}
-              style={{
-                color: isActive('/map') ? '#ea580c' : '#4b5563',
-                borderColor: isActive('/map') ? '#ea580c' : 'transparent'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#ea580c'}
-              onMouseLeave={(e) => e.currentTarget.style.color = isActive('/map') ? '#ea580c' : '#4b5563'}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              {t('nav.map')}
-            </Link>
-            <Link
-              to="/about"
-              className={`block font-medium transition-colors ${isActive('/about') ? 'border-l-4 pl-3' : 'pl-4'}`}
-              style={{
-                color: isActive('/about') ? '#ea580c' : '#4b5563',
-                borderColor: isActive('/about') ? '#ea580c' : 'transparent'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#ea580c'}
-              onMouseLeave={(e) => e.currentTarget.style.color = isActive('/about') ? '#ea580c' : '#4b5563'}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              {t('nav.about')}
-            </Link>
+            {communityNavLinks.map(({ key, label }) => (
+              <Link
+                key={key || 'home-mobile'}
+                to={getCommunityPath(key)}
+                className={`block font-medium transition-colors ${isActive(key) ? 'border-l-4 pl-3' : 'pl-4'}`}
+                style={{
+                  color: isActive(key) ? '#ea580c' : '#4b5563',
+                  borderColor: isActive(key) ? '#ea580c' : 'transparent'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#ea580c'}
+                onMouseLeave={(e) => e.currentTarget.style.color = isActive(key) ? '#ea580c' : '#4b5563'}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {label}
+              </Link>
+            ))}
             <div className="pt-3 border-t space-y-2">
               <button
                 onClick={toggleLanguage}
@@ -398,24 +343,23 @@ const Navbar = ({ community }) => {
                     <User className="h-4 w-4 inline mr-2" />
                     {getUserDisplayName()}
                   </div>
-                  <Link
-                    to="/dashboard"
-                    className="block font-medium pl-4 py-2"
-                    style={{ color: '#374151' }}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <LayoutDashboard className="h-4 w-4 inline mr-2" />
-                    {t('nav.dashboard')}
-                  </Link>
-                  <Link
-                    to="/settings"
-                    className="block font-medium pl-4 py-2"
-                    style={{ color: '#374151' }}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Settings className="h-4 w-4 inline mr-2" />
-                    {t('nav.settings')}
-                  </Link>
+                  <div className="space-y-1">
+                    {getRoleSpecificMenuItems().map((item, index) => {
+                      const Icon = item.icon;
+                      return (
+                        <Link
+                          key={`${item.to}-${index}`}
+                          to={item.to}
+                          className="block font-medium pl-4 py-2"
+                          style={{ color: '#374151' }}
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <Icon className="h-4 w-4 inline mr-2" />
+                          {item.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
                   <button
                     onClick={() => {
                       handleLogout();

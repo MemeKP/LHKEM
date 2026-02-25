@@ -1,6 +1,7 @@
-import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Calendar, MapPin, Users, DollarSign, Edit, ArrowLeft, Clock, Info } from 'lucide-react';
+import { Calendar, MapPin, Users, DollarSign, Edit, ArrowLeft, Clock, Info, Phone, MessageCircle, Facebook } from 'lucide-react';
+import api from '../../services/api';
+import { useQuery } from '@tanstack/react-query';
 
 /**
  * Event Detail Page - แสดงรายละเอียด Event และสามารถแก้ไขได้
@@ -9,13 +10,47 @@ import { Calendar, MapPin, Users, DollarSign, Edit, ArrowLeft, Clock, Info } fro
  * - GET /api/events/:id - ดึงรายละเอียด Event
  * - GET /api/events/:id/participants - ดึงรายชื่อผู้ลงทะเบียน
  */
+const useEvent = (eventId) => {
+  return useQuery({
+    queryKey: ['event', eventId],
+    queryFn: async () => {
+      const res = await api.get(`/api/events/${eventId}`);
+      return res.data;
+    },
+    enabled: !!eventId,
+  });
+};
+
+const fetchParticipants = async (eventId) => {
+  const res = await api.get(`/api/events/${eventId}/participants`);
+  return res.data;
+};
+
+const useEventParticipants = (eventId) => {
+  return useQuery({
+    queryKey: ['event-participants', eventId],
+    queryFn: () => fetchParticipants(eventId),
+    enabled: !!eventId,
+  });
+};
 
 const EventDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { data: event, isLoading, isError } = useEvent(id);
+  const {
+    data: participants = [],
+  } = useEventParticipants(id);
+
+  const getLocationName = (location) => {
+    if (!location) return 'ไม่ระบุสถานที่';
+    if (typeof location === 'string') return location;
+    return location.full_address || location.address || 'ไม่ระบุสถานที่';
+  };
 
   // TODO: Fetch from API - GET /api/events/:id
   // Mock data for Event detail
+  /*
   const event = {
     id: id,
     title: 'งานลอยกระทงโหล่งฮิมคาว 2567',
@@ -33,14 +68,15 @@ const EventDetailPage = () => {
     created_at: new Date('2024-01-01T10:00:00'),
     updated_at: new Date('2024-01-05T14:30:00'),
     images: []
-  };
+  };*/
 
   // TODO: Fetch from API - GET /api/events/:id/participants
+  /*
   const participants = [
     { id: '1', name: 'สมชาย ใจดี', email: 'somchai@example.com', phone: '081-234-5678', registered_at: new Date('2024-01-02') },
     { id: '2', name: 'สมหญิง รักสงบ', email: 'somying@example.com', phone: '082-345-6789', registered_at: new Date('2024-01-03') },
     { id: '3', name: 'วิชัย มั่นคง', email: 'wichai@example.com', phone: '083-456-7890', registered_at: new Date('2024-01-04') }
-  ];
+  ];*/
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -68,13 +104,21 @@ const EventDetailPage = () => {
     }
   };
 
+  if (isLoading) return <div className="p-10 text-center">กำลังโหลดข้อมูล...</div>;
+  if (isError || !event) return <div className="p-10 text-center text-red-500">ไม่พบข้อมูลกิจกรรม</div>;
+
+  const registeredCount = participants?.length || 0;
+  const seatLimit = event.seat_limit || 0;
+  const remainingSeats = seatLimit - registeredCount;
+  const API_URL = import.meta.env.VITE_API_URL
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-[#F5EFE7] py-8">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back Button */}
         <button
           onClick={() => navigate('/community-admin/events')}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+          className="flex items-center gap-2 text-[#666666] hover:text-[#1A1A1A] mb-6 transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
           กลับไปรายการ Event
@@ -99,12 +143,17 @@ const EventDetailPage = () => {
                   </span>
                 )}
               </div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{event.title}</h1>
-              <p className="text-gray-600">สร้างโดย {event.created_by}</p>
+              <h1 className="text-3xl font-bold text-[#1A1A1A] mb-1">{event.title}</h1>
+              {event.title_en && (
+                <p className="text-lg text-[#8C8C8C] mb-1">{event.title_en}</p>
+              )}
+              <p className="text-[#666666]">สร้างโดย {event.created_by?.firstname
+                ? `${event.created_by.firstname} ${event.created_by.lastname}`
+                : 'ไม่ระบุตัวตน'}</p>
             </div>
             <button
               onClick={() => navigate(`/community-admin/events/${id}/edit`)}
-              className="flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition-colors"
+              className="flex items-center gap-2 px-6 py-3 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] font-semibold rounded-lg transition-colors"
             >
               <Edit className="h-5 w-5" />
               แก้ไข Event
@@ -121,7 +170,7 @@ const EventDetailPage = () => {
               <div className="aspect-video bg-gradient-to-br from-orange-100 to-orange-200">
                 {event.images && event.images.length > 0 ? (
                   <img
-                    src={event.images[0]}
+                    src={`${API_URL}${event.images}`} 
                     alt={event.title}
                     className="w-full h-full object-cover"
                   />
@@ -135,22 +184,105 @@ const EventDetailPage = () => {
 
             {/* Description */}
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Info className="h-5 w-5 text-orange-500" />
+              <h2 className="text-xl font-semibold text-[#1A1A1A] mb-4 flex items-center gap-2">
+                <Info className="h-5 w-5 text-[#FFC107]" />
                 รายละเอียด
               </h2>
-              <p className="text-gray-700 leading-relaxed whitespace-pre-line">{event.description}</p>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm font-semibold text-[#555555] mb-1">ภาษาไทย</p>
+                  <p className="text-[#666666] leading-relaxed whitespace-pre-line">{event.description}</p>
+                </div>
+                {event.description_en && (
+                  <div className="pt-4 border-t border-gray-100">
+                    <p className="text-sm font-semibold text-[#555555] mb-1">English</p>
+                    <p className="text-[#666666] leading-relaxed whitespace-pre-line">{event.description_en}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Additional Information Sections */}
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-xl font-semibold text-[#1A1A1A] mb-4">ข้อมูลเพิ่มเติม</h2>
+              <div className="space-y-4">
+                {/* Event Type */}
+                <div>
+                  <p className="text-sm font-semibold text-[#1A1A1A] mb-1">ประเภทกิจกรรม</p>
+                  <p className="text-[#666666]">{event.event_type || 'ไม่ระบุ'}</p>
+                </div>
+                
+                {/* Target Audience */}
+                <div>
+                  <p className="text-sm font-semibold text-[#1A1A1A] mb-1">กลุ่มเป้าหมาย</p>
+                  <p className="text-[#666666]">{event.target_audience || 'ไม่ระบุ'}</p>
+                </div>
+
+                {/* Workshops */}
+                {event.workshops && event.workshops.length > 0 && (
+                  <div>
+                    <p className="text-sm font-semibold text-[#1A1A1A] mb-2">Workshop ที่เข้าร่วม</p>
+                    <ul className="list-disc list-inside text-[#666666] space-y-1">
+                      {event.workshops.map((workshop, idx) => (
+                        <li key={idx}>{workshop}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Additional Info */}
+                {event.additional_info && (
+                  <div>
+                    <p className="text-sm font-semibold text-[#1A1A1A] mb-1">ข้อมูลเพิ่มเติม</p>
+                    <p className="text-[#666666] whitespace-pre-line">{event.additional_info}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Contact Information */}
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-xl font-semibold text-[#1A1A1A] mb-4">ข้อมูลติดต่อ</h2>
+              <div className="space-y-3">
+                {event.contact_phone && (
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-[#999999]" />
+                    <span className="text-[#666666]">{event.contact_phone}</span>
+                  </div>
+                )}
+                {event.contact_line && (
+                  <div className="flex items-center gap-2">
+                    <MessageCircle className="h-4 w-4 text-[#999999]" />
+                    <span className="text-[#666666]">Line: {event.contact_line}</span>
+                  </div>
+                )}
+                {event.contact_facebook && (
+                  <div className="flex items-center gap-2">
+                    <Facebook className="h-4 w-4 text-[#999999]" />
+                    <span className="text-[#666666]">Facebook: {event.contact_facebook}</span>
+                  </div>
+                )}
+                {event.coordinator_name && (
+                  <div>
+                    <p className="text-sm font-semibold text-[#1A1A1A] mb-1">ผู้ประสานงาน</p>
+                    <p className="text-[#666666]">{event.coordinator_name}</p>
+                  </div>
+                )}
+                {!event.contact_phone && !event.contact_line && !event.contact_facebook && !event.coordinator_name && (
+                  <p className="text-[#999999] text-sm">ไม่มีข้อมูลติดต่อ</p>
+                )}
+              </div>
             </div>
 
             {/* Participants List */}
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Users className="h-5 w-5 text-orange-500" />
+              <h2 className="text-xl font-semibold text-[#1A1A1A] mb-4 flex items-center gap-2">
+                <Users className="h-5 w-5 text-[#FFC107]" />
                 รายชื่อผู้ลงทะเบียน ({participants.length}/{event.seat_limit})
               </h2>
-              
+
               {participants.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-[#999999]">
                   ยังไม่มีผู้ลงทะเบียน
                 </div>
               ) : (
@@ -206,14 +338,14 @@ const EventDetailPage = () => {
           <div className="space-y-6">
             {/* Date & Time */}
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-orange-500" />
+              <h3 className="text-lg font-semibold text-[#1A1A1A] mb-4 flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-[#FFC107]" />
                 วันและเวลา
               </h3>
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">วันที่</p>
-                  <p className="font-medium text-gray-900">
+                  <p className="text-sm text-[#666666] mb-1">วันที่</p>
+                  <p className="font-medium text-[#1A1A1A]">
                     {new Date(event.start_at).toLocaleDateString('th-TH', {
                       year: 'numeric',
                       month: 'long',
@@ -223,8 +355,8 @@ const EventDetailPage = () => {
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">เวลา</p>
-                  <p className="font-medium text-gray-900 flex items-center gap-2">
+                  <p className="text-sm text-[#666666] mb-1">เวลา</p>
+                  <p className="font-medium text-[#1A1A1A] flex items-center gap-2">
                     <Clock className="h-4 w-4" />
                     {new Date(event.start_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
                     {' - '}
@@ -236,54 +368,66 @@ const EventDetailPage = () => {
 
             {/* Location */}
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-orange-500" />
+              <h3 className="text-lg font-semibold text-[#1A1A1A] mb-4 flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-[#FFC107]" />
                 สถานที่
               </h3>
-              <p className="text-gray-700 leading-relaxed">{event.location}</p>
+              <p className="text-[#666666] leading-relaxed">{getLocationName(event.location)}</p>
             </div>
 
             {/* Capacity & Pricing */}
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">ข้อมูลเพิ่มเติม</h3>
+              <h3 className="text-lg font-semibold text-[#1A1A1A] mb-4">จำนวนและค่าใช้จ่าย</h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-gray-600">
+                  <div className="flex items-center gap-2 text-[#666666]">
                     <Users className="h-4 w-4" />
                     <span>จำนวนที่นั่ง</span>
                   </div>
-                  <span className="font-semibold text-gray-900">{event.seat_limit} ที่</span>
+                  <span className="font-semibold text-[#1A1A1A]">{seatLimit} ที่</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">ลงทะเบียนแล้ว</span>
-                  <span className="font-semibold text-gray-900">{event.registered} คน</span>
+                  <span className="text-[#666666]">ลงทะเบียนแล้ว</span>
+                  <span className="font-semibold text-[#1A1A1A]">{registeredCount} คน</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">ที่นั่งคงเหลือ</span>
-                  <span className="font-semibold text-orange-600">{event.seat_limit - event.registered} ที่</span>
+                  <span className="text-[#666666]">ที่นั่งคงเหลือ</span>
+                  <span className="font-semibold text-[#FFC107]">{remainingSeats} ที่</span>
                 </div>
                 {event.deposit_amount > 0 && (
                   <div className="flex items-center justify-between pt-3 border-t">
-                    <div className="flex items-center gap-2 text-gray-600">
+                    <div className="flex items-center gap-2 text-[#666666]">
                       <DollarSign className="h-4 w-4" />
                       <span>ค่ามัดจำ</span>
                     </div>
-                    <span className="font-semibold text-orange-600">฿{event.deposit_amount}</span>
+                    <span className="font-semibold text-[#FFC107]">฿{event.deposit_amount}</span>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Metadata */}
-            <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
+            <div className="bg-[#F5F5F5] rounded-lg p-4 text-sm text-[#666666]">
               <div className="space-y-2">
                 <div>
                   <span className="font-medium">สร้างเมื่อ:</span>{' '}
-                  {new Date(event.created_at).toLocaleDateString('th-TH')}
+                  {event.createdAt 
+                    ? new Date(event.createdAt).toLocaleDateString('th-TH', { 
+                        year: 'numeric', month: 'long', day: 'numeric', 
+                        hour: '2-digit', minute: '2-digit' 
+                      })
+                    : '-'
+                  }
                 </div>
                 <div>
                   <span className="font-medium">แก้ไขล่าสุด:</span>{' '}
-                  {new Date(event.updated_at).toLocaleDateString('th-TH')}
+                  {event.updatedAt
+                    ? new Date(event.updatedAt).toLocaleDateString('th-TH', {
+                      year: 'numeric', month: 'long', day: 'numeric',
+                      hour: '2-digit', minute: '2-digit'
+                    })
+                    : '-'
+                  }
                 </div>
               </div>
             </div>

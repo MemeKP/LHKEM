@@ -1,15 +1,72 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe, UseGuards, UseInterceptors, UploadedFile, Req, UploadedFiles } from '@nestjs/common';
 import { CommunitiesService } from './communities.service';
 import { CreateCommunityDto } from './dto/create-community.dto';
 import { UpdateCommunityDto } from './dto/update-community.dto';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { UserRole } from 'src/common/enums/user-role.enum';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
+import { randomBytes } from 'crypto';
+import { ParseFilePipe } from '@nestjs/common';
 
 @Controller('api/communities')
 export class CommunitiesController {
-  constructor(private readonly communitiesService: CommunitiesService) { }
+  constructor(
+    private readonly communitiesService: CommunitiesService,
+  ) { }
 
+  // @Post()
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles(UserRole.PLATFORM_ADMIN)
+  // create(@Body() createCommunityDto: CreateCommunityDto) {
+  //   return this.communitiesService.create(createCommunityDto);
+  // }
   @Post()
-  create(@Body() createCommunityDto: CreateCommunityDto) {
-    return this.communitiesService.create(createCommunityDto);
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PLATFORM_ADMIN)
+  @UseInterceptors(
+    FileInterceptor('images', {
+      storage: diskStorage({
+        destination: './uploads/communities',
+        filename: (req, file, cb) => {
+          const randomName = randomBytes(16).toString('hex');
+          cb(null, `${randomName}${extname(file.originalname)}`);
+        },
+      }),
+    }),
+  )
+  create(
+    @Req() req: any,
+    @Body() createCommunityDto: CreateCommunityDto,
+    @UploadedFile(
+      new ParseFilePipe({
+        fileIsRequired: false,
+      }),
+    )
+    file?: Express.Multer.File,
+  ) {
+    if (file) {
+      createCommunityDto.images = [
+        `/uploads/communities/${file.filename}`,
+      ];
+    }
+    if (typeof createCommunityDto.contact_info === 'string') {
+      createCommunityDto.contact_info = JSON.parse(createCommunityDto.contact_info);
+    }
+    if (typeof createCommunityDto.admins === 'string') {
+      createCommunityDto.admins = JSON.parse(createCommunityDto.admins);
+    }
+    return this.communitiesService.create(req.user.userMongoId, createCommunityDto);
+  }
+
+  @Get('my-community')
+  @UseGuards(JwtAuthGuard)
+  async findMyCommunity(@Req() req: any) {
+    const userId = req.user.userMongoId || req.user._id; 
+    return this.communitiesService.findMyCommunity(userId);
   }
 
   @Get()
@@ -18,22 +75,23 @@ export class CommunitiesController {
   }
 
   @Get(':idOrSlug')
-  findOne(@Param('idOrSlug') idOrSlug: string) {
-    return this.communitiesService.findByIdOrSlug(idOrSlug);
+  findOne(@Param('idOrSlug') idOrSlug: string, @Req() req) {
+    const userId = req.user?.userMongoId || req.user?._id || null;
+    return this.communitiesService.findByIdOrSlug(idOrSlug, userId);
   }
 
   @Get(':id/media')
-  getMedia(@Param('id') id:string){
+  getMedia(@Param('id') id: string) {
     return this.communitiesService.getMedia(id);
   }
 
   @Get(':id/map')
-  getMapData(@Param('id') id:string){
+  getMapData(@Param('id') id: string) {
     return this.communitiesService.getMapData(id);
   }
 
   @Get(':id/workshops')
-  getWorkshopsPreview(@Param('id') id:string, @Query('limit', new ParseIntPipe({optional:true})) limit: number = 3,){
+  getWorkshopsPreview(@Param('id') id: string, @Query('limit', new ParseIntPipe({ optional: true })) limit: number = 3,) {
     return this.communitiesService.getWorkshopsPreview(id, limit);
   }
 
@@ -52,14 +110,86 @@ export class CommunitiesController {
     return this.communitiesService.getChartStats(id);
   }
 
+  @Post(':id/admins')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PLATFORM_ADMIN)
+  async addAdminToCommunity(
+    @Param('id') id: string,
+    @Body('email') email: string,
+    @Req() req: any,
+  ) {
+    return this.communitiesService.addAdminByEmail(id, email, req.user.userId);
+  }
+
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCommunityDto: UpdateCommunityDto) {
-    return this.communitiesService.update(id, updateCommunityDto);
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PLATFORM_ADMIN, UserRole.ADMIN)
+  @UseInterceptors(
+    FilesInterceptor('files', 10, {
+      storage: diskStorage({
+        destination: './uploads/communities',
+        filename: (req, file, cb) => {
+          const randomName = randomBytes(16).toString('hex');
+          cb(null, `${randomName}${extname(file.originalname)}`);
+        },
+      }),
+    }),
+  )
+  async update(
+    @Param('id') id: string,
+    @Body() updateCommunityDto: UpdateCommunityDto,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+    @Req() req,
+  ) {
+
+    if (typeof updateCommunityDto.location === 'string') {
+      updateCommunityDto.location = JSON.parse(updateCommunityDto.location);
+    }
+
+    if (typeof updateCommunityDto.contact_info === 'string') {
+      updateCommunityDto.contact_info = JSON.parse(updateCommunityDto.contact_info);
+    }
+
+    if (typeof updateCommunityDto.hero_section === 'string') {
+      updateCommunityDto.hero_section = JSON.parse(updateCommunityDto.hero_section);
+    }
+
+    if (typeof updateCommunityDto.admins === 'string') {
+      updateCommunityDto.admins = JSON.parse(updateCommunityDto.admins);
+    }
+
+    // if (typeof updateCommunityDto.admin_permissions === 'string') {
+    //     updateCommunityDto.admin_permissions = JSON.parse(updateCommunityDto.admin_permissions);
+    // }
+
+    if (updateCommunityDto.existing_images && typeof updateCommunityDto.existing_images === 'string') {
+      updateCommunityDto.existing_images = [updateCommunityDto.existing_images];
+    }
+    const mongoId = req.user.userMongoId || req.user._id;
+    const userRole = req.user.role;
+    return this.communitiesService.update(id, mongoId, userRole, updateCommunityDto, files);
+  }
+
+  @Delete(':id/admins/:adminId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PLATFORM_ADMIN)
+  async removeAdminFromCommunity(
+    @Param('id') community_id: string,
+    @Param('adminId') adminId: string,
+  ) {
+    return this.communitiesService.removeAdmin(community_id, adminId);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.communitiesService.remove(id);
+  }
+
+  @Patch(':id/close')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PLATFORM_ADMIN)
+  async closeCommunity(@Param('id') id: string) {
+    return this.communitiesService.close(id);
   }
 
 }

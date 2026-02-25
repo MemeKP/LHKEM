@@ -15,7 +15,7 @@ export class Community {
     name: string;
 
     @Prop({ trim: true })
-    name_en: string; 
+    name_en: string;
 
     @Prop({ trim: true })
     abbreviation: string;
@@ -81,11 +81,11 @@ export class Community {
             postal_code: { type: String },
             coordinates: {
                 type: {
-                    lat: { type: Number, required: true },
-                    lng: { type: Number, required: true }
+                    lat: { type: Number, required: false },
+                    lng: { type: Number, required: false }
                 },
                 _id: false,
-                required: true
+                required: false
             }
         },
         _id: false,
@@ -118,8 +118,8 @@ export class Community {
             phone: String,
             email: String,
             facebook: {
-                name: String, 
-                link: String  
+                name: String,
+                link: String
             },
             line: {
                 name: String,
@@ -129,7 +129,7 @@ export class Community {
                 name: String,
                 link: String
             },
-            website: String 
+            website: String
         },
         required: true,
         _id: false
@@ -139,7 +139,7 @@ export class Community {
         email?: string;
         facebook?: { name: string; link: string };
         line?: { name: string; link: string };
-        ig?: {name:string, link:string};
+        ig?: { name: string, link: string };
         website?: string;
     }
 
@@ -151,6 +151,9 @@ export class Community {
 
     @Prop({ type: Date })
     updated_at: Date;
+
+    @Prop({ default: true }) // ตั้งค่าเริ่มต้นเป็น true (เปิดอยู่) <- soft delete จ้าแม่
+    is_active: boolean;
 }
 
 export const CommunitySchema = SchemaFactory.createForClass(Community);
@@ -158,12 +161,12 @@ export const CommunitySchema = SchemaFactory.createForClass(Community);
 CommunitySchema.index({ slug: 1 }, { unique: true })
 CommunitySchema.index({ 'location.coordinates.lat': 1, 'location.coordinates.lng': 1 });
 
-// relation จาก COMMUNITY_ADMIN, EVENTS, USERS, SHOP, WORKSHOP table ที่จะอ้างอิงมาหา (รอสร้าง)
-// CommunitySchema.virtual('shops', {
-//     ref: 'Shop',
-//     localField: '_id',
-//     foreignField: 'community'
-// })
+// relation จาก COMMUNITY_ADMIN, EVENTS, USERS, SHOP, WORKSHOP table ที่จะอ้างอิงมาหา
+CommunitySchema.virtual('shops', {
+    ref: 'Shop',
+    localField: '_id',
+    foreignField: 'community'
+})
 
 CommunitySchema.virtual('events', {
     ref: 'Event',
@@ -172,7 +175,7 @@ CommunitySchema.virtual('events', {
 })
 
 CommunitySchema.virtual('workshops', {
-    ref: 'WorkShop',
+    ref: 'Workshop',
     localField: '_id',
     foreignField: 'community'
 })

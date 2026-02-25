@@ -5,6 +5,13 @@ import { Model, Types } from 'mongoose';
 import { EventDocument, Event as EventSchema } from './schemas/event.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { EventStatus } from './events.types';
+import { User } from 'src/users/schemas/users.schema';
+
+type ParticipantWithUser = {
+  user: Types.ObjectId | User;
+  joined_at: Date;
+  status: string;
+};
 
 @Injectable()
 export class EventsService {
@@ -13,7 +20,36 @@ export class EventsService {
     private readonly eventModel: Model<EventDocument>,
   ) {}
 
-  async create(createEventDto: CreateEventDto, user_id: string, role: 'COMMUNITY_ADMIN', community_id: string): Promise<EventSchema> {
+  // async create(createEventDto: CreateEventDto, user_id: string, role: string, community_id: string): Promise<EventSchema> {
+  //   if (createEventDto.end_at < createEventDto.start_at) {
+  //     throw new BadRequestException('End date must be after start date');
+  //   }
+
+  //   const newEvent = new this.eventModel({
+  //     ...createEventDto,
+  //     community_id: new Types.ObjectId(community_id),
+  //     created_by: new Types.ObjectId(user_id),
+  //     created_by_role: role,
+  //     title: createEventDto.title,
+  //     images: createEventDto.images,
+  //     description: createEventDto.description,
+  //     location: createEventDto.location,
+  //     start_at: new Date(createEventDto.start_at),
+  //     end_at: new Date(createEventDto.end_at),
+  //     seat_limit: createEventDto.seat_limit,
+  //     deposit_amount: createEventDto.deposit_amount ?? 0,
+  //     status: EventStatus.OPEN,
+  //   })
+  //   return newEvent.save();
+  // }
+
+  async create(
+    createEventDto: CreateEventDto,
+    user_id: string,
+    role: string,
+    community_id: string
+  ): Promise<EventDocument> {
+
     if (new Date(createEventDto.end_at) < new Date(createEventDto.start_at)) {
       throw new BadRequestException('End date must be after start date');
     }
@@ -25,34 +61,84 @@ export class EventsService {
       community_id: new Types.ObjectId(community_id),
       created_by: new Types.ObjectId(user_id),
       created_by_role: role,
+
       start_at: new Date(createEventDto.start_at),
       end_at: new Date(createEventDto.end_at),
+
       deposit_amount: createEventDto.deposit_amount ?? 0,
-      status: EventStatus.OPEN,
+      images: createEventDto.images ?? [],
+      status: createEventDto.status ?? EventStatus.PENDING,
     });
+
     return newEvent.save();
   }
+
 
   async findAll(): Promise<EventSchema[]> {
     return this.eventModel.find().exec();
   }
 
+  async findAllByCommunity(communityId: string) {
+    return this.eventModel
+      .find({ community_id: new Types.ObjectId(communityId) })
+      .sort({ created_at: -1 })
+      .exec();
+  }
+
+  async findAllByCommunities(communityIds: string[]) {
+    const objectIds = communityIds.map(id => new Types.ObjectId(id));
+    return this.eventModel
+      .find({
+        community_id: { $in: objectIds }
+      })
+      .sort({ created_at: -1 })
+      .populate('created_by', 'firstname lastname email')
+      .exec();
+  }
+
+  async findPending(communityId: string) {
+    return this.eventModel.find({
+      // community_id: communityId,
+      community_id: new Types.ObjectId(communityId),
+      status: 'PENDING'
+    })
+      .sort({ created_at: 1 })
+      .exec();
+  }
+
   async findOne(id: string): Promise<EventSchema> {
-    const event = await this.eventModel.findById(id).exec();
+    const event = await this.eventModel.findById(id).populate('created_by', 'firstname lastname email').exec();
     if (!event) {
       throw new NotFoundException(`Event with ID ${id} not found`);
     }
     return event;
   }
 
-  async update(id: string, updateEventDto: UpdateEventDto): Promise<EventSchema> {
-    /** * Changed parameter type from number to string for ObjectId compatibility 
-     */
+  async update(
+    id: string,
+    updateEventDto: UpdateEventDto,
+    image?: Express.Multer.File,
+  ): Promise<EventSchema> {
+
     if (updateEventDto.start_at && updateEventDto.end_at) {
       if (new Date(updateEventDto.end_at) < new Date(updateEventDto.start_at)) {
         throw new BadRequestException('End date must be after start date');
       }
     }
+
+    if (updateEventDto.location && typeof updateEventDto.location === 'string') {
+      updateEventDto.location = JSON.parse(updateEventDto.location);
+    }
+
+    if (image) {
+      const existingEvent = await this.eventModel.findById(id);
+
+      updateEventDto.existing_images = [
+        ...(existingEvent?.images || []),
+        `/uploads/events/${image.filename}`,
+      ];
+    }
+
 
     const updatedEvent = await this.eventModel.findByIdAndUpdate(
       id,
@@ -63,6 +149,7 @@ export class EventsService {
     if (!updatedEvent) {
       throw new NotFoundException(`Event #${id} not found`);
     }
+
     return updatedEvent;
   }
 
@@ -76,5 +163,49 @@ export class EventsService {
     } catch (error) {
       throw new InternalServerErrorException('Something wrong during deletion! ' + error);
     }
+  }
+
+  async getParticipants(eventId: string) {
+    const event = await this.eventModel
+      .findById(eventId)
+      .populate({
+        path: 'participants.user',
+        select: 'firstname lastname email phone'
+      })
+      .exec();
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+    return (event.participants as ParticipantWithUser[])
+      .map(p => {
+        if (!p.user || typeof p.user === 'string') return null;
+
+        const user = p.user as User;
+
+        return {
+          id: user.user_id,
+          name: `${user.firstname} ${user.lastname}`,
+          email: user.email,
+          phone: user.phone ?? '-',
+          registered_at: p.joined_at,
+        };
+      })
+      .filter(Boolean);
+  }
+
+  async joinEvent(eventId: string, userId: string) {
+    return this.eventModel.findByIdAndUpdate(
+      eventId,
+      {
+        $push: {
+          participants: {
+            user: new Types.ObjectId(userId),
+            joined_at: new Date()
+          }
+        }
+      },
+      { new: true }
+    );
   }
 }

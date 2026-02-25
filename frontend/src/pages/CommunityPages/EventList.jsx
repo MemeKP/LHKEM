@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, MapPin, Users, DollarSign, Plus, Search, Filter, Eye, Edit, Trash2 } from 'lucide-react';
+import api from '../../services/api';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 /**
  * Event List Page - แสดงรายการ Event ทั้งหมดของชุมชน
@@ -10,13 +12,51 @@ import { Calendar, MapPin, Users, DollarSign, Plus, Search, Filter, Eye, Edit, T
  * - DELETE /api/events/:id - ลบ Event
  */
 
+const getLocationName = (location) => {
+  if (!location) return 'ไม่ระบุสถานที่';
+  if (typeof location === 'string') return location;
+  // กรณีข้อมูลใหม่เป็น Object
+  return location.full_address || location.address || 'ไม่ระบุสถานที่';
+};
+
+const fetchEvents = async () => {
+  const res = await api.get('/api/events')
+  return res.data;
+}
+
+const deleteEvent = async (eventId) => {
+  const res = await api.delete(`/api/events/${eventId}`);
+  return res.data;
+}
+
+const useEvents = () => {
+  return useQuery({
+    queryKey: ['events'],
+    queryFn: fetchEvents,
+  });
+};
+
+const useDeleteEvent = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: deleteEvent,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['events'] });
+    },
+  });
+};
+
 const EventList = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const { data: events = [], isLoading, isError } = useEvents();
+  const { mutateAsync: deleteEvent } = useDeleteEvent();
 
   // TODO: Fetch from API - GET /api/events?community_id=xxx
   // Mock data for Events  
+  /*
   const events = [
     {
       id: '1',
@@ -74,7 +114,7 @@ const EventList = () => {
       is_pinned: false,
       registered: 30
     }
-  ];
+  ];*/
 
   const statusOptions = [
     { value: 'all', label: 'ทั้งหมด' },
@@ -83,47 +123,58 @@ const EventList = () => {
     { value: 'CANCELLED', label: 'ยกเลิก' }
   ];
 
+  /*
   const filteredEvents = events.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          event.location.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'all' || event.status === filterStatus;
     return matchesSearch && matchesStatus;
-  });
-
-  const handleDelete = async (eventId) => {
-    if (!confirm('คุณต้องการลบ Event นี้ใช่หรือไม่?')) return;
+  });*/
+  const filteredEvents = events.filter(event => {
+    const titleMatch = event.title?.toLowerCase().includes(searchTerm.toLowerCase());
+    const locationStr = event.location?.full_address || event.location?.address || '';
+    const locationMatch = locationStr.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = titleMatch || locationMatch;
+    const matchesStatus = filterStatus === 'all' || event.status === filterStatus;
     
+    return matchesSearch && matchesStatus;
+  });
+ 
+  const handleDelete = async (eventId) => {
+    if (!window.confirm('คุณต้องการลบ Event นี้ใช่หรือไม่? (การกระทำนี้ไม่สามารถย้อนกลับได้)')) return;
+
     try {
-      // TODO: Call API - DELETE /api/events/:id
-      console.log('Deleting event:', eventId);
+      await deleteEvent(eventId);
       alert('ลบ Event สำเร็จ!');
-      // Refresh list
     } catch (error) {
       console.error('Failed to delete event:', error);
       alert('เกิดข้อผิดพลาดในการลบ Event');
     }
   };
 
+  if (isLoading) return <div className="p-8 text-center text-gray-500">กำลังโหลดข้อมูล...</div>;
+  if (isError) return <div className="p-8 text-center text-red-500">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>;
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-[#F5EFE7] py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">กิจกรรมของชุมชน</h1>
-              <p className="text-gray-600 mt-1">จัดการและดูรายละเอียด Event ทั้งหมด</p>
+              <h1 className="text-3xl font-bold text-[#1A1A1A]">กิจกรรมของชุมชน</h1>
+              <p className="text-[#666666] mt-1">จัดการและดูรายละเอียด Event ทั้งหมด</p>
             </div>
             <div className="flex items-center gap-3">
               <button
                 onClick={() => navigate('/community-admin/dashboard')}
-                className="px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-lg transition-colors"
+                className="px-6 py-3 bg-[#1E293B] hover:bg-[#0F172A] text-white font-semibold rounded-lg transition-colors"
               >
                 กลับหน้าหลัก
               </button>
               <button
                 onClick={() => navigate('/community-admin/events/create')}
-                className="flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition-colors"
+                className="flex items-center gap-2 px-6 py-3 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] font-semibold rounded-lg transition-colors"
               >
                 <Plus className="h-5 w-5" />
                 สร้าง Event ใหม่
@@ -140,7 +191,7 @@ const EventList = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="ค้นหาชื่อ Event หรือสถานที่..."
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent"
               />
             </div>
 
@@ -149,7 +200,7 @@ const EventList = () => {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="pl-10 pr-8 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent appearance-none bg-white"
+                className="pl-10 pr-8 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent appearance-none bg-white"
               >
                 {statusOptions.map(option => (
                   <option key={option.value} value={option.value}>{option.label}</option>
@@ -162,9 +213,9 @@ const EventList = () => {
         {/* Events Grid */}
         {filteredEvents.length === 0 ? (
           <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-            <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">ไม่พบ Event</h3>
-            <p className="text-gray-600">
+            <Calendar className="h-16 w-16 text-[#CCCCCC] mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-[#1A1A1A] mb-2">ไม่พบ Event</h3>
+            <p className="text-[#666666]">
               {searchTerm || filterStatus !== 'all' 
                 ? 'ไม่พบ Event ที่ตรงกับเงื่อนไขการค้นหา'
                 : 'ยังไม่มี Event ในชุมชน'
@@ -173,9 +224,9 @@ const EventList = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredEvents.map((event) => (
+            {filteredEvents.map((event, i) => (
               <div
-                key={event.id}
+                key={event._id || event.id || i}
                 className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow"
               >
                 {/* Event Image */}
@@ -207,19 +258,19 @@ const EventList = () => {
                         ? 'bg-gray-100 text-gray-800'
                         : 'bg-red-100 text-red-800'
                     }`}>
-                      {event.status === 'OPEN' ? 'เปิดรับสมัคร' : event.status === 'CLOSED' ? 'ปิดรับสมัคร' : 'ยกเลิก'}
+                      {event.status === 'OPEN' ? 'เปิดรับสมัคร' : event.status === 'CLOSED' ? 'ปิดรับสมัคร' : event.status === 'PENDING' ? 'รออนุมัติ' : 'ยกเลิก'}
                     </span>
                   </div>
                 </div>
 
                 {/* Event Info */}
                 <div className="p-5">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">{event.title}</h3>
-                  <p className="text-sm text-gray-600 mb-4 line-clamp-2">{event.description}</p>
+                  <h3 className="text-lg font-semibold text-[#1A1A1A] mb-2 line-clamp-2">{event.title}</h3>
+                  <p className="text-sm text-[#666666] mb-4 line-clamp-2">{event.description}</p>
 
                   {/* Event Details */}
                   <div className="space-y-2 text-sm mb-4">
-                    <div className="flex items-start gap-2 text-gray-600">
+                    <div className="flex items-start gap-2 text-[#666666]">
                       <Calendar className="h-4 w-4 mt-0.5 flex-shrink-0" />
                       <div>
                         <p className="font-medium">{new Date(event.start_at).toLocaleDateString('th-TH', { 
@@ -235,18 +286,18 @@ const EventList = () => {
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-2 text-gray-600">
+                    <div className="flex items-center gap-2 text-[#666666]">
                       <MapPin className="h-4 w-4 flex-shrink-0" />
-                      <span className="line-clamp-1">{event.location}</span>
+                      <span className="line-clamp-1">{getLocationName(event.location)}</span>
                     </div>
                     
                     <div className="flex items-center justify-between pt-2 border-t">
-                      <div className="flex items-center gap-2 text-gray-600">
+                      <div className="flex items-center gap-2 text-[#666666]">
                         <Users className="h-4 w-4" />
                         <span>{event.registered}/{event.seat_limit}</span>
                       </div>
                       {event.deposit_amount > 0 && (
-                        <div className="flex items-center gap-1 text-orange-600 font-medium">
+                        <div className="flex items-center gap-1 text-[#FFC107] font-medium">
                           <DollarSign className="h-4 w-4" />
                           <span>฿{event.deposit_amount}</span>
                         </div>
@@ -257,21 +308,21 @@ const EventList = () => {
                   {/* Action Buttons */}
                   <div className="flex gap-2">
                     <button
-                      onClick={() => navigate(`/community-admin/events/${event.id}`)}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors"
+                      onClick={() => navigate(`/community-admin/events/${event._id}`)}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-[#666666] font-medium rounded-lg transition-colors"
                     >
                       <Eye className="h-4 w-4" />
                       ดูรายละเอียด
                     </button>
                     <button
-                      onClick={() => navigate(`/community-admin/events/${event.id}/edit`)}
-                      className="flex items-center justify-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition-colors"
+                      onClick={() => navigate(`/community-admin/events/${event._id}/edit`)}
+                      className="flex items-center justify-center gap-2 px-4 py-2 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] font-medium rounded-lg transition-colors"
                     >
                       <Edit className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => handleDelete(event.id)}
-                      className="flex items-center justify-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors"
+                      onClick={() => handleDelete(event._id)}
+                      className="flex items-center justify-center gap-2 px-4 py-2 bg-[#E53935] hover:bg-[#D32F2F] text-white font-medium rounded-lg transition-colors"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -284,7 +335,7 @@ const EventList = () => {
 
         {/* Summary */}
         {filteredEvents.length > 0 && (
-          <div className="mt-8 text-center text-gray-600">
+          <div className="mt-8 text-center text-[#666666]">
             แสดง {filteredEvents.length} Event จากทั้งหมด {events.length} รายการ
           </div>
         )}

@@ -9,6 +9,7 @@ import { MapPin } from './schemas/map-pin.schema';
 import { WorkshopSchema } from 'src/workshops/schemas/workshop.schema';
 import { Shop, ShopSchema } from 'src/shops/schemas/shop.schema';
 import { EventSchema } from 'src/events/schemas/event.schema';
+import { CommunityAdmin, CommunityAdminSchema } from 'src/community-admin/schemas/community-admin.schema';
 
 @Module({
   imports: [
