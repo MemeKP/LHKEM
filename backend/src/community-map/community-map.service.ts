@@ -12,6 +12,8 @@ import { MapPin, MapPinStatus } from './schemas/map-pin.schema';
 import { CreateMapPinDto } from './dto/create-map-pin.dto';
 import { Shop } from '../shops/schemas/shop.schema';
 import { Types } from 'mongoose';
+import * as path from 'path';
+import { promises as fsPromises } from 'fs';
 
 @Injectable()
 export class CommunityMapService {
@@ -217,11 +219,40 @@ async getPinDetail(pinId: string) {
   // =========================
   async uploadMap(communityId: string, imageUrl: string) {
     const communityObjectId = new Types.ObjectId(communityId);
-    return this.communityMapModel.findOneAndUpdate(
+
+    const existingMap = await this.communityMapModel
+      .findOne({ communityId: communityObjectId })
+      .select('imageUrl')
+      .lean();
+
+    const updatedMap = await this.communityMapModel.findOneAndUpdate(
       { communityId: communityObjectId },
       { imageUrl },
       { upsert: true, new: true },
     );
+
+    if (existingMap?.imageUrl && existingMap.imageUrl !== imageUrl) {
+      await this.deleteMapImage(existingMap.imageUrl);
+    }
+
+    return updatedMap;
+  }
+
+  private async deleteMapImage(imageUrl: string) {
+    if (!imageUrl || /^https?:\/\//i.test(imageUrl)) {
+      return;
+    }
+
+    const normalizedPath = imageUrl.replace(/^[/\\]+/, '');
+    const absolutePath = path.join(process.cwd(), normalizedPath);
+
+    try {
+      await fsPromises.unlink(absolutePath);
+    } catch (error: any) {
+      if (error?.code !== 'ENOENT') {
+        console.warn(`Failed to delete unused community map image at ${absolutePath}:`, error);
+      }
+    }
   }
 
   async getPendingPins(communityId: string) {

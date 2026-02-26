@@ -54,6 +54,7 @@ $ npm run start:prod
 - Cover + gallery uploads go through the `image_slots` manifest with placeholders like `__file__0` sent by the frontend.
 - When editing a community, any images that disappear from the manifest will be removed from Mongo _and_ deleted from disk automatically.
 - Files are stored under `/uploads/communities`; removal uses `fs.unlink` with graceful handling for already-deleted files.
+- Map uploads hit `POST /api/admin/communities/:id/map`; replacing a map image automatically deletes the old file from `/uploads/maps` once the new record saves.
 
 ## Run tests
 
