@@ -233,7 +233,7 @@ const CommunityHome = () => {
               <div className="h-full rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow relative">
                 <img
                   //src={`${API_URL}${community.images?.[0]}`}
-                  src={resolveImageUrl(community.images?.[0])}
+                  src={resolveImageUrl(community.images?.[2])}
                   alt={ct('รูปภาพหลัก 2', 'Main Image 2')}
                   className="w-full h-full object-cover"
                 />
@@ -244,7 +244,7 @@ const CommunityHome = () => {
                 <div className="rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow relative">
                   <img
                     // src={`${API_URL}${community.images?.[2]}`}
-                    src={resolveImageUrl(community.images?.[2])}
+                    src={resolveImageUrl(community.images?.[3])}
                     alt={ct('รูปภาพ 2', 'Image 2')}
                     className="w-full h-full object-cover"
                   />
@@ -252,7 +252,7 @@ const CommunityHome = () => {
                 <div className="rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow relative">
                   <img
                     // src={`${API_URL}${community.images?.[3]}`}
-                    src={resolveImageUrl(community.images?.[3])}
+                    src={resolveImageUrl(community.images?.[4])}
                     alt={ct('รูปภาพ 3', 'Image 3')}
                     className="w-full h-full object-cover"
                   />

@@ -5,13 +5,15 @@ import { useTranslation } from '../../hooks/useTranslation';
 import api from '../../services/api';
 import { useQuery } from '@tanstack/react-query';
 import Swal from 'sweetalert2'
+import CommunityImageUploader from '../../components/CommunityImageUploader';
+import { buildImageSlotsPayload } from '../../utils/communityImages';
 
 const fetchCommunityDetail = async (id) => {
   const res = await api.get(`/api/platform-admin/communities/${id}/for-update`);
   return res.data; 
 };
 
-const updateCommunity = async (id, formData, newImages, existingImages) => {
+const updateCommunity = async ({ id, formData, coverSlot, gallerySlots }) => {
   const formDataToSend = new FormData();
   formDataToSend.append('name', formData.name);
   if (formData.name_en) formDataToSend.append('name_en', formData.name_en);
@@ -62,17 +64,13 @@ const updateCommunity = async (id, formData, newImages, existingImages) => {
   //   can_approve_workshop: formData.workshopApproval
   // }));
   
-  if (newImages && newImages.length > 0) {
-    newImages.forEach((file) => {
-      formDataToSend.append('files', file); 
-    });
-  }
+  const manifest = buildImageSlotsPayload({
+    coverSlot,
+    gallerySlots,
+    appendFile: (file) => formDataToSend.append('files', file),
+  });
 
-  if (existingImages && existingImages.length > 0) {
-    existingImages.forEach((url) => {
-      formDataToSend.append('existing_images', url);
-    });
-  }
+  formDataToSend.append('image_slots', JSON.stringify(manifest));
 
   const res = await api.patch(`/api/communities/${id}`, formDataToSend, {
     headers: {
@@ -123,6 +121,8 @@ const PlatformEditCommunity = () => {
   const [mapImage, setMapImage] = useState(null);
   const [mapPreview, setMapPreview] = useState(null);
   const [existingMapUrl, setExistingMapUrl] = useState(null);
+  const [galleryInitialImages, setGalleryInitialImages] = useState([]);
+  const [gallerySlots, setGallerySlots] = useState([]);
 
   const { data: community, isLoading } = useQuery({
     queryKey: ['community-update', id],
@@ -162,6 +162,9 @@ const PlatformEditCommunity = () => {
 
       if (community.images && community.images.length > 0) {
         setExistingImage(community.images[0]);
+        setGalleryInitialImages(community.images.slice(1, 5));
+      } else {
+        setGalleryInitialImages([]);
       }
 
       // Fetch existing community map
@@ -282,19 +285,20 @@ const PlatformEditCommunity = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const newImagesArray = coverImageFile ? [coverImageFile] : [];
-    let existingImagesArray = community?.images || [];
 
-    // if (currentImages && currentImages.length > 0) {
-    //    existingImagesArray = [...currentImages]; 
-    // }
-    
-    //const existingImagesArray = (existingImage && !coverImageFile) ? [existingImage] : [];
+    const coverSlot = coverImageFile
+      ? { file: coverImageFile }
+      : existingImage
+        ? { existingUrl: existingImage }
+        : null;
 
     try {
-      // console.log("Sending Existing:", existingImagesArray); 
-      // console.log("Sending New:", newImagesArray);
-      await updateCommunity(id, formData, newImagesArray, existingImagesArray);
+      await updateCommunity({
+        id,
+        formData,
+        coverSlot,
+        gallerySlots: gallerySlots?.length ? gallerySlots : [],
+      });
 
       // Upload map image if provided 
       if (mapImage) {
@@ -321,7 +325,7 @@ const PlatformEditCommunity = () => {
   if (isLoading) return <div>Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-[#FAF8F3] animate-fadeIn">
+    <div className="min-h-screen bg-[#F5EFE7] animate-fadeIn">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
         <button
@@ -593,6 +597,17 @@ const PlatformEditCommunity = () => {
             <p className="text-xs text-gray-500 mt-2">
               {ct('บอกเล่า ทิศทาง + ข้อมูลเพิ่มเติม', 'Share directions and additional information')}
             </p>
+          </div>
+
+          {/* Community Atmosphere Images */}
+          <div className="mb-6">
+            <label className="block text-sm font-semibold text-gray-900 mb-2">
+              {ct('บรรยากาศในชุมชน', 'Community Atmosphere')}
+            </label>
+            <CommunityImageUploader
+              initialImages={galleryInitialImages}
+              onChange={setGallerySlots}
+            />
           </div>
 
           {/* Contact Email */}

@@ -51,6 +51,34 @@ export class CreateCommunityDto {
     @IsOptional()
     @IsArray()
     @IsString({ each: true })
+    @Transform(({ value }) => {
+        if (typeof value === 'string') {
+            try {
+                const parsed = JSON.parse(value);
+                if (Array.isArray(parsed)) {
+                    return parsed;
+                }
+            } catch (error) {
+                return value ? [value] : [];
+            }
+            return value ? [value] : [];
+        }
+
+        if (Array.isArray(value)) {
+            return value;
+        }
+
+        if (value === undefined || value === null) {
+            return [];
+        }
+
+        return [value];
+    })
+    image_slots?: string[];
+
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
     videos?: string[];
 
     @Transform(({ value }) =>

@@ -261,22 +261,26 @@ export class CommunitiesService {
 
     let finalImages: string[] = [];
 
-    if (updateCommunityDto.existing_images) {
-      if (Array.isArray(updateCommunityDto.existing_images)) {
-        finalImages = [...updateCommunityDto.existing_images];
-      } else {
-        finalImages = [updateCommunityDto.existing_images];
+    if (Array.isArray(updateCommunityDto.images) && updateCommunityDto.images.length > 0) {
+      finalImages = updateCommunityDto.images;
+    } else {
+      if (updateCommunityDto.existing_images) {
+        if (Array.isArray(updateCommunityDto.existing_images)) {
+          finalImages = [...updateCommunityDto.existing_images];
+        } else {
+          finalImages = [updateCommunityDto.existing_images];
+        }
+      }
+
+      if (files && files.length > 0) {
+        const newImagePaths = files.map(file =>
+          `/uploads/communities/${file.filename}`
+        );
+        finalImages = [...newImagePaths, ...finalImages];
       }
     }
 
-    if (files && files.length > 0) {
-      const newImagePaths = files.map(file =>
-        `/uploads/communities/${file.filename}`
-      );
-      finalImages = [...newImagePaths, ...finalImages];
-    }
-
-    if (files?.length > 0 || updateCommunityDto.existing_images) {
+    if (finalImages.length > 0) {
       updateCommunityDto.images = finalImages;
     }
     const updateData: any = { ...updateCommunityDto };

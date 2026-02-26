@@ -114,7 +114,7 @@ const PlatformShopApproval = () => {
   const closeTimeDisplay = shop.closeTime || ct('ไม่ระบุ', 'Not specified');
 
   return (
-    <div className="min-h-screen bg-[#FAF8F3]">
+    <div className="min-h-screen bg-[#F5EFE7]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <button
           onClick={() => navigate(`/platform-admin/communities/${communityId}`)}

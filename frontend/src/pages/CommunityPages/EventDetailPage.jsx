@@ -218,18 +218,6 @@ const EventDetailPage = () => {
                   <p className="text-[#666666]">{event.target_audience || 'ไม่ระบุ'}</p>
                 </div>
 
-                {/* Workshops */}
-                {event.workshops && event.workshops.length > 0 && (
-                  <div>
-                    <p className="text-sm font-semibold text-[#1A1A1A] mb-2">Workshop ที่เข้าร่วม</p>
-                    <ul className="list-disc list-inside text-[#666666] space-y-1">
-                      {event.workshops.map((workshop, idx) => (
-                        <li key={idx}>{workshop}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
                 {/* Additional Info */}
                 {event.additional_info && (
                   <div>
@@ -272,65 +260,6 @@ const EventDetailPage = () => {
                   <p className="text-[#999999] text-sm">ไม่มีข้อมูลติดต่อ</p>
                 )}
               </div>
-            </div>
-
-            {/* Participants List */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold text-[#1A1A1A] mb-4 flex items-center gap-2">
-                <Users className="h-5 w-5 text-[#FFC107]" />
-                รายชื่อผู้ลงทะเบียน ({participants.length}/{event.seat_limit})
-              </h2>
-
-              {participants.length === 0 ? (
-                <div className="text-center py-8 text-[#999999]">
-                  ยังไม่มีผู้ลงทะเบียน
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead>
-                      <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          ลำดับ
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          ชื่อ
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          อีเมล
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          เบอร์โทร
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          วันที่ลงทะเบียน
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {participants.map((participant, index) => (
-                        <tr key={participant.id} className="hover:bg-gray-50">
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {index + 1}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {participant.name}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {participant.email}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {participant.phone}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {new Date(participant.registered_at).toLocaleDateString('th-TH')}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
             </div>
           </div>
 
@@ -377,23 +306,8 @@ const EventDetailPage = () => {
 
             {/* Capacity & Pricing */}
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-[#1A1A1A] mb-4">จำนวนและค่าใช้จ่าย</h3>
+              <h3 className="text-lg font-semibold text-[#1A1A1A] mb-4">ค่าใช้จ่าย</h3>
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-[#666666]">
-                    <Users className="h-4 w-4" />
-                    <span>จำนวนที่นั่ง</span>
-                  </div>
-                  <span className="font-semibold text-[#1A1A1A]">{seatLimit} ที่</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[#666666]">ลงทะเบียนแล้ว</span>
-                  <span className="font-semibold text-[#1A1A1A]">{registeredCount} คน</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[#666666]">ที่นั่งคงเหลือ</span>
-                  <span className="font-semibold text-[#FFC107]">{remainingSeats} ที่</span>
-                </div>
                 {event.deposit_amount > 0 && (
                   <div className="flex items-center justify-between pt-3 border-t">
                     <div className="flex items-center gap-2 text-[#666666]">
