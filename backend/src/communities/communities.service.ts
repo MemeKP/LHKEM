@@ -583,7 +583,7 @@ export class CommunitiesService {
       community = await this.communityModel.findOne({ slug: identifier }); 
     }
     if (!community) {
-      throw new NotFoundException('ไม่พบข้อมูลชุมชนนี้');
+      throw new NotFoundException('Community not found');
     }
 
     const shops = await this.shopModel
