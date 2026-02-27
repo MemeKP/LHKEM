@@ -6,6 +6,8 @@ import api from '../../services/api';
 import { useQuery } from '@tanstack/react-query';
 import Swal from 'sweetalert2';
 import CommunityAssignmentNotice from '../../components/CommunityAssignmentNotice';
+import CommunityImageUploader from '../../components/CommunityImageUploader';
+import { buildImageSlotsPayload } from '../../utils/communityImages';
 
 // เหลือ map
 
@@ -15,7 +17,7 @@ const fetchCommunityDetail = async () => {
   return res.data;
 };
 
-const updateCommunity = async (id, formData, newImages, existingImages) => {
+const updateCommunity = async ({ id, formData, coverSlot, gallerySlots }) => {
   const formDataToSend = new FormData();
   formDataToSend.append('name', formData.name);
   if (formData.name_en) formDataToSend.append('name_en', formData.name_en);
@@ -62,17 +64,13 @@ const updateCommunity = async (id, formData, newImages, existingImages) => {
     formDataToSend.append('admins', JSON.stringify(adminList));
   }
 
-  if (newImages && newImages.length > 0) {
-    newImages.forEach((file) => {
-      formDataToSend.append('files', file);
-    });
-  }
+  const manifest = buildImageSlotsPayload({
+    coverSlot,
+    gallerySlots,
+    appendFile: (file) => formDataToSend.append('files', file),
+  });
 
-  if (existingImages && existingImages.length > 0) {
-    existingImages.forEach((url) => {
-      formDataToSend.append('existing_images', url);
-    });
-  }
+  formDataToSend.append('image_slots', JSON.stringify(manifest));
 
   const res = await api.patch(`/api/communities/${id}`, formDataToSend, {
     headers: {
@@ -122,6 +120,8 @@ const AdminCommunitySettings = () => {
   const [mapImageFile, setMapImageFile] = useState(null);
   const [mapPreview, setMapPreview] = useState(null);
   const [existingMapUrl, setExistingMapUrl] = useState(null);
+  const [galleryInitialImages, setGalleryInitialImages] = useState([]);
+  const [gallerySlots, setGallerySlots] = useState([]);
   const { data: community, isLoading } = useQuery({
     queryKey: ['setting'],
     queryFn: fetchCommunityDetail,
@@ -149,6 +149,9 @@ const AdminCommunitySettings = () => {
       }));
       if (community.images && community.images.length > 0) {
         setExistingImage(community.images[0]); 
+        setGalleryInitialImages(community.images.slice(1, 5));
+      } else {
+        setGalleryInitialImages([]);
       }
 
       if (community._id) {
@@ -169,6 +172,24 @@ const AdminCommunitySettings = () => {
       }
     }
   }, [community]);
+
+  useEffect(() => {
+    if (!galleryInitialImages || galleryInitialImages.length === 0) {
+      return;
+    }
+
+    setGallerySlots((prev) => {
+      const hasPayload = Array.isArray(prev) && prev.some(slot => slot?.file || slot?.existingUrl);
+      if (hasPayload) {
+        return prev;
+      }
+
+      return galleryInitialImages.map((image) => ({
+        file: null,
+        existingUrl: image || null,
+      }));
+    });
+  }, [galleryInitialImages]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -255,10 +276,18 @@ const AdminCommunitySettings = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
   
-    const newImagesArray = coverImageFile ? [coverImageFile] : [];
-    let existingImagesArray = community?.images || [];
+    const coverSlot = coverImageFile
+      ? { file: coverImageFile }
+      : existingImage
+        ? { existingUrl: existingImage }
+        : null;
     try {
-      await updateCommunity(community._id, formData, newImagesArray, existingImagesArray);
+      await updateCommunity({
+        id: community._id,
+        formData,
+        coverSlot,
+        gallerySlots,
+      });
 
       if (mapImageFile) {
         try {
@@ -547,6 +576,17 @@ const AdminCommunitySettings = () => {
             <p className="text-xs text-gray-500 mt-2">
               {ct('กำลังแสดงรูปปัจจุบัน', 'Currently showing existing image')}
             </p>
+          </div>
+
+          {/* Community Atmosphere Images */}
+          <div className="mb-6">
+            <label className="block text-sm font-semibold text-gray-900 mb-2">
+              {ct('รูปภาพบรรยากาศในชุมชน', 'Community Atmosphere Images')}
+            </label>
+            <CommunityImageUploader
+              initialImages={galleryInitialImages}
+              onChange={setGallerySlots}
+            />
           </div>
 
           {/* Community Admins */}

@@ -14,6 +14,8 @@ import { LocationDto } from './dto/location.dto';
 import { User } from 'src/users/schemas/users.schema';
 import { UserRole } from 'src/common/enums/user-role.enum';
 import { CommunityView } from 'src/community-view/schemas/community-view.schema';
+import * as path from 'path';
+import { promises as fsPromises } from 'fs';
 
 @Injectable()
 export class CommunitiesService {
@@ -259,26 +261,47 @@ export class CommunitiesService {
       // delete updateCommunityDto.admins
     }
 
-    let finalImages: string[] = [];
+    const existingCommunity = await this.communityModel.findById(id).select('images');
+    if (!existingCommunity) {
+      throw new NotFoundException(`Community #${id} not found`);
+    }
 
-    if (updateCommunityDto.existing_images) {
-      if (Array.isArray(updateCommunityDto.existing_images)) {
-        finalImages = [...updateCommunityDto.existing_images];
-      } else {
-        finalImages = [updateCommunityDto.existing_images];
+    const previousImages = Array.isArray(existingCommunity.images)
+      ? [...existingCommunity.images]
+      : [];
+
+    let nextImages: string[] | null = null;
+
+    if (Array.isArray(updateCommunityDto.images)) {
+      nextImages = updateCommunityDto.images;
+    } else {
+      let computedImages: string[] = [];
+
+      if (updateCommunityDto.existing_images) {
+        if (Array.isArray(updateCommunityDto.existing_images)) {
+          computedImages = [...updateCommunityDto.existing_images];
+        } else {
+          computedImages = [updateCommunityDto.existing_images];
+        }
+      }
+
+      if (files && files.length > 0) {
+        const newImagePaths = files.map(file =>
+          `/uploads/communities/${file.filename}`
+        );
+        computedImages = [...newImagePaths, ...computedImages];
+      }
+
+      if (computedImages.length > 0) {
+        nextImages = computedImages;
+        updateCommunityDto.images = computedImages;
       }
     }
 
-    if (files && files.length > 0) {
-      const newImagePaths = files.map(file =>
-        `/uploads/communities/${file.filename}`
-      );
-      finalImages = [...newImagePaths, ...finalImages];
-    }
+    const imagesToDelete = Array.isArray(nextImages)
+      ? previousImages.filter(imagePath => imagePath && !nextImages.includes(imagePath))
+      : [];
 
-    if (files?.length > 0 || updateCommunityDto.existing_images) {
-      updateCommunityDto.images = finalImages;
-    }
     const updateData: any = { ...updateCommunityDto };
     delete updateData.admins;
     delete updateData.existing_images;
@@ -319,7 +342,35 @@ export class CommunitiesService {
     if (!updatedCommunity) {
       throw new NotFoundException(`Community #${id} not found`);
     }
+
+    if (imagesToDelete.length > 0) {
+      await this.deleteImageFiles(imagesToDelete);
+    }
+
     return updatedCommunity;
+  }
+
+  private async deleteImageFiles(imagePaths: string[]) {
+    if (!Array.isArray(imagePaths) || imagePaths.length === 0) {
+      return;
+    }
+
+    await Promise.all(imagePaths.map(async (imagePath) => {
+      if (!imagePath || /^https?:\/\//i.test(imagePath)) {
+        return;
+      }
+
+      const normalized = imagePath.replace(/^[/\\]+/, '');
+      const absolutePath = path.join(process.cwd(), normalized);
+
+      try {
+        await fsPromises.unlink(absolutePath);
+      } catch (error: any) {
+        if (error?.code !== 'ENOENT') {
+          console.warn(`Failed to delete unused community image at ${absolutePath}:`, error);
+        }
+      }
+    }));
   }
 
   async addAdminByEmail(communityId: string, email: string, addedById: string) {

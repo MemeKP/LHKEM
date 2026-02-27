@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe, UseGuards, UseInterceptors, UploadedFile, Req, UploadedFiles } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe, UseGuards, UseInterceptors, Req, UploadedFiles } from '@nestjs/common';
+
 import { CommunitiesService } from './communities.service';
 import { CreateCommunityDto } from './dto/create-community.dto';
 import { UpdateCommunityDto } from './dto/update-community.dto';
@@ -18,17 +19,11 @@ export class CommunitiesController {
     private readonly communitiesService: CommunitiesService,
   ) { }
 
-  // @Post()
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @Roles(UserRole.PLATFORM_ADMIN)
-  // create(@Body() createCommunityDto: CreateCommunityDto) {
-  //   return this.communitiesService.create(createCommunityDto);
-  // }
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.PLATFORM_ADMIN)
   @UseInterceptors(
-    FileInterceptor('images', {
+    FilesInterceptor('images', 10, {
       storage: diskStorage({
         destination: './uploads/communities',
         filename: (req, file, cb) => {
@@ -41,24 +36,45 @@ export class CommunitiesController {
   create(
     @Req() req: any,
     @Body() createCommunityDto: CreateCommunityDto,
-    @UploadedFile(
-      new ParseFilePipe({
-        fileIsRequired: false,
-      }),
-    )
-    file?: Express.Multer.File,
+    @UploadedFiles() files: Array<Express.Multer.File>,
   ) {
-    if (file) {
-      createCommunityDto.images = [
-        `/uploads/communities/${file.filename}`,
-      ];
-    }
     if (typeof createCommunityDto.contact_info === 'string') {
       createCommunityDto.contact_info = JSON.parse(createCommunityDto.contact_info);
     }
     if (typeof createCommunityDto.admins === 'string') {
       createCommunityDto.admins = JSON.parse(createCommunityDto.admins);
     }
+    if (typeof createCommunityDto.image_slots === 'string') {
+      try {
+        createCommunityDto.image_slots = JSON.parse(createCommunityDto.image_slots);
+      } catch (error) {
+        createCommunityDto.image_slots = [];
+      }
+    }
+
+    const uploadedPaths = (files || []).map(
+      (file) => `/uploads/communities/${file.filename}`,
+    );
+    if (Array.isArray(createCommunityDto.image_slots) && createCommunityDto.image_slots.length > 0) {
+      const finalImages: string[] = [];
+      let fileIndex = 0;
+      createCommunityDto.image_slots.forEach((slot) => {
+        if (typeof slot === 'string' && slot.startsWith('__file__')) {
+          const nextImage = uploadedPaths[fileIndex++];
+          if (nextImage) {
+            finalImages.push(nextImage);
+          }
+        } else if (typeof slot === 'string' && slot.trim() !== '') {
+          finalImages.push(slot);
+        }
+      });
+      if (finalImages.length > 0) {
+        createCommunityDto.images = finalImages;
+      }
+    } else if (uploadedPaths.length > 0) {
+      createCommunityDto.images = uploadedPaths;
+    }
+    delete createCommunityDto.image_slots;
     return this.communitiesService.create(req.user.userMongoId, createCommunityDto);
   }
 
@@ -158,13 +174,39 @@ export class CommunitiesController {
       updateCommunityDto.admins = JSON.parse(updateCommunityDto.admins);
     }
 
-    // if (typeof updateCommunityDto.admin_permissions === 'string') {
-    //     updateCommunityDto.admin_permissions = JSON.parse(updateCommunityDto.admin_permissions);
-    // }
-
+    if (typeof updateCommunityDto.image_slots === 'string') {
+      try {
+        updateCommunityDto.image_slots = JSON.parse(updateCommunityDto.image_slots);
+      } catch (error) {
+        updateCommunityDto.image_slots = [];
+      }
+    }
     if (updateCommunityDto.existing_images && typeof updateCommunityDto.existing_images === 'string') {
       updateCommunityDto.existing_images = [updateCommunityDto.existing_images];
     }
+    const uploadedPaths = (files || []).map(
+      (file) => `/uploads/communities/${file.filename}`,
+    );
+    if (Array.isArray(updateCommunityDto.image_slots) && updateCommunityDto.image_slots.length > 0) {
+      const finalImages: string[] = [];
+      let fileIndex = 0;
+      updateCommunityDto.image_slots.forEach((slot) => {
+        if (typeof slot === 'string' && slot.startsWith('__file__')) {
+          const nextImage = uploadedPaths[fileIndex++];
+          if (nextImage) {
+            finalImages.push(nextImage);
+          }
+        } else if (typeof slot === 'string' && slot.trim() !== '') {
+          finalImages.push(slot);
+        }
+      });
+      if (finalImages.length > 0) {
+        updateCommunityDto.images = finalImages;
+      }
+    } else if (uploadedPaths.length > 0) {
+      updateCommunityDto.images = uploadedPaths;
+    }
+    delete updateCommunityDto.image_slots;
     const mongoId = req.user.userMongoId || req.user._id;
     const userRole = req.user.role;
     return this.communitiesService.update(id, mongoId, userRole, updateCommunityDto, files);

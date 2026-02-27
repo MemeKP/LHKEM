@@ -332,18 +332,33 @@ const EventCreateForm = () => {
               วันและเวลา <span className="text-red-500">*</span>
             </label>
             <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-[#666666] mb-1.5">
-                  วันที่จัดกิจกรรม
-                </label>
-                <input
-                  type="date"
-                  name="event_date"
-                  value={formData.event_date}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A]"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-[#666666] mb-1.5">
+                    วันที่จัดกิจกรรม
+                  </label>
+                  <input
+                    type="date"
+                    name="event_date"
+                    value={formData.event_date}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[#666666] mb-1.5">
+                    วันที่สิ้นสุดกิจกรรม
+                  </label>
+                  <input
+                    type="date"
+                    //name="event_date"
+                    //value={formData.event_date}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A]"
+                  />
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -390,19 +405,6 @@ const EventCreateForm = () => {
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A] mb-3"
               placeholder="ระบุสถานที่"
             />
-            <div className="border-2 border-dashed border-[#E0E0E0] rounded-lg p-6 text-center bg-[#F0F9F4]">
-              <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center mx-auto mb-3">
-                <MapPin className="h-6 w-6 text-[#4CAF50]" />
-              </div>
-              <p className="text-sm text-[#666666] mb-3">เลือกสถานที่บนแผนที่</p>
-              <button
-                type="button"
-                className="px-4 py-2 bg-white border border-gray-300 text-[#666666] rounded-lg hover:bg-gray-50 transition text-sm font-medium"
-              >
-                เปิดแผนที่
-              </button>
-              <p className="text-xs text-[#999999] mt-3">{ct('คลิกเพื่อเลือกตำแหน่งที่แม่นยำบนแผนที่', 'Click to select precise location on map')}</p>
-            </div>
           </div>
 
           {/* 6. ประเภทกิจกรรม */}
@@ -423,39 +425,6 @@ const EventCreateForm = () => {
               <option value="market">ตลาดนัด</option>
               <option value="other">อื่นๆ</option>
             </select>
-          </div>
-
-          {/* 7. Workshop ที่เข้าร่วม  ลองดูหน่อยว่าจะเอามั้ย*/}
-          <div className="mb-6">
-            <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
-              Workshop ที่เข้าร่วม (ถ้ามี)
-            </label>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="workshop1"
-                  className="w-4 h-4 text-[#FFC107] border-gray-300 rounded focus:ring-[#FFC107]"
-                />
-                <label htmlFor="workshop1" className="text-sm text-[#666666]">Workshop ย้อมผ้าครามธรรมชาติ</label>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="workshop2"
-                  className="w-4 h-4 text-[#FFC107] border-gray-300 rounded focus:ring-[#FFC107]"
-                />
-                <label htmlFor="workshop2" className="text-sm text-[#666666]">Workshop เครื่องปั้นดินเผา</label>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="workshop3"
-                  className="w-4 h-4 text-[#FFC107] border-gray-300 rounded focus:ring-[#FFC107]"
-                />
-                <label htmlFor="workshop3" className="text-sm text-[#666666]">Workshop งานไม้แกะสลัก</label>
-              </div>
-            </div>
           </div>
 
           {/* 8. กลุ่มเป้าหมาย */}

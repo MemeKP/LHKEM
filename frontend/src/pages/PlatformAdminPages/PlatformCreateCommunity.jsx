@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Image as ImageIcon, Plus, X } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
 import api from '../../services/api';
 import { useMutation } from '@tanstack/react-query';
+import CommunityImageUploader from '../../components/CommunityImageUploader';
+import { buildImageSlotsPayload } from '../../utils/communityImages';
 
-const createCommunity = async (formData) => {
+const createCommunity = async ({ formData, coverSlot, gallerySlots }) => {
   const formDataToSend = new FormData();
   formDataToSend.append('name', formData.name);
 
@@ -49,9 +51,13 @@ const createCommunity = async (formData) => {
     formDataToSend.append('admins', JSON.stringify(formData.admins));
   }
 
-  if (formData.coverImage) {
-    formDataToSend.append('images', formData.coverImage);
-  }
+  const manifest = buildImageSlotsPayload({
+    coverSlot,
+    gallerySlots,
+    appendFile: (file) => formDataToSend.append('images', file),
+  });
+
+  formDataToSend.append('image_slots', JSON.stringify(manifest));
 
   formDataToSend.append('admin_permissions', JSON.stringify({
     can_approve_workshop: formData.workshopApproval
@@ -102,6 +108,8 @@ const PlatformCreateCommunity = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [mapImage, setMapImage] = useState(null);
   const [mapPreview, setMapPreview] = useState(null);
+  const [gallerySlots, setGallerySlots] = useState([]);
+  const initialGalleryImages = useMemo(() => [], []);
 
   const mutation = useMutation({
     mutationFn: createCommunity,
@@ -190,11 +198,12 @@ const PlatformCreateCommunity = () => {
   // };
   const handleSubmit = (e) => {
     e.preventDefault();
-    mutation.mutate(formData);
+    const coverSlot = formData.coverImage ? { file: formData.coverImage } : null;
+    mutation.mutate({ formData, coverSlot, gallerySlots });
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF8F3] animate-fadeIn">
+    <div className="min-h-screen bg-[#F5EFE7] animate-fadeIn">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
         <button
@@ -383,6 +392,14 @@ const PlatformCreateCommunity = () => {
                 value={formData.location.coordinates.lng}
               />
             </div>
+          </div>
+
+          {/* Community Atmosphere Images */}
+          <div className="mb-6">
+            <label className="block text-sm font-semibold text-gray-900 mb-2">
+              {ct('รูปภาพบรรยากาศในชุมชน', 'Community Atmosphere Images')}
+            </label>
+            <CommunityImageUploader initialImages={initialGalleryImages} onChange={setGallerySlots} />
           </div>
           {/* Community Map Upload */}
           <div className="mb-6">

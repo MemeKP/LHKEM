@@ -363,18 +363,33 @@ const EventEditForm = () => {
               วันและเวลา <span className="text-red-500">*</span>
             </label>
             <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-[#666666] mb-1.5">
-                  วันที่จัดกิจกรรม
-                </label>
-                <input
-                  type="date"
-                  name="event_date"
-                  value={formData.event_date}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A]"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-[#666666] mb-1.5">
+                    วันที่จัดกิจกรรม
+                  </label>
+                  <input
+                    type="date"
+                    name="event_date"
+                    value={formData.event_date}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[#666666] mb-1.5">
+                    วันที่สิ้นสุดกิจกรรม
+                  </label>
+                  <input
+                    type="date"
+                    //name="event_date"
+                    //value={formData.event_date}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A]"
+                  />
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -453,39 +468,6 @@ const EventEditForm = () => {
               <option value="market">ตลาดนัด</option>
               <option value="other">อื่นๆ</option>
             </select>
-          </div>
-
-          {/* 7. Workshop ที่เข้าร่วม */}
-          <div className="mb-6">
-            <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
-              Workshop ที่เข้าร่วม (ถ้ามี)
-            </label>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="workshop1"
-                  className="w-4 h-4 text-[#FFC107] border-gray-300 rounded focus:ring-[#FFC107]"
-                />
-                <label htmlFor="workshop1" className="text-sm text-[#666666]">Workshop ย้อมผ้าครามธรรมชาติ</label>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="workshop2"
-                  className="w-4 h-4 text-[#FFC107] border-gray-300 rounded focus:ring-[#FFC107]"
-                />
-                <label htmlFor="workshop2" className="text-sm text-[#666666]">Workshop เครื่องปั้นดินเผา</label>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="workshop3"
-                  className="w-4 h-4 text-[#FFC107] border-gray-300 rounded focus:ring-[#FFC107]"
-                />
-                <label htmlFor="workshop3" className="text-sm text-[#666666]">Workshop งานไม้แกะสลัก</label>
-              </div>
-            </div>
           </div>
 
           {/* 8. กลุ่มเป้าหมาย */}
