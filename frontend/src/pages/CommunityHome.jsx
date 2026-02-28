@@ -7,7 +7,6 @@ import WorkshopModal from '../components/WorkshopModal';
 import ETicketModal from '../components/ETicketModal';
 import api from '../services/api';
 import { useQuery } from '@tanstack/react-query';
-import { communityEventsMock } from '../data/eventsMock';
 import { getShopsByCommunity } from '../services/shopService';
 import { getShopCoverImage, resolveImageUrl } from '../utils/image';
 
@@ -30,6 +29,11 @@ const fetchCommunityMap = async (communityId) => {
   }
 };
 
+const fetchCommunityEvents = async (communityId) => {
+  const res = await api.get(`/api/events/public/${communityId}`);
+  return res.data;
+};
+
 const CommunityHome = () => {
   const { t, ct } = useTranslation();
   const { community } = useOutletContext()
@@ -41,6 +45,27 @@ const CommunityHome = () => {
   const [showETicket, setShowETicket] = useState(false);
   const [shops, setShops] = useState([]);
   const [activeShopCount, setActiveShopCount] = useState(0);
+
+  const { data: events = [] } = useQuery({
+    queryKey: ['community-events', community._id],
+    queryFn: () => fetchCommunityEvents(community._id),
+    enabled: !!community._id,
+    refetchOnWindowFocus: false,
+  });
+
+  const eventCards = events.map(event => ({
+    id: event._id,
+    title: ct(event.title, event.title_en),
+    description: ct(event.description, event.description_en),
+    date: event.start_at ? new Date(event.start_at).toLocaleDateString('th-TH', {
+      day: 'numeric', month: 'short', year: 'numeric'
+    }) : 'ไม่ระบุ',
+    time: event.start_at ? new Date(event.start_at).toLocaleTimeString('th-TH', {
+      hour: '2-digit', minute: '2-digit'
+    }) : '',
+    location: event.location?.full_address || '',
+    gradient: 'from-orange-400 to-amber-500',
+  }));
 
   useEffect(() => {
     const fetchCommunity = async () => {
@@ -115,13 +140,6 @@ const CommunityHome = () => {
   ];
 
   const workshopCards = workshopData.slice(0, 3);
-  const eventCards = communityEventsMock.map((ev) => ({
-    ...ev,
-    title: ct(ev.title, ev.title_en),
-    description: ct(ev.description, ev.description_en),
-    date: ct(ev.date, ev.date_en),
-    location: ct(ev.location, ev.location_en),
-  }));
 
   const handleOpenModal = (workshop) => setActiveWorkshop(workshop);
   const handleCloseModal = () => setActiveWorkshop(null);
@@ -221,7 +239,7 @@ const CommunityHome = () => {
             <div className="h-[300px] md:h-[400px] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow relative">
               <img
                 // src={`${API_URL}${community.images?.[1]}`}
-                 src={resolveImageUrl(community.images?.[1])}
+                src={resolveImageUrl(community.images?.[1])}
                 alt={ct('รูปภาพหลัก', 'Main Image')}
                 className="w-full h-full object-cover"
               />
@@ -233,7 +251,7 @@ const CommunityHome = () => {
               <div className="h-full rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow relative">
                 <img
                   //src={`${API_URL}${community.images?.[0]}`}
-                  src={resolveImageUrl(community.images?.[2])}
+                  src={resolveImageUrl(community.images?.[0])}
                   alt={ct('รูปภาพหลัก 2', 'Main Image 2')}
                   className="w-full h-full object-cover"
                 />
@@ -244,7 +262,7 @@ const CommunityHome = () => {
                 <div className="rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow relative">
                   <img
                     // src={`${API_URL}${community.images?.[2]}`}
-                    src={resolveImageUrl(community.images?.[3])}
+                    src={resolveImageUrl(community.images?.[2])}
                     alt={ct('รูปภาพ 2', 'Image 2')}
                     className="w-full h-full object-cover"
                   />
@@ -252,7 +270,7 @@ const CommunityHome = () => {
                 <div className="rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow relative">
                   <img
                     // src={`${API_URL}${community.images?.[3]}`}
-                    src={resolveImageUrl(community.images?.[4])}
+                    src={resolveImageUrl(community.images?.[3])}
                     alt={ct('รูปภาพ 3', 'Image 3')}
                     className="w-full h-full object-cover"
                   />
@@ -374,7 +392,14 @@ const CommunityHome = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {eventCards.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-2xl border border-gray-200">
+              <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500">
+                {ct('ยังไม่มีกิจกรรมที่จัดในตอนนี้', 'No events available yet')}
+              </p>
+            </div>
+          ) : (<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {eventCards.map((event) => (
               <Link
                 to={`/${community.slug}/events/${event.id}`}
@@ -402,18 +427,20 @@ const CommunityHome = () => {
                     <MapPin className="h-4 w-4" />
                     <span className="line-clamp-1">{event.location}</span>
                   </div>
+                  {/* Event จำเป็นต้องกดเข้าร่วมม้ายน้า */}
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-sm font-semibold text-orange-600">{ct('ดูรายละเอียด', 'View details')}</span>
-                    <button className="px-4 py-2 bg-gray-900 text-white rounded-full text-sm font-semibold hover:bg-gray-800 transition">
+                    {/* <button className="px-4 py-2 bg-gray-900 text-white rounded-full text-sm font-semibold hover:bg-gray-800 transition">
                       {ct('เข้าร่วม', 'Join')}
-                    </button>
+                    </button> */}
                   </div>
                 </div>
               </Link>
             ))}
-          </div>
+          </div>)}
 
-          <div className="text-center mt-10">
+          {/* ตรงนี้ไม่มี route เฉพาะ */}
+          {/* <div className="text-center mt-10">
             <Link
               to={`/${community.slug}/events`}
               className="inline-flex items-center justify-center gap-2 px-8 py-3 border-2 border-gray-300 rounded-full text-gray-700 hover:border-gray-400 hover:bg-gray-50 transition font-semibold"
@@ -421,7 +448,7 @@ const CommunityHome = () => {
               {ct('ดู Event ทั้งหมด', 'View All Events')}
               <ArrowRight className="h-5 w-5" />
             </Link>
-          </div>
+          </div> */}
         </div>
       </section>
 

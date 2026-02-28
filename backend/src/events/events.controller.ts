@@ -10,6 +10,9 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import * as fs from 'fs';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { UserRole } from 'src/common/enums/user-role.enum';
+import { Roles } from 'src/common/decorators/roles.decorator';
 interface JwtPayload {
   userId: string;
   role: string;
@@ -114,7 +117,6 @@ export class EventsController {
     );
   }
 
-
   @Get('pending')
   @UseGuards(JwtAuthGuard)
   async findPending(@Req() req: any) {
@@ -147,6 +149,17 @@ export class EventsController {
     return this.eventsService.findAllByCommunities([communityId]);
   }
 
+  // ของหน้า community homepage (public)
+  @Get('public/:communityId')
+  async findPublicByCommunity(@Param('communityId') communityId: string) {
+    return this.eventsService.findPublicByCommunity(communityId);
+  }
+
+  @Get('public-detail/:id')
+  async findPublicOne(@Param('id') id: string) {
+    return this.eventsService.findOne(id);
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   async findOne(@Req() req, @Param('id') id: string) {
@@ -172,6 +185,14 @@ export class EventsController {
     return event;
   }
 
+  @Patch(':id/approve')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async approveEvent(@Param('id') id: string, @Req() req) {
+    const userId = req.user.userMongoId || req.user._id;
+    return this.eventsService.approveEvent(id, userId);
+  }
+
   @Patch(':id')
   @UseInterceptors(FileInterceptor('image'))
   update(
@@ -187,16 +208,10 @@ export class EventsController {
     return this.eventsService.remove(id);
   }
 
+  // ไม่แน่ใจเผื่อไว้ก่อน
   @Get(':id/participants')
   // @UseGuards(JwtAuthGuard) // เปิด comment เมื่อต้องการล็อคสิทธิ์
   async getParticipants(@Param('id') id: string) {
     return this.eventsService.getParticipants(id);
-  }
-
-  // ไว้ test postman
-  @Post(':id/join')
-  @UseGuards(JwtAuthGuard)
-  async joinEvent(@Param('id') id: string, @Req() req) {
-    return this.eventsService.joinEvent(id, req.user.userMongoId);
   }
 }

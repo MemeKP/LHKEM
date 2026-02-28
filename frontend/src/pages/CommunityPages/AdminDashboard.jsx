@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { Calendar, Store, FileText, Users, Eye, AlertCircle, CheckCircle, XCircle, Edit, Plus, List, MapPin } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
 import { getShopsByCommunity, getPendingShops } from '../../services/shopService';
 import { getShopCoverImage } from '../../utils/image';
 import CommunityAssignmentNotice from '../../components/CommunityAssignmentNotice';
+import Swal from 'sweetalert2';
 
 /**
  * Admin Dashboard - ศูนย์รวมการจัดการชุมชน (หน้าหลัก)
@@ -15,8 +16,6 @@ import CommunityAssignmentNotice from '../../components/CommunityAssignmentNotic
  * 
  * TODO: Backend APIs:
  * - GET /api/workshops/pending?community_id=xxx
- * - GET /api/events/pending?community_id=xxx  
- * - GET /api/shops/pending?community_id=xxx
  */
 
 const usePendingData = (communityId) => {
@@ -50,14 +49,32 @@ const usePendingData = (communityId) => {
   return { eventsQuery, shopsQuery, pendingShopsQuery };
 };
 
+const approveEvent = async (eventId) => {
+  const res = await api.patch(`/api/events/${eventId}/approve`);
+  return res.data;
+};
+
 const AdminDashboard = () => {
   const { community, hasCommunity } = useOutletContext();
   const { eventsQuery, shopsQuery, pendingShopsQuery } = usePendingData(community?._id);
   const navigate = useNavigate();
   const { ct } = useTranslation();
   const [activeTab, setActiveTab] = useState('workshops');
+
   const [taskTab, setTaskTab] = useState('events'); // Tab for Events/Shops section
   const isLoading = eventsQuery.isLoading || shopsQuery.isLoading || pendingShopsQuery.isLoading;
+  const queryClient = useQueryClient();
+
+  const approveEventMutation = useMutation({
+    mutationFn: (eventId) => approveEvent(eventId),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['pending-events']);
+      Swal.fire('สำเร็จ', 'อนุมัติกิจกรรมเรียบร้อยแล้ว', 'success');
+    },
+    onError: () => {
+      Swal.fire('Error', 'ไม่สามารถอนุมัติได้', 'error');
+    },
+  });
 
   if (!hasCommunity) {
     return <CommunityAssignmentNotice />;
@@ -393,8 +410,8 @@ const AdminDashboard = () => {
               <button
                 onClick={() => setTaskTab('events')}
                 className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-2 ${taskTab === 'events'
-                    ? 'bg-[#4CAF50] text-white'
-                    : 'text-[#666666] hover:bg-gray-100'
+                  ? 'bg-[#4CAF50] text-white'
+                  : 'text-[#666666] hover:bg-gray-100'
                   }`}
               >
                 <Calendar className="h-4 w-4" />
@@ -403,8 +420,8 @@ const AdminDashboard = () => {
               <button
                 onClick={() => setTaskTab('shops')}
                 className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-2 ${taskTab === 'shops'
-                    ? 'bg-[#4CAF50] text-white'
-                    : 'text-[#666666] hover:bg-gray-100'
+                  ? 'bg-[#4CAF50] text-white'
+                  : 'text-[#666666] hover:bg-gray-100'
                   }`}
               >
                 <Store className="h-4 w-4" />
@@ -449,7 +466,7 @@ const AdminDashboard = () => {
                               new Date(event.start_at).toLocaleDateString('th-TH', {
                                 day: 'numeric',
                                 month: 'short',
-                                year: 'numeric' 
+                                year: 'numeric'
                               })
                             ) : (
                               'ไม่ระบุวันที่'
@@ -465,8 +482,12 @@ const AdminDashboard = () => {
                           >
                             {ct('ดูรายละเอียด', 'View Details')}
                           </button>
-                          <button className="px-4 py-2 bg-[#1E293B] hover:bg-[#0F172A] text-white text-sm font-semibold rounded-lg transition-all">
-                            {ct('อนุมัติ', 'Approve')}
+                          <button
+                            onClick={() => approveEventMutation.mutate(event._id || event.id)}
+                            disabled={approveEventMutation.isPending}
+                            className="px-4 py-2 bg-[#1E293B] hover:bg-[#0F172A] text-white text-sm font-semibold rounded-lg transition-all"
+                          >
+                            {approveEventMutation.isPending ? 'กำลังอนุมัติ...' : ct('อนุมัติ', 'Approve')}
                           </button>
                         </div>
                       </div>

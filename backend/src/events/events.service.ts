@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { Model, Types } from 'mongoose';
@@ -6,6 +6,7 @@ import { EventDocument, Event as EventSchema } from './schemas/event.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { EventStatus } from './events.types';
 import { User } from 'src/users/schemas/users.schema';
+import { CommunityAdmin, CommunityAdminDocument } from 'src/community-admin/schemas/community-admin.schema';
 
 type ParticipantWithUser = {
   user: Types.ObjectId | User;
@@ -18,6 +19,7 @@ export class EventsService {
   constructor(
     @InjectModel(Event.name)
     private readonly eventModel: Model<EventDocument>,
+    @InjectModel(CommunityAdmin.name) private communityAdminModel: Model<CommunityAdminDocument>,
   ) { }
 
   // async create(createEventDto: CreateEventDto, user_id: string, role: string, community_id: string): Promise<EventSchema> {
@@ -192,18 +194,31 @@ export class EventsService {
       .filter(Boolean);
   }
 
-  async joinEvent(eventId: string, userId: string) {
-    return this.eventModel.findByIdAndUpdate(
-      eventId,
-      {
-        $push: {
-          participants: {
-            user: new Types.ObjectId(userId),
-            joined_at: new Date()
-          }
-        }
-      },
-      { new: true }
-    );
+  async findPublicByCommunity(communityId: string) {
+    return this.eventModel.find({
+      community_id: new Types.ObjectId(communityId),
+      status: { $in: [EventStatus.OPEN, EventStatus.PUBLISHED] },
+    })
+      .sort({ start_at: 1 })
+      .select('title description images location start_at end_at status seat_limit participants')
+      .lean();
+  }
+
+  async approveEvent(id: string, userId: string) {
+    const event = await this.eventModel.findById(id);
+    if (!event) throw new NotFoundException('Event not found');
+
+    const isAdmin = await this.communityAdminModel.findOne({
+      user: new Types.ObjectId(userId),
+      community: event.community_id,
+    });
+    if (!isAdmin) throw new ForbiddenException('You are not an admin of this community');
+
+    if (event.status !== EventStatus.PENDING) {
+      throw new BadRequestException(`Cannot approve event with status ${event.status}`);
+    }
+
+    event.status = EventStatus.OPEN;
+    return event.save();
   }
 }
