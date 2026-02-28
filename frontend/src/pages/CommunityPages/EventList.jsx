@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, MapPin, Users, DollarSign, Plus, Search, Filter, Eye, Edit, Trash2 } from 'lucide-react';
+import { Calendar, MapPin, Plus, Search, Filter, Eye, Edit, Trash2, Clock, Image as ImageIcon, AlertCircle, Phone } from 'lucide-react';
 import api from '../../services/api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -12,11 +12,53 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
  * - DELETE /api/events/:id - ลบ Event
  */
 
-const getLocationName = (location) => {
-  if (!location) return 'ไม่ระบุสถานที่';
+const getLocationName = (location, fallback) => {
+  if (!location) return fallback;
   if (typeof location === 'string') return location;
-  // กรณีข้อมูลใหม่เป็น Object
-  return location.full_address || location.address || 'ไม่ระบุสถานที่';
+  return location.full_address || location.address || fallback;
+};
+
+const normalizeStatus = (status) => (status || 'OPEN').toUpperCase();
+
+const statusFilters = [
+  { id: 'ALL', label: { th: 'ทั้งหมด', en: 'All' } },
+  { id: 'OPEN', label: { th: 'เปิดรับสมัคร', en: 'Open' } },
+  { id: 'CLOSED', label: { th: 'ปิดรับสมัคร', en: 'Closed' } },
+  { id: 'PENDING', label: { th: 'รอการตรวจสอบ', en: 'Pending' } },
+  { id: 'CANCELLED', label: { th: 'ยกเลิก', en: 'Cancelled' } },
+];
+
+const statusLabels = {
+  OPEN: { th: 'เปิดรับสมัคร', en: 'Open' },
+  CLOSED: { th: 'ปิดรับสมัคร', en: 'Closed' },
+  PENDING: { th: 'รอการตรวจสอบ', en: 'Pending' },
+  CANCELLED: { th: 'ยกเลิก', en: 'Cancelled' },
+};
+
+const statusBadges = {
+  OPEN: 'bg-green-100 text-green-700',
+  CLOSED: 'bg-gray-100 text-gray-700',
+  PENDING: 'bg-yellow-100 text-yellow-800',
+  CANCELLED: 'bg-red-100 text-red-700',
+  DEFAULT: 'bg-gray-100 text-gray-700',
+};
+
+const getPrimaryImage = (images) => {
+  if (!images) return null;
+  if (Array.isArray(images)) {
+    return images.length > 0 ? images[0] : null;
+  }
+  return images;
+};
+
+const resolveStatusLabel = (status, locale = 'th') => {
+  const normalized = normalizeStatus(status);
+  return statusLabels[normalized]?.[locale] || status || '-';
+};
+
+const resolveBadgeClasses = (status) => {
+  const normalized = normalizeStatus(status);
+  return statusBadges[normalized] || statusBadges.DEFAULT;
 };
 
 const fetchEvents = async () => {
@@ -53,6 +95,7 @@ const EventList = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const { data: events = [], isLoading, isError } = useEvents();
   const { mutateAsync: deleteEvent } = useDeleteEvent();
+  const API_URL = import.meta.env.VITE_API_URL;
 
   // TODO: Fetch from API - GET /api/events?community_id=xxx
   // Mock data for Events  
@@ -227,15 +270,37 @@ const EventList = () => {
             {filteredEvents.map((event, i) => (
               <div
                 key={event._id || event.id || i}
-                className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                className="bg-white rounded-2xl shadow-sm overflow-hidden hover:shadow-lg transition-shadow border border-orange-50"
               >
                 {/* Event Image */}
-                <div className="aspect-video bg-gradient-to-br from-orange-100 to-orange-200 relative">
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Calendar className="h-16 w-16 text-orange-300" />
+                <div className="relative aspect-[4/3] bg-gradient-to-br from-orange-50 to-orange-100">
+                  {(() => {
+                    const coverImage = getPrimaryImage(event.images);
+                    if (!coverImage) {
+                      return (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <ImageIcon className="h-16 w-16 text-orange-300" />
+                        </div>
+                      );
+                    }
+                    const coverSrc = coverImage.startsWith('http') ? coverImage : `${API_URL}${coverImage}`;
+                    return (
+                      <img
+                        src={coverSrc}
+                        alt={event.title}
+                        className="w-full h-full object-cover"
+                      />
+                    );
+                  })()}
+
+                  {/* Status */}
+                  <div className="absolute top-3 left-3 flex flex-wrap gap-2">
+                    <span className={`px-3 py-1 text-xs font-semibold rounded-full ${resolveBadgeClasses(event.status)}`}>
+                      {resolveStatusLabel(event.status)}
+                    </span>
                   </div>
-                  
-                  {/* Status Badges */}
+
+                  {/* Feature Flags */}
                   <div className="absolute top-3 right-3 flex gap-2">
                     {event.is_pinned && (
                       <span className="px-2 py-1 bg-red-500 text-white text-xs font-semibold rounded-full">
@@ -248,28 +313,15 @@ const EventList = () => {
                       </span>
                     )}
                   </div>
-
-                  {/* Status */}
-                  <div className="absolute top-3 left-3">
-                    <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                      event.status === 'OPEN' 
-                        ? 'bg-green-100 text-green-800' 
-                        : event.status === 'CLOSED'
-                        ? 'bg-gray-100 text-gray-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {event.status === 'OPEN' ? 'เปิดรับสมัคร' : event.status === 'CLOSED' ? 'ปิดรับสมัคร' : event.status === 'PENDING' ? 'รออนุมัติ' : 'ยกเลิก'}
-                    </span>
-                  </div>
                 </div>
 
                 {/* Event Info */}
-                <div className="p-5">
+                <div className="p-6">
                   <h3 className="text-lg font-semibold text-[#1A1A1A] mb-2 line-clamp-2">{event.title}</h3>
                   <p className="text-sm text-[#666666] mb-4 line-clamp-2">{event.description}</p>
 
                   {/* Event Details */}
-                  <div className="space-y-2 text-sm mb-4">
+                  <div className="space-y-3 text-sm mb-5">
                     <div className="flex items-start gap-2 text-[#666666]">
                       <Calendar className="h-4 w-4 mt-0.5 flex-shrink-0" />
                       <div>
@@ -290,19 +342,17 @@ const EventList = () => {
                       <MapPin className="h-4 w-4 flex-shrink-0" />
                       <span className="line-clamp-1">{getLocationName(event.location)}</span>
                     </div>
-                    
-                    <div className="flex items-center justify-between pt-2 border-t">
+                    {event.contact?.phone && (
                       <div className="flex items-center gap-2 text-[#666666]">
-                        <Users className="h-4 w-4" />
-                        <span>{event.registered}/{event.seat_limit}</span>
+                        <Phone className="h-4 w-4 flex-shrink-0" />
+                        <span>{event.contact.phone}</span>
                       </div>
-                      {event.deposit_amount > 0 && (
-                        <div className="flex items-center gap-1 text-[#FFC107] font-medium">
-                          <DollarSign className="h-4 w-4" />
-                          <span>฿{event.deposit_amount}</span>
-                        </div>
-                      )}
-                    </div>
+                    )}
+                    {event.additional_info && (
+                      <p className="text-xs text-[#999999] line-clamp-2 bg-[#F9F2E7] px-3 py-2 rounded-lg">
+                        {event.additional_info}
+                      </p>
+                    )}
                   </div>
 
                   {/* Action Buttons */}

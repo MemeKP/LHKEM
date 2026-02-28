@@ -147,6 +147,16 @@ export class EventsController {
     return this.eventsService.findAllByCommunities([communityId]);
   }
 
+  @Get('public/:slug')
+  async findPublicEvents(@Param('slug') slug: string, @Query('status') status?: string) {
+    return this.eventsService.findPublicByCommunity(slug, status);
+  }
+
+  @Get('public/:slug/:id')
+  async findPublicEventDetail(@Param('slug') slug: string, @Param('id') id: string) {
+    return this.eventsService.findPublicEventDetail(slug, id);
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   async findOne(@Req() req, @Param('id') id: string) {

@@ -4,11 +4,11 @@ import {
   IsNotEmpty,
   IsOptional,
   IsDateString,
-  IsNumber,
-  Min,
   ValidateNested,
   IsBoolean,
   IsEnum,
+  IsNumber,
+  Min,
 } from 'class-validator';
 import { LocationDto } from 'src/communities/dto/location.dto';
 import { EventStatus } from '../events.types';
@@ -54,19 +54,15 @@ export class CreateEventDto {
   @IsDateString()
   end_at: string;
 
-  @Type(() => Number)
-  @IsNumber()
-  @Min(1)
-  seat_limit: number;
-
   @IsOptional()
   @Type(() => Number) 
   @IsNumber()
   @Min(0)
   deposit_amount?: number;
 
+  @IsOptional()
   @IsEnum(EventStatus)
-  status: EventStatus;
+  status?: EventStatus;
 
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true || value === '1')

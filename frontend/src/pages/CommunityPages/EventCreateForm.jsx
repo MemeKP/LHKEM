@@ -18,9 +18,7 @@ import Swal from 'sweetalert2';
  * - location (required) - สถานที่ (Object: full_address, province, coordinates)
  * - start_at (required) - วันและเวลาเริ่ม (ISO DateTime)
  * - end_at (required) - วันและเวลาสิ้นสุด (ISO DateTime)
- * - seat_limit (required) - จำนวนที่นั่ง
  * - deposit_amount (optional) - ค่าใช้จ่าย/ค่าม��ดจำ
- * - status (OPEN, CLOSED, CANCELLED) - สถานะ
  * - is_featured (boolean) - แนะนำ
  * - is_pinned (boolean) - ปักหมุด
  * - images (string) - รูปภาพปก (TODO: รอ Image Upload API)
@@ -75,25 +73,19 @@ const EventCreateForm = () => {
     description: '',
     descriptionEn: '',
     event_date: '',
+    end_date: '',
     start_time: '',
     end_time: '',
     location: '',
     event_type: '',
-    workshops: [],
     target_audience: '',
     cost_type: 'free', // 'free' or 'paid'
     deposit_amount: '',
-    contact: {
-      contact_phone: '',
-      contact_line: '',
-      contact_facebook: '',
-      coordinator_name: '',
-    },
+    contact_phone: '',
+    contact_line: '',
+    contact_facebook: '',
+    coordinator_name: '',
     additional_info: '',
-    seat_limit: '',
-    status: 'OPEN',
-    is_featured: false,
-    is_pinned: false,
   });
 
   const handleChange = (e) => {
@@ -108,18 +100,18 @@ const EventCreateForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.event_date || !formData.start_time || !formData.end_time) {
+    if (!formData.event_date || !formData.end_date || !formData.start_time || !formData.end_time) {
       Swal.fire({
         icon: 'warning',
         title: 'ข้อมูลไม่ครบถ้วน',
-        text: 'กรุณาระบุวันและเวลา',
+        text: 'กรุณาระบุวันเริ่ม วันสิ้นสุด และเวลา',
         confirmButtonColor: '#3085d6',
       });
       return;
     }
 
     const startDateTime = new Date(`${formData.event_date}T${formData.start_time}`);
-    const endDateTime = new Date(`${formData.event_date}T${formData.end_time}`);
+    const endDateTime = new Date(`${formData.end_date}T${formData.end_time}`);
 
     if (endDateTime < startDateTime) {
       Swal.fire({
@@ -150,20 +142,13 @@ const EventCreateForm = () => {
       submitData.append('title_en', formData.titleEn || formData.title);
       submitData.append('description', formData.description);
       submitData.append('description_en', formData.descriptionEn || formData.description);
-      submitData.append('seat_limit', parseInt(formData.seat_limit) || 1);
       submitData.append('deposit_amount', formData.cost_type === 'free' ? 0 : (parseFloat(formData.deposit_amount) || 0));
+
       submitData.append('start_at', startDateTime.toISOString());
       submitData.append('end_at', endDateTime.toISOString());
-      submitData.append('status', formData.status);
-      submitData.append('is_featured', formData.is_featured);
-      submitData.append('is_pinned', formData.is_pinned);
+
       submitData.append('event_type', formData.event_type || '');
       submitData.append('target_audience', formData.target_audience || '');
-
-      submitData.append(
-        'workshops',
-        JSON.stringify(formData.workshops || [])
-      );
 
       const contactData = {
         phone: formData.contact_phone,
@@ -175,7 +160,6 @@ const EventCreateForm = () => {
       submitData.append('contact', JSON.stringify(contactData));
 
       submitData.append('additional_info', formData.additional_info || '');
-
 
       const locationData = {
         full_address: formData.location || "ไม่ระบุ",
@@ -352,8 +336,8 @@ const EventCreateForm = () => {
                   </label>
                   <input
                     type="date"
-                    //name="event_date"
-                    //value={formData.event_date}
+                    name="end_date"
+                    value={formData.end_date}
                     onChange={handleChange}
                     required
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A]"
@@ -566,9 +550,6 @@ const EventCreateForm = () => {
               placeholder="ข้อมูลเพิ่มเติม (ถ้ามี)"
             />
           </div>
-
-          {/* Hidden fields for backend compatibility */}
-          <input type="hidden" name="seat_limit" value={formData.seat_limit || "100"} />
 
           {/* Actions */}
           <div className="flex items-center justify-center gap-3 pt-4">

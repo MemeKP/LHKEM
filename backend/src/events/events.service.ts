@@ -6,6 +6,7 @@ import { EventDocument, Event as EventSchema } from './schemas/event.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { EventStatus } from './events.types';
 import { User } from 'src/users/schemas/users.schema';
+import { Community, CommunityDocument } from 'src/communities/schemas/community.schema';
 
 type ParticipantWithUser = {
   user: Types.ObjectId | User;
@@ -18,30 +19,9 @@ export class EventsService {
   constructor(
     @InjectModel(Event.name)
     private readonly eventModel: Model<EventDocument>,
+    @InjectModel(Community.name)
+    private readonly communityModel: Model<CommunityDocument>,
   ) { }
-
-  // async create(createEventDto: CreateEventDto, user_id: string, role: string, community_id: string): Promise<EventSchema> {
-  //   if (createEventDto.end_at < createEventDto.start_at) {
-  //     throw new BadRequestException('End date must be after start date');
-  //   }
-
-  //   const newEvent = new this.eventModel({
-  //     ...createEventDto,
-  //     community_id: new Types.ObjectId(community_id),
-  //     created_by: new Types.ObjectId(user_id),
-  //     created_by_role: role,
-  //     title: createEventDto.title,
-  //     images: createEventDto.images,
-  //     description: createEventDto.description,
-  //     location: createEventDto.location,
-  //     start_at: new Date(createEventDto.start_at),
-  //     end_at: new Date(createEventDto.end_at),
-  //     seat_limit: createEventDto.seat_limit,
-  //     deposit_amount: createEventDto.deposit_amount ?? 0,
-  //     status: EventStatus.OPEN,
-  //   })
-  //   return newEvent.save();
-  // }
 
   async create(
     createEventDto: CreateEventDto,
@@ -71,9 +51,11 @@ export class EventsService {
     return newEvent.save();
   }
 
-
-  async findAll(): Promise<EventSchema[]> {
-    return this.eventModel.find();
+  async findPending(communityId: string): Promise<EventDocument[]> {
+    return this.eventModel
+      .find({ community_id: new Types.ObjectId(communityId), status: EventStatus.PENDING })
+      .sort({ created_at: -1 })
+      .exec();
   }
 
   async findAllByCommunity(communityId: string) {
@@ -94,14 +76,63 @@ export class EventsService {
       .exec();
   }
 
-  async findPending(communityId: string) {
-    return this.eventModel.find({
-      // community_id: communityId,
-      community_id: new Types.ObjectId(communityId),
-      status: 'PENDING'
-    })
-      .sort({ created_at: 1 })
+  private async findCommunityByIdentifier(identifier: string) {
+    if (Types.ObjectId.isValid(identifier)) {
+      const byId = await this.communityModel.findOne({
+        _id: new Types.ObjectId(identifier),
+        is_active: true,
+      }).exec();
+      if (byId) return byId;
+    }
+
+    const decoded = decodeURIComponent(identifier);
+    return this.communityModel.findOne({
+      $or: [{ slug: decoded }, { name: decoded }],
+      is_active: true,
+    }).exec();
+  }
+
+  async findPublicByCommunity(identifier: string, status?: string) {
+    const community = await this.findCommunityByIdentifier(identifier);
+    if (!community) {
+      throw new NotFoundException('Community not found');
+    }
+
+    const statuses = (status ? status.split(',') : [EventStatus.OPEN])
+      .map((s) => s?.trim()?.toUpperCase())
+      .filter((s): s is EventStatus => Object.values(EventStatus).includes(s as EventStatus));
+
+    const statusFilter = statuses.length > 0 ? statuses : [EventStatus.OPEN];
+
+    return this.eventModel
+      .find({
+        community_id: community._id,
+        status: { $in: statusFilter },
+      })
+      .sort({ start_at: 1 })
       .exec();
+  }
+
+  async findPublicEventDetail(identifier: string, eventId: string) {
+    const community = await this.findCommunityByIdentifier(identifier);
+    if (!community) {
+      throw new NotFoundException('Community not found');
+    }
+
+    if (!Types.ObjectId.isValid(eventId)) {
+      throw new NotFoundException('Event not found');
+    }
+
+    const event = await this.eventModel.findOne({
+      _id: new Types.ObjectId(eventId),
+      community_id: community._id,
+    }).exec();
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    return event;
   }
 
   async findOne(id: string): Promise<EventSchema> {
@@ -126,6 +157,14 @@ export class EventsService {
 
     if (updateEventDto.location && typeof updateEventDto.location === 'string') {
       updateEventDto.location = JSON.parse(updateEventDto.location);
+    }
+
+    if (updateEventDto.contact && typeof updateEventDto.contact === 'string') {
+      try {
+        updateEventDto.contact = JSON.parse(updateEventDto.contact);
+      } catch (error) {
+        throw new BadRequestException('Invalid contact format');
+      }
     }
 
     if (image) {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useOutletContext, useParams } from 'react-router-dom';
 import { MapPin, Calendar, Heart, Leaf, Users, Palette, HomeIcon, List, BookXIcon, Box, BoxesIcon, Sparkle, SparklesIcon, Clock, Users as UsersIcon, Star, Store, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
@@ -7,9 +7,9 @@ import WorkshopModal from '../components/WorkshopModal';
 import ETicketModal from '../components/ETicketModal';
 import api from '../services/api';
 import { useQuery } from '@tanstack/react-query';
-import { communityEventsMock } from '../data/eventsMock';
 import { getShopsByCommunity } from '../services/shopService';
 import { getShopCoverImage, resolveImageUrl } from '../utils/image';
+import { getCommunityEvents } from '../services/eventService';
 
 const fetchPopularWorkshops = async (communityId) => {
   const res = await api.get(`/api/communities/${communityId}/workshops`, {
@@ -115,13 +115,59 @@ const CommunityHome = () => {
   ];
 
   const workshopCards = workshopData.slice(0, 3);
-  const eventCards = communityEventsMock.map((ev) => ({
-    ...ev,
-    title: ct(ev.title, ev.title_en),
-    description: ct(ev.description, ev.description_en),
-    date: ct(ev.date, ev.date_en),
-    location: ct(ev.location, ev.location_en),
-  }));
+  const { data: eventsData = [], isLoading: eventsLoading, isError: eventsError } = useQuery({
+    queryKey: ['community-events', community.slug],
+    queryFn: () => getCommunityEvents(community.slug),
+    enabled: !!community.slug,
+  });
+
+  const formattedEvents = useMemo(() => {
+    if (!Array.isArray(eventsData)) return [];
+    const dateOptions = { day: 'numeric', month: 'short', year: 'numeric' };
+    const timeOptions = { hour: '2-digit', minute: '2-digit' };
+    const fallbackDate = ct('ไม่ระบุวันที่', 'No date');
+    const fallbackTime = ct('ไม่ระบุเวลา', 'No time info');
+
+    return eventsData.map((event, index) => {
+      const startAt = event.start_at ? new Date(event.start_at) : null;
+      const endAt = event.end_at ? new Date(event.end_at) : null;
+      const gradients = [
+        'from-orange-300 via-orange-400 to-orange-500',
+        'from-amber-300 via-yellow-400 to-orange-400',
+        'from-rose-300 via-pink-400 to-red-400',
+        'from-green-300 via-emerald-400 to-teal-400',
+        'from-blue-300 via-indigo-400 to-purple-400'
+      ];
+      const gradient = gradients[index % gradients.length];
+
+      const startDateLabel = startAt
+        ? startAt.toLocaleDateString('th-TH', dateOptions)
+        : fallbackDate;
+      const endDateLabel = endAt
+        ? endAt.toLocaleDateString('th-TH', dateOptions)
+        : fallbackDate;
+      const startTimeLabel = startAt
+        ? startAt.toLocaleTimeString('th-TH', timeOptions)
+        : fallbackTime;
+      const endTimeLabel = endAt
+        ? endAt.toLocaleTimeString('th-TH', timeOptions)
+        : fallbackTime;
+
+      return {
+        _id: event._id,
+        title: ct(event.title, event.title_en),
+        description: ct(event.description, event.description_en),
+        location: typeof event.location === 'string'
+          ? event.location
+          : event.location?.full_address || ct('ไม่ระบุสถานที่', 'No location info'),
+        dateLabel: startDateLabel,
+        startFullLabel: `${startDateLabel} • ${startTimeLabel}`,
+        endFullLabel: `${endDateLabel} • ${endTimeLabel}`,
+        coverImage: Array.isArray(event.images) ? event.images[0] : event.images,
+        gradient,
+      };
+    });
+  }, [eventsData, ct]);
 
   const handleOpenModal = (workshop) => setActiveWorkshop(workshop);
   const handleCloseModal = () => setActiveWorkshop(null);
@@ -374,54 +420,82 @@ const CommunityHome = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {eventCards.map((event) => (
-              <Link
-                to={`/${community.slug}/events/${event.id}`}
-                key={event.id}
-                className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition block"
-              >
-                <div className={`relative h-44 bg-gradient-to-br ${event.gradient}`}>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Calendar className="h-16 w-16 text-white/60" />
-                  </div>
-                  <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 rounded-full text-xs font-semibold text-gray-700">
-                    {event.date}
-                  </div>
+          {eventsLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 3 }).map((_, idx) => (
+                <div key={idx} className="bg-white rounded-2xl border border-gray-200 p-6 animate-pulse">
+                  <div className="h-44 bg-gray-100 rounded-xl mb-4" />
+                  <div className="h-4 bg-gray-100 rounded w-1/2 mb-2" />
+                  <div className="h-4 bg-gray-100 rounded w-3/4 mb-2" />
+                  <div className="h-4 bg-gray-100 rounded w-full" />
                 </div>
-                <div className="p-6 space-y-3">
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <Clock className="h-4 w-4" />
-                    <span>{event.time}</span>
+              ))}
+            </div>
+          ) : eventsError ? (
+            <div className="text-center text-red-500">{ct('ไม่สามารถโหลดกิจกรรมได้', 'Unable to load events')}</div>
+          ) : formattedEvents.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-2xl border border-gray-200">
+              <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500">{ct('ยังไม่มีกิจกรรมที่เปิดอยู่ในขณะนี้', 'No open events at the moment')}</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {formattedEvents.map((event) => (
+                <Link
+                  to={`/${community.slug}/events/${event._id}`}
+                  key={event._id}
+                  className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition block"
+                >
+                  <div className="relative h-44">
+                    {event.coverImage ? (
+                      <img
+                        src={resolveImageUrl(event.coverImage)}
+                        alt={event.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className={`h-full bg-gradient-to-br ${event.gradient} flex items-center justify-center`}>
+                        <Calendar className="h-16 w-16 text-white/60" />
+                      </div>
+                    )}
+                    <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 rounded-full text-xs font-semibold text-gray-700">
+                      {event.dateLabel}
+                    </div>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 leading-snug line-clamp-2">
-                    {event.title}
-                  </h3>
-                  <p className="text-sm text-gray-600 line-clamp-2">{event.description}</p>
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <MapPin className="h-4 w-4" />
-                    <span className="line-clamp-1">{event.location}</span>
+                  <div className="p-6 space-y-4">
+                    <h3 className="text-xl font-bold text-gray-900 leading-snug line-clamp-2">
+                      {event.title}
+                    </h3>
+                    <p className="text-sm text-gray-600 line-clamp-2">{event.description}</p>
+                    <div className="rounded-2xl border border-orange-100 bg-orange-50/40 p-4 space-y-3">
+                      <div className="flex items-start gap-3">
+                        <Clock className="h-4 w-4 text-orange-500 mt-1" />
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-orange-600">{ct('เริ่ม', 'Starts')}</p>
+                          <p className="text-sm font-semibold text-gray-900">{event.startFullLabel}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <Clock className="h-4 w-4 text-orange-500 mt-1" />
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-orange-600">{ct('สิ้นสุด', 'Ends')}</p>
+                          <p className="text-sm font-semibold text-gray-900">{event.endFullLabel}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <MapPin className="h-4 w-4" />
+                      <span className="line-clamp-1">{event.location}</span>
+                    </div>
+                    <div className="flex items-center justify-between pt-2">
+                      <span className="text-sm font-semibold text-orange-600">{ct('ดูรายละเอียด', 'View details')}</span>
+                      <ArrowRight className="h-4 w-4 text-gray-400" />
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="text-sm font-semibold text-orange-600">{ct('ดูรายละเอียด', 'View details')}</span>
-                    <button className="px-4 py-2 bg-gray-900 text-white rounded-full text-sm font-semibold hover:bg-gray-800 transition">
-                      {ct('เข้าร่วม', 'Join')}
-                    </button>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-
-          <div className="text-center mt-10">
-            <Link
-              to={`/${community.slug}/events`}
-              className="inline-flex items-center justify-center gap-2 px-8 py-3 border-2 border-gray-300 rounded-full text-gray-700 hover:border-gray-400 hover:bg-gray-50 transition font-semibold"
-            >
-              {ct('ดู Event ทั้งหมด', 'View All Events')}
-              <ArrowRight className="h-5 w-5" />
-            </Link>
-          </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

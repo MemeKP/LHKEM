@@ -18,9 +18,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
  * - location (required)
  * - start_at (required)
  * - end_at (required)
- * - seat_limit (required)
  * - deposit_amount (optional)
- * - status (OPEN, CLOSED, CANCELLED)
  * - is_featured (boolean)
  * - is_pinned (boolean)
  * - images (string) - TODO: รอ Image Upload API
@@ -91,11 +89,11 @@ const EventEditForm = () => {
     description: '',
     descriptionEn: '',
     event_date: '',
+    end_date: '',
     start_time: '',
     end_time: '',
     location: '',
     event_type: '',
-    workshops: [],
     target_audience: '',
     cost_type: 'free',
     deposit_amount: '',
@@ -104,10 +102,6 @@ const EventEditForm = () => {
     contact_facebook: '',
     coordinator_name: '',
     additional_info: '',
-    seat_limit: '',
-    status: 'OPEN',
-    is_featured: false,
-    is_pinned: false,
   });
 
   useEffect(() => {
@@ -121,11 +115,11 @@ const EventEditForm = () => {
         description: event.description || '',
         descriptionEn: event.description_en || '',
         event_date: startDate.toISOString().split('T')[0],
+        end_date: endDate.toISOString().split('T')[0],
         start_time: startDate.toTimeString().slice(0, 5),
         end_time: endDate.toTimeString().slice(0, 5),
         location: typeof event.location === 'string' ? event.location : (event.location?.full_address || ''),
-        event_type: '',
-        workshops: [],
+        event_type: event.event_type || '',
         target_audience: event.target_audience || '',
         cost_type: event.deposit_amount > 0 ? 'paid' : 'free',
         deposit_amount: event.deposit_amount || '',
@@ -134,10 +128,6 @@ const EventEditForm = () => {
         contact_facebook: event.contact?.facebook || '',
         coordinator_name: event.contact?.coordinator_name || '',
         additional_info: event.additional_info || '',
-        seat_limit: event.seat_limit || '',
-        status: event.status || 'OPEN',
-        is_featured: event.is_featured || false,
-        is_pinned: event.is_pinned || false,
       });
 
       if (event.images && event.images.length > 0) {
@@ -157,7 +147,7 @@ const EventEditForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.event_date || !formData.start_time || !formData.end_time) {
+    if (!formData.event_date || !formData.end_date || !formData.start_time || !formData.end_time) {
       alert("กรุณาระบุวันและเวลา");
       return;
     }
@@ -166,7 +156,12 @@ const EventEditForm = () => {
       setLoading(true);
 
       const startDateTime = new Date(`${formData.event_date}T${formData.start_time}`);
-      const endDateTime = new Date(`${formData.event_date}T${formData.end_time}`);
+      const endDateTime = new Date(`${formData.end_date}T${formData.end_time}`);
+
+      if (endDateTime < startDateTime) {
+        alert("เวลาสิ้นสุดต้องอยู่หลังเวลาเริ่ม");
+        return;
+      }
 
       const fd = new FormData();
 
@@ -175,7 +170,6 @@ const EventEditForm = () => {
       fd.append("description", formData.description);
       fd.append("description_en", formData.descriptionEn || formData.description);
 
-      fd.append("seat_limit", parseInt(formData.seat_limit) || 1);
       fd.append(
         "deposit_amount",
         formData.cost_type === "free"
@@ -186,19 +180,18 @@ const EventEditForm = () => {
       fd.append("start_at", startDateTime.toISOString());
       fd.append("end_at", endDateTime.toISOString());
 
-      fd.append("status", formData.status);
-      fd.append("is_featured", formData.is_featured);
-      fd.append("is_pinned", formData.is_pinned);
+      fd.append("event_type", formData.event_type || '');
+      fd.append("target_audience", formData.target_audience || '');
 
-      fd.append("event_type", formData.event_type);
-      fd.append("target_audience", formData.target_audience);
-      fd.append("cost_type", formData.cost_type);
+      const contactData = {
+        phone: formData.contact_phone,
+        line: formData.contact_line,
+        facebook: formData.contact_facebook,
+        coordinator_name: formData.coordinator_name,
+      };
 
-      fd.append("contact_phone", formData.contact_phone);
-      fd.append("contact_line", formData.contact_line);
-      fd.append("contact_facebook", formData.contact_facebook);
-      fd.append("coordinator_name", formData.coordinator_name);
-      fd.append("additional_info", formData.additional_info);
+      fd.append("contact", JSON.stringify(contactData));
+      fd.append("additional_info", formData.additional_info || '');
 
 
       fd.append(
@@ -383,8 +376,8 @@ const EventEditForm = () => {
                   </label>
                   <input
                     type="date"
-                    //name="event_date"
-                    //value={formData.event_date}
+                    name="end_date"
+                    value={formData.end_date}
                     onChange={handleChange}
                     required
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A]"
@@ -609,9 +602,6 @@ const EventEditForm = () => {
               placeholder="ข้อมูลเพิ่มเติม (ถ้ามี)"
             />
           </div>
-
-          {/* Hidden fields for backend compatibility */}
-          <input type="hidden" name="seat_limit" value={formData.seat_limit || "100"} />
 
           {/* Actions */}
           <div className="flex items-center justify-center gap-3 pt-4">

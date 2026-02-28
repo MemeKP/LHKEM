@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { Calendar, Store, FileText, Users, Eye, AlertCircle, CheckCircle, XCircle, Edit, Plus, List, MapPin } from 'lucide-react';
+import { Calendar, Store, FileText, Users, Eye, AlertCircle, CheckCircle, XCircle, Edit, Plus, List, MapPin, Clock } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../services/api';
@@ -42,8 +42,8 @@ const usePendingData = (communityId) => {
 
   // event
   const eventsQuery = useQuery({
-    queryKey: ['events', 'pending', communityId],
-    queryFn: async () => (await api.get('/api/events/pending', { params: { communityId } })).data,
+    queryKey: ['events', 'community', communityId],
+    queryFn: async () => (await api.get('/api/events', { params: { communityId } })).data,
     enabled: !!communityId,
   });
 
@@ -65,7 +65,10 @@ const AdminDashboard = () => {
 
   if (isLoading) return <div className="p-8 text-center">กำลังโหลดข้อมูล...</div>;
 
-  const pendingEvents = eventsQuery.data || [];
+  const allEvents = eventsQuery.data || [];
+  const normalizeEventStatus = (status) => (status || '').toUpperCase();
+  const openEvents = allEvents.filter((event) => normalizeEventStatus(event.status) === 'OPEN');
+  const pendingEvents = allEvents.filter((event) => normalizeEventStatus(event.status) === 'PENDING');
   const communityShops = shopsQuery.data || [];
   const pendingShops = pendingShopsQuery.data || communityShops.filter(
     (shop) => ((shop.status || 'PENDING').toUpperCase()) !== 'ACTIVE'
@@ -101,7 +104,7 @@ const AdminDashboard = () => {
 
   const pendingCounts = {
     workshops: pendingWorkshops.length,
-    events: pendingEvents.length,
+    events: openEvents.length,
     shops: pendingShops.length,
     total: pendingWorkshops.length + pendingEvents.length + pendingShops.length,
   };
@@ -159,6 +162,69 @@ const AdminDashboard = () => {
     if (value === 'ACTIVE') return ct('อนุมัติแล้ว', 'Approved');
     if (value === 'REJECTED') return ct('ถูกปฏิเสธ', 'Rejected');
     return ct('รออนุมัติ', 'Pending');
+  };
+
+  const eventStatusStyles = {
+    OPEN: 'bg-green-100 text-green-800',
+    PENDING: 'bg-yellow-100 text-yellow-800',
+    CLOSED: 'bg-gray-200 text-gray-700',
+    CANCELLED: 'bg-red-100 text-red-800',
+  };
+
+  const eventStatusLabel = (status) => {
+    switch (normalizeEventStatus(status)) {
+      case 'OPEN':
+        return ct('เปิดรับผู้เข้าร่วม', 'Open');
+      case 'CLOSED':
+        return ct('ปิดรับแล้ว', 'Closed');
+      case 'CANCELLED':
+        return ct('ยกเลิก', 'Cancelled');
+      case 'PENDING':
+        return ct('รอการตรวจสอบ', 'Pending');
+      default:
+        return ct('ไม่ทราบสถานะ', 'Unknown');
+    }
+  };
+
+  const formatEventDateRange = (startAt, endAt) => {
+    if (!startAt) {
+      return ct('ยังไม่กำหนดวันที่', 'Date not set');
+    }
+    const locale = 'th-TH';
+    const options = { day: 'numeric', month: 'short', year: 'numeric' };
+    const startDate = new Date(startAt).toLocaleDateString(locale, options);
+    if (!endAt) {
+      return startDate;
+    }
+    const endDate = new Date(endAt).toLocaleDateString(locale, options);
+    if (startDate === endDate) {
+      return startDate;
+    }
+    return `${startDate} - ${endDate}`;
+  };
+
+  const formatEventTimeRange = (startAt, endAt) => {
+    if (!startAt) {
+      return ct('ยังไม่ระบุเวลา', 'Time not set');
+    }
+    const locale = 'th-TH';
+    const timeOptions = { hour: '2-digit', minute: '2-digit' };
+    const startTime = new Date(startAt).toLocaleTimeString(locale, timeOptions);
+    if (!endAt) {
+      return startTime;
+    }
+    const endTime = new Date(endAt).toLocaleTimeString(locale, timeOptions);
+    return `${startTime} - ${endTime}`;
+  };
+
+  const resolveEventLocation = (event) => {
+    if (!event?.location) {
+      return ct('ยังไม่ระบุสถานที่', 'Location not provided');
+    }
+    if (typeof event.location === 'string') {
+      return event.location;
+    }
+    return event.location.full_address || ct('ยังไม่ระบุสถานที่', 'Location not provided');
   };
 
   return (
@@ -418,7 +484,7 @@ const AdminDashboard = () => {
             {/* Events Tab */}
             {taskTab === 'events' && (
               <div>
-                {pendingEvents.length === 0 ? (
+                {openEvents.length === 0 ? (
                   <div className="bg-[#F5F5F5] rounded-xl p-8 flex flex-col items-center justify-center min-h-[280px]">
                     <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center mb-4">
                       <Calendar className="h-8 w-8 text-[#90CAF9]" />
@@ -435,29 +501,43 @@ const AdminDashboard = () => {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {pendingEvents.map((event) => (
-                      <div key={event.id} className="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-md transition-all">
-                        <span className="inline-block px-3 py-1 bg-[#E3F2FD] text-[#1976D2] rounded-md text-xs font-semibold mb-3">
-                          {ct('อีเว้นท์', 'Event')}
-                        </span>
-                        <h3 className="text-base font-bold text-[#1A1A1A] mb-2">{event.title}</h3>
-                        <p className="text-sm text-[#666666] mb-4 line-clamp-2">{event.description}</p>
-                        <div className="flex items-center gap-3 text-sm text-[#666666] mb-4">
-                          <span className="flex items-center gap-1 text-sm text-gray-500">
-                            <Calendar className="h-4 w-4" />
-                            {event.start_at ? (
-                              new Date(event.start_at).toLocaleDateString('th-TH', {
-                                day: 'numeric',
-                                month: 'short',
-                                year: 'numeric' 
-                              })
-                            ) : (
-                              'ไม่ระบุวันที่'
-                            )}
+                    {openEvents.map((event) => (
+                      <div key={event._id || event.id} className="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-md transition-all flex flex-col gap-4">
+                        {event.images?.length ? (
+                          <div className="relative h-40 w-full rounded-lg overflow-hidden bg-gray-100">
+                            <img src={event.images[0]} alt={event.title} className="w-full h-full object-cover" />
+                          </div>
+                        ) : null}
+
+                        <div className="flex items-center justify-between">
+                          <span className="inline-flex items-center text-xs font-semibold px-3 py-1 bg-[#E3F2FD] text-[#1976D2] rounded-full">
+                            {ct('อีเว้นท์', 'Event')}
                           </span>
-                          <span>•</span>
-                          <span>{event.time}</span>
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${eventStatusStyles[normalizeEventStatus(event.status)] || 'bg-gray-100 text-gray-700'}`}>
+                            {eventStatusLabel(event.status)}
+                          </span>
                         </div>
+
+                        <div>
+                          <h3 className="text-lg font-bold text-[#1A1A1A] mb-1 line-clamp-2">{event.title}</h3>
+                          <p className="text-sm text-[#666666] line-clamp-3">{event.description}</p>
+                        </div>
+
+                        <div className="space-y-2 text-sm text-[#4B5563]">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-[#4CAF50]" />
+                            <span>{formatEventDateRange(event.start_at, event.end_at)}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-[#4CAF50]" />
+                            <span>{formatEventTimeRange(event.start_at, event.end_at)}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-[#4CAF50]" />
+                            <span className="line-clamp-1">{resolveEventLocation(event)}</span>
+                          </div>
+                        </div>
+
                         <div className="flex gap-2">
                           <button
                             onClick={() => navigate(`/community-admin/events/${event._id || event.id}`)}
@@ -465,8 +545,11 @@ const AdminDashboard = () => {
                           >
                             {ct('ดูรายละเอียด', 'View Details')}
                           </button>
-                          <button className="px-4 py-2 bg-[#1E293B] hover:bg-[#0F172A] text-white text-sm font-semibold rounded-lg transition-all">
-                            {ct('อนุมัติ', 'Approve')}
+                          <button
+                            onClick={() => navigate(`/community-admin/events/${event._id || event.id}/edit`)}
+                            className="px-4 py-2 bg-[#1E293B] hover:bg-[#0F172A] text-white text-sm font-semibold rounded-lg transition-all"
+                          >
+                            {ct('แก้ไข', 'Edit')}
                           </button>
                         </div>
                       </div>
