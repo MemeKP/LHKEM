@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { MapPin, Calendar, Clock, ArrowLeft, Info, Phone, MessageCircle, Facebook, Users } from 'lucide-react';
+import { MapPin, Calendar, Clock, ArrowLeft, Info, Phone, MessageCircle, Facebook, Users, Tag, AlertCircle } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useQuery } from '@tanstack/react-query';
 import { getCommunityEventDetail } from '../services/eventService';
@@ -24,6 +24,19 @@ const EventDetail = () => {
     ? `${startAt.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} - ${endAt.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}`
     : ct('ไม่ระบุเวลา', 'Time not specified');
   const coverImage = Array.isArray(event?.images) ? event?.images[0] : event?.images;
+  const locationValue = typeof event?.location === 'string'
+    ? event.location
+    : event?.location?.full_address || ct('ไม่ระบุสถานที่', 'No location info');
+  const costLabel = event?.deposit_amount && Number(event.deposit_amount) > 0
+    ? `฿${Number(event.deposit_amount).toLocaleString('th-TH', { minimumFractionDigits: 0 })}`
+    : ct('ฟรี', 'Free');
+  const statusLabel = (event?.status || 'OPEN').toUpperCase();
+  const statusBadge = {
+    OPEN: 'bg-green-100 text-green-700',
+    CLOSED: 'bg-gray-200 text-gray-700',
+    CANCELLED: 'bg-red-100 text-red-700',
+    PENDING: 'bg-yellow-100 text-yellow-700'
+  }[statusLabel] || 'bg-gray-200 text-gray-700';
 
   if (isLoading) {
     return (
@@ -62,21 +75,46 @@ const EventDetail = () => {
     },
     {
       label: ct('สถานที่', 'Location'),
-      value: typeof event.location === 'string'
-        ? event.location
-        : event.location?.full_address || ct('ไม่ระบุสถานที่', 'No location info'),
+      value: locationValue,
       icon: <MapPin className="h-4 w-4 text-orange-500" />,
     },
-    event.event_type && {
+    event?.event_type && {
       label: ct('ประเภทกิจกรรม', 'Event type'),
       value: event.event_type,
       icon: <Info className="h-4 w-4 text-orange-500" />,
     },
-    event.target_audience && {
+    event?.target_audience && {
       label: ct('กลุ่มเป้าหมาย', 'Audience'),
       value: event.target_audience,
       icon: <Users className="h-4 w-4 text-orange-500" />,
     },
+  ].filter(Boolean);
+
+  const highlightChips = [
+    {
+      label: ct('สถานะ', 'Status'),
+      value: statusLabel,
+      icon: <AlertCircle className="h-4 w-4" />,
+      badge: statusBadge,
+    },
+    {
+      label: ct('ค่าใช้จ่าย', 'Cost'),
+      value: costLabel,
+      icon: <Tag className="h-4 w-4" />,
+      badge: 'bg-amber-100 text-amber-700'
+    },
+    event?.event_type && {
+      label: ct('ประเภท', 'Type'),
+      value: event.event_type,
+      icon: <Info className="h-4 w-4" />,
+      badge: 'bg-blue-100 text-blue-700'
+    },
+    event?.target_audience && {
+      label: ct('กลุ่มเป้าหมาย', 'Audience'),
+      value: event.target_audience,
+      icon: <Users className="h-4 w-4" />,
+      badge: 'bg-purple-100 text-purple-700'
+    }
   ].filter(Boolean);
 
   const contactChips = [
@@ -92,11 +130,15 @@ const EventDetail = () => {
       label: `Facebook: ${event.contact.facebook}`,
       icon: <Facebook className="h-4 w-4" />,
     },
+    event.contact?.coordinator_name && {
+      label: `${ct('ผู้ประสานงาน', 'Coordinator')}: ${event.contact.coordinator_name}`,
+      icon: <Users className="h-4 w-4" />,
+    },
   ].filter(Boolean);
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] py-10 px-4">
-      <div className="max-w-5xl mx-auto space-y-6">
+    <div className="min-h-screen bg-[#FAFAFA] py-10 px-4 animate-fadeIn">
+      <div className="max-w-6xl mx-auto space-y-8">
         <Link
           to={`/${slug}/events`}
           className="inline-flex items-center gap-2 text-[#666666] hover:text-[#1A1A1A] mb-2"
@@ -105,39 +147,74 @@ const EventDetail = () => {
           {ct('กลับหน้าชุมชน', 'Back to community')}
         </Link>
 
-        <div className="bg-white rounded-3xl shadow-lg overflow-hidden border border-orange-100">
-          <div className="relative">
+        <div className="bg-white rounded-3xl shadow-lg overflow-hidden border border-orange-100 animate-fadeIn">
+          <div className="relative h-[360px]">
             {coverImage ? (
               <img
                 src={resolveImageUrl(coverImage)}
                 alt={event.title}
-                className="w-full h-[320px] object-cover"
+                className="w-full h-full object-cover"
               />
             ) : (
-              <div className="h-[320px] bg-gradient-to-br from-orange-200 via-amber-200 to-orange-300 flex items-center justify-center">
-                <Calendar className="h-20 w-20 text-white/60" />
+              <div className="h-full bg-gradient-to-br from-orange-200 via-amber-200 to-orange-300 flex items-center justify-center">
+                <Calendar className="h-24 w-24 text-white/60" />
               </div>
             )}
-            <div className="absolute bottom-6 left-6 bg-white/90 rounded-2xl px-4 py-2 text-sm font-semibold text-gray-800 shadow">
-              {dateLabel}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+            <div className="absolute top-6 left-6 flex flex-wrap gap-2">
+              <span className={`px-4 py-1.5 rounded-full text-xs font-semibold ${statusBadge}`}>
+                {statusLabel}
+              </span>
+              {event?.is_featured && (
+                <span className="px-4 py-1.5 rounded-full text-xs font-semibold bg-yellow-400 text-white">
+                  {ct('แนะนำ', 'Featured')}
+                </span>
+              )}
+              {event?.is_pinned && (
+                <span className="px-4 py-1.5 rounded-full text-xs font-semibold bg-red-500 text-white">
+                  {ct('ปักหมุด', 'Pinned')}
+                </span>
+              )}
+            </div>
+            <div className="absolute bottom-6 left-6 right-6 flex flex-col gap-3 text-white">
+              <div className="text-sm font-semibold px-4 py-2 bg-white/20 backdrop-blur rounded-2xl w-fit">
+                {dateLabel}
+              </div>
+              <div className="flex flex-wrap gap-3 text-sm text-white/90">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15">
+                  <Clock className="h-4 w-4" />
+                  {timeLabel}
+                </div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15">
+                  <MapPin className="h-4 w-4" />
+                  <span className="line-clamp-1">{locationValue}</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="p-8 space-y-6">
-            <div>
-              <span className="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700 mb-3">
-                {event.status || 'OPEN'}
-              </span>
-              <h1 className="text-3xl font-bold text-[#1A1A1A] mb-3">{ct(event.title, event.title_en)}</h1>
-              <p className="text-[#666666] leading-relaxed whitespace-pre-line">
+          <div className="p-8 space-y-8">
+            <div className="space-y-4">
+              <div className="flex flex-wrap gap-3">
+                {highlightChips.map((chip) => (
+                  <div key={chip.label} className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${chip.badge} bg-opacity-80 animate-fadeIn`}>
+                    {chip.icon}
+                    <span>{chip.value}</span>
+                  </div>
+                ))}
+              </div>
+              <h1 className="text-3xl lg:text-4xl font-bold text-[#1A1A1A] leading-tight">
+                {ct(event.title, event.title_en)}
+              </h1>
+              <p className="text-[#5C5C5C] leading-relaxed whitespace-pre-line">
                 {ct(event.description, event.description_en)}
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {detailBlocks.map((block) => (
-                <div key={block.label} className="border border-gray-100 rounded-2xl p-4 flex gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center">
+                <div key={block.label} className="border border-gray-100 rounded-2xl p-4 flex gap-3 bg-gray-50/40">
+                  <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-sm">
                     {block.icon}
                   </div>
                   <div>
@@ -147,16 +224,42 @@ const EventDetail = () => {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 animate-fadeIn">
+              <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                <Clock className="h-5 w-5 text-orange-500" />
+                {ct('กำหนดการ', 'Schedule')}
+              </h3>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="rounded-2xl border border-orange-100 bg-orange-50/60 p-4">
+                  <p className="text-xs uppercase tracking-wide text-orange-600 mb-1">{ct('เริ่ม', 'Starts')}</p>
+                  <p className="text-base font-semibold text-gray-900">{startAt?.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }) || '-'}</p>
+                  <p className="text-sm text-gray-600">{startAt?.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) || '-'}</p>
+                </div>
+                <div className="rounded-2xl border border-orange-100 bg-white p-4">
+                  <p className="text-xs uppercase tracking-wide text-gray-400 mb-1">{ct('สิ้นสุด', 'Ends')}</p>
+                  <p className="text-base font-semibold text-gray-900">{endAt?.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }) || '-'}</p>
+                  <p className="text-sm text-gray-600">{endAt?.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) || '-'}</p>
+                </div>
+              </div>
+            </div>
 
             {event.additional_info && (
-              <div className="bg-[#FFF7ED] rounded-2xl p-5 border border-orange-100">
-                <p className="text-sm font-semibold text-[#8C4A00] mb-1">{ct('ข้อมูลเพิ่มเติม', 'Additional info')}</p>
+              <div className="bg-white rounded-3xl shadow-sm border border-orange-100 p-6 animate-fadeIn">
+                <h3 className="text-xl font-semibold text-[#8C4A00] mb-3">{ct('ข้อมูลเพิ่มเติม', 'Additional info')}</h3>
                 <p className="text-sm text-[#7A4A0C] whitespace-pre-line">{event.additional_info}</p>
               </div>
             )}
 
-            <div>
-              <h3 className="text-lg font-semibold text-[#1A1A1A] mb-3">{ct('ข้อมูลติดต่อ', 'Contact')}</h3>
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 animate-fadeIn">
+              <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                <Info className="h-5 w-5 text-orange-500" />
+                {ct('ข้อมูลติดต่อ', 'Contact')}
+              </h3>
               {contactChips.length > 0 ? (
                 <div className="flex flex-wrap gap-3 text-sm text-[#666666]">
                   {contactChips.map((chip, index) => (
@@ -169,6 +272,25 @@ const EventDetail = () => {
               ) : (
                 <p className="text-sm text-gray-500">{ct('ยังไม่มีข้อมูลติดต่อ', 'No contact info')}</p>
               )}
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 animate-fadeIn">
+              <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-orange-500" />
+                {ct('สถานที่จัดกิจกรรม', 'Event Location')}
+              </h3>
+              <p className="text-sm text-gray-600 mb-4 line-clamp-3">{locationValue}</p>
+            </div>
+
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 animate-fadeIn">
+              <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                <Tag className="h-5 w-5 text-orange-500" />
+                {ct('ข้อมูลค่าใช้จ่าย', 'Cost Detail')}
+              </h3>
+              <p className="text-3xl font-bold text-[#1A1A1A]">{costLabel}</p>
+              <p className="text-sm text-gray-500 mt-1">{event?.deposit_amount > 0 ? ct('ชำระหน้างานหรือโอนตามเงื่อนไขที่แจ้ง', 'Pay on-site or via provided instructions') : ct('ไม่มีค่าใช้จ่ายเพิ่มเติม', 'No additional cost')}</p>
             </div>
           </div>
         </div>

@@ -82,9 +82,9 @@ const AdminShopList = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5EFE7] py-10">
+    <div className="min-h-screen bg-[#F5EFE7] py-10 animate-fadeIn">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between animate-slideUp">
           <div>
             <p className="text-sm uppercase tracking-wide text-[#8E24AA] font-semibold">
               {ct('ร้านค้าในชุมชน', 'Community Shops')}
@@ -105,7 +105,7 @@ const AdminShopList = () => {
           </button>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 items-stretch">
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 items-stretch animate-slideUp">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
@@ -134,25 +134,25 @@ const AdminShopList = () => {
         </div>
 
         {isLoading ? (
-          <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center text-gray-500">
+          <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center text-gray-500 animate-slideUp">
             {ct('กำลังโหลดรายชื่อร้านค้า...', 'Loading shop list...')}
           </div>
         ) : isError ? (
-          <div className="bg-white rounded-2xl border border-red-200 p-10 text-center text-red-600">
+          <div className="bg-white rounded-2xl border border-red-200 p-10 text-center text-red-600 animate-slideUp">
             {ct('ไม่สามารถโหลดรายชื่อร้านค้าได้', 'Unable to load shop list.')}
           </div>
         ) : filteredShops.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-dashed border-gray-300 p-10 flex flex-col items-center text-center text-gray-500">
+          <div className="bg-white rounded-2xl border border-dashed border-gray-300 p-10 flex flex-col items-center text-center text-gray-500 animate-slideUp">
             <AlertCircle className="h-10 w-10 mb-3 text-gray-400" />
             <p className="text-base font-medium">{ct('ไม่พบร้านค้าตามเงื่อนไขที่เลือก', 'No shops matched the selected filters.')}</p>
             <p className="text-sm text-gray-400">{ct('ลองปรับสถานะหรือคำค้นหาใหม่', 'Try changing the status filter or search term')}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-stagger">
             {filteredShops.map((shop) => {
               const coverImage = getShopCoverImage(shop);
               return (
-              <div key={shop._id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all p-5 flex flex-col gap-4">
+              <div key={shop._id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all p-5 flex flex-col gap-4 transform hover:-translate-y-1">
                 {coverImage && (
                   <div className="w-full h-36 rounded-xl overflow-hidden bg-gray-100">
                     <img
@@ -190,13 +190,13 @@ const AdminShopList = () => {
                 <div className="flex gap-2">
                   <button
                     onClick={() => navigate(`/community-admin/shops/${shop._id}/approval`)}
-                    className="flex-1 px-4 py-2 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-sm font-semibold rounded-lg transition-all"
+                    className="flex-1 px-4 py-2 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-sm font-semibold rounded-lg transition-all transform hover:-translate-y-0.5"
                   >
                     {ct('ดูรายละเอียด', 'View details')}
                   </button>
                   <button
                     onClick={() => navigate(`/community-admin/shops/${shop._id}/approval`)}
-                    className="px-4 py-2 bg-[#1E293B] hover:bg-[#0F172A] text-white text-sm font-semibold rounded-lg transition-all"
+                    className="px-4 py-2 bg-[#1E293B] hover:bg-[#0F172A] text-white text-sm font-semibold rounded-lg transition-all transform hover:-translate-y-0.5"
                   >
                     {resolveSecondaryCta(shop.status)}
                   </button>

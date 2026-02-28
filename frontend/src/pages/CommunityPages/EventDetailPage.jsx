@@ -142,7 +142,7 @@ const EventDetailPage = () => {
     }
   };
 
-  if (isLoading) return <div className="p-10 text-center">กำลังโหลดข้อมูล...</div>;
+  if (isLoading) return <div className="p-10 text-center animate-fadeIn">กำลังโหลดข้อมูล...</div>;
   if (isError || !event) return <div className="p-10 text-center text-red-500">ไม่พบข้อมูลกิจกรรม</div>;
 
   const API_URL = import.meta.env.VITE_API_URL;
@@ -173,7 +173,7 @@ const EventDetailPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F5EFE7] py-8">
+    <div className="min-h-screen bg-[#F5EFE7] py-8 animate-fadeIn">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back Button */}
         <button
@@ -185,7 +185,7 @@ const EventDetailPage = () => {
         </button>
 
         {/* Header */}
-        <div className="bg-gradient-to-br from-[#FFF5E1] via-white to-white rounded-2xl shadow-sm p-6 lg:p-8 mb-8 border border-orange-100">
+        <div className="bg-gradient-to-br from-[#FFF5E1] via-white to-white rounded-2xl shadow-sm p-6 lg:p-8 mb-8 border border-orange-100 transition-all duration-300 hover:shadow-xl">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -262,7 +262,7 @@ const EventDetailPage = () => {
           {/* Left Column - Event Details */}
           <div className="lg:col-span-2 space-y-6">
             {/* Event Image */}
-            <div className="bg-white rounded-2xl shadow-md overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-md overflow-hidden animate-fadeIn">
               <div className="relative aspect-[16/9] bg-gradient-to-br from-orange-100 to-orange-200">
                 {primaryImage ? (
                   <img
@@ -283,7 +283,7 @@ const EventDetailPage = () => {
             </div>
 
             {/* Description */}
-            <div className="bg-white rounded-2xl shadow-sm p-6 lg:p-7">
+            <div className="bg-white rounded-2xl shadow-sm p-6 lg:p-7 transition-all duration-300 hover:shadow-lg">
               <h2 className="text-xl font-semibold text-[#1A1A1A] mb-4 flex items-center gap-2">
                 <Info className="h-5 w-5 text-[#FFC107]" />
                 รายละเอียด
@@ -304,7 +304,7 @@ const EventDetailPage = () => {
 
             {/* Additional Information Sections */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white rounded-2xl shadow-sm p-6">
+              <div className="bg-white rounded-2xl shadow-sm p-6 transition-all duration-300 hover:shadow-lg">
                 <h2 className="text-xl font-semibold text-[#1A1A1A] mb-4 flex items-center gap-2">
                   <Target className="h-5 w-5 text-[#FFC107]" />
                   ประเภท & กลุ่มเป้าหมาย
@@ -330,7 +330,7 @@ const EventDetailPage = () => {
                   )}
                 </div>
               </div>
-              <div className="bg-white rounded-2xl shadow-sm p-6">
+              <div className="bg-white rounded-2xl shadow-sm p-6 transition-all duration-300 hover:shadow-lg">
                 <h2 className="text-xl font-semibold text-[#1A1A1A] mb-4 flex items-center gap-2">
                   <Globe className="h-5 w-5 text-[#FFC107]" />
                   ข้อมูลเพิ่มเติม
@@ -371,7 +371,7 @@ const EventDetailPage = () => {
             </div>
 
             {/* Contact Information */}
-            <div className="bg-white rounded-2xl shadow-sm p-6">
+            <div className="bg-white rounded-2xl shadow-sm p-6 transition-all duration-300 hover:shadow-lg animate-fadeIn">
               <h2 className="text-xl font-semibold text-[#1A1A1A] mb-4">ข้อมูลติดต่อ</h2>
               <div className="space-y-3">
                 {event.contact?.phone && renderContactItem(<Phone className="h-4 w-4 text-[#999999]" />, 'phone', event.contact.phone)}
@@ -393,7 +393,7 @@ const EventDetailPage = () => {
           {/* Right Column - Event Info */}
           <div className="space-y-6">
             {/* Timeline */}
-            <div className="bg-white rounded-2xl shadow-sm p-6">
+            <div className="bg-white rounded-2xl shadow-sm p-6 transition-all duration-300 hover:shadow-lg">
               <h3 className="text-lg font-semibold text-[#1A1A1A] mb-4 flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-[#FFC107]" />
                 วันและเวลา
@@ -426,7 +426,7 @@ const EventDetailPage = () => {
             </div>
 
             {/* Location */}
-            <div className="bg-white rounded-2xl shadow-sm p-6">
+            <div className="bg-white rounded-2xl shadow-sm p-6 transition-all duration-300 hover:shadow-lg">
               <h3 className="text-lg font-semibold text-[#1A1A1A] mb-4 flex items-center gap-2">
                 <MapPin className="h-5 w-5 text-[#FFC107]" />
                 สถานที่
@@ -435,7 +435,7 @@ const EventDetailPage = () => {
             </div>
 
             {/* Metadata */}
-            <div className="bg-[#F5F5F5] rounded-2xl p-5 text-sm text-[#666666]">
+            <div className="bg-[#F5F5F5] rounded-2xl p-5 text-sm text-[#666666] transition-all duration-300 hover:shadow-inner">
               <div className="space-y-2">
                 <div>
                   <span className="font-medium">สร้างเมื่อ:</span>{' '}

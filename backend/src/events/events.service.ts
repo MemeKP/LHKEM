@@ -7,6 +7,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { EventStatus } from './events.types';
 import { User } from 'src/users/schemas/users.schema';
 import { Community, CommunityDocument } from 'src/communities/schemas/community.schema';
+import * as path from 'path';
+import { promises as fsPromises } from 'fs';
 
 type ParticipantWithUser = {
   user: Types.ObjectId | User;
@@ -167,15 +169,42 @@ export class EventsService {
       }
     }
 
-    if (image) {
-      const existingEvent = await this.eventModel.findById(id);
-
-      updateEventDto.existing_images = [
-        ...(existingEvent?.images || []),
-        `/uploads/events/${image.filename}`,
-      ];
+    const existingEvent = await this.eventModel.findById(id).exec();
+    if (!existingEvent) {
+      throw new NotFoundException(`Event #${id} not found`);
     }
 
+    const previousImages = Array.isArray(existingEvent.images)
+      ? [...existingEvent.images]
+      : [];
+
+    let retainedImages: string[] = [];
+    if (updateEventDto.existing_images) {
+      if (Array.isArray(updateEventDto.existing_images)) {
+        retainedImages = updateEventDto.existing_images.filter(Boolean);
+      } else if (typeof updateEventDto.existing_images === 'string') {
+        try {
+          const parsed = JSON.parse(updateEventDto.existing_images);
+          retainedImages = Array.isArray(parsed) ? parsed.filter(Boolean) : [parsed].filter(Boolean);
+        } catch {
+          retainedImages = [updateEventDto.existing_images].filter(Boolean);
+        }
+      }
+    }
+
+    let nextImages: string[] = previousImages;
+
+    if (image) {
+      const newImagePath = `/uploads/events/${image.filename}`;
+      nextImages = [newImagePath];
+    } else if (retainedImages.length > 0) {
+      nextImages = retainedImages;
+    } else if (Array.isArray(updateEventDto.images)) {
+      nextImages = updateEventDto.images.filter(Boolean);
+    }
+
+    updateEventDto.images = nextImages;
+    delete (updateEventDto as any).existing_images;
 
     const updatedEvent = await this.eventModel.findByIdAndUpdate(
       id,
@@ -187,7 +216,35 @@ export class EventsService {
       throw new NotFoundException(`Event #${id} not found`);
     }
 
+    const imagesToDelete = previousImages.filter((imagePath) => imagePath && !nextImages.includes(imagePath));
+    if (imagesToDelete.length > 0) {
+      await this.deleteImageFiles(imagesToDelete);
+    }
+
     return updatedEvent;
+  }
+
+  private async deleteImageFiles(imagePaths: string[]) {
+    if (!Array.isArray(imagePaths) || imagePaths.length === 0) {
+      return;
+    }
+
+    await Promise.all(imagePaths.map(async (imagePath) => {
+      if (!imagePath || /^https?:\/\//i.test(imagePath)) {
+        return;
+      }
+
+      const normalized = imagePath.replace(/^[/\\]+/, '');
+      const absolutePath = path.join(process.cwd(), normalized);
+
+      try {
+        await fsPromises.unlink(absolutePath);
+      } catch (error: any) {
+        if (error?.code !== 'ENOENT') {
+          console.warn(`Failed to delete unused event image at ${absolutePath}:`, error);
+        }
+      }
+    }));
   }
 
   async remove(id: string) {

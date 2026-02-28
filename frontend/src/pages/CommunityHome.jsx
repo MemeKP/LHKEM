@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useOutletContext, useParams } from 'react-router-dom';
 import { MapPin, Calendar, Heart, Leaf, Users, Palette, HomeIcon, List, BookXIcon, Box, BoxesIcon, Sparkle, SparklesIcon, Clock, Users as UsersIcon, Star, Store, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
@@ -41,6 +41,8 @@ const CommunityHome = () => {
   const [showETicket, setShowETicket] = useState(false);
   const [shops, setShops] = useState([]);
   const [activeShopCount, setActiveShopCount] = useState(0);
+  const eventsCarouselRef = useRef(null);
+  const [eventScrollState, setEventScrollState] = useState({ canLeft: false, canRight: false });
 
   useEffect(() => {
     const fetchCommunity = async () => {
@@ -168,6 +170,37 @@ const CommunityHome = () => {
       };
     });
   }, [eventsData, ct]);
+
+  const updateEventScrollState = () => {
+    const container = eventsCarouselRef.current;
+    if (!container) return;
+    const { scrollLeft, scrollWidth, clientWidth } = container;
+    setEventScrollState({
+      canLeft: scrollLeft > 16,
+      canRight: scrollLeft + clientWidth < scrollWidth - 16,
+    });
+  };
+
+  useEffect(() => {
+    updateEventScrollState();
+  }, [formattedEvents.length]);
+
+  useEffect(() => {
+    window.addEventListener('resize', updateEventScrollState);
+    return () => window.removeEventListener('resize', updateEventScrollState);
+  }, []);
+
+  const handleEventScroll = (direction) => {
+    const container = eventsCarouselRef.current;
+    if (!container) return;
+    const card = container.querySelector('.event-card');
+    const scrollAmount = card ? card.offsetWidth + 24 : container.clientWidth;
+    container.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth',
+    });
+    requestAnimationFrame(updateEventScrollState);
+  };
 
   const handleOpenModal = (workshop) => setActiveWorkshop(workshop);
   const handleCloseModal = () => setActiveWorkshop(null);
@@ -408,16 +441,38 @@ const CommunityHome = () => {
       {/* Events Section */}
       <section className="py-20 px-4 bg-white">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <span className="inline-block bg-orange-50 text-orange-600 px-4 py-2 rounded-full text-sm font-semibold mb-4">
-              {ct('กิจกรรมในชุมชน', 'Community Events')}
-            </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-              {ct('กำลังจะจัดขึ้น', 'Upcoming Events')}
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              {ct('ติดตามกิจกรรมพิเศษ เทศกาล และงานชุมชนที่กำลังจะเกิดขึ้น', 'See festivals and special events happening in the community')}
-            </p>
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12 text-center md:text-left">
+            <div>
+              <span className="inline-block bg-orange-50 text-orange-600 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+                {ct('กิจกรรมในชุมชน', 'Community Events')}
+              </span>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+                {ct('กำลังจะจัดขึ้น', 'Upcoming Events')}
+              </h2>
+              <p className="text-gray-600 max-w-2xl">
+                {ct('ติดตามกิจกรรมพิเศษ เทศกาล และงานชุมชนที่กำลังจะเกิดขึ้น', 'See festivals and special events happening in the community')}
+              </p>
+            </div>
+            {formattedEvents.length > 1 && (
+              <div className="flex items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleEventScroll('left')}
+                  disabled={!eventScrollState.canLeft}
+                  className={`p-3 rounded-full border transition ${eventScrollState.canLeft ? 'border-gray-300 text-gray-700 hover:bg-gray-50' : 'border-gray-100 text-gray-300 cursor-not-allowed'}`}
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleEventScroll('right')}
+                  disabled={!eventScrollState.canRight}
+                  className={`p-3 rounded-full border transition ${eventScrollState.canRight ? 'border-gray-300 text-gray-700 hover:bg-gray-50' : 'border-gray-100 text-gray-300 cursor-not-allowed'}`}
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </div>
+            )}
           </div>
 
           {eventsLoading ? (
@@ -439,61 +494,78 @@ const CommunityHome = () => {
               <p className="text-gray-500">{ct('ยังไม่มีกิจกรรมที่เปิดอยู่ในขณะนี้', 'No open events at the moment')}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {formattedEvents.map((event) => (
-                <Link
-                  to={`/${community.slug}/events/${event._id}`}
-                  key={event._id}
-                  className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition block"
-                >
-                  <div className="relative h-44">
-                    {event.coverImage ? (
-                      <img
-                        src={resolveImageUrl(event.coverImage)}
-                        alt={event.title}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className={`h-full bg-gradient-to-br ${event.gradient} flex items-center justify-center`}>
-                        <Calendar className="h-16 w-16 text-white/60" />
-                      </div>
-                    )}
-                    <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 rounded-full text-xs font-semibold text-gray-700">
-                      {event.dateLabel}
-                    </div>
-                  </div>
-                  <div className="p-6 space-y-4">
-                    <h3 className="text-xl font-bold text-gray-900 leading-snug line-clamp-2">
-                      {event.title}
-                    </h3>
-                    <p className="text-sm text-gray-600 line-clamp-2">{event.description}</p>
-                    <div className="rounded-2xl border border-orange-100 bg-orange-50/40 p-4 space-y-3">
-                      <div className="flex items-start gap-3">
-                        <Clock className="h-4 w-4 text-orange-500 mt-1" />
-                        <div>
-                          <p className="text-xs uppercase tracking-wide text-orange-600">{ct('เริ่ม', 'Starts')}</p>
-                          <p className="text-sm font-semibold text-gray-900">{event.startFullLabel}</p>
+            <div className="relative">
+              <div
+                ref={eventsCarouselRef}
+                onScroll={updateEventScrollState}
+                className="flex gap-6 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-4"
+              >
+                {formattedEvents.map((event) => (
+                  <Link
+                    to={`/${community.slug}/events/${event._id}`}
+                    key={event._id}
+                    className="event-card min-w-[280px] sm:min-w-[340px] lg:min-w-[380px] bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all snap-start"
+                  >
+                    <div className="relative h-48">
+                      {event.coverImage ? (
+                        <img
+                          src={resolveImageUrl(event.coverImage)}
+                          alt={event.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className={`h-full bg-gradient-to-br ${event.gradient} flex items-center justify-center`}>
+                          <Calendar className="h-16 w-16 text-white/70" />
                         </div>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <Clock className="h-4 w-4 text-orange-500 mt-1" />
-                        <div>
-                          <p className="text-xs uppercase tracking-wide text-orange-600">{ct('สิ้นสุด', 'Ends')}</p>
-                          <p className="text-sm font-semibold text-gray-900">{event.endFullLabel}</p>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+                      <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-white">
+                        <span className="px-3 py-1 bg-white/20 backdrop-blur rounded-full text-xs font-semibold">
+                          {event.dateLabel}
+                        </span>
+                        <div className="flex items-center gap-2 text-sm font-semibold">
+                          <Clock className="h-4 w-4" />
+                          {event.startFullLabel.split('•')[1] || ''}
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <MapPin className="h-4 w-4" />
-                      <span className="line-clamp-1">{event.location}</span>
+                    <div className="p-6 space-y-4">
+                      <h3 className="text-xl font-bold text-gray-900 leading-snug line-clamp-2">
+                        {event.title}
+                      </h3>
+                      <p className="text-sm text-gray-600 line-clamp-3">{event.description}</p>
+                      <div className="grid grid-cols-1 gap-3 rounded-2xl border border-orange-100 bg-gradient-to-br from-orange-50/60 to-amber-50 p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
+                            <Clock className="h-4 w-4 text-orange-500" />
+                          </div>
+                          <div>
+                            <p className="text-xs uppercase tracking-wide text-orange-600">{ct('เริ่ม', 'Starts')}</p>
+                            <p className="text-sm font-semibold text-gray-900">{event.startFullLabel}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
+                            <Clock className="h-4 w-4 text-orange-500" />
+                          </div>
+                          <div>
+                            <p className="text-xs uppercase tracking-wide text-orange-600">{ct('สิ้นสุด', 'Ends')}</p>
+                            <p className="text-sm font-semibold text-gray-900">{event.endFullLabel}</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <MapPin className="h-4 w-4" />
+                        <span className="line-clamp-1">{event.location}</span>
+                      </div>
+                      <div className="flex items-center justify-between pt-2 text-sm font-semibold text-orange-600">
+                        <span>{ct('ดูรายละเอียด', 'View details')}</span>
+                        <ArrowRight className="h-4 w-4" />
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between pt-2">
-                      <span className="text-sm font-semibold text-orange-600">{ct('ดูรายละเอียด', 'View details')}</span>
-                      <ArrowRight className="h-4 w-4 text-gray-400" />
-                    </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                ))}
+              </div>
             </div>
           )}
         </div>

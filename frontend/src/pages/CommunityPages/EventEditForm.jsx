@@ -5,6 +5,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
 import api from '../../services/api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import Swal from 'sweetalert2';
 
 /**
  * Event Edit Form - แก้ไข Event ที่มีอยู่แล้ว
@@ -65,8 +66,14 @@ const useUpdateEvent = () => {
 
   return useMutation({
     mutationFn: updateEventAPI,
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      const eventId = variables?.eventId;
       queryClient.invalidateQueries({ queryKey: ['events'] });
+      if (eventId) {
+        queryClient.invalidateQueries({ queryKey: ['event', eventId] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['community-events'] });
+      queryClient.invalidateQueries({ queryKey: ['community-event'] });
     },
   });
 };
@@ -82,7 +89,8 @@ const EventEditForm = () => {
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
-  const API_URL = import.meta.env.VITE_API_URL
+  const [existingImages, setExistingImages] = useState([]);
+  const API_URL = import.meta.env.VITE_API_URL || '';
   const [formData, setFormData] = useState({
     title: '',
     titleEn: '',
@@ -129,12 +137,24 @@ const EventEditForm = () => {
         coordinator_name: event.contact?.coordinator_name || '',
         additional_info: event.additional_info || '',
       });
-
-      if (event.images && event.images.length > 0) {
-        setImagePreview(event.images[0]);
-      }
+      const normalizedImages = Array.isArray(event.images)
+        ? event.images
+        : event?.images
+          ? [event.images]
+          : [];
+      setExistingImages(normalizedImages);
+      setImageFile(null);
+      setImagePreview(normalizedImages[0] || null);
     }
   }, [event]);
+
+  useEffect(() => {
+    return () => {
+      if (imagePreview && imagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -148,20 +168,38 @@ const EventEditForm = () => {
     e.preventDefault();
 
     if (!formData.event_date || !formData.end_date || !formData.start_time || !formData.end_time) {
-      alert("กรุณาระบุวันและเวลา");
+      Swal.fire({
+        icon: 'warning',
+        title: 'ข้อมูลไม่ครบถ้วน',
+        text: 'กรุณาระบุวันเริ่ม วันสิ้นสุด และเวลา',
+        confirmButtonColor: '#3085d6',
+      });
+      return;
+    }
+
+    const startDateTime = new Date(`${formData.event_date}T${formData.start_time}`);
+    const endDateTime = new Date(`${formData.end_date}T${formData.end_time}`);
+
+    if (endDateTime < startDateTime) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'เวลาไม่ถูกต้อง',
+        text: 'เวลาสิ้นสุดกิจกรรม ต้องอยู่หลังเวลาเริ่มกิจกรรม',
+        confirmButtonColor: '#3085d6',
+      });
       return;
     }
 
     try {
       setLoading(true);
-
-      const startDateTime = new Date(`${formData.event_date}T${formData.start_time}`);
-      const endDateTime = new Date(`${formData.end_date}T${formData.end_time}`);
-
-      if (endDateTime < startDateTime) {
-        alert("เวลาสิ้นสุดต้องอยู่หลังเวลาเริ่ม");
-        return;
-      }
+      Swal.fire({
+        title: 'กำลังบันทึกการแก้ไข...',
+        text: 'กรุณารอสักครู่ ระบบกำลังอัปโหลดข้อมูลและรูปภาพ',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
 
       const fd = new FormData();
 
@@ -203,6 +241,8 @@ const EventEditForm = () => {
 
       if (imageFile) {
         fd.append("image", imageFile);
+      } else {
+        fd.append('existing_images', JSON.stringify(existingImages));
       }
 
       await updateEvent({
@@ -210,11 +250,29 @@ const EventEditForm = () => {
         payload: fd,
       });
 
-      alert("แก้ไข Event สำเร็จ!");
+      Swal.close();
+      await Swal.fire({
+        icon: 'success',
+        title: 'แก้ไขสำเร็จ!',
+        text: 'ข้อมูลกิจกรรมได้รับการอัปเดตแล้ว',
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
       navigate(`/community-admin/events/${id}`);
     } catch (error) {
       console.error(error);
-      alert("เกิดข้อผิดพลาด");
+      Swal.close();
+
+      const msg = error?.response?.data?.message;
+      const errorMessage = Array.isArray(msg) ? msg.join('\n') : (msg || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+
+      Swal.fire({
+        icon: 'error',
+        title: 'แก้ไขกิจกรรมไม่สำเร็จ',
+        text: errorMessage,
+        confirmButtonColor: '#d33',
+      });
     } finally {
       setLoading(false);
     }
@@ -224,33 +282,41 @@ const EventEditForm = () => {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+      const objectUrl = URL.createObjectURL(file);
+      setImageFile(file);
+      setExistingImages([]);
+      setImagePreview(objectUrl);
     }
   };
 
+  const handleRemoveImage = () => {
+    setImagePreview(null);
+    setImageFile(null);
+    setExistingImages([]);
+  };
+
   if (eventLoading) {
-    return <div className="min-h-screen bg-[#FAFAFA] py-8 flex items-center justify-center">
+    return <div className="min-h-screen bg-[#FAFAFA] py-8 flex items-center justify-center animate-fadeIn">
       <p className="text-[#666666]">กำลังโหลดข้อมูล...</p>
     </div>;
   }
 
-  console.log("event:", event);
-
+  const previewSrc = imagePreview
+    ? imagePreview.startsWith('blob:') || imagePreview.startsWith('data:')
+      ? imagePreview
+      : `${API_URL}${imagePreview}`
+    : null;
 
   return (
-    <div className="min-h-screen bg-[#F5EFE7] py-8">
+    <div className="min-h-screen bg-[#F5EFE7] py-8 animate-fadeIn">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-6 text-center">
+        <div className="mb-6 text-center animate-fadeIn">
           <h1 className="text-2xl font-bold text-[#1A1A1A] mb-1">{ct('แก้ไขกิจกรรมของชุมชน', 'Edit Community Event')}</h1>
           <p className="text-[#666666] text-sm">{ct('แก้ไขข้อมูลกิจกรรมพิเศษหรือเทศกาลของชุมชน', 'Edit information for special events or community festivals')}</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+        <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
           {/* 1. ชื่องาน/กิจกรรม */}
           <div className="mb-6">
             <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
@@ -290,12 +356,12 @@ const EventEditForm = () => {
               รูปภาพปกกิจกรรม
             </label>
             <div className="border-2 border-dashed border-[#E0E0E0] rounded-lg p-8 text-center bg-[#FAFAFA]">
-              {imagePreview ? (
+              {previewSrc ? (
                 <div className="relative">
-                  <img src={`${API_URL}${imagePreview}`} alt="Preview" className="max-h-48 mx-auto rounded-lg" />
+                  <img src={previewSrc} alt="Preview" className="max-h-48 mx-auto rounded-lg" />
                   <button
                     type="button"
-                    onClick={() => setImagePreview(null)}
+                    onClick={handleRemoveImage}
                     className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
                   >
                     <X className="h-4 w-4" />
@@ -429,18 +495,7 @@ const EventEditForm = () => {
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A] mb-3"
               placeholder="ระบุสถานที่"
             />
-            <div className="border-2 border-dashed border-[#E0E0E0] rounded-lg p-6 text-center bg-[#F0F9F4]">
-              <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center mx-auto mb-3">
-                <MapPin className="h-6 w-6 text-[#4CAF50]" />
-              </div>
-              <p className="text-sm text-[#666666] mb-3">เลือกสถานที่บนแผนที่</p>
-              <button
-                type="button"
-                className="px-4 py-2 bg-white border border-gray-300 text-[#666666] rounded-lg hover:bg-gray-50 transition text-sm font-medium"
-              >
-                เปิดแผนที่
-              </button>
-            </div>
+            
           </div>
 
           {/* 6. ประเภทกิจกรรม */}

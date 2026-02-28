@@ -195,14 +195,14 @@ const EventList = () => {
     }
   };
 
-  if (isLoading) return <div className="p-8 text-center text-gray-500">กำลังโหลดข้อมูล...</div>;
+  if (isLoading) return <div className="p-8 text-center text-gray-500 animate-fadeIn">กำลังโหลดข้อมูล...</div>;
   if (isError) return <div className="p-8 text-center text-red-500">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>;
 
   return (
-    <div className="min-h-screen bg-[#F5EFE7] py-8">
+    <div className="min-h-screen bg-[#F5EFE7] py-8 animate-fadeIn">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8 animate-fadeIn">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-3xl font-bold text-[#1A1A1A]">กิจกรรมของชุมชน</h1>
@@ -255,7 +255,7 @@ const EventList = () => {
 
         {/* Events Grid */}
         {filteredEvents.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+          <div className="bg-white rounded-lg shadow-sm p-12 text-center animate-fadeIn">
             <Calendar className="h-16 w-16 text-[#CCCCCC] mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-[#1A1A1A] mb-2">ไม่พบ Event</h3>
             <p className="text-[#666666]">
@@ -266,11 +266,11 @@ const EventList = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn">
             {filteredEvents.map((event, i) => (
               <div
                 key={event._id || event.id || i}
-                className="bg-white rounded-2xl shadow-sm overflow-hidden hover:shadow-lg transition-shadow border border-orange-50"
+                className="bg-white rounded-2xl shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-orange-50"
               >
                 {/* Event Image */}
                 <div className="relative aspect-[4/3] bg-gradient-to-br from-orange-50 to-orange-100">

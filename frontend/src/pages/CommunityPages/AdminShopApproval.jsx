@@ -145,7 +145,7 @@ const AdminShopApproval = () => {
 
   if (shopLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#FAF8F3]">
+      <div className="flex items-center justify-center min-h-screen bg-[#FAF8F3] animate-fadeIn">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent mb-4"></div>
           <p className="text-gray-600">{ct('กำลังโหลดข้อมูลร้านค้า...', 'Loading shop data...')}</p>
@@ -156,12 +156,12 @@ const AdminShopApproval = () => {
 
   if (shopError || !shop) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#FAF8F3]">
+      <div className="flex items-center justify-center min-h-screen bg-[#FAF8F3] animate-fadeIn">
         <div className="text-center space-y-4">
           <p className="text-gray-700">{ct('ไม่พบข้อมูลร้านค้านี้', 'Unable to load shop data.')}</p>
           <button
             onClick={() => navigate('/community-admin/shops')}
-            className="px-4 py-2 text-sm font-semibold text-white bg-orange-500 rounded-lg"
+            className="px-4 py-2 text-sm font-semibold text-white bg-orange-500 rounded-lg transition-transform duration-300 hover:-translate-y-0.5"
           >
             {ct('กลับไปรายชื่อร้านค้า', 'Back to shop list')}
           </button>
@@ -178,7 +178,7 @@ const AdminShopApproval = () => {
   const coverImage = getShopCoverImage(shop);
 
   return (
-    <div className="min-h-screen bg-[#FAF8F3]">
+    <div className="min-h-screen bg-[#F5EFE7] animate-fadeIn">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <button
           onClick={() => navigate('/community-admin/shops')}
@@ -188,7 +188,7 @@ const AdminShopApproval = () => {
           <span className="font-medium">{ct('กลับไปหน้าร้านค้า', 'Back to shops')}</span>
         </button>
 
-        <div className="bg-white rounded-2xl p-6 shadow-sm space-y-4">
+        <div className="bg-white rounded-2xl p-6 shadow-sm space-y-4 animate-slideUp">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <p className="text-sm uppercase tracking-wide text-orange-500 font-semibold mb-1">
@@ -217,7 +217,7 @@ const AdminShopApproval = () => {
             </div>
           </div>
           {coverImage && (
-            <div className="rounded-2xl overflow-hidden h-48 w-full">
+            <div className="rounded-2xl overflow-hidden h-48 w-full animate-scaleIn">
               <img
                 src={coverImage}
                 alt={shop.shopName}
@@ -230,7 +230,7 @@ const AdminShopApproval = () => {
             <button
               disabled={shopStatus === 'ACTIVE' || approveShopMutation.isLoading}
               onClick={() => approveShopMutation.mutate()}
-              className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-green-600 text-white font-semibold shadow-sm hover:bg-green-700 disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-green-600 text-white font-semibold shadow-sm hover:bg-green-700 disabled:opacity-50 transition-transform duration-300 hover:-translate-y-0.5"
             >
               {approveShopMutation.isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
               <CheckCircle className="h-4 w-4" />
@@ -239,7 +239,7 @@ const AdminShopApproval = () => {
             <button
               disabled={shopStatus === 'REJECTED' || rejectShopMutation.isLoading}
               onClick={() => rejectShopMutation.mutate()}
-              className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-red-500 text-white font-semibold shadow-sm hover:bg-red-600 disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-red-500 text-white font-semibold shadow-sm hover:bg-red-600 disabled:opacity-50 transition-transform duration-300 hover:-translate-y-0.5"
             >
               {rejectShopMutation.isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
               <XCircle className="h-4 w-4" />
@@ -248,9 +248,9 @@ const AdminShopApproval = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-stagger">
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-2xl p-6 shadow-sm">
+            <div className="bg-white rounded-2xl p-6 shadow-sm animate-slideUp">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">{ct('ข้อมูลร้านค้า', 'Shop Information')}</h2>
               {!coverImage && (
                 <div className="rounded-xl border border-dashed border-gray-200 p-4 flex items-center gap-3 text-sm text-gray-500 mb-4">
@@ -269,7 +269,7 @@ const AdminShopApproval = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-6 shadow-sm">
+            <div className="bg-white rounded-2xl p-6 shadow-sm animate-slideUp">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">{ct('ช่องทางการติดต่อ', 'Contact')}</h2>
               <div className="space-y-4">
                 <div className="flex items-center gap-3 p-4 rounded-xl border border-gray-100">
@@ -298,7 +298,7 @@ const AdminShopApproval = () => {
           </div>
 
           <div className="space-y-6">
-            <div className="bg-white rounded-2xl p-6 shadow-sm">
+            <div className="bg-white rounded-2xl p-6 shadow-sm animate-slideUp">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold text-gray-900">{ct('หมุดบนแผนที่', 'Map Pin')}</h2>
                 {pin?.hasPin && (
@@ -310,7 +310,7 @@ const AdminShopApproval = () => {
               <div className="rounded-2xl border border-gray-100 overflow-hidden">
                 <div className="relative w-full h-80 bg-gray-50">
                   {mapLoading ? (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 space-y-3">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 space-y-3 animate-fadeIn">
                       <Loader2 className="h-8 w-8 animate-spin" />
                       <p>{ct('กำลังโหลดแผนที่...', 'Loading community map...')}</p>
                     </div>
@@ -364,7 +364,7 @@ const AdminShopApproval = () => {
                     <button
                       disabled={pinStatus === 'APPROVED' || approvePinMutation.isLoading}
                       onClick={() => approvePinMutation.mutate()}
-                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-orange-500 text-white font-semibold hover:bg-orange-600 disabled:opacity-50"
+                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-orange-500 text-white font-semibold hover:bg-orange-600 disabled:opacity-50 transition-transform duration-300 hover:-translate-y-0.5"
                     >
                       {approvePinMutation.isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
                       <CheckCircle className="h-4 w-4" />

@@ -69,6 +69,7 @@ const AdminDashboard = () => {
   const normalizeEventStatus = (status) => (status || '').toUpperCase();
   const openEvents = allEvents.filter((event) => normalizeEventStatus(event.status) === 'OPEN');
   const pendingEvents = allEvents.filter((event) => normalizeEventStatus(event.status) === 'PENDING');
+  const actionableEvents = [...pendingEvents, ...openEvents];
   const communityShops = shopsQuery.data || [];
   const pendingShops = pendingShopsQuery.data || communityShops.filter(
     (shop) => ((shop.status || 'PENDING').toUpperCase()) !== 'ACTIVE'
@@ -104,7 +105,7 @@ const AdminDashboard = () => {
 
   const pendingCounts = {
     workshops: pendingWorkshops.length,
-    events: openEvents.length,
+    events: actionableEvents.length,
     shops: pendingShops.length,
     total: pendingWorkshops.length + pendingEvents.length + pendingShops.length,
   };
@@ -228,7 +229,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5EFE7] py-8">
+    <div className="min-h-screen bg-[#F5EFE7] py-8 animate-fadeIn">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header with Action Buttons */}
         <div className="flex items-center justify-between mb-6">
@@ -257,7 +258,7 @@ const AdminDashboard = () => {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
+          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 bg-[#FFF3E0] rounded-lg flex items-center justify-center">
                 <AlertCircle className="h-5 w-5 text-[#F57C00]" />
@@ -267,7 +268,7 @@ const AdminDashboard = () => {
             <p className="text-sm font-medium text-[#666666]">{ct('Workshops รออนุมัติ', 'Workshops Pending')}</p>
           </div>
 
-          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
+          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 bg-[#FFF9C4] rounded-lg flex items-center justify-center">
                 <FileText className="h-5 w-5 text-[#F9A825]" />
@@ -277,7 +278,7 @@ const AdminDashboard = () => {
             <p className="text-sm font-medium text-[#666666]">{ct('Workshops รอการแก้ไข', 'Workshops Review')}</p>
           </div>
 
-          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
+          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 bg-[#E3F2FD] rounded-lg flex items-center justify-center">
                 <Calendar className="h-5 w-5 text-[#1976D2]" />
@@ -287,7 +288,7 @@ const AdminDashboard = () => {
             <p className="text-sm font-medium text-[#666666]">{ct('กิจกรรม', 'Events')}</p>
           </div>
 
-          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
+          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 bg-[#F3E5F5] rounded-lg flex items-center justify-center">
                 <Store className="h-5 w-5 text-[#8E24AA]" />
@@ -321,9 +322,9 @@ const AdminDashboard = () => {
               <p className="text-gray-600">{ct('ยังไม่มีร้านค้าในชุมชนของคุณ', 'No shops have been created in this community yet.')}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 animate-fadeIn">
               {communityShops.slice(0, 6).map((shop) => (
-                <div key={shop._id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all p-5 flex flex-col gap-3">
+                <div key={shop._id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 p-5 flex flex-col gap-3">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">{ct('ร้านค้า', 'Shop')}</p>
@@ -378,9 +379,9 @@ const AdminDashboard = () => {
         </div>
 
         {/* Workshop Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 animate-fadeIn">
           {pendingWorkshops.map((workshop) => (
-            <div key={workshop.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200 hover:shadow-md transition-all">
+            <div key={workshop.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300 hover:-translate-y-1">
               {/* Workshop Image */}
               <div className="relative h-48 bg-gradient-to-br from-blue-100 to-blue-200">
                 {workshop.image ? (
@@ -453,7 +454,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Tasks Tabs */}
-        <div className="bg-white rounded-xl shadow-sm mb-6 border border-gray-200">
+        <div className="bg-white rounded-xl shadow-sm mb-6 border border-gray-200 animate-fadeIn">
           <div className="border-b border-gray-200">
             <div className="flex space-x-1 px-2 py-2">
               <button
@@ -484,8 +485,8 @@ const AdminDashboard = () => {
             {/* Events Tab */}
             {taskTab === 'events' && (
               <div>
-                {openEvents.length === 0 ? (
-                  <div className="bg-[#F5F5F5] rounded-xl p-8 flex flex-col items-center justify-center min-h-[280px]">
+                {actionableEvents.length === 0 ? (
+                  <div className="bg-[#F5F5F5] rounded-xl p-8 flex flex-col items-center justify-center min-h-[280px] animate-fadeIn">
                     <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center mb-4">
                       <Calendar className="h-8 w-8 text-[#90CAF9]" />
                     </div>
@@ -501,8 +502,8 @@ const AdminDashboard = () => {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {openEvents.map((event) => (
-                      <div key={event._id || event.id} className="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-md transition-all flex flex-col gap-4">
+                    {actionableEvents.map((event) => (
+                      <div key={event._id || event.id} className="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col gap-4">
                         {event.images?.length ? (
                           <div className="relative h-40 w-full rounded-lg overflow-hidden bg-gray-100">
                             <img src={event.images[0]} alt={event.title} className="w-full h-full object-cover" />

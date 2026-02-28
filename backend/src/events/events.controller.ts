@@ -17,6 +17,29 @@ interface JwtPayload {
   community_id: string;
 }
 
+const eventImageUploadOptions = {
+  storage: diskStorage({
+    destination: (req, file, cb) => {
+      const uploadPath = './uploads/events';
+      if (!fs.existsSync(uploadPath)) {
+        fs.mkdirSync(uploadPath, { recursive: true });
+      }
+      cb(null, uploadPath);
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      const ext = extname(file.originalname);
+      cb(null, `event-${uniqueSuffix}${ext}`);
+    },
+  }),
+  fileFilter: (req, file, cb) => {
+    if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+      return cb(new BadRequestException('Only image files are allowed!'), false);
+    }
+    cb(null, true);
+  },
+};
+
 @Controller('api/events')
 export class EventsController {
   constructor(private readonly eventsService: EventsService,
@@ -45,32 +68,7 @@ export class EventsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(
-    FileInterceptor('image', {
-      storage: diskStorage({
-        destination: (req, file, cb) => {
-          const uploadPath = './uploads/events';
-          if (!fs.existsSync(uploadPath)) {
-            fs.mkdirSync(uploadPath, { recursive: true });
-          }
-          cb(null, uploadPath);
-        },
-        filename: (req, file, cb) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          const ext = extname(file.originalname);
-          cb(null, `event-${uniqueSuffix}${ext}`);
-        },
-      }),
-      fileFilter: (req, file, cb) => {
-        if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-          return cb(
-            new BadRequestException('Only image files are allowed!'),
-            false,
-          );
-        }
-        cb(null, true);
-      },
-    }),
+    FileInterceptor('image', eventImageUploadOptions),
   )
   async createEvent(
     @Req() req: any,
@@ -183,7 +181,7 @@ export class EventsController {
   }
 
   @Patch(':id')
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(FileInterceptor('image', eventImageUploadOptions))
   update(
     @Param('id') id: string,
     @UploadedFile() image: Express.Multer.File,

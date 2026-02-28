@@ -124,6 +124,7 @@ const EventCreateForm = () => {
     }
 
     try {
+      setLoading(true);
       Swal.fire({
         title: 'กำลังสร้างกิจกรรม...',
         text: 'กรุณารอสักครู่ ระบบกำลังอัปโหลดข้อมูลและรูปภาพ',
@@ -168,6 +169,7 @@ const EventCreateForm = () => {
 
       await createEvent(submitData);
 
+      Swal.close();
       await Swal.fire({
         icon: 'success',
         title: 'สำเร็จ!',
@@ -180,6 +182,7 @@ const EventCreateForm = () => {
 
     } catch (error) {
       console.error('Failed to create event:', error);
+      Swal.close();
 
       const msg = error?.response?.data?.message;
       const errorMessage = Array.isArray(msg) ? msg.join('\n') : (msg || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
@@ -190,6 +193,8 @@ const EventCreateForm = () => {
         text: errorMessage,
         confirmButtonColor: '#d33',
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -202,15 +207,15 @@ const EventCreateForm = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5EFE7] py-8">
+    <div className="min-h-screen bg-[#F5EFE7] py-8 animate-fadeIn">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-6 text-center">
+        <div className="mb-6 text-center animate-fadeIn">
           <h1 className="text-2xl font-bold text-[#1A1A1A] mb-1">{ct('สร้างกิจกรรมของชุมชน', 'Create Community Event')}</h1>
           <p className="text-[#666666] text-sm">{ct('กรอกข้อมูลกิจกรรมพิเศษหรือเทศกาลของชุมชน', 'Fill in information for special events or community festivals')}</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+        <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
           {/* 1. ชื่องาน/กิจกรรม */}
           <div className="mb-6">
             <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
