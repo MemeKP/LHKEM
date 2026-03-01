@@ -34,9 +34,15 @@ const ETicketModal = ({ booking, isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8 bg-black/70 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden relative animate-slideUp">
-        {/* Close Button */}
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8 bg-black/70 backdrop-blur-sm animate-fadeIn"
+      onClick={onClose} // Added: Clicking the dark background will call onClose
+    >
+      <div 
+        className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden relative animate-slideUp"
+        onClick={(e) => e.stopPropagation()} // Added: Stops the background click from triggering when clicking inside the white modal
+      >
+        {/* Close Button (Top Right) */}
         <button
           className="absolute top-4 right-4 z-10 p-2 bg-white/90 rounded-full text-gray-600 hover:text-gray-900 transition shadow-md"
           onClick={onClose}
@@ -59,11 +65,11 @@ const ETicketModal = ({ booking, isOpen, onClose }) => {
           {/* Workshop Title */}
           <div className="text-center">
             <h3 className="text-xl font-bold text-gray-900 mb-2">
-              {workshop.title}
+              {workshop?.title || ct('ไม่มีชื่อกิจกรรม', 'No Title')}
             </h3>
             <p className="text-sm text-gray-600 flex items-center justify-center gap-2">
               <Store className="h-4 w-4" />
-              {ct('โดยร้าน', 'By')} {workshop.host}
+              {ct('โดยร้าน', 'By')} {workshop?.host || ct('ไม่มีชื่อร้าน', 'No Shop')}
             </p>
           </div>
 
@@ -75,8 +81,8 @@ const ETicketModal = ({ booking, isOpen, onClose }) => {
                 <Calendar className="h-5 w-5 text-orange-600" />
               </div>
               <div className="flex-1">
-                <p className="text-xs text-gray-500 mb-1">{ct('วันที่ (Date)', 'Date')}</p>
-                <p className="text-sm font-semibold text-gray-900">{ct('อาทิตย์, 19 ม.ค. 69', 'Sunday, Jan 19, 2026')}</p>
+                <p className="text-xs text-gray-500 mb-1">{ct('วันที่จอง (Booking Date)', 'Booking Date')}</p>
+                <p className="text-sm font-semibold text-gray-900">{formattedDate}</p>
               </div>
             </div>
 
@@ -86,8 +92,8 @@ const ETicketModal = ({ booking, isOpen, onClose }) => {
                 <Clock className="h-5 w-5 text-orange-600" />
               </div>
               <div className="flex-1">
-                <p className="text-xs text-gray-500 mb-1">{ct('เวลา (Time)', 'Time')}</p>
-                <p className="text-sm font-semibold text-gray-900">{ct('10:00 - 11:30 น.', '10:00 - 11:30')}</p>
+                <p className="text-xs text-gray-500 mb-1">{ct('เวลาที่จอง (Booking Time)', 'Booking Time')}</p>
+                <p className="text-sm font-semibold text-gray-900">{formattedTime}</p>
               </div>
             </div>
 
@@ -100,21 +106,6 @@ const ETicketModal = ({ booking, isOpen, onClose }) => {
                 <p className="text-xs text-gray-500 mb-1">{ct('จำนวน (Guests)', 'Guests')}</p>
                 <p className="text-sm font-semibold text-gray-900">
                   {guestCount} {ct('ท่าน', 'person(s)')}
-                </p>
-              </div>
-            </div>
-
-            {/* Total Price */}
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 mt-1">
-                <div className="h-5 w-5 flex items-center justify-center">
-                  <span className="text-orange-600 font-bold">฿</span>
-                </div>
-              </div>
-              <div className="flex-1">
-                <p className="text-xs text-gray-500 mb-1">{ct('ค่าใช้จ่ายทั้งหมด', 'Total')}</p>
-                <p className="text-lg font-bold text-orange-600">
-                  {ct('ค่าเข้าชมฟรี', 'Free')} {guestCount} {ct('ท่าน', 'person(s)')}
                 </p>
               </div>
             </div>
@@ -152,6 +143,14 @@ const ETicketModal = ({ booking, isOpen, onClose }) => {
             >
               <MessageCircle className="h-5 w-5" />
               {ct('ติดต่อร้านค้า', 'Contact Shop')}
+            </button>
+
+            {/* Added: Explicit Close Button at the bottom */}
+            <button
+              onClick={onClose}
+              className="w-full flex items-center justify-center gap-2 text-gray-500 hover:text-gray-700 font-semibold py-2 transition"
+            >
+              {ct('ปิด', 'Close')}
             </button>
           </div>
 

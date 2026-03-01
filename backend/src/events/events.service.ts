@@ -19,7 +19,7 @@ type ParticipantWithUser = {
 @Injectable()
 export class EventsService {
   constructor(
-    @InjectModel(Event.name)
+    @InjectModel(EventSchema.name)
     private readonly eventModel: Model<EventDocument>,
     @InjectModel(Community.name)
     private readonly communityModel: Model<CommunityDocument>,
@@ -36,6 +36,8 @@ export class EventsService {
       throw new BadRequestException('End date must be after start date');
     }
 
+    /** * Used spread operator to maintain efficiency while overriding specific fields 
+     */
     const newEvent = new this.eventModel({
       ...createEventDto,
       community_id: new Types.ObjectId(community_id),
@@ -58,6 +60,9 @@ export class EventsService {
       .find({ community_id: new Types.ObjectId(communityId), status: EventStatus.PENDING })
       .sort({ created_at: -1 })
       .exec();
+  }
+  async findAll(): Promise<EventSchema[]> {
+    return this.eventModel.find().exec();
   }
 
   async findAllByCommunity(communityId: string) {
@@ -152,7 +157,7 @@ export class EventsService {
   ): Promise<EventSchema> {
 
     if (updateEventDto.start_at && updateEventDto.end_at) {
-      if (updateEventDto.end_at < updateEventDto.start_at) {
+      if (new Date(updateEventDto.end_at) < new Date(updateEventDto.start_at)) {
         throw new BadRequestException('End date must be after start date');
       }
     }
@@ -251,11 +256,11 @@ export class EventsService {
     try {
       const res = await this.eventModel.findByIdAndDelete(id).exec();
       if (!res) {
-        throw new NotFoundException(`Event with ID ${id} not found`)
+        throw new NotFoundException(`Event with ID ${id} not found`);
       }
       return { message: `This action removes a #${id} event` };
     } catch (error) {
-      throw new InternalServerErrorException('Something wrong during deletion!' + error)
+      throw new InternalServerErrorException('Something wrong during deletion! ' + error);
     }
   }
 

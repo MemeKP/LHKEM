@@ -4,17 +4,23 @@ import { Document, Types } from "mongoose";
 export type WorkshopregistrationDocument = Workshopregistration & Document;
 
 @Schema({
-    timestamps: true, /* Automatically manages created_at and updated_at */
+    timestamps: true,
     versionKey: false,
 })
 export class Workshopregistration {
     @Prop({
-        type: Number, /* Kept as Number per your initial spec */
+        type: String,
         required: true,
         index: true,
     })
-    /* The ID of the user registering */
-    userId: number;
+    workshopId: string;
+
+    @Prop({
+        type: String,
+        required: true,
+        index: true,
+    })
+    userId: String;
 
     @Prop({
         type: Number,

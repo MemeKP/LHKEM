@@ -2,7 +2,8 @@ import { MapPin, X, Calendar, Clock, BookOpen, AlertCircle, Info, Store, Users, 
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../hooks/useTranslation';
 import { useAuth } from '../hooks/useAuth';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { workshopService } from '../services/workshopService';
 
 const SectionCard = ({ icon, title, children }) => (
   <div className="rounded-3xl border border-gray-100 bg-white shadow-sm p-5 space-y-4 animate-scaleIn">
@@ -16,48 +17,76 @@ const SectionCard = ({ icon, title, children }) => (
 
 const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
   const { t, ct } = useTranslation();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth(); 
   const navigate = useNavigate();
   const [guestCount, setGuestCount] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+
+  // FIX: Properly calculate seats using real backend variables
+  const capacity = workshop?.capacity || workshop?.seatLimit || 0;
+  const booked = workshop?.current_participants || workshop?.seatsBooked || 0;
+  const availableSeats = Math.max(0, capacity - booked);
 
   const handleIncrement = () => {
-    if (guestCount < workshop.seatsLeft) {
-      setGuestCount(guestCount + 1);
+    if (guestCount < availableSeats) {
+      setGuestCount(prev => prev + 1);
     }
   };
 
   const handleDecrement = () => {
     if (guestCount > 1) {
-      setGuestCount(guestCount - 1);
+      setGuestCount(prev => prev - 1);
     }
   };
 
-  const handleEnroll = () => {
+  const handleEnroll = async () => {
     if (!isAuthenticated) {
       onClose();
-      navigate('/login', { state: { from: `/workshops`, workshopId: workshop.id } });
+      navigate('/login', { state: { from: `/workshops`, workshopId: workshop?._id || workshop?.id } });
       return;
     }
     
-    // Create booking and show E-ticket
-    const booking = {
-      id: Date.now(),
-      workshop,
-      guestCount,
-      bookingDate: new Date().toISOString(),
-      status: 'pending'
-    };
-    
-    // Save to localStorage (temporary until backend is ready)
-    const existingBookings = JSON.parse(localStorage.getItem('workshopBookings') || '[]');
-    existingBookings.push(booking);
-    localStorage.setItem('workshopBookings', JSON.stringify(existingBookings));
-    
-    onClose();
-    if (onBookingSuccess) {
-      onBookingSuccess(booking);
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      const registrationPayload = {
+        workshopId: String(workshop?._id || workshop?.id), 
+        userId: String(user?.userId || user?._id || user?.id), 
+        slots: guestCount, 
+        note: ""
+      };
+      
+      const response = await workshopService.registerForWorkshop(registrationPayload);
+      
+      const formattedBooking = {
+        id: response._id || response.id, 
+        workshop: workshop,              
+        guestCount: guestCount,          
+        bookingDate: new Date().toISOString(),
+        status: response.status || 'pending'
+      };
+      
+      onClose();
+      if (onBookingSuccess) {
+        onBookingSuccess(formattedBooking);
+      }
+
+    } catch (error) {
+      const backendError = error.response?.data?.message || error.response?.data || error.message;
+      alert(`${ct('ระบบปฏิเสธข้อมูลเนื่องจาก:\n\n', 'Backend rejected the data because:\n\n')}${JSON.stringify(backendError, null, 2)}`);
+      console.error('Registration error:', error.response?.data || error);
+      
+      setSubmitError(ct('ไม่สามารถทำการจองได้ กรุณาลองใหม่อีกครั้ง', 'Could not complete booking. Please try again.'));
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    if (isOpen) setGuestCount(1);
+  }, [isOpen, workshop?._id]);
 
   if (!isOpen || !workshop) return null;
 
@@ -67,7 +96,7 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
         <button
           className="absolute top-3 right-3 p-2 text-gray-400 hover:text-gray-600 transition"
           onClick={onClose}
-          aria-label={t('common.close')}
+          aria-label={t('common.close') || ct('ปิด', 'Close')}
         >
           <X className="h-5 w-5" />
         </button>
@@ -79,23 +108,24 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
               <h3 className="text-2xl font-bold text-gray-900 leading-snug mb-2">{workshop.title}</h3>
               <p className="text-sm text-gray-500 flex items-center gap-2">
                 <Store className="h-4 w-4" />
-                {ct('โดยร้าน', 'By')} {workshop.host}
+                {ct('โดยร้าน', 'By')} {workshop.host || workshop.shopName || ct('ไม่ระบุ', 'Unknown')}
               </p>
             </div>
             
             <div className="flex items-center justify-between pt-2">
               <div className="text-left">
                 <p className="text-3xl font-bold text-orange-500">
-                  {workshop.price === 0 ? t('workshops.free') : `${workshop.price}.-`}
+                  {workshop.price === 0 ? (t('workshops.free') || ct('ฟรี', 'Free')) : `${workshop.price}.-`}
                 </p>
                 <p className="text-xs text-gray-400">{ct('ต่อคน', 'per person')}</p>
               </div>
               <div className="text-right space-y-1">
+                {/* FIX: Actually use availableSeats here */}
                 <span className="text-xs font-medium text-orange-600 bg-orange-50 px-3 py-1 rounded-full inline-block">
-                  {ct('ที่นั่งคงเหลือ', 'Seats left')} {workshop.seatsLeft}
+                  {ct('ที่นั่งคงเหลือ', 'Seats left')} {availableSeats}
                 </span>
                 <p className="text-xs text-gray-500 flex items-center gap-1 justify-end">
-                  <Clock className="h-3 w-3" /> {workshop.duration}
+                  <Clock className="h-3 w-3" /> {workshop.duration || workshop.time || `${workshop.startTime} - ${workshop.endTime}`}
                 </p>
               </div>
             </div>
@@ -121,8 +151,8 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
               ) : (
                 <div className="rounded-2xl border p-4 bg-blue-50 border-blue-200">
                   <p className="font-semibold text-gray-900">{ct('รอบที่จัดกิจกรรม (Workshop)', 'Workshop Session')}</p>
-                  <p className="text-gray-600">{ct('เปิดรับ: จันทร์ - ศุกร์', 'Open: Monday - Friday')}</p>
-                  <p className="text-gray-400 text-sm">{ct('รอบเช้า: 10:00 - 15:30 น.', 'Morning: 10:00 - 15:30')}</p>
+                  <p className="text-gray-600">{workshop.date || workshop.startDate ? new Date(workshop.date || workshop.startDate).toLocaleDateString('th-TH') : ct('โปรดตรวจสอบกับร้านค้า', 'Check with shop')}</p>
+                  <p className="text-gray-400 text-sm">{workshop.time || `${workshop.startTime} - ${workshop.endTime}` || ct('โปรดตรวจสอบกับร้านค้า', 'Check with shop')}</p>
                 </div>
               )}
             </div>
@@ -134,8 +164,7 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
             title={ct('เวลาทำการของร้าน', 'Shop Opening Hours')}
           >
             <div className="rounded-2xl border p-4 bg-white border-gray-100">
-              <p className="text-gray-700">{ct('เปิดทำการ: 10:00 - 17:00 น.', 'Open: 10:00 - 17:00')}</p>
-              <p className="text-gray-500 text-sm">{ct('(หยุดวันอาทิตย์)', '(Closed on Sunday)')}</p>
+              <p className="text-gray-700">{ct('โปรดตรวจสอบเวลาทำการกับร้านค้าโดยตรง', 'Please check opening hours with the shop directly.')}</p>
             </div>
           </SectionCard>
 
@@ -145,12 +174,9 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
             title={ct('สิ่งที่ได้เรียนรู้', 'What You\'ll Learn')}
           >
             <div className="space-y-2">
-              <button className="w-full text-left px-4 py-3 bg-orange-50 text-orange-700 rounded-xl text-sm font-medium">
-                {ct('ดูตัวอย่างผลงาน', 'View Sample Work')}
-              </button>
               <div className="px-4 py-3 bg-gray-50 rounded-xl">
                 <p className="text-sm text-gray-700">
-                  {workshop.learnings && workshop.learnings.length > 0 ? workshop.learnings[0] : ct('ผ้าย้อมคราม ทำด้วยตัวเอง ทำง่ายได้ผ้าผืนละ 1 ชิ้น', 'Learn natural indigo dyeing. Easy DIY process, create 1 piece of fabric')}
+                  {workshop.learnings && workshop.learnings.length > 0 ? workshop.learnings[0] : workshop.description || ct('มาร่วมสนุกและเรียนรู้ไปด้วยกัน', 'Come join the fun and learn together.')}
                 </p>
               </div>
               {workshop.learnings && workshop.learnings.length > 1 && (
@@ -171,10 +197,7 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
             icon={<MapPin className="h-5 w-5 text-red-500" />}
             title={ct('สถานที่', 'Location')}
           >
-            <p className="text-sm text-gray-700 mb-2">{ct('โซน B ซอย 2 (บ้านจำกานฟ้า) ในชุมชนคาว', 'Zone B Soi 2 (Baan Jamkan Fah) in Loeng Him Kaw')}</p>
-            <div className="w-full h-40 rounded-2xl border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-400 text-sm">
-              {ct('[ Google Map Area ]', '[ Google Map Area ]')}
-            </div>
+            <p className="text-sm text-gray-700 mb-2">{workshop.customLocation || workshop.location?.address || workshop.location || ct('ใช้สถานที่ร้าน', 'Shop location')}</p>
           </SectionCard>
           
           {/* Contact Info */}
@@ -183,7 +206,7 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
             title={ct('ช่องทางติดต่อ', 'Contact Information')}
           >
             <p className="text-sm text-gray-700">
-              {ct('Facebook : ตัวอย่างเพจร้านที่เปิดสอนงาน + เบอร์', 'Facebook: Sample shop page + phone number')}
+              {workshop.contactInfo || ct('โปรดติดต่อผ่านแพลตฟอร์มหรือร้านค้าโดยตรง', 'Please contact via platform or directly with the shop')}
             </p>
           </SectionCard>
 
@@ -192,21 +215,26 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <p className="text-sm font-semibold text-gray-900">{ct('จำนวนที่นั่ง', 'Guests')}</p>
-                <p className="text-xs text-gray-500">{ct('สูงสุดเท่ากับ', 'Max')} {workshop.seatsLeft} {ct('คน', 'people')}</p>
+                {/* FIX: Actually use availableSeats here */}
+                <p className="text-xs text-gray-500">{ct('สูงสุดเท่ากับ', 'Max')} {availableSeats} {ct('คน', 'people')}</p>
               </div>
               <div className="flex items-center gap-3">
                 <button
+                  type="button"
                   onClick={handleDecrement}
                   disabled={guestCount <= 1}
-                  className="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                  className="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 transition"
                 >
                   <Minus className="h-4 w-4" />
                 </button>
+                
                 <span className="text-2xl font-bold text-gray-900 w-12 text-center">{guestCount}</span>
+                
                 <button
+                  type="button"
                   onClick={handleIncrement}
-                  disabled={guestCount >= workshop.seatsLeft}
-                  className="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                  disabled={guestCount >= availableSeats}
+                  className="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 transition"
                 >
                   <Plus className="h-4 w-4" />
                 </button>
@@ -215,16 +243,34 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
             <div className="text-right">
               <p className="text-sm text-gray-500">{ct('ค่าใช้จ่ายทั้งหมด', 'Total')}</p>
               <p className="text-2xl font-bold text-orange-600">
-                {workshop.price === 0 ? t('workshops.free') : `฿${workshop.price * guestCount}`}
+                {workshop.price === 0 ? (t('workshops.free') || ct('ฟรี', 'Free')) : `฿${workshop.price * guestCount}`}
               </p>
             </div>
           </div>
 
+          {submitError && (
+            <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm text-center">
+              {submitError}
+            </div>
+          )}
+
           <button
             onClick={handleEnroll}
-            className="w-full bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white font-semibold py-4 rounded-2xl transition-all shadow-lg hover:shadow-xl"
+            disabled={isSubmitting || availableSeats <= 0} 
+            className={`w-full font-semibold py-4 rounded-2xl transition-all shadow-lg hover:shadow-xl ${
+              isSubmitting || availableSeats <= 0
+                ? 'bg-gray-400 cursor-not-allowed text-white' 
+                : 'bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white'
+            }`}
           >
-            {isAuthenticated ? ct('จองเลย', 'Book Now') : ct('เข้าสู่ระบบเพื่อจอง', 'Login to Book')}
+            {isSubmitting 
+              ? ct('กำลังดำเนินการ...', 'Processing...') 
+              : availableSeats <= 0 
+                ? ct('เต็มแล้ว', 'Full')
+                : isAuthenticated 
+                  ? ct('จองเลย', 'Book Now') 
+                  : ct('เข้าสู่ระบบเพื่อจอง', 'Login to Book')
+            }
           </button>
         </div>
       </div>

@@ -5,17 +5,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
 import { BarChart, Bar, PieChart as RechartsPie, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-/**
- * Community Admin Dashboard - UI Structure Only
- * 
- * TODO: Backend APIs needed:
- * - GET /api/communities/:id/dashboard - Dashboard statistics
- * - GET /api/communities/:id/shops - List of shops in community
- * - GET /api/workshops/pending - Pending workshops for approval
- * - PATCH /api/workshops/:id/approve - Approve workshop
- * - PATCH /api/workshops/:id/reject - Reject workshop
- * - GET /api/communities/:id/stats - Various statistics for charts
- */
+/* DEPRECATED */
 
 const CommunityAdminDashboard = () => {
   const { user } = useAuth();

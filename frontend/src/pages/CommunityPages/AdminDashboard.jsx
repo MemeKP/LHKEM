@@ -9,7 +9,7 @@ import { getShopCoverImage } from '../../utils/image';
 import CommunityAssignmentNotice from '../../components/CommunityAssignmentNotice';
 
 /**
- * Admin Dashboard - ศูนย์รวมการจัดการชุมชน (หน้าหลัก)
+ * Community Admin Dashboard - ศูนย์รวมการจัดการชุมชน (หน้าหลัก)
  * รวม: Workshop รออนุมัติ, Event รออนุมัติ, ร้านค้ารออนุมัติ
  * หน้าหลักสำหรับจัดการและอนุมัติข้อมูลต่างๆ ของชุมชน
  * 
@@ -38,7 +38,20 @@ const usePendingData = (communityId) => {
     },
     enabled: !!communityId,
   });
+
   // workshop
+  const workshopsQuery = useQuery({
+    queryKey: ['community-workshops', communityId],
+    queryFn: async () => {
+      if (!communityId) return [];
+      // Adjust path to match your backend (e.g., /api/management/workshops)
+      const res = await api.get('/management/workshops/pending', { 
+          params: { communityId } 
+        });
+      return res.data?.data || res.data || [];
+    },
+    enabled: !!communityId,
+  });
 
   // event
   const eventsQuery = useQuery({
@@ -47,12 +60,12 @@ const usePendingData = (communityId) => {
     enabled: !!communityId,
   });
 
-  return { eventsQuery, shopsQuery, pendingShopsQuery };
+  return { eventsQuery, shopsQuery, pendingShopsQuery, workshopsQuery };
 };
 
 const AdminDashboard = () => {
   const { community, hasCommunity } = useOutletContext();
-  const { eventsQuery, shopsQuery, pendingShopsQuery } = usePendingData(community?._id);
+  const { eventsQuery, shopsQuery, pendingShopsQuery, workshopsQuery } = usePendingData(community?._id);
   const navigate = useNavigate();
   const { ct } = useTranslation();
   const [activeTab, setActiveTab] = useState('workshops');
@@ -74,40 +87,35 @@ const AdminDashboard = () => {
   const pendingShops = pendingShopsQuery.data || communityShops.filter(
     (shop) => ((shop.status || 'PENDING').toUpperCase()) !== 'ACTIVE'
   );
-
-  // Mock data - Workshop รออนุมัติ
-  const pendingWorkshops = [
-    {
-      id: 'w1',
-      title: 'กองสอนทอผ้าครามจังหวัดน่าน',
-      shop: 'บ้านครามโหล่งฮิมคาว',
-      description: 'เรียนรู้การย้อมผ้าด้วยสีครามจากธรรมชาติ ตั้งแต่การเตรียมน้ำย้อม การพับผ้า จนได้ผืนผ้าสวยงาม',
-      price: 450,
-      seats: 8,
-      duration: '3 ชม.',
-      submittedAt: '2024-01-15T10:30:00',
-      status: 'รออนุมัติ',
-      image: null
-    },
-    {
-      id: 'w2',
-      title: 'Workshop เครื่องปั้นดินเผาแบบล้านนา',
-      shop: 'เครื่องปั้นดินเผาบ้านมอญ',
-      description: 'สัมผัสประสบการณ์การปั้นดินเผาแบบล้านนา ทำภาชนะเครื่องใช้ด้วยมือของคุณเอง',
-      price: 380,
-      seats: 6,
-      duration: '2.5 ชม.',
-      submittedAt: '2024-01-16T14:20:00',
-      status: 'รออนุมัติ',
-      image: null
-    }
-  ];
+  const allWorkshops = workshopsQuery.data || [];
+  const pendingWorkshops = allWorkshops.filter(w => w.approvalStatus === 'PENDING');
+  const revisionWorkshops = allWorkshops.filter(w => w.approvalStatus === 'CHANGE');
 
   const pendingCounts = {
     workshops: pendingWorkshops.length,
     events: actionableEvents.length,
+    revisionWorkshops: revisionWorkshops.length,
     shops: pendingShops.length,
     total: pendingWorkshops.length + pendingEvents.length + pendingShops.length,
+  };
+
+  const handleApproveWorkshop = async (workshopId) => {
+    if (!window.confirm(ct('คุณต้องการอนุมัติ Workshop นี้ใช่หรือไม่?', 'Approve this workshop?'))) return;
+    
+    try {
+      // Adjust path to match your backend
+      await api.patch(`/api/management/workshops/${workshopId}`, {
+        approvalStatus: 'ACTIVE',
+        registrationStatus: 'OPEN'
+      });
+      alert(ct('อนุมัติ Workshop สำเร็จ', 'Workshop approved successfully'));
+      
+      // Refresh the data instantly
+      queryClient.invalidateQueries(['community-workshops']);
+    } catch (error) {
+      console.error('Failed to approve:', error);
+      alert(ct('เกิดข้อผิดพลาดในการอนุมัติ', 'Failed to approve workshop'));
+    }
   };
 
   // TODO: Fetch from API
@@ -145,22 +153,20 @@ const AdminDashboard = () => {
   // };
 
   const getStatusColor = (status) => {
-    // ปรับตาม enum ของ back (PENDING, APPROVED)
     switch ((status || '').toUpperCase()) {
-      case 'PENDING':
-        return 'bg-yellow-100 text-yellow-800';
+      case 'PENDING': return 'bg-yellow-100 text-yellow-800';
       case 'APPROVED':
-      case 'ACTIVE':
-        return 'bg-green-100 text-green-800';
-      case 'REJECTED':
-        return 'bg-red-100 text-red-800';
+      case 'ACTIVE': return 'bg-green-100 text-green-800';
+      case 'CHANGE': return 'bg-orange-100 text-orange-800'; // 👈 ADDED
+      case 'REJECTED': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const statusLabel = (status) => {
-    const value = status || 'PENDING';
+    const value = (status || 'PENDING').toUpperCase();
     if (value === 'ACTIVE') return ct('อนุมัติแล้ว', 'Approved');
+    if (value === 'CHANGE') return ct('รอการแก้ไข', 'Needs Revision'); // 👈 ADDED
     if (value === 'REJECTED') return ct('ถูกปฏิเสธ', 'Rejected');
     return ct('รออนุมัติ', 'Pending');
   };
@@ -273,7 +279,7 @@ const AdminDashboard = () => {
               <div className="w-10 h-10 bg-[#FFF9C4] rounded-lg flex items-center justify-center">
                 <FileText className="h-5 w-5 text-[#F9A825]" />
               </div>
-              <span className="text-2xl font-bold text-[#1A1A1A]">{pendingCounts.workshops}</span>
+              <span className="text-2xl font-bold text-[#1A1A1A]">{pendingCounts.revisionWorkshops}</span>
             </div>
             <p className="text-sm font-medium text-[#666666]">{ct('Workshops รอการแก้ไข', 'Workshops Review')}</p>
           </div>
@@ -378,65 +384,73 @@ const AdminDashboard = () => {
           </button>
         </div>
 
-        {/* Workshop Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 animate-fadeIn">
-          {pendingWorkshops.map((workshop) => (
-            <div key={workshop.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200 hover:shadow-md transition-all duration-300 hover:-translate-y-1">
-              {/* Workshop Image */}
-              <div className="relative h-48 bg-gradient-to-br from-blue-100 to-blue-200">
-                {workshop.image ? (
-                  <img src={workshop.image} alt={workshop.title} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <FileText className="h-16 w-16 text-blue-300" />
-                  </div>
-                )}
-                {/* Pending Badge */}
-                <div className="absolute top-3 right-3">
-                  <span className="px-3 py-1 bg-[#E53935] text-white rounded-md text-xs font-semibold">
-                    {ct('รออนุมัติ', 'Pending')}
-                  </span>
-                </div>
-              </div>
-
-              {/* Workshop Info */}
-              <div className="p-4">
-                <span className="inline-block px-2 py-1 bg-[#FFF3E0] text-[#F57C00] rounded text-xs font-medium mb-2">
-                  {ct('ร้านค้าของฉัน', 'My Shop')}
-                </span>
-                <h3 className="text-base font-bold text-[#1A1A1A] mb-2 line-clamp-2">
-                  {workshop.title}
-                </h3>
-                <p className="text-sm text-[#666666] mb-3 line-clamp-2">
-                  {workshop.description}
-                </p>
-
-                {/* Workshop Details */}
-                <div className="flex items-center gap-3 text-sm text-[#666666] mb-4">
-                  <span className="flex items-center gap-1">
-                    <span className="font-semibold text-[#1A1A1A]">฿{workshop.price}</span>
-                  </span>
-                  <span>•</span>
-                  <span>{workshop.duration}</span>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => navigate(`/community-admin/workshops/${workshop.id}/approve`)}
-                    className="flex-1 px-4 py-2 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-sm font-semibold rounded-lg transition-all"
-                  >
-                    {ct('ตรวจสอบรายละเอียด', 'Review')}
-                  </button>
-                  <button
-                    className="px-4 py-2 bg-[#1E293B] hover:bg-[#0F172A] text-white text-sm font-semibold rounded-lg transition-all"
-                  >
-                    {ct('อนุมัติ', 'Approve')}
-                  </button>
-                </div>
-              </div>
+        {/* Real Pending Workshop Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          {pendingWorkshops.length === 0 ? (
+            <div className="col-span-3 bg-white border border-dashed border-gray-300 rounded-2xl p-8 text-center">
+              <CheckCircle className="h-12 w-12 text-green-300 mx-auto mb-4" />
+              <p className="text-gray-600">{ct('ไม่มี Workshop รออนุมัติในขณะนี้', 'No pending workshops.')}</p>
             </div>
-          ))}
+          ) : (
+            pendingWorkshops.map((workshop) => (
+              <div key={workshop._id || workshop.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200 hover:shadow-md transition-all">
+                {/* Workshop Image */}
+                <div className="relative h-48 bg-gradient-to-br from-blue-100 to-blue-200">
+                  {workshop.image || workshop.imageUrl ? (
+                    <img src={workshop.image || workshop.imageUrl} alt={workshop.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <FileText className="h-16 w-16 text-blue-300" />
+                    </div>
+                  )}
+                  {/* Pending Badge */}
+                  <div className="absolute top-3 right-3">
+                    <span className="px-3 py-1 bg-[#E53935] text-white rounded-md text-xs font-semibold">
+                      {ct('รออนุมัติ', 'Pending')}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Workshop Info */}
+                <div className="p-4">
+                  <span className="inline-block px-2 py-1 bg-[#FFF3E0] text-[#F57C00] rounded text-xs font-medium mb-2">
+                    {workshop.shop?.shopName || workshop.shopName || ct('ร้านค้า', 'Shop')}
+                  </span>
+                  <h3 className="text-base font-bold text-[#1A1A1A] mb-2 line-clamp-2">
+                    {workshop.title}
+                  </h3>
+                  <p className="text-sm text-[#666666] mb-3 line-clamp-2">
+                    {workshop.description}
+                  </p>
+
+                  {/* Workshop Details */}
+                  <div className="flex items-center gap-3 text-sm text-[#666666] mb-4">
+                    <span className="flex items-center gap-1">
+                      <span className="font-semibold text-[#1A1A1A]">฿{workshop.price}</span>
+                    </span>
+                    <span>•</span>
+                    <span>{workshop.duration || ct('ไม่ระบุ', 'N/A')}</span>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => navigate(`/community-admin/workshops/${workshop._id || workshop.id}/approve`)}
+                      className="flex-1 px-4 py-2 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-sm font-semibold rounded-lg transition-all"
+                    >
+                      {ct('ตรวจสอบรายละเอียด', 'Review')}
+                    </button>
+                    <button
+                      onClick={() => handleApproveWorkshop(workshop._id || workshop.id)}
+                      className="px-4 py-2 bg-[#1E293B] hover:bg-[#0F172A] text-white text-sm font-semibold rounded-lg transition-all"
+                    >
+                      {ct('อนุมัติ', 'Approve')}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
         {/* งานที่ต้องจัดการ Section Title with CTA */}
