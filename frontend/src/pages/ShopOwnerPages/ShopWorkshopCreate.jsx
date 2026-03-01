@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, MapPin, Clock, Users, Calendar, Plus, X, Image as ImageIcon } from 'lucide-react';
 import { useMyShop } from '../../hooks/useMyShop';
 import ShopPendingApprovalNotice from '../../components/ShopPendingApprovalNotice';
+import api from '../../services/api'; // ADDED: For backend connection
 
 const ShopWorkshopCreate = () => {
   const navigate = useNavigate();
@@ -75,28 +76,62 @@ const ShopWorkshopCreate = () => {
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = (e) => {
+  // CRITICAL FIX: Updated handleSubmit to post to real backend instead of localStorage
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!shop?._id) {
+      setMessage({ type: 'error', text: 'ไม่พบข้อมูลร้านค้า' });
+      return;
+    }
+
     setSaving(true);
     try {
-      const draft = JSON.parse(localStorage.getItem('shopDraft') || '{}');
-      const newWorkshop = {
-        id: `wk-${Date.now()}`,
-        ...form,
-        seatLimit: Number(form.seatLimit || 0),
+      // 1. Construct standard ISO Date for the required backend 'date' field
+      const standardDate = form.registrationStartDate 
+        ? new Date(`${form.registrationStartDate}T${form.workshopStartTime || '00:00'}:00`).toISOString() 
+        : new Date().toISOString();
+
+      // 2. Map the frontend UI fields to match your CreateWorkshopDto exactly
+      const payload = {
+        title: form.title,
+        description: form.description,
         price: Number(form.price || 0),
-        seatsBooked: 0,
-        status: 'PENDING',
-        createdAt: new Date().toISOString()
+        capacity: Number(form.seatLimit || 0), // Mapping 'seatLimit' to 'capacity'
+        date: standardDate, 
+        
+        // Ensure a valid category is sent to bypass the @IsIn decorator
+        category: form.categories.length > 0 ? 'งานฝีมือ' : 'งานฝีมือ', 
+        
+        // Pass the extra UI fields to the backend
+        startDate: form.registrationStartDate,
+        endDate: form.registrationEndDate,
+        startTime: form.workshopStartTime,
+        endTime: form.workshopEndTime,
+        image: form.imageUrl, // Base64
+        
+        // 3. Attach MongoDB Relational IDs
+        shopId: String(shop._id), 
+        communityId: String(shop.community?._id || shop.community || shop.communityId), 
       };
-      const workshops = Array.isArray(draft.workshops) ? draft.workshops : [];
-      const updated = { ...draft, workshops: [newWorkshop, ...workshops] };
-      localStorage.setItem('shopDraft', JSON.stringify(updated));
-      localStorage.setItem('shopHasSetup', 'true');
+
+      // 4. Send to the secured management route
+      await api.post('/management/workshops', payload);
+
       setMessage({ type: 'success', text: 'สร้าง Workshop สำเร็จ' });
-      navigate(`/${slug}/shop/dashboard`);
-    } catch {
-      setMessage({ type: 'error', text: 'บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง' });
+      
+      // Delay navigation slightly so user sees success message
+      setTimeout(() => {
+        navigate(`/${slug}/shop/dashboard`);
+      }, 1500);
+
+    } catch (error) {
+      const backendError = error.response?.data?.message || error.message;
+      setMessage({ 
+        type: 'error', 
+        text: `บันทึกไม่สำเร็จ: ${Array.isArray(backendError) ? backendError[0] : backendError}` 
+      });
+      console.error('Creation error:', error);
     } finally {
       setSaving(false);
     }
@@ -154,7 +189,7 @@ const ShopWorkshopCreate = () => {
 
         {message.text && (
           <div
-            className={`mb-4 p-3 rounded-lg ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}
+            className={`mb-4 p-3 rounded-lg ${message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}
           >
             {message.text}
           </div>
@@ -219,6 +254,7 @@ const ShopWorkshopCreate = () => {
               rows={4}
               placeholder="อธิบายรายละเอียด Workshop ของคุณ เช่น สิ่งที่จะได้เรียนรู้ กิจกรรมที่จะทำ"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all resize-none"
+              required
             />
           </div>
 
@@ -234,6 +270,7 @@ const ShopWorkshopCreate = () => {
                   value={form.registrationStartDate}
                   onChange={handleChange}
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
+                  required
                 />
               </div>
               <div>
@@ -261,6 +298,7 @@ const ShopWorkshopCreate = () => {
                   value={form.workshopStartTime}
                   onChange={handleChange}
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
+                  required
                 />
               </div>
               <div>
@@ -271,6 +309,7 @@ const ShopWorkshopCreate = () => {
                   value={form.workshopEndTime}
                   onChange={handleChange}
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
+                  required
                 />
               </div>
             </div>
@@ -330,7 +369,9 @@ const ShopWorkshopCreate = () => {
                 value={form.seatLimit}
                 onChange={handleChange}
                 placeholder="เช่น 20"
+                min="1"
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
+                required
               />
             </div>
           </div>
@@ -339,14 +380,16 @@ const ShopWorkshopCreate = () => {
           <div className="animate-fadeIn" style={{animationDelay: '0.9s'}}>
             <label className="block text-sm font-semibold text-[#3D3D3D] mb-3">💰 ค่าสมัคร</label>
             <div>
-              <label className="block text-xs text-[#6B6B6B] mb-1.5">ราคา</label>
+              <label className="block text-xs text-[#6B6B6B] mb-1.5">ราคา (บาท)</label>
               <input
                 type="number"
                 name="price"
                 value={form.price}
                 onChange={handleChange}
                 placeholder="฿0"
+                min="0"
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
+                required
               />
               <p className="text-xs text-[#9CA3AF] mt-1.5">ใส่ 0 ถ้าเป็น Workshop ฟรี</p>
             </div>

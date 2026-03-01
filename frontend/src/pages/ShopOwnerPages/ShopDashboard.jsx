@@ -1,29 +1,58 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Plus, Edit, Trash2, Eye, Users, DollarSign, Clock, CheckCircle, XCircle, AlertCircle, Camera, Settings as SettingsIcon, Bell, Calendar, TrendingUp, Star } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Users, DollarSign, Clock, CheckCircle, XCircle, AlertCircle, Camera, Settings as SettingsIcon, Bell, Calendar, TrendingUp, Star, Edit3 } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useMyShop } from '../../hooks/useMyShop';
 import { resolveImageUrl } from '../../utils/image';
+import api from '../../services/api';
 
 const ShopDashboard = () => {
-  const { t } = useTranslation();
+  const { t, ct } = useTranslation();
   const navigate = useNavigate();
   const { slug } = useParams();
+  
   const { data: shop, isLoading: shopLoading, clearShopCache } = useMyShop();
   const isPendingShop = !shopLoading && shop && shop.status !== 'ACTIVE';
 
-  // Clear shop cache when user changes
+  const [activeTab, setActiveTab] = useState('all');
+  const [workshops, setWorkshops] = useState([]);
+  const [isLoadingWorkshops, setIsLoadingWorkshops] = useState(false);
+
+  // Clear cache
   useEffect(() => {
     return () => {
       clearShopCache();
     };
   }, [clearShopCache]);
 
+  // Loading
   useEffect(() => {
     if (!shopLoading && !shop) {
       navigate('/shop/create');
     }
   }, [shop, shopLoading, navigate]);
+
+  // Fetch Shop's Workshops (WITH CACHE BUSTING)
+  useEffect(() => {
+    const fetchShopWorkshops = async () => {
+      if (!shop?._id) return;
+      
+      setIsLoadingWorkshops(true);
+      try {
+        // Force fresh data by appending a timestamp to the URL
+        const timestamp = new Date().getTime();
+        const res = await api.get(`/management/workshops/shop/${shop._id}?_t=${timestamp}`);
+        const data = res.data?.data || res.data || [];
+        setWorkshops(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Failed to fetch shop workshops:', error);
+      } finally {
+        setIsLoadingWorkshops(false);
+      }
+    };
+
+    fetchShopWorkshops();
+  }, [shop?._id]);
 
   const profile = {
     name: shop?.shopName || '',
@@ -36,91 +65,101 @@ const ShopDashboard = () => {
     status: shop?.status || 'PENDING',
   };
 
-  const workshops = [];
-  const activeTab = 'all';
-
   const stats = useMemo(() => {
-    const active = workshops.filter(w => w.status === 'ACTIVE');
-    const pending = workshops.filter(w => w.status === 'PENDING');
+    const active = workshops.filter(w => (w.approvalStatus || w.status) === 'ACTIVE');
+    const pending = workshops.filter(w => (w.approvalStatus || w.status || 'PENDING') === 'PENDING');
+    
     return {
       totalWorkshops: workshops.length,
       activeWorkshops: active.length,
-      totalBookings: workshops.reduce((sum, w) => sum + (w.seatsBooked || 0), 0),
-      totalRevenue: workshops.reduce((sum, w) => sum + ((w.seatsBooked || 0) * (w.price || 0)), 0),
+      totalBookings: workshops.reduce((sum, w) => sum + (w.current_participants || w.seatsBooked || 0), 0),
+      totalRevenue: workshops.reduce((sum, w) => sum + ((w.current_participants || w.seatsBooked || 0) * (w.price || 0)), 0),
       averageRating: 0,
       pendingApprovals: pending.length,
       pendingWorkshops: pending
     };
   }, [workshops]);
-  const handleDeleteWorkshop = async (id) => {
-    if (!confirm(t('shopDashboard.confirmDelete'))) return;
 
-    const draft = JSON.parse(localStorage.getItem('shopDraft') || '{}');
-    const updated = {
-      ...draft,
-      workshops: (draft.workshops || []).filter(w => w.id !== id)
-    };
-    localStorage.setItem('shopDraft', JSON.stringify(updated));
-    setWorkshops(updated.workshops);
-  };
+  const handleDeleteWorkshop = async (workshopId) => {
+    const confirmDelete = window.confirm(ct('คุณต้องการลบ Workshop นี้และข้อมูลการลงทะเบียนทั้งหมดใช่หรือไม่?', 'Do you want to delete this Workshop and all registration data?'));
+    if (!confirmDelete) return;
 
-  const handleProfileChange = (e) => {
-    const { name, value } = e.target;
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.');
-      setProfile(prev => ({
-        ...prev,
-        [parent]: { ...(prev[parent]||{}), [child]: value }
-      }));
-    } else {
-      setProfile(prev => ({ ...prev, [name]: value }));
+    try {
+      await api.delete(`/management/workshops/${workshopId}`);
+      
+      setWorkshops(prev => prev.filter(w => (w._id === workshopId || w.id === workshopId)));
+      
+      alert(ct('ลบข้อมูลสำเร็จเรียบร้อยแล้ว', 'Data deleted successfully'));
+    } catch (error) {
+      console.error('Delete failed:', error);
+      alert(ct('ไม่สามารถลบข้อมูลได้ กรุณาลองใหม่อีกครั้ง', 'Unable to delete data. Please try again.'));
     }
   };
+  
+  const renderBadges = (approvalStatus, registrationStatus) => {
+    let approvalBadge = null;
+    let regBadge = null;
 
-  const handleImagePick = (key, file) => {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setProfile(prev => ({ ...prev, [key]: reader.result }));
-    };
-    reader.readAsDataURL(file);
-  };
+    switch (approvalStatus) {
+      case 'PENDING':
+        approvalBadge = <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 border border-yellow-200"><Clock className="h-3 w-3" /> {ct('รออนุมัติ', 'Pending Approval')}</span>;
+        break;
+      case 'CHANGE':
+        approvalBadge = <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200"><Edit3 className="h-3 w-3" /> {ct('ต้องแก้ไข', 'Revision Needed')}</span>;
+        break;
+      case 'REJECTED':
+        approvalBadge = <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 border border-red-200"><AlertCircle className="h-3 w-3" /> {ct('ไม่อนุมัติ', 'Rejected')}</span>;
+        break;
+      case 'ACTIVE':
+        approvalBadge = <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200"><CheckCircle className="h-3 w-3" /> {ct('อนุมัติ', 'Approved')}</span>;
+        break;
+      default:
+        approvalBadge = null;
+    }
 
-  const saveProfile = () => {
-    const draft = JSON.parse(localStorage.getItem('shopDraft') || '{}');
-    const updated = { ...draft, ...profile };
-    localStorage.setItem('shopDraft', JSON.stringify(updated));
-    setShowSettings(false);
-  };
-
-  const getStatusBadge = (status) => {
-    const config = {
-      PENDING: { bg: 'bg-yellow-100', text: 'text-yellow-700', icon: Clock, label: t('shopDashboard.status.pending') },
-      ACTIVE: { bg: 'bg-green-100', text: 'text-green-700', icon: CheckCircle, label: t('shopDashboard.status.active') },
-      CLOSED: { bg: 'bg-gray-100', text: 'text-gray-700', icon: XCircle, label: t('shopDashboard.status.closed') },
-      CANCELLED: { bg: 'bg-red-100', text: 'text-red-700', icon: XCircle, label: t('shopDashboard.status.cancelled') },
-      REJECTED: { bg: 'bg-red-100', text: 'text-red-700', icon: AlertCircle, label: t('shopDashboard.status.rejected') }
-    };
-
-    const { bg, text, icon: Icon, label } = config[status] || config.PENDING;
+    if (approvalStatus === 'ACTIVE') {
+       if (registrationStatus === 'OPEN') {
+          regBadge = <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700"><Users className="h-3 w-3" /> {ct('เปิดรับสมัคร', 'Open')}</span>;
+       } else {
+          regBadge = <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700"><XCircle className="h-3 w-3" /> {ct('ปิดรับสมัคร', 'Closed')}</span>;
+       }
+    }
 
     return (
-      <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${bg} ${text}`}>
-        <Icon className="h-3 w-3" />
-        {label}
-      </span>
+      <div className="flex flex-col gap-2 items-end">
+        {approvalBadge}
+        {regBadge}
+      </div>
     );
   };
 
   const filteredWorkshops = workshops.filter(w => {
-    if (activeTab === 'all') return true;
-    if (activeTab === 'active') return w.status === 'ACTIVE';
-    if (activeTab === 'pending') return w.status === 'PENDING';
-    if (activeTab === 'closed') return w.status === 'CLOSED';
-    return true;
+    const approval = (w.approvalStatus || w.status || 'PENDING').toUpperCase();
+    const registration = (w.registrationStatus || 'CLOSED').toUpperCase();
+    
+    switch (activeTab) {
+      case 'all':
+        return true;
+      case 'active':
+        return approval === 'ACTIVE' && registration === 'OPEN';
+      case 'pending':
+        return approval === 'PENDING';
+      case 'revision':
+        return approval === 'CHANGE' || approval === 'REJECTED';
+      case 'closed':
+        return approval === 'ACTIVE' && registration !== 'OPEN';
+      default:
+        return true;
+    }
   });
 
-  // always render directly in prototype
+  const dashboardTabs = [
+    { id: 'all', label: ct('ทั้งหมด', 'All') },
+    { id: 'active', label: ct('เปิดรับสมัคร', 'Active') },
+    { id: 'pending', label: ct('รอตรวจสอบ', 'Pending') },
+    { id: 'revision', label: ct('ต้องแก้ไข', 'Needs Revision') },
+    { id: 'closed', label: ct('ปิดรับสมัคร', 'Closed') }
+  ];
 
   return (
     <div className="min-h-screen bg-[#F5EFE7] py-8 animate-fadeIn">
@@ -130,7 +169,6 @@ const ShopDashboard = () => {
             <div className="aspect-[16/6] w-full bg-gray-200">
               {profile.coverUrl && (
                 <img 
-                // src={profile.coverUrl} 
                 src={resolveImageUrl(profile.coverUrl)}
                 alt="cover" 
                 className="w-full h-full object-cover" />
@@ -148,7 +186,7 @@ const ShopDashboard = () => {
                 className="flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-[#E07B39] text-[#E07B39] font-medium rounded-full hover:bg-[#E07B39] hover:text-white transition-all hover:scale-105 shadow-sm"
               >
                 <SettingsIcon className="h-4 w-4" />
-                แก้ไขข้อมูลร้าน
+                {ct('แก้ไขข้อมูลร้าน', 'Edit Shop Profile')}
               </button>
               <button
                 onClick={() => {
@@ -163,7 +201,7 @@ const ShopDashboard = () => {
                 }`}
               >
                 <Plus className="h-4 w-4" />
-                สร้าง Workshop ใหม่
+                {ct('สร้าง Workshop ใหม่', 'Create Workshop')}
               </button>
             </div>
           </div>
@@ -193,7 +231,7 @@ const ShopDashboard = () => {
                 <div className="p-2 bg-[#FFF7ED] rounded-lg">
                   <Calendar className="h-5 w-5 text-[#E07B39]" />
                 </div>
-                <p className="text-xs font-semibold text-[#6B6B6B]">Workshop ทั้งหมด</p>
+                <p className="text-xs font-semibold text-[#6B6B6B]">{ct('Workshop ทั้งหมด', 'Total Workshops')}</p>
               </div>
               <p className="text-2xl font-bold text-[#3D3D3D]">{stats.totalWorkshops}</p>
             </div>
@@ -203,7 +241,7 @@ const ShopDashboard = () => {
                 <div className="p-2 bg-[#E8F5E9] rounded-lg">
                   <Users className="h-5 w-5 text-[#4CAF50]" />
                 </div>
-                <p className="text-xs font-semibold text-[#6B6B6B]">ผู้เข้าร่วมทั้งหมด</p>
+                <p className="text-xs font-semibold text-[#6B6B6B]">{ct('ผู้เข้าร่วมทั้งหมด', 'Total Participants')}</p>
               </div>
               <p className="text-2xl font-bold text-[#3D3D3D]">{stats.totalBookings}</p>
             </div>
@@ -212,145 +250,73 @@ const ShopDashboard = () => {
                 <div className="p-2 bg-[#E3F2FD] rounded-lg">
                   <TrendingUp className="h-5 w-5 text-[#2196F3]" />
                 </div>
-                <p className="text-xs font-semibold text-[#6B6B6B]">Workshop ที่รออนุมัติ</p>
+                <p className="text-xs font-semibold text-[#6B6B6B]">{ct('Workshop ที่รออนุมัติ', 'Pending Workshops')}</p>
               </div>
               <p className="text-2xl font-bold text-[#3D3D3D]">{stats.pendingApprovals}</p>
             </div>
           </div>
         )}
 
-        {/* Notifications Section */}
-        <div className="mb-8 animate-slideUp">
-          <div className="flex items-center gap-2 mb-4">
-            <Bell className="h-5 w-5 text-orange-600" />
-            <h2 className="text-lg font-semibold text-[#2F4F2F]">การแจ้งเตือน</h2>
-          </div>
-          <div className="space-y-3">
-            {stats.pendingApprovals > 0 && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-yellow-900">Workshop ที่รอการยืนยัน</p>
-                  <p className="text-sm text-yellow-700 mt-1">
-                    คุณมี Workshop ที่รอการยืนยันจากแอดมิน {stats.pendingApprovals} รายการ
-                  </p>
-                </div>
-              </div>
-            )}
-            {workshops.filter(w => w.status === 'ACTIVE').length > 0 && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-green-900">Workshop ที่เปิดสอนอยู่</p>
-                  <p className="text-sm text-green-700 mt-1">
-                    กำลังเปิดสอน Workshop อยู่ {workshops.filter(w => w.status === 'ACTIVE').length} รายการ ตรวจสอบผู้เข้าร่วมได้ที่รายละเอียด Workshop
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Quick Actions Section */}
-        <div className="mb-8 animate-slideUp">
-          <div className="flex items-center gap-2 mb-4">
-            <Star className="h-5 w-5 text-orange-600" />
-            <h2 className="text-lg font-semibold text-[#2F4F2F]">ข้อมูลเสริม</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition-shadow">
-              <h3 className="font-semibold text-[#2F4F2F] mb-2">กลยุทธ์ของคุณได้ผล!</h3>
-              <p className="text-sm text-[#6B6B6B] mb-3">
-                การตั้งราคาและคำอธิบายที่ดีจะช่วยให้ Workshop ของคุณดึงดูดผู้เข้าร่วมมากขึ้น
-              </p>
-            </div>
-            <div className="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition-shadow">
-              <h3 className="font-semibold text-[#2F4F2F] mb-2">เคล็ดลับ</h3>
-              <p className="text-sm text-[#6B6B6B]">
-                ลูกค้ามักจะชอบ Workshop ที่มีรูปภาพสวยและคำอธิบายชัดเจน
-              </p>
-            </div>
-          </div>
-        </div>
-
         <div className="bg-white rounded-lg shadow-sm">
           <div className="px-6 pt-6 pb-4">
-            <h2 className="text-xl font-bold text-[#2F4F2F] mb-4">Workshop ของร้านคุณ</h2>
+            <h2 className="text-xl font-bold text-[#2F4F2F] mb-4">{ct('Workshop ของร้านคุณ', 'Your Workshops')}</h2>
           </div>
-          <div className="border-b border-gray-200">
-            <div className="flex space-x-8 px-6">
-              {['all', 'active', 'pending', 'closed'].map((tab) => (
+          <div className="border-b border-gray-200 overflow-x-auto">
+            <div className="flex space-x-8 px-6 whitespace-nowrap min-w-max">
+              {dashboardTabs.map((tab) => (
                 <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
                   className={`py-4 px-1 border-b-2 font-medium text-sm transition-all ${
-                    activeTab === tab
+                    activeTab === tab.id
                       ? 'border-[#E07B39] text-[#E07B39]'
                       : 'border-transparent text-[#6B6B6B] hover:text-[#3D3D3D] hover:border-gray-300'
                   }`}
                 >
-                  {t(`shopDashboard.tabs.${tab}`)}
+                  {tab.label}
                 </button>
               ))}
             </div>
           </div>
 
           <div className="p-6">
-            {filteredWorkshops.length === 0 ? (
+            {isLoadingWorkshops ? (
+               <div className="flex justify-center py-10">
+                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+               </div>
+            ) : filteredWorkshops.length === 0 ? (
               <div className="text-center py-12">
                 <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-[#2F4F2F] mb-2">
-                  {t('shopDashboard.noWorkshops.title')}
+                  {ct('ไม่มีข้อมูล Workshop ในหมวดหมู่นี้', 'No workshops in this category')}
                 </h3>
-                <p className="text-gray-600 mb-6">
-                  {t('shopDashboard.noWorkshops.description')}
-                </p>
-                <button
-                  onClick={() => {
-                    if (isPendingShop) return;
-                    navigate(`/${slug}/shop/workshops/create`);
-                  }}
-                  disabled={isPendingShop}
-                  className={`inline-flex items-center px-6 py-3 font-semibold rounded-full shadow-md transition-all ${
-                    isPendingShop
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'bg-[#4CAF50] text-white hover:bg-[#45A049] hover:scale-105'
-                  }`}
-                >
-                  <Plus className="h-5 w-5 mr-2" />
-                  {isPendingShop ? t('shopDashboard.pending.waitApproval', 'รอการอนุมัติร้าน') : t('shopDashboard.createWorkshop')}
-                </button>
               </div>
             ) : (
               <div className="space-y-4 animate-stagger">
                 {filteredWorkshops.map((workshop) => (
-                  <div key={workshop.id} className="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition-shadow animate-scaleIn">
+                  <div key={workshop._id} className="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition-shadow animate-scaleIn">
                     <div className="flex gap-4">
                       <div className="relative w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
-                        {workshop.imageUrl && (
-                          <img src={workshop.imageUrl} alt={workshop.title} className="w-full h-full object-cover" />
+                        {(workshop.images?.[0] || workshop.imageUrl || workshop.picture) && (
+                          <img 
+                            src={resolveImageUrl(workshop.images?.[0] || workshop.imageUrl || workshop.picture)} 
+                            alt={workshop.title} 
+                            className="w-full h-full object-cover" 
+                          />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-4 mb-2">
                           <div className="flex-1">
                             <h3 className="text-lg font-semibold text-[#2F4F2F] mb-1">{workshop.title}</h3>
-                            <p className="text-sm text-[#6B6B6B] line-clamp-2">{workshop.description || 'ไม่มีคำอธิบาย'}</p>
+                            <p className="text-sm text-[#6B6B6B] line-clamp-2">{workshop.description || ct('ไม่มีคำอธิบาย', 'No description')}</p>
                           </div>
-                          {getStatusBadge(workshop.status)}
+                          {renderBadges(workshop.approvalStatus, workshop.registrationStatus)}
                         </div>
                         <div className="flex items-center gap-6 text-sm text-gray-600 mt-3">
                           <div className="flex items-center gap-1">
-                            <Star className="h-4 w-4 text-yellow-500" />
-                            <span>{workshop.rating ? Number(workshop.rating).toFixed(1) : '4.9'} คะแนน</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-4 w-4" />
-                            <span>{workshop.duration ? `${workshop.duration} นาที` : '180 นาที'}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
                             <Users className="h-4 w-4" />
-                            <span>{workshop.seatsBooked || 0} / {workshop.seatLimit || 10} คน</span>
+                            <span>{workshop.current_participants || 0} / {workshop.capacity || 10} {ct('คน', 'people')}</span>
                           </div>
                         </div>
                         <div className="flex items-center justify-between mt-4">
@@ -359,7 +325,7 @@ const ShopDashboard = () => {
                             <button
                               onClick={() => {
                                 if (isPendingShop) return;
-                                navigate(`/${slug}/shop/workshops/${workshop.id}`);
+                                navigate(`/${slug}/shop/workshops/${workshop._id}`);
                               }}
                               disabled={isPendingShop}
                               className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
@@ -368,12 +334,12 @@ const ShopDashboard = () => {
                                   : 'bg-[#E07B39] text-white hover:bg-[#D66B29] hover:scale-105 shadow-sm'
                               }`}
                             >
-                              {isPendingShop ? t('shopDashboard.pending.disabled', 'รออนุมัติ') : 'ดูรายละเอียด'}
+                              {isPendingShop ? ct('รออนุมัติ', 'Pending') : ct('ดูรายละเอียด', 'View Details')}
                             </button>
                             <button
                               onClick={() => {
                                 if (isPendingShop) return;
-                                handleDeleteWorkshop(workshop.id);
+                                handleDeleteWorkshop(workshop._id);
                               }}
                               disabled={isPendingShop}
                               className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
@@ -382,7 +348,7 @@ const ShopDashboard = () => {
                                   : 'bg-red-50 text-red-600 hover:bg-red-100 hover:scale-105'
                               }`}
                             >
-                              {t('delete', 'ลบ')}
+                              {ct('ลบ', 'Delete')}
                             </button>
                           </div>
                         </div>

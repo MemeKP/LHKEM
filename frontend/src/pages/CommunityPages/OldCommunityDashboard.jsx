@@ -5,6 +5,8 @@ import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
 import api from '../../services/api';
 
+/* DEPRECATED */
+
 const CommunityAdminDashboard = () => {
   const { user } = useAuth();
   const { t } = useTranslation();

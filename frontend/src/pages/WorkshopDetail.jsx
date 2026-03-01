@@ -10,7 +10,7 @@ const WorkshopDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
-  const { t } = useTranslation();
+  const { t, ct } = useTranslation();
   const [workshop, setWorkshop] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +30,7 @@ const WorkshopDetail = () => {
         api.get(`/workshops/${id}/reviews`)
       ]);
 
-      setWorkshop(workshopRes.data.workshop);
+      setWorkshop(workshopRes.data.workshop || workshopRes.data.data || workshopRes.data);
       setReviews(reviewsRes.data.reviews || []);
     } catch (error) {
       console.error('Failed to fetch workshop:', error);
@@ -46,28 +46,35 @@ const WorkshopDetail = () => {
     }
 
     setEnrolling(true);
-    try {
-      await api.post(`/workshops/${id}/enroll`, {
-        userId: user.id,
-        participants
-      });
 
-      // Show E-Ticket Modal after successful booking
+    try {
+      const payload = {
+        workshopId: String(id), 
+        userId: String(user?.userId || user?._id || user?.id), 
+        slots: participants, 
+        note: ""
+      };
+      
+      const response = await api.post('/enroll', payload);
+      
       setBookingData({
         workshop: {
           title: workshop.title,
-          host: workshop.host || 'Shop Name',
-          date: workshop.date,
-          time: workshop.time,
-          location: workshop.location
+          host: workshop.host || workshop.shopName || ct('ไม่ระบุชื่อร้าน', 'Shop Name'),
+          date: workshop.date || workshop.startDate,
+          time: workshop.time || `${workshop.startTime} - ${workshop.endTime}`,
+          location: workshop.location || workshop.customLocation
         },
         guestCount: participants,
         bookingDate: new Date().toISOString()
       });
       setShowETicket(true);
-      fetchWorkshopDetails();
+      fetchWorkshopDetails(); // Refresh the data to update the seats!
+
     } catch (error) {
-      alert(error.response?.data?.error || t('workshopDetail.enrollError'));
+      const backendError = error.response?.data?.message || error.response?.data || error.message;
+      alert(`${ct('ระบบปฏิเสธข้อมูลเนื่องจาก:\n\n', 'Backend rejected the data because:\n\n')}${JSON.stringify(backendError, null, 2)}`);
+      console.error('Registration error:', error);
     } finally {
       setEnrolling(false);
     }
@@ -85,19 +92,22 @@ const WorkshopDetail = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('workshopDetail.notFound')}</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('workshopDetail.notFound') || ct('ไม่พบเวิร์กชอป', 'Workshop Not Found')}</h2>
           <button
             onClick={() => navigate('/workshops')}
             className="text-orange-600 hover:text-orange-700"
           >
-            {t('workshopDetail.backToWorkshops')}
+            {t('workshopDetail.backToWorkshops') || ct('กลับไปหน้าเวิร์กชอป', 'Back to Workshops')}
           </button>
         </div>
       </div>
     );
   }
 
-  const seatsAvailable = workshop.seatLimit - workshop.seatsBooked;
+  // FIX: Properly calculate seats using real backend variables
+  const capacity = workshop.capacity || workshop.seatLimit || 0;
+  const booked = workshop.current_participants || workshop.seatsBooked || 0;
+  const seatsAvailable = Math.max(0, capacity - booked);
   const isFull = seatsAvailable <= 0;
 
   return (
@@ -108,14 +118,21 @@ const WorkshopDetail = () => {
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
         >
           <ArrowLeft className="h-5 w-5" />
-          {t('common.back')}
+          {t('common.back') || ct('กลับ', 'Back')}
         </button>
 
         <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-8">
-          <div className="aspect-video bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center">
-            <div className="text-white text-center">
+          <div className="aspect-video bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center relative">
+            {(workshop.image || workshop.imageUrl || workshop.picture) && (
+              <img 
+                src={workshop.image || workshop.imageUrl || workshop.picture} 
+                alt={workshop.title} 
+                className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-overlay"
+              />
+            )}
+            <div className="text-white text-center z-10 drop-shadow-md">
               <h1 className="text-4xl font-bold mb-2">{workshop.title}</h1>
-              <p className="text-orange-100">{workshop.category}</p>
+              <p className="text-orange-100">{workshop.category || ct('เวิร์กชอป', 'Workshop')}</p>
             </div>
           </div>
 
@@ -125,17 +142,17 @@ const WorkshopDetail = () => {
                 <div className="flex items-center gap-4 mb-4">
                   <div className="flex items-center gap-1">
                     <Star className="h-5 w-5 text-yellow-400 fill-current" />
-                    <span className="font-semibold">{workshop.rating.toFixed(1)}</span>
-                    <span className="text-gray-500">({workshop.reviewCount} {t('workshopDetail.reviews')})</span>
+                    <span className="font-semibold">{workshop.rating?.toFixed(1) || '5.0'}</span>
+                    <span className="text-gray-500">({workshop.reviewCount || 0} {t('workshopDetail.reviews') || ct('รีวิว', 'reviews')})</span>
                   </div>
                   <span className="text-gray-400">•</span>
                   <div className="flex items-center gap-1 text-gray-600">
                     <Users className="h-5 w-5" />
-                    <span>{workshop.seatsBooked}/{workshop.seatLimit} {t('workshopDetail.enrolled')}</span>
+                    <span>{booked}/{capacity} {t('workshopDetail.enrolled') || ct('คนเข้าร่วม', 'enrolled')}</span>
                   </div>
                 </div>
 
-                <p className="text-gray-600 mb-6">{workshop.description}</p>
+                <p className="text-gray-600 mb-6 whitespace-pre-wrap">{workshop.description}</p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                   <div className="flex items-center gap-3">
@@ -143,13 +160,13 @@ const WorkshopDetail = () => {
                       <Calendar className="h-5 w-5 text-blue-600" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">{t('workshopDetail.date')}</p>
+                      <p className="text-sm text-gray-500">{t('workshopDetail.date') || ct('วันที่', 'Date')}</p>
                       <p className="font-semibold text-gray-900">
-                        {new Date(workshop.startDateTime).toLocaleDateString('th-TH', {
+                        {workshop.date || workshop.startDate ? new Date(workshop.date || workshop.startDate).toLocaleDateString('th-TH', {
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric'
-                        })}
+                        }) : ct('ไม่ระบุ', 'N/A')}
                       </p>
                     </div>
                   </div>
@@ -159,8 +176,8 @@ const WorkshopDetail = () => {
                       <Clock className="h-5 w-5 text-green-600" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">{t('workshopDetail.duration')}</p>
-                      <p className="font-semibold text-gray-900">{workshop.duration}</p>
+                      <p className="text-sm text-gray-500">{t('workshopDetail.duration') || ct('เวลา', 'Time')}</p>
+                      <p className="font-semibold text-gray-900">{workshop.time || `${workshop.startTime} - ${workshop.endTime}` || ct('ไม่ระบุเวลา', 'N/A')}</p>
                     </div>
                   </div>
 
@@ -169,8 +186,8 @@ const WorkshopDetail = () => {
                       <MapPin className="h-5 w-5 text-purple-600" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">{t('workshopDetail.location')}</p>
-                      <p className="font-semibold text-gray-900">{workshop.location.address}</p>
+                      <p className="text-sm text-gray-500">{t('workshopDetail.location') || ct('สถานที่', 'Location')}</p>
+                      <p className="font-semibold text-gray-900">{workshop.customLocation || workshop.location?.address || workshop.location || ct('ใช้สถานที่ร้าน', 'Shop')}</p>
                     </div>
                   </div>
 
@@ -179,8 +196,8 @@ const WorkshopDetail = () => {
                       <Users className="h-5 w-5 text-orange-600" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">{t('workshopDetail.host')}</p>
-                      <p className="font-semibold text-gray-900">{workshop.host}</p>
+                      <p className="text-sm text-gray-500">{t('workshopDetail.host') || ct('ผู้จัด', 'Host')}</p>
+                      <p className="font-semibold text-gray-900">{workshop.host || workshop.shopName || ct('ไม่ระบุ', 'Unknown')}</p>
                     </div>
                   </div>
                 </div>
@@ -189,14 +206,14 @@ const WorkshopDetail = () => {
               <div className="ml-8 w-80">
                 <div className="bg-gray-50 rounded-lg p-6 sticky top-8">
                   <div className="text-center mb-6">
-                    <p className="text-4xl font-bold text-gray-900">฿{workshop.price}</p>
-                    <p className="text-gray-600">{t('workshopDetail.perPerson')}</p>
+                    <p className="text-4xl font-bold text-gray-900">{workshop.price === 0 ? (t('workshops.free') || ct('ฟรี', 'Free')) : `฿${workshop.price}`}</p>
+                    <p className="text-gray-600">{t('workshopDetail.perPerson') || ct('ต่อคน', 'per person')}</p>
                   </div>
 
                   {!isFull && (
                     <div className="mb-4">
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t('workshopDetail.participants')}
+                        {t('workshopDetail.participants') || ct('จำนวนผู้เข้าร่วม', 'Participants')}
                       </label>
                       <input
                         type="number"
@@ -207,7 +224,7 @@ const WorkshopDetail = () => {
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                       />
                       <p className="text-sm text-gray-500 mt-1">
-                        {t('workshopDetail.seatsAvailable')}: {seatsAvailable}
+                        {t('workshopDetail.seatsAvailable') || ct('ที่นั่งคงเหลือ', 'Seats Available')}: {seatsAvailable}
                       </p>
                     </div>
                   )}
@@ -221,50 +238,54 @@ const WorkshopDetail = () => {
                         : 'bg-orange-500 hover:bg-orange-600 text-white'
                     }`}
                   >
-                    {enrolling ? t('common.loading') : isFull ? t('workshopDetail.full') : t('workshopDetail.enrollNow')}
+                    {enrolling ? (t('common.loading') || ct('กำลังดำเนินการ...', 'Loading...')) : isFull ? (t('workshopDetail.full') || ct('เต็มแล้ว', 'Full')) : (t('workshopDetail.enrollNow') || ct('จองเลย', 'Enroll Now'))}
                   </button>
 
-                  {!isFull && (
+                  {!isFull && workshop.price > 0 && (
                     <p className="text-center text-sm text-gray-600 mt-4">
-                      {t('workshopDetail.total')}: ฿{(workshop.price * participants).toLocaleString()}
+                      {t('workshopDetail.total') || ct('ยอดรวม', 'Total')}: ฿{(workshop.price * participants).toLocaleString()}
                     </p>
                   )}
                 </div>
               </div>
             </div>
 
-            <div className="border-t border-gray-200 pt-6 mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                {t('workshopDetail.whatYouWillLearn')}
-              </h2>
-              <ul className="space-y-3">
-                {workshop.whatYouWillLearn.map((item, index) => (
-                  <li key={index} className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700">{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {(workshop.whatYouWillLearn && workshop.whatYouWillLearn.length > 0) && (
+              <div className="border-t border-gray-200 pt-6 mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                  {t('workshopDetail.whatYouWillLearn') || ct('สิ่งที่คุณจะได้เรียนรู้', 'What You Will Learn')}
+                </h2>
+                <ul className="space-y-3">
+                  {workshop.whatYouWillLearn.map((item, index) => (
+                    <li key={index} className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                      <span className="text-gray-700">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
-            <div className="border-t border-gray-200 pt-6 mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                {t('workshopDetail.requirements')}
-              </h2>
-              <ul className="space-y-2">
-                {workshop.requirements.map((item, index) => (
-                  <li key={index} className="flex items-start gap-3">
-                    <span className="text-orange-500">•</span>
-                    <span className="text-gray-700">{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {(workshop.requirements && workshop.requirements.length > 0) && (
+              <div className="border-t border-gray-200 pt-6 mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                  {t('workshopDetail.requirements') || ct('สิ่งที่ต้องเตรียมมา', 'Requirements')}
+                </h2>
+                <ul className="space-y-2">
+                  {workshop.requirements.map((item, index) => (
+                    <li key={index} className="flex items-start gap-3">
+                      <span className="text-orange-500">•</span>
+                      <span className="text-gray-700">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {reviews.length > 0 && (
               <div className="border-t border-gray-200 pt-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                  {t('workshopDetail.reviewsTitle')} ({reviews.length})
+                  {t('workshopDetail.reviewsTitle') || ct('รีวิว', 'Reviews')} ({reviews.length})
                 </h2>
                 <div className="space-y-4">
                   {reviews.map((review) => (
@@ -302,7 +323,6 @@ const WorkshopDetail = () => {
         </div>
       </div>
 
-      {/* E-Ticket Modal */}
       <ETicketModal
         booking={bookingData}
         isOpen={showETicket}
