@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Clock, Users, CheckCircle, Calendar, DollarSign, Edit, X, Pause, Eye, Mail, AlertCircle, Edit3 } from 'lucide-react';
+import Swal from 'sweetalert2';
+
 import { useTranslation } from '../../hooks/useTranslation';
 import { useMyShop } from '../../hooks/useMyShop';
 import ShopPendingApprovalNotice from '../../components/ShopPendingApprovalNotice';
@@ -47,6 +49,29 @@ const ShopWorkshopDetail = () => {
   }, [id]);
 
   const handleUpdateEnrollmentStatus = async (enrollmentId, newStatus) => {
+    const isConfirmAction = newStatus === 'CONFIRMED';
+    const confirmText = isConfirmAction
+      ? ct('ต้องการยืนยันผู้เข้าร่วมคนนี้หรือไม่?', 'Confirm this participant?')
+      : ct('ต้องการปฏิเสธผู้เข้าร่วมคนนี้หรือไม่?', 'Reject this participant?');
+
+    const result = await Swal.fire({
+      icon: 'question',
+      title: ct('ยืนยันการเปลี่ยนสถานะ', 'Confirm status change'),
+      text: confirmText,
+      showCancelButton: true,
+      confirmButtonText: ct('ยืนยัน', 'Confirm'),
+      cancelButtonText: ct('ยกเลิก', 'Cancel'),
+    });
+
+    if (!result.isConfirmed) return;
+
+    Swal.fire({
+      title: ct('กำลังอัปเดตสถานะ...', 'Updating status...'),
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      didOpen: () => Swal.showLoading(),
+    });
+
     try {
       await api.patch(`/management/workshops/enrollments/${enrollmentId}/status`, { 
         status: newStatus 
@@ -54,18 +79,50 @@ const ShopWorkshopDetail = () => {
       setEnrollments(prev => prev.map(e => 
         (e._id === enrollmentId || e.id === enrollmentId) ? { ...e, status: newStatus } : e
       ));
-      alert(ct('อัปเดตสถานะสำเร็จ', 'Status updated successfully'));
+      Swal.close();
+      Swal.fire({
+        icon: 'success',
+        title: ct('อัปเดตสำเร็จ', 'Status updated'),
+        text: isConfirmAction
+          ? ct('ยืนยันผู้เข้าร่วมเรียบร้อยแล้ว', 'Participant confirmed successfully')
+          : ct('ปฏิเสธผู้เข้าร่วมเรียบร้อยแล้ว', 'Participant rejected successfully'),
+      });
     } catch (error) {
       console.error('Failed to update status:', error);
-      alert(ct('ไม่สามารถอัปเดตสถานะได้', 'Failed to update status'));
+      Swal.close();
+      Swal.fire({
+        icon: 'error',
+        title: ct('อัปเดตไม่สำเร็จ', 'Update failed'),
+        text: ct('ไม่สามารถอัปเดตสถานะได้ กรุณาลองใหม่อีกครั้ง', 'Unable to update status, please try again.'),
+      });
     }
   };
 
   const handleUpdateWorkshopStatus = async (newRegStatus, newAppStatus) => {
     const isCancel = newAppStatus === 'REJECTED';
-    const msg = isCancel ? 'ต้องการยกเลิกถาวรใช่หรือไม่?' : 'ต้องการเปลี่ยนสถานะการรับสมัครใช่หรือไม่?';
-    
-    if (!window.confirm(ct(msg, 'Confirm status change?'))) return;
+    const confirmMessage = isCancel
+      ? ct('ต้องการยกเลิก Workshop นี้ถาวรหรือไม่?', 'Do you want to cancel this workshop permanently?')
+      : newRegStatus === 'OPEN'
+        ? ct('ต้องการเปิดรับสมัครอีกครั้งหรือไม่?', 'Re-open registration?')
+        : ct('ต้องการปิดรับสมัครชั่วคราวหรือไม่?', 'Close registration?');
+
+    const result = await Swal.fire({
+      icon: isCancel ? 'warning' : 'question',
+      title: ct('ยืนยันการเปลี่ยนสถานะ', 'Confirm status change'),
+      text: confirmMessage,
+      showCancelButton: true,
+      confirmButtonText: ct('ยืนยัน', 'Confirm'),
+      cancelButtonText: ct('ยกเลิก', 'Cancel'),
+    });
+
+    if (!result.isConfirmed) return;
+
+    Swal.fire({
+      title: ct('กำลังอัปเดตสถานะ...', 'Updating status...'),
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      didOpen: () => Swal.showLoading(),
+    });
 
     try {
       const payload = {
@@ -75,10 +132,20 @@ const ShopWorkshopDetail = () => {
 
       await api.patch(`/management/workshops/${id}`, payload);
       setWorkshop(prev => ({ ...prev, ...payload }));
-      alert(ct('อัปเดตสถานะสำเร็จ', 'Status updated'));
+      Swal.close();
+      Swal.fire({
+        icon: 'success',
+        title: ct('อัปเดตสำเร็จ', 'Status updated'),
+        text: ct('สถานะ Workshop ถูกปรับเรียบร้อยแล้ว', 'Workshop status has been updated.'),
+      });
     } catch (error) {
       console.error('Status update failed:', error);
-      alert(ct('เกิดข้อผิดพลาดในการอัปเดตสถานะ', 'Failed to update status'));
+      Swal.close();
+      Swal.fire({
+        icon: 'error',
+        title: ct('เกิดข้อผิดพลาด', 'Something went wrong'),
+        text: ct('เกิดข้อผิดพลาดในการอัปเดตสถานะ กรุณาลองใหม่', 'Unable to update status, please try again.'),
+      });
     }
   };
 
@@ -130,6 +197,66 @@ const ShopWorkshopDetail = () => {
   
   const seatsLeft = Math.max(0, capacity - participants);
   const totalViews = workshop.views || 0; 
+
+  const shopAddress = shop?.address || shop?.location?.address || workshop.shopLocation || workshop.location;
+  const resolvedLocation = workshop.locationType === 'custom'
+    ? (workshop.customLocation || workshop.location || ct('ระบุสถานที่ภายหลัง', 'Venue to be announced'))
+    : (shopAddress || ct('ใช้สถานที่ร้าน', 'Shop location'));
+
+  const eventDateValue = workshop.workshopDate || workshop.date || workshop.startDate || workshop.endDate || null;
+  const formattedEventDate = eventDateValue
+    ? new Date(eventDateValue).toLocaleDateString('th-TH', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      })
+    : ct('ไม่ระบุ', 'N/A');
+
+  const getEnrollmentUserInfo = (enrollment = {}) => {
+    const userCandidate =
+      enrollment.fetchedUser ||
+      (typeof enrollment.user === 'object' ? enrollment.user : null) ||
+      (typeof enrollment.userId === 'object' ? enrollment.userId : null);
+
+    const rawUserId =
+      typeof enrollment.userId === 'string'
+        ? enrollment.userId
+        : userCandidate?.user_id || userCandidate?._id || enrollment.userId?._id || null;
+
+    const normalizedUserId = (() => {
+      if (!rawUserId) return '-';
+      if (typeof rawUserId === 'string') return rawUserId;
+      if (typeof rawUserId === 'object' && typeof rawUserId.toString === 'function') {
+        return rawUserId.toString();
+      }
+      return rawUserId || '-';
+    })();
+
+    const firstname = userCandidate?.firstname || enrollment.firstname;
+    const lastname = userCandidate?.lastname || enrollment.lastname;
+
+    const fullName = [firstname, lastname]
+      .filter(Boolean)
+      .join(' ')
+      .trim();
+
+    return {
+      name:
+        fullName ||
+        userCandidate?.name ||
+        userCandidate?.displayName ||
+        enrollment.name ||
+        enrollment.displayName ||
+        ct('ไม่ระบุชื่อ', 'Unknown Name'),
+      email: userCandidate?.email || enrollment.email || '-',
+      phone:
+        userCandidate?.phone ||
+        enrollment.phone ||
+        enrollment.phoneNumber ||
+        '-',
+      userId: normalizedUserId,
+    };
+  };
 
   return (
     <div className="min-h-screen bg-[#F5EFE7] py-12 animate-fadeIn">
@@ -212,7 +339,7 @@ const ShopWorkshopDetail = () => {
                 <div className="flex items-center gap-3 text-gray-700">
                   <Calendar className="h-5 w-5 text-gray-400" />
                   <span className="text-sm">
-                    {workshop.startDate ? new Date(workshop.startDate).toLocaleDateString('th-TH') : (workshop.date ? new Date(workshop.date).toLocaleDateString('th-TH') : ct('ไม่ระบุ', 'N/A'))}
+                    {formattedEventDate}
                   </span>
                 </div>
                 <div className="flex items-center gap-3 text-gray-700">
@@ -223,7 +350,7 @@ const ShopWorkshopDetail = () => {
                 </div>
                 <div className="flex items-center gap-3 text-gray-700">
                   <MapPin className="h-5 w-5 text-gray-400" />
-                  <span className="text-sm">{workshop.customLocation || workshop.location || ct('ใช้สถานที่ร้าน', 'Shop Location')}</span>
+                  <span className="text-sm">{resolvedLocation}</span>
                 </div>
                 <div className="flex items-center gap-3 text-gray-700">
                   <Users className="h-5 w-5 text-gray-400" />
@@ -305,17 +432,14 @@ const ShopWorkshopDetail = () => {
                   </tr>
                 ) : (
                   enrollments.map((e, idx) => {
-                    // Extracting the fetched user data strictly from the new backend process
-                    const userData = e.fetchedUser || e;
-                    const userName = userData?.name || userData?.displayName || userData?.username || ct('ไม่ระบุชื่อ', 'Unknown Name');
-                    const userEmail = userData?.email || '-';
-                    const userPhone = userData?.phone || userData?.phoneNumber || '-';
+                    const { name: userName, email: userEmail, phone: userPhone } = getEnrollmentUserInfo(e);
                     const bookedSeats = e.slots || e.guestCount || 1;
 
                     return (
                       <tr key={e._id || idx} className="border-t border-gray-100 hover:bg-gray-50">
                         <td className="px-4 py-4 text-sm text-gray-700">{idx + 1}</td>
                         <td className="px-4 py-4 text-sm font-medium text-gray-900">{userName}</td>
+
                         <td className="px-4 py-4 text-sm text-gray-600">{userEmail}</td>
                         <td className="px-4 py-4 text-sm text-gray-600">{userPhone}</td>
                         <td className="px-4 py-4 text-sm text-gray-900 font-medium">{bookedSeats}</td>

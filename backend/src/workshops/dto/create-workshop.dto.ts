@@ -31,8 +31,13 @@ export class CreateWorkshopDto {
   description: string;
 
   @IsDateString()
-  /* Scheduled date for the workshop */
+  /* Scheduled date for the workshop (legacy field kept for compatibility) */
   date: string;
+
+  @IsOptional()
+  @IsDateString()
+  /* Explicit workshop event date used by the frontend form */
+  workshopDate?: string;
 
   @IsMongoId()
   @IsNotEmpty()
@@ -64,4 +69,13 @@ export class CreateWorkshopDto {
 
   @IsOptional()
   image?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['shop', 'custom'])
+  locationType?: 'shop' | 'custom';
+
+  @IsOptional()
+  @IsString()
+  customLocation?: string;
 }

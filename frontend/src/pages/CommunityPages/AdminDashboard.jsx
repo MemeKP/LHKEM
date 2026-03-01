@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { Calendar, Store, FileText, Users, Eye, AlertCircle, CheckCircle, XCircle, Edit, Plus, List, MapPin, Clock } from 'lucide-react';
+
 import { useTranslation } from '../../hooks/useTranslation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
-import { getShopsByCommunity, getPendingShops } from '../../services/shopService';
+import { getShopsByCommunity, getPendingShops, approveShop } from '../../services/shopService';
 import { getShopCoverImage } from '../../utils/image';
-import CommunityAssignmentNotice from '../../components/CommunityAssignmentNotice';
+import Swal from 'sweetalert2';
 
 /**
  * Community Admin Dashboard - ศูนย์รวมการจัดการชุมชน (หน้าหลัก)
@@ -70,6 +71,7 @@ const AdminDashboard = () => {
   const { ct } = useTranslation();
   const [activeTab, setActiveTab] = useState('workshops');
   const [taskTab, setTaskTab] = useState('events'); // Tab for Events/Shops section
+  const queryClient = useQueryClient();
   const isLoading = eventsQuery.isLoading || shopsQuery.isLoading || pendingShopsQuery.isLoading;
 
   if (!hasCommunity) {
@@ -100,21 +102,95 @@ const AdminDashboard = () => {
   };
 
   const handleApproveWorkshop = async (workshopId) => {
-    if (!window.confirm(ct('คุณต้องการอนุมัติ Workshop นี้ใช่หรือไม่?', 'Approve this workshop?'))) return;
-    
+    const result = await Swal.fire({
+      title: ct('ยืนยันการอนุมัติ?', 'Confirm approval?'),
+      text: ct('เมื่ออนุมัติแล้ว Workshop จะเปิดรับลงทะเบียนทันที', 'Once approved, the workshop will open for registration immediately.'),
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: ct('อนุมัติ', 'Approve'),
+      cancelButtonText: ct('ยกเลิก', 'Cancel'),
+      confirmButtonColor: '#1E293B'
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
-      // Adjust path to match your backend
-      await api.patch(`/api/management/workshops/${workshopId}`, {
+      Swal.fire({
+        title: ct('กำลังอนุมัติ...', 'Approving...'),
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        didOpen: () => Swal.showLoading(),
+      });
+
+      await api.patch(`/management/workshops/${workshopId}`, {
         approvalStatus: 'ACTIVE',
         registrationStatus: 'OPEN'
       });
-      alert(ct('อนุมัติ Workshop สำเร็จ', 'Workshop approved successfully'));
-      
-      // Refresh the data instantly
-      queryClient.invalidateQueries(['community-workshops']);
+
+      Swal.close();
+      await Swal.fire({
+        icon: 'success',
+        title: ct('อนุมัติสำเร็จ', 'Workshop approved'),
+        timer: 2000,
+        showConfirmButton: false
+      });
+
+      await queryClient.invalidateQueries({ queryKey: ['community-workshops', community?._id] });
     } catch (error) {
       console.error('Failed to approve:', error);
-      alert(ct('เกิดข้อผิดพลาดในการอนุมัติ', 'Failed to approve workshop'));
+      Swal.close();
+      Swal.fire({
+        icon: 'error',
+        title: ct('อนุมัติไม่สำเร็จ', 'Approval failed'),
+        text: error.response?.data?.message || ct('กรุณาลองใหม่อีกครั้ง', 'Please try again later')
+      });
+    }
+  };
+
+  const handleApproveShop = async (shopId) => {
+    const result = await Swal.fire({
+      title: ct('ยืนยันการอนุมัติร้านค้า?', 'Approve this shop?'),
+      text: ct('ร้านค้าจะปรากฏในแผนที่และรายการเมื่อตรวจสอบผ่าน', 'The shop will become visible on listings once approved.'),
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: ct('อนุมัติ', 'Approve'),
+      cancelButtonText: ct('ยกเลิก', 'Cancel'),
+      confirmButtonColor: '#1E293B'
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      Swal.fire({
+        title: ct('กำลังอนุมัติ...', 'Approving...'),
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        didOpen: () => Swal.showLoading(),
+      });
+
+      await approveShop(shopId);
+
+      Swal.close();
+      await Swal.fire({
+        icon: 'success',
+        title: ct('อนุมัติร้านค้าสำเร็จ', 'Shop approved'),
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['community-shops', community?._id] }),
+        queryClient.invalidateQueries({ queryKey: ['community-pending-shops', community?._id] }),
+        queryClient.invalidateQueries({ queryKey: ['community-shops-admin', community?._id] }),
+      ]);
+    } catch (error) {
+      console.error('Failed to approve shop:', error);
+      Swal.close();
+      Swal.fire({
+        icon: 'error',
+        title: ct('อนุมัติร้านค้าไม่สำเร็จ', 'Shop approval failed'),
+        text: error.response?.data?.message || ct('กรุณาลองใหม่อีกครั้ง', 'Please try again later')
+      });
     }
   };
 
@@ -639,10 +715,10 @@ const AdminDashboard = () => {
                               {ct('ดูรายละเอียด', 'View Details')}
                             </button>
                             <button
-                              onClick={() => navigate(`/community-admin/shops/${shop._id}/approval`)}
+                              onClick={() => handleApproveShop(shop._id || shop.id)}
                               className="px-4 py-2 bg-[#1E293B] hover:bg-[#0F172A] text-white text-sm font-semibold rounded-lg transition-all"
                             >
-                              {ct('ไปยังหน้าการอนุมัติ', 'Go to approval')}
+                              {ct('อนุมัติ', 'Approve')}
                             </button>
                           </div>
                         </div>

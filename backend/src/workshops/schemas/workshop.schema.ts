@@ -28,6 +28,10 @@ export class Workshop {
   /* Event date */
   date: Date;
 
+  @Prop({ type: Date })
+  /* Explicit workshop event date (mirrors `date` for newer clients) */
+  workshopDate?: Date;
+
   // ------------------------------------------------------
   // 1. CLIENT SIDE: Can users book this workshop right now?
   // ------------------------------------------------------
@@ -61,6 +65,15 @@ export class Workshop {
   @Prop() startTime: string;
   @Prop() endTime: string;
   @Prop() image: string;
+  @Prop({
+    type: String,
+    enum: ['shop', 'custom'],
+    default: 'shop'
+  })
+  locationType: 'shop' | 'custom';
+
+  @Prop()
+  customLocation?: string;
   @Prop({ type: Number, default: 0 }) views: number;
   @Prop({ type: String, default: '' }) rejectReason: string;
 

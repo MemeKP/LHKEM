@@ -59,7 +59,7 @@ function App() {
             <Route path="/" element={<SimpleLayout />}>
               <Route index element={<Landing />} />
               <Route path="dashboard" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['TOURIST']}>
                   <UserDashboard />
                 </ProtectedRoute>
               } />

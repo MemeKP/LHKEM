@@ -17,6 +17,20 @@ const UserDashboard = () => {
   const [isFetching, setIsFetching] = useState(true);
 
   useEffect(() => {
+    if (!loading && user && user.role && user.role !== 'TOURIST') {
+      // Redirect other roles to their dashboards
+      const roleRedirects = {
+        SHOP_OWNER: '/shop/dashboard',
+        COMMUNITY_ADMIN: '/community-admin/dashboard',
+        PLATFORM_ADMIN: '/platform-admin/dashboard',
+      };
+
+      const redirectPath = roleRedirects[user.role] || '/';
+      navigate(redirectPath, { replace: true });
+    }
+  }, [user, loading, navigate]);
+
+  useEffect(() => {
     const fetchEnrollments = async () => {
       // FIX: Use user.userId or user._id depending on your auth payload
       const userId = user?.userId || user?.id || user?._id;

@@ -135,10 +135,19 @@ export class ShopsService {
     if (!Types.ObjectId.isValid(shopId)) {
       throw new BadRequestException('Invalid shop identifier');
     }
-    return this.shopModel.findOne({
-      _id: new Types.ObjectId(shopId),
-      status: 'ACTIVE',
-    });
+    const shop = await this.shopModel
+      .findOne({
+        _id: new Types.ObjectId(shopId),
+        status: 'ACTIVE',
+      })
+      .populate('userId', 'firstname lastname email phone')
+      .lean();
+
+    if (!shop) {
+      throw new NotFoundException('Shop not found');
+    }
+
+    return this.attachOwnerMetadata(shop);
   }
 
   async findByIdAdmin(shopId: string) {
@@ -146,12 +155,16 @@ export class ShopsService {
       throw new BadRequestException('Invalid shop identifier');
     }
 
-    const shop = await this.shopModel.findById(shopId);
+    const shop = await this.shopModel
+      .findById(shopId)
+      .populate('userId', 'firstname lastname email phone')
+      .lean();
+
     if (!shop) {
       throw new NotFoundException('Shop not found');
     }
 
-    return shop;
+    return this.attachOwnerMetadata(shop);
   }
 
 

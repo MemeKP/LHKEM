@@ -1,4 +1,7 @@
-import { X, Calendar, Clock, MapPin, Users, Download, MessageCircle, Store } from 'lucide-react';
+import { X, Calendar, Clock, MapPin, Users, Download, MessageCircle, Store, Phone, Facebook, Mail } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { getShopById } from '../services/shopService';
 import { useTranslation } from '../hooks/useTranslation';
 
 /**
@@ -12,7 +15,9 @@ const ETicketModal = ({ booking, isOpen, onClose }) => {
   if (!isOpen || !booking) return null;
 
   const { workshop, guestCount, bookingDate } = booking;
+  const [isContactPanelOpen, setIsContactPanelOpen] = useState(false);
   const bookingDateObj = new Date(bookingDate);
+
   const formattedDate = bookingDateObj.toLocaleDateString('th-TH', {
     year: 'numeric',
     month: 'long',
@@ -23,15 +28,73 @@ const ETicketModal = ({ booking, isOpen, onClose }) => {
     minute: '2-digit'
   });
 
-  const handleSaveImage = () => {
-    // TODO: Implement screenshot/download functionality
-    alert(ct('กำลังบันทึกภาพ E-ticket...', 'Saving E-ticket image...'));
-  };
+  const workshopShopId = useMemo(() => {
+    if (!workshop) return null;
+    if (typeof workshop.shopId === 'string') return workshop.shopId;
+    if (workshop?.shopId?._id) return workshop.shopId._id;
+    if (workshop?.shop?._id) return workshop.shop._id;
+    return workshop?.shopId || workshop?.shop?.id || null;
+  }, [workshop]);
+
+  const { data: shopResponse } = useQuery({
+    queryKey: ['eticket-shop-detail', workshopShopId],
+    queryFn: () => getShopById(workshopShopId),
+    enabled: Boolean(workshopShopId),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const derivedShop = useMemo(() => {
+    if (shopResponse?.data) return shopResponse.data;
+    if (shopResponse) return shopResponse;
+    if (typeof workshop?.shopId === 'object') return workshop.shopId;
+    return workshop?.shop || null;
+  }, [shopResponse, workshop]);
+
+  const resolvedShopName =
+    derivedShop?.shopName ||
+    workshop?.shopName ||
+    workshop?.host ||
+    ct('ไม่มีชื่อร้าน', 'No Shop');
+
+  const resolvedLocation =
+    workshop?.customLocation ||
+    workshop?.location?.address ||
+    workshop?.location ||
+    derivedShop?.address ||
+    derivedShop?.location?.address ||
+    ct('ยังไม่ระบุสถานที่ กรุณาติดต่อร้านค้า', 'Location not provided, please contact the shop.');
 
   const handleContactShop = () => {
-    // TODO: Implement contact shop functionality (open chat/phone)
-    alert(ct('กำลังเปิดช่องทางติดต่อร้าน...', 'Opening shop contact...'));
+    setIsContactPanelOpen(true);
   };
+
+  const contactInfo = useMemo(() => {
+    const phone =
+      derivedShop?.owner?.phone ||
+      derivedShop?.contact?.phone ||
+      derivedShop?.phone ||
+      workshop?.shopPhone ||
+      '-';
+    const line = derivedShop?.contact?.line || workshop?.shopLine || '';
+    const facebook = derivedShop?.contact?.facebook || workshop?.shopFacebook || '';
+    const email =
+      derivedShop?.owner?.email ||
+      derivedShop?.contact?.email ||
+      derivedShop?.email ||
+      workshop?.shopEmail ||
+      '';
+
+    return {
+      phone,
+      line,
+      facebook,
+      email,
+    };
+  }, [derivedShop, workshop]);
+
+  const hasContactDetail = useMemo(() => {
+    return Object.values(contactInfo).some((value) => value && value !== '-' && value.trim?.());
+  }, [contactInfo]);
 
   return (
     <div 
@@ -69,7 +132,7 @@ const ETicketModal = ({ booking, isOpen, onClose }) => {
             </h3>
             <p className="text-sm text-gray-600 flex items-center justify-center gap-2">
               <Store className="h-4 w-4" />
-              {ct('โดยร้าน', 'By')} {workshop?.host || ct('ไม่มีชื่อร้าน', 'No Shop')}
+              {ct('โดยร้าน', 'By')} {resolvedShopName}
             </p>
           </div>
 
@@ -118,25 +181,23 @@ const ETicketModal = ({ booking, isOpen, onClose }) => {
               <div>
                 <p className="text-sm font-semibold text-gray-900 mb-1">{ct('สถานที่', 'Location')}</p>
                 <p className="text-sm text-gray-700">
-                  {ct('โซน B ซอย 2', 'Zone B Soi 2')}
+                  {resolvedLocation}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  {ct('(บ้านจำกานฟ้า) ในชุมชนคาว', '(Baan Jamkan Fah) in Loeng Him Kaw')}
-                </p>
+                {workshop?.shop?.address && !workshop?.customLocation && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    {ct('อ้างอิงจากที่อยู่ร้าน', 'Using shop address as venue')}
+                  </p>
+                )}
               </div>
             </div>
           </div>
 
           {/* Action Buttons */}
           <div className="space-y-3 pt-2">
-            <button
-              onClick={handleSaveImage}
-              className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3.5 rounded-2xl transition shadow-lg"
-            >
-              <Download className="h-5 w-5" />
-              {ct('บันทึกภาพ (Save Ticket)', 'Save Ticket')}
-            </button>
-            
+            <p className="text-sm text-gray-600 text-center">
+              {ct('กรุณาติดต่อทางร้านค้าเพื่อดำเนินการชำระเงิน', 'Please contact the shop to complete payment')}
+            </p>
+
             <button
               onClick={handleContactShop}
               className="w-full flex items-center justify-center gap-2 border-2 border-orange-500 text-orange-600 hover:bg-orange-50 font-semibold py-3.5 rounded-2xl transition"
@@ -162,6 +223,80 @@ const ETicketModal = ({ booking, isOpen, onClose }) => {
           </div>
         </div>
       </div>
+      {isContactPanelOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-4" onClick={() => setIsContactPanelOpen(false)}>
+          <div
+            className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 space-y-4 animate-slideUp"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase text-gray-400">{ct('ช่องทางติดต่อร้านค้า', 'Shop contact info')}</p>
+                <p className="text-lg font-semibold text-gray-900">{resolvedShopName}</p>
+              </div>
+              <button
+                onClick={() => setIsContactPanelOpen(false)}
+                className="p-2 text-gray-500 hover:text-gray-700"
+                aria-label={ct('ปิด', 'Close')}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {hasContactDetail ? (
+              <div className="space-y-3">
+                {contactInfo.phone && contactInfo.phone !== '-' && (
+                  <div className="flex items-center gap-3 p-3 rounded-2xl border border-gray-100 bg-gray-50">
+                    <Phone className="h-4 w-4 text-green-600" />
+                    <div>
+                      <p className="text-xs uppercase text-gray-400">{ct('โทรศัพท์', 'Phone')}</p>
+                      <p className="text-sm font-semibold text-gray-900">{contactInfo.phone}</p>
+                    </div>
+                  </div>
+                )}
+                {contactInfo.line && (
+                  <div className="flex items-center gap-3 p-3 rounded-2xl border border-gray-100 bg-gray-50">
+                    <MessageCircle className="h-4 w-4 text-green-600" />
+                    <div>
+                      <p className="text-xs uppercase text-gray-400">Line</p>
+                      <p className="text-sm font-semibold text-gray-900">{contactInfo.line}</p>
+                    </div>
+                  </div>
+                )}
+                {contactInfo.facebook && (
+                  <div className="flex items-center gap-3 p-3 rounded-2xl border border-gray-100 bg-gray-50">
+                    <Facebook className="h-4 w-4 text-blue-600" />
+                    <div>
+                      <p className="text-xs uppercase text-gray-400">Facebook</p>
+                      <p className="text-sm font-semibold text-gray-900 break-all">{contactInfo.facebook}</p>
+                    </div>
+                  </div>
+                )}
+                {contactInfo.email && (
+                  <div className="flex items-center gap-3 p-3 rounded-2xl border border-gray-100 bg-gray-50">
+                    <Mail className="h-4 w-4 text-gray-600" />
+                    <div>
+                      <p className="text-xs uppercase text-gray-400">Email</p>
+                      <p className="text-sm font-semibold text-gray-900 break-all">{contactInfo.email}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="p-4 rounded-2xl border border-yellow-100 bg-yellow-50 text-sm text-yellow-800">
+                {ct('ร้านค้ายังไม่ได้ระบุช่องทางติดต่อ กรุณาใช้หมายเลขโทรศัพท์หลักของชุมชน', 'No contact info provided. Please reach out via the main community channels.')}
+              </div>
+            )}
+
+            <button
+              onClick={() => setIsContactPanelOpen(false)}
+              className="w-full mt-2 py-3 rounded-2xl bg-orange-500 text-white font-semibold hover:bg-orange-600 transition"
+            >
+              {ct('ปิดหน้าต่างนี้', 'Close panel')}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

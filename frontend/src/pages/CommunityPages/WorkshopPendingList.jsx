@@ -1,30 +1,44 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate, useOutletContext } from 'react-router-dom';
+
+import { useQuery } from '@tanstack/react-query';
 import { Search, Filter, Eye, Clock, Users, DollarSign } from 'lucide-react';
+import Swal from 'sweetalert2';
 import api from '../../services/api';
 
 /* Shop Owner Pending List */
 
 const WorkshopPendingList = () => {
   const navigate = useNavigate();
+  const { community } = useOutletContext() || {};
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
-  const [pendingWorkshops, setPendingWorkshops] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchPending = async () => {
-      try {
-        const res = await api.get('/api/management/workshops/pending');
-        setPendingWorkshops(res.data);
-      } catch (error) {
-        console.error('Error fetching pending workshops:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchPending();
-  }, []);
+  const {
+    data: pendingWorkshops = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ['community-admin-pending-workshops', community?._id],
+    queryFn: async () => {
+      if (!community?._id) return [];
+      const res = await api.get('/management/workshops/pending', {
+        params: { communityId: community._id },
+      });
+      const data = res.data?.data || res.data || [];
+      if (!Array.isArray(data)) return [];
+      return data;
+    },
+    onError: (error) => {
+      console.error('Error fetching pending workshops:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'ไม่สามารถโหลดข้อมูลได้',
+        text: 'กรุณาลองใหม่ในภายหลัง',
+      });
+    },
+    enabled: !!community?._id,
+    staleTime: 1000 * 30,
+  });
 
   const categories = [
     { value: 'all', label: 'ทั้งหมด' },
@@ -34,16 +48,24 @@ const WorkshopPendingList = () => {
     { value: 'วัฒนธรรม', label: 'วัฒนธรรม' },
   ];
 
-  const filteredWorkshops = pendingWorkshops.filter(workshop => {
+  const pendingOnly = pendingWorkshops.filter((workshop) =>
+    (workshop.approvalStatus || 'PENDING').toUpperCase() === 'PENDING'
+  );
+
+  const filteredWorkshops = pendingOnly.filter(workshop => {
     const matchesSearch = workshop.title?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = filterCategory === 'all' || workshop.category === filterCategory;
     return matchesSearch && matchesCategory;
   });
 
+  const handleViewWorkshop = (id) => {
+    navigate(`/community-admin/workshops/${id}/approve`);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-[#F5EFE7] py-8 animate-fadeIn">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
+        <div className="mb-8 animate-slideUp" style={{ animationDelay: '0.05s' }}>
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">เวิร์กช็อปที่รออนุมัติ</h1>
@@ -84,9 +106,19 @@ const WorkshopPendingList = () => {
           </div>
         </div>
 
-        {isLoading ? (
+        {(!community?._id && !isLoading) ? (
+          <div className="bg-white rounded-lg shadow-sm p-12 text-center animate-slideUp">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">ยังไม่ได้ระบุตัวตนชุมชน</h3>
+            <p className="text-gray-600">กรุณาเลือกหรือผูกชุมชนก่อนจึงจะเห็นรายการ Workshop</p>
+          </div>
+        ) : isLoading ? (
           <div className="flex justify-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+          </div>
+        ) : isError ? (
+          <div className="bg-white rounded-lg shadow-sm p-12 text-center animate-slideUp">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">เกิดข้อผิดพลาดในการโหลดข้อมูล</h3>
+            <p className="text-gray-600">กรุณารีเฟรชหน้าหรือกลับมาตรวจสอบใหม่อีกครั้ง</p>
           </div>
         ) : filteredWorkshops.length === 0 ? (
           <div className="bg-white rounded-lg shadow-sm p-12 text-center">
@@ -99,12 +131,24 @@ const WorkshopPendingList = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredWorkshops.map((workshop) => (
-              <div key={workshop._id} className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="aspect-video bg-gradient-to-br from-blue-100 to-blue-200 relative">
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Users className="h-16 w-16 text-blue-300" />
-                  </div>
+            {filteredWorkshops.map((workshop, index) => (
+              <div
+                key={workshop._id}
+                className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-slideUp"
+                style={{ animationDelay: `${0.05 * (index + 1)}s` }}
+              >
+                <div className="aspect-video relative bg-gray-100">
+                  {workshop.image || workshop.imageUrl ? (
+                    <img
+                      src={workshop.image || workshop.imageUrl}
+                      alt={workshop.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-200">
+                      <Users className="h-16 w-16 text-blue-300" />
+                    </div>
+                  )}
                   <div className="absolute top-3 right-3">
                     <span className="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">
                       รออนุมัติ
@@ -127,13 +171,15 @@ const WorkshopPendingList = () => {
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => navigate(`/community-admin/workshops/${workshop._id}`)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-lg transition-colors"
-                  >
-                    <Eye className="h-4 w-4" />
-                    ตรวจสอบ
-                  </button>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => handleViewWorkshop(workshop._id)}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-lg transition-colors"
+                    >
+                      <Eye className="h-4 w-4" />
+                      ตรวจสอบ
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

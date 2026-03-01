@@ -80,6 +80,22 @@ const ShopDashboard = () => {
     };
   }, [workshops]);
 
+  const getWorkshopImage = (workshop = {}) => {
+    const candidates = [
+      workshop.image,
+      Array.isArray(workshop.images) ? workshop.images[0] : null,
+      workshop.imageUrl,
+      workshop.picture,
+    ];
+
+    for (const candidate of candidates) {
+      const resolved = resolveImageUrl(candidate);
+      if (resolved) return resolved;
+    }
+
+    return null;
+  };
+
   const handleDeleteWorkshop = async (workshopId) => {
     const confirmDelete = window.confirm(ct('คุณต้องการลบ Workshop นี้และข้อมูลการลงทะเบียนทั้งหมดใช่หรือไม่?', 'Do you want to delete this Workshop and all registration data?'));
     if (!confirmDelete) return;
@@ -297,14 +313,26 @@ const ShopDashboard = () => {
                   <div key={workshop._id} className="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition-shadow animate-scaleIn">
                     <div className="flex gap-4">
                       <div className="relative w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
-                        {(workshop.images?.[0] || workshop.imageUrl || workshop.picture) && (
-                          <img 
-                            src={resolveImageUrl(workshop.images?.[0] || workshop.imageUrl || workshop.picture)} 
-                            alt={workshop.title} 
-                            className="w-full h-full object-cover" 
-                          />
-                        )}
+                        {(() => {
+                          const imageSrc = getWorkshopImage(workshop);
+                          if (imageSrc) {
+                            return (
+                              <img
+                                src={imageSrc}
+                                alt={workshop.title}
+                                className="w-full h-full object-cover"
+                              />
+                            );
+                          }
+                          return (
+                            <div className="flex h-full w-full flex-col items-center justify-center text-gray-400">
+                              <Camera className="h-6 w-6" />
+                              <span className="mt-1 text-xs">{ct('ยังไม่มีรูป', 'No image')}</span>
+                            </div>
+                          );
+                        })()}
                       </div>
+
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-4 mb-2">
                           <div className="flex-1">

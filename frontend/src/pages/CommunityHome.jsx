@@ -104,7 +104,18 @@ const CommunityHome = () => {
   });
 
   const actualWorkshopsArray = Array.isArray(workshops) ? workshops : [];
-  const workshopCards = actualWorkshopsArray.slice(0, 3);
+
+  const workshopCards = useMemo(() => {
+    if (actualWorkshopsArray.length <= 3) {
+      return actualWorkshopsArray;
+    }
+    const shuffled = [...actualWorkshopsArray];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled.slice(0, 3);
+  }, [actualWorkshopsArray]);
   
   const workshopCount = actualWorkshopsArray.length;
 
@@ -526,9 +537,7 @@ const CommunityHome = () => {
                       </div>
                     </div>
                     <div className="p-6 space-y-4">
-                      <h3 className="text-xl font-bold text-gray-900 leading-snug line-clamp-2">
-                        {event.title}
-                      </h3>
+                      <h3 className="text-xl font-bold text-gray-900">{event.title}</h3>
                       <p className="text-sm text-gray-600 line-clamp-3">{event.description}</p>
                       <div className="grid grid-cols-1 gap-3 rounded-2xl border border-orange-100 bg-gradient-to-br from-orange-50/60 to-amber-50 p-4">
                         <div className="flex items-start gap-3">
@@ -679,17 +688,36 @@ const CommunityHome = () => {
                 const isFull = seatsLeft <= 0;
                 const canEnroll = isRegistrationOpen && !isFull;
 
+                const coverImage = resolveImageUrl(
+                  card.image ||
+                  card.imageUrl ||
+                  card.coverImage ||
+                  card.cover ||
+                  (Array.isArray(card.images) ? card.images[0] : null)
+                );
+
+                const cardGradient = 'from-orange-200 to-orange-300';
+
                 return (
                 <div key={card._id} className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-lg transition">
-                  <div className={`h-44 bg-gradient-to-br from-orange-200 to-orange-300 relative`}>
+                  <div className="h-44 relative overflow-hidden">
+                    {coverImage ? (
+                      <img
+                        src={coverImage}
+                        alt={card.title || 'Workshop cover'}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div className={`w-full h-full bg-gradient-to-br ${cardGradient}`}></div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
                     <div className="absolute top-4 left-4 bg-white/85 text-xs font-semibold text-gray-700 px-3 py-1 rounded-full">
                       {card.category || 'Workshop'}
                     </div>
                     <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-white">
-                        <Star className="h-4 w-4 text-yellow-300" />
-                        <span className="text-sm font-semibold">5.0</span>
-                      </div>
                       <span className="text-xs text-white/80">
                         {isRegistrationOpen ? ct('เปิดรับสมัคร', 'Open') : ct('ปิดรับสมัคร', 'Closed')}
                       </span>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { MapPin, Clock, Phone, Image as ImageIcon } from 'lucide-react';
+import Swal from 'sweetalert2';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import ShopMapPinModal from '../../components/ShopMapPinModal';
@@ -12,7 +13,6 @@ const ShopCreate = () => {
   const { slug } = useParams();
   const { token } = useAuth();
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState({ type: '', text: '' });
   const [communityId, setCommunityId] = useState('');
   const [isPinModalOpen, setPinModalOpen] = useState(false);
   const [selectedPinPosition, setSelectedPinPosition] = useState(null);
@@ -132,30 +132,60 @@ const ShopCreate = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!communities.length) {
-      setMessage({ type: 'error', text: 'ยังโหลดรายการชุมชนไม่เสร็จ กรุณาลองใหม่' });
+      Swal.fire({
+        icon: 'warning',
+        title: 'ข้อมูลชุมชนยังไม่พร้อม',
+        text: 'ยังโหลดรายการชุมชนไม่เสร็จ กรุณาลองใหม่อีกครั้ง',
+      });
       return;
     }
     setSaving(true);
-    setMessage({ type: '', text: '' });
+    Swal.fire({
+      title: 'กำลังบันทึกข้อมูลร้าน...',
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
 
     try {
       await createShopMutation.mutateAsync();
 
       if (selectedPinPosition) {
-        await saveShopMapPin({
-          position_x: selectedPinPosition.x,
-          position_y: selectedPinPosition.y,
-        });
-        setPinStatusMessage('บันทึกหมุดตำแหน่งร้านเรียบร้อย รอการอนุมัติ');
+        try {
+          await saveShopMapPin({
+            position_x: selectedPinPosition.x,
+            position_y: selectedPinPosition.y,
+          });
+          setPinStatusMessage('บันทึกหมุดตำแหน่งร้านเรียบร้อย รอการอนุมัติ');
+        } catch (pinError) {
+          console.error('Failed to save pin:', pinError);
+          await Swal.fire({
+            icon: 'warning',
+            title: 'บันทึกหมุดไม่สำเร็จ',
+            text: 'ระบบจะลองบันทึกหมุดอีกครั้งหลังจากอนุมัติร้าน คุณสามารถแก้ไขภายหลังได้',
+          });
+        }
       }
 
-      setMessage({ type: 'success', text: 'บันทึกโปรไฟล์ร้านเรียบร้อย' });
+      Swal.close();
+      await Swal.fire({
+        icon: 'success',
+        title: 'บันทึกร้านสำเร็จ',
+        text: 'ระบบบันทึกโปรไฟล์ร้านเรียบร้อยแล้ว รอการตรวจสอบจากแอดมิน',
+      });
       const selectedCommunity = communities.find((c) => c._id === communityId);
       const communitySlug = selectedCommunity?.slug || slug;
       navigate(`/${communitySlug}/shop/dashboard`);
     } catch (err) {
       const msg = err?.response?.data?.message || err.message || 'บันทึกร้านไม่สำเร็จ ลองใหม่อีกครั้ง';
-      setMessage({ type: 'error', text: Array.isArray(msg) ? msg.join(', ') : msg });
+      Swal.close();
+      Swal.fire({
+        icon: 'error',
+        title: 'บันทึกไม่สำเร็จ',
+        text: Array.isArray(msg) ? msg.join(', ') : msg,
+      });
     } finally {
       setSaving(false);
     }
@@ -163,7 +193,11 @@ const ShopCreate = () => {
 
   const handleOpenPinModal = () => {
     if (!communityId) {
-      setMessage({ type: 'error', text: 'กรุณาเลือกชุมชนก่อนเลือกตำแหน่งร้าน' });
+      Swal.fire({
+        icon: 'info',
+        title: 'กรุณาเลือกชุมชน',
+        text: 'เลือกชุมชนก่อน เพื่อให้ระบบเพิ่มตำแหน่งร้านได้ถูกต้อง',
+      });
       return;
     }
     setPinModalOpen(true);
@@ -181,14 +215,6 @@ const ShopCreate = () => {
           <h1 className="text-3xl md:text-4xl font-bold text-[#2F4F2F] mb-3">สร้างโปรไฟล์ร้านของคุณ</h1>
           <p className="text-[#6B6B6B] text-base">กรอกข้อมูลร้านของคุณเพื่อเริ่มต้นใช้งาน</p>
         </div>
-
-        {message.text && (
-          <div
-            className={`mb-4 p-3 rounded-lg ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}
-          >
-            {message.text}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm p-8 space-y-6 border border-gray-100 animate-slideUp" style={{animationDelay: '0.1s'}}>
           {/* ชื่อร้าน */}

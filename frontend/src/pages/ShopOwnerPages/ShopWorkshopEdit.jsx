@@ -1,16 +1,24 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Clock, Users, Calendar, Plus, X, AlertCircle, Image as ImageIcon, Camera } from 'lucide-react';
+
+import Swal from 'sweetalert2';
 import { useMyShop } from '../../hooks/useMyShop';
 import ShopPendingApprovalNotice from '../../components/ShopPendingApprovalNotice';
 import api from '../../services/api'; // ADDED: API import
+
+const WORKSHOP_CATEGORY_OPTIONS = [
+  { value: 'งานฝีมือ', label: 'งานฝีมือ (Crafts)' },
+  { value: 'ศิลปะ', label: 'ศิลปะ (Art)' },
+  { value: 'อาหาร', label: 'อาหาร (Cooking)' },
+  { value: 'วัฒนธรรม', label: 'วัฒนธรรม (Culture)' },
+];
 
 const ShopWorkshopEdit = () => {
   const { id, slug } = useParams();
   const navigate = useNavigate();
   const { data: shop, isLoading: shopLoading } = useMyShop();
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState({ type: '', text: '' });
   const [loading, setLoading] = useState(true);
 
   const [form, setForm] = useState({
@@ -18,6 +26,7 @@ const ShopWorkshopEdit = () => {
     description: '',
     registrationStartDate: '',
     registrationEndDate: '',
+    workshopDate: '',
     workshopStartTime: '',
     workshopEndTime: '',
     locationType: 'shop',
@@ -25,11 +34,19 @@ const ShopWorkshopEdit = () => {
     seatLimit: '',
     price: '',
     imageUrl: '',
+    category: 'งานฝีมือ',
     categories: [],
     activities: [
       { id: 1, title: '', description: '', duration: '' }
     ]
   });
+
+  const toDateInputValue = (value) => {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toISOString().split('T')[0];
+  };
 
   // FIX 1: Fetch real data from Backend instead of localStorage
   useEffect(() => {
@@ -41,11 +58,13 @@ const ShopWorkshopEdit = () => {
         const workshop = res.data?.data || res.data;
 
         if (workshop) {
+          const resolvedWorkshopDate = workshop.workshopDate || workshop.date;
           setForm({
             title: workshop.title || '',
             description: workshop.description || '',
             registrationStartDate: workshop.startDate || '',
             registrationEndDate: workshop.endDate || '',
+            workshopDate: toDateInputValue(resolvedWorkshopDate),
             workshopStartTime: workshop.startTime || '',
             workshopEndTime: workshop.endTime || '',
             locationType: workshop.locationType || 'shop',
@@ -53,13 +72,18 @@ const ShopWorkshopEdit = () => {
             seatLimit: workshop.capacity || '', // Map capacity to seatLimit
             price: workshop.price || '',
             imageUrl: workshop.image || '', // Map image to imageUrl
+            category: workshop.category || 'งานฝีมือ',
             categories: workshop.categories || [],
             activities: workshop.activities || [{ id: 1, title: '', description: '', duration: '' }]
           });
         }
       } catch (error) {
         console.error("Failed to load workshop:", error);
-        setMessage({ type: 'error', text: 'ไม่สามารถโหลดข้อมูลเวิร์กชอปได้' });
+        Swal.fire({
+          icon: 'error',
+          title: 'โหลดข้อมูลไม่สำเร็จ',
+          text: 'ไม่สามารถโหลดข้อมูลเวิร์กชอปได้ กรุณาลองใหม่',
+        });
       } finally {
         setLoading(false);
       }
@@ -91,6 +115,14 @@ const ShopWorkshopEdit = () => {
     }));
   };
 
+  const handleLocationRadioChange = (nextType) => {
+    setForm(prev => ({
+      ...prev,
+      locationType: nextType,
+      customLocation: nextType === 'custom' ? prev.customLocation : ''
+    }));
+  };
+
   const addActivity = () => {
     setForm(prev => ({
       ...prev,
@@ -118,21 +150,33 @@ const ShopWorkshopEdit = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-    setMessage({ type: '', text: '' });
+    Swal.fire({
+      title: 'กำลังบันทึกการแก้ไข...',
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      didOpen: () => Swal.showLoading(),
+    });
 
     try {
+      const sanitizedCustomLocation = form.customLocation.trim();
+      const eventDateIso = form.workshopDate
+        ? new Date(`${form.workshopDate}T${form.workshopStartTime || '00:00'}:00`).toISOString()
+        : new Date().toISOString();
+
       const payload = {
         title: form.title,
         description: form.description,
         startDate: form.registrationStartDate,
         endDate: form.registrationEndDate,
+        workshopDate: form.workshopDate,
         startTime: form.workshopStartTime,
         endTime: form.workshopEndTime,
         locationType: form.locationType,
-        customLocation: form.customLocation,
+        customLocation: form.locationType === 'custom' ? sanitizedCustomLocation : '',
         capacity: Number(form.seatLimit), // Mapping back to backend schema
         price: Number(form.price),
         image: form.imageUrl, // Mapping back to backend schema
+        category: form.category || 'งานฝีมือ',
         categories: form.categories,
         activities: form.activities,
         
@@ -140,20 +184,29 @@ const ShopWorkshopEdit = () => {
         approvalStatus: 'PENDING',
         
         // Update the main date field used for listing
-        date: form.registrationStartDate ? new Date(form.registrationStartDate).toISOString() : new Date().toISOString()
+        date: eventDateIso
       };
 
       // Ensure no /api prefix in URL
       await api.patch(`/management/workshops/${id}`, payload);
 
-      setMessage({ type: 'success', text: 'แก้ไข Workshop สำเร็จ และส่งให้แอดมินตรวจสอบแล้ว' });
-      
-      // Navigate back after short delay
-      setTimeout(() => navigate(`/${slug}/shop/dashboard`), 2000);
+      Swal.close();
+      await Swal.fire({
+        icon: 'success',
+        title: 'บันทึกสำเร็จ',
+        text: 'ส่งข้อมูลให้แอดมินตรวจสอบแล้ว',
+      });
+
+      navigate(`/${slug}/shop/dashboard`);
 
     } catch (error) {
       const errorMsg = error.response?.data?.message || 'บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง';
-      setMessage({ type: 'error', text: Array.isArray(errorMsg) ? errorMsg[0] : errorMsg });
+      Swal.close();
+      Swal.fire({
+        icon: 'error',
+        title: 'บันทึกไม่สำเร็จ',
+        text: Array.isArray(errorMsg) ? errorMsg[0] : errorMsg,
+      });
     } finally {
       setSaving(false);
     }
@@ -208,14 +261,6 @@ const ShopWorkshopEdit = () => {
           <p className="text-sm text-red-500 font-medium mt-1">⚠️ เมื่อบันทึกแล้ว สถานะจะกลับเป็น "รออนุมัติ" เพื่อให้แอดมินตรวจสอบใหม่</p>
         </div>
 
-        {message.text && (
-          <div
-            className={`mb-4 p-4 rounded-xl border ${message.type === 'success' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}
-          >
-            {message.text}
-          </div>
-        )}
-
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm p-8 space-y-6 border border-gray-100 animate-slideUp">
           
           {/* Form Fields - Same as Create but now wired to real state */}
@@ -254,6 +299,28 @@ const ShopWorkshopEdit = () => {
           </div>
 
           <div>
+            <label className="block text-sm font-semibold text-[#3D3D3D] mb-3">หมวดหมู่หลักของ Workshop</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {WORKSHOP_CATEGORY_OPTIONS.map(option => (
+                <label
+                  key={option.value}
+                  className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${form.category === option.value ? 'border-[#E07B39] bg-[#FFF7ED]' : 'border-gray-200 hover:bg-gray-50'}`}
+                >
+                  <input
+                    type="radio"
+                    name="category"
+                    value={option.value}
+                    checked={form.category === option.value}
+                    onChange={handleChange}
+                    className="w-4 h-4 text-[#E07B39] border-gray-300 focus:ring-[#E07B39]"
+                  />
+                  <span className="text-sm text-gray-700">{option.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
             <label className="block text-sm font-semibold text-[#3D3D3D] mb-2">คำอธิบาย Workshop</label>
             <textarea
               name="description"
@@ -265,8 +332,6 @@ const ShopWorkshopEdit = () => {
             />
           </div>
 
-          {/* ... Remaining inputs remain the same layout as your provided file ... */}
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs text-[#6B6B6B] mb-1.5">วันที่เปิดรับลงทะเบียน</label>
@@ -276,6 +341,7 @@ const ShopWorkshopEdit = () => {
                   value={form.registrationStartDate}
                   onChange={handleChange}
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none"
+                  required
                 />
               </div>
               <div>
@@ -290,7 +356,85 @@ const ShopWorkshopEdit = () => {
               </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-[#6B6B6B] mb-1.5">เวลาเริ่มกิจกรรม</label>
+              <input
+                type="time"
+                name="workshopStartTime"
+                value={form.workshopStartTime}
+                onChange={handleChange}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-[#6B6B6B] mb-1.5">เวลาสิ้นสุดกิจกรรม</label>
+              <input
+                type="time"
+                name="workshopEndTime"
+                value={form.workshopEndTime}
+                onChange={handleChange}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-[#3D3D3D] mb-3">📆 วันที่จัด Workshop</label>
+            <input
+              type="date"
+              name="workshopDate"
+              value={form.workshopDate}
+              onChange={handleChange}
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-[#3D3D3D] mb-3">📍 สถานที่</label>
+            <div className="space-y-3">
+              <div className="flex gap-4 flex-wrap">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="locationType"
+                    value="shop"
+                    checked={form.locationType === 'shop'}
+                    onChange={() => handleLocationRadioChange('shop')}
+                    className="w-4 h-4 text-[#E07B39] border-gray-300 focus:ring-[#E07B39]"
+                  />
+                  <span className="text-sm text-[#3D3D3D]">ใช้สถานที่ร้าน</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="locationType"
+                    value="custom"
+                    checked={form.locationType === 'custom'}
+                    onChange={() => handleLocationRadioChange('custom')}
+                    className="w-4 h-4 text-[#E07B39] border-gray-300 focus:ring-[#E07B39]"
+                  />
+                  <span className="text-sm text-[#3D3D3D]">ระบุสถานที่เอง</span>
+                </label>
+              </div>
+              {form.locationType === 'custom' && (
+                <input
+                  type="text"
+                  name="customLocation"
+                  value={form.customLocation}
+                  onChange={handleChange}
+                  placeholder="ระบุสถานที่จัด Workshop"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none"
+                  required
+                />
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs text-[#6B6B6B] mb-1.5">ราคา (บาท)</label>
                 <input
@@ -298,7 +442,9 @@ const ShopWorkshopEdit = () => {
                   name="price"
                   value={form.price}
                   onChange={handleChange}
+                  min="0"
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none"
+                  required
                 />
               </div>
               <div>
@@ -308,9 +454,28 @@ const ShopWorkshopEdit = () => {
                   name="seatLimit"
                   value={form.seatLimit}
                   onChange={handleChange}
+                  min="1"
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none"
+                  required
                 />
               </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-[#3D3D3D] mb-3">บรรยากาศ Workshop</label>
+            <div className="grid grid-cols-2 gap-3">
+              {['ไม่ต้องมีพื้นฐาน', 'งานทำมือพื้นฐาน', 'ทำงานร่วมกัน/กลุ่มเล็ก', 'ชวนเพื่อน/ครอบครัว'].map(option => (
+                <label key={option} className="flex items-center gap-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={form.categories.includes(option)}
+                    onChange={() => toggleCategory(option)}
+                    className="w-4 h-4 text-[#E07B39] border-gray-300 rounded focus:ring-[#E07B39]"
+                  />
+                  <span className="text-sm text-gray-700">{option}</span>
+                </label>
+              ))}
+            </div>
           </div>
 
           <div className="flex justify-center gap-4 pt-6">

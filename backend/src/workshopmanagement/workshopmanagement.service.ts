@@ -4,6 +4,18 @@ import { Model, Types } from 'mongoose';
 import { Workshop, WorkshopDocument } from '../workshops/schemas/workshop.schema';
 import { CreateWorkshopDto } from '../workshops/dto/create-workshop.dto';
 import { Workshopregistration, WorkshopregistrationDocument } from '../workshopregistrations/schemas/workshopregistration.schema';
+import { User, UserDocument } from '../users/schemas/users.schema';
+
+const normalizeUserId = (value: unknown): string | null => {
+  if (!value) return null;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object' && 'toString' in value) {
+    const str = (value as { toString: () => string }).toString();
+    return typeof str === 'string' ? str : null;
+  }
+  return String(value);
+};
+
 // import { UpdateWorkshopDto } from '../workshops/dto/update-workshop.dto';
 
 @Injectable()
@@ -11,12 +23,22 @@ export class WorkshopManagementService {
   constructor(
     @InjectModel(Workshop.name) private readonly workshopModel: Model<WorkshopDocument>,
     @InjectModel(Workshopregistration.name) private readonly registeredWorkshopModel: Model<WorkshopregistrationDocument>,
+    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
   ) {}
 
   // Force PENDING status on creation
   async create(createWorkshopDto: CreateWorkshopDto): Promise<Workshop> {
+    const locationType = createWorkshopDto.locationType === 'custom' ? 'custom' : 'shop';
+    const sanitizedCustomLocation = locationType === 'custom' ? createWorkshopDto.customLocation || '' : '';
+    const rawEventDate = createWorkshopDto.workshopDate || createWorkshopDto.date;
+    const normalizedEventDate = rawEventDate ? new Date(rawEventDate).toISOString() : new Date().toISOString();
+
     const createdWorkshop = new this.workshopModel({
       ...createWorkshopDto,
+      date: normalizedEventDate,
+      workshopDate: normalizedEventDate,
+      locationType,
+      customLocation: sanitizedCustomLocation,
       // CRITICAL FIX: Use the exact new variable names from the schema
       approvalStatus: 'PENDING', 
       registrationStatus: 'OPEN',
@@ -77,11 +99,33 @@ export class WorkshopManagementService {
       };
 
       // 2. Pass the filter and populate the user data
-      return await this.registeredWorkshopModel
+      const registrations = await this.registeredWorkshopModel
         .find(filter)
-        .populate('userId', 'name email phone') 
         .sort({ createdAt: -1 })
-        .exec();
+        .lean();
+
+      const uniqueUserIds = Array.from(
+        new Set(
+          registrations
+            .map((reg) => normalizeUserId(reg.userId))
+            .filter((id): id is string => typeof id === 'string' && !!id)
+        )
+      );
+
+      const users = await this.userModel
+        .find({ user_id: { $in: uniqueUserIds } })
+        .select('firstname lastname email phone user_id')
+        .lean();
+
+      const userMap = new Map(users.map((user) => [user.user_id, user]));
+
+      return registrations.map((reg) => {
+        const normalizedId = normalizeUserId(reg.userId);
+        return {
+          ...reg,
+          fetchedUser: normalizedId ? userMap.get(normalizedId) || null : null,
+        };
+      });
         
     } catch (error) {
       console.error('Error fetching enrollments:', error);
@@ -121,6 +165,22 @@ export class WorkshopManagementService {
     // If it doesn't have an approvalStatus, it's a general edit, so we force PENDING.
     if (!updateData.approvalStatus) {
       updateData.approvalStatus = 'PENDING';
+    }
+
+    if (typeof updateData.locationType !== 'undefined') {
+      updateData.locationType = updateData.locationType === 'custom' ? 'custom' : 'shop';
+      updateData.customLocation = updateData.locationType === 'custom' ? updateData.customLocation || '' : '';
+    }
+
+    if (typeof updateData.workshopDate !== 'undefined' || typeof updateData.date !== 'undefined') {
+      const rawEventDate = updateData.workshopDate || updateData.date;
+      if (rawEventDate) {
+        const normalizedEventDate = new Date(rawEventDate).toISOString();
+        updateData.workshopDate = normalizedEventDate;
+        updateData.date = normalizedEventDate;
+      } else {
+        delete updateData.workshopDate;
+      }
     }
 
     // 2. Perform the update in MongoDB

@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Store, MapPin, Users, Search, List, AlertCircle, Filter } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
-import { getAdminShopsByCommunity } from '../../services/shopService';
+import { getAdminShopsByCommunity, approveShop } from '../../services/shopService';
 import { getShopCoverImage } from '../../utils/image';
+import Swal from 'sweetalert2';
 
 const statusFilters = [
   { id: 'ALL', label: { th: 'ทั้งหมด', en: 'All' } },
@@ -34,6 +35,7 @@ const AdminShopList = () => {
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
+  const queryClient = useQueryClient();
 
   const {
     data: shops = [],
@@ -79,6 +81,62 @@ const AdminShopList = () => {
     if (normalized === 'PENDING') return ct('อนุมัติ', 'Approve');
     if (normalized === 'REJECTED') return ct('พิจารณาใหม่', 'Revisit');
     return ct('จัดการ', 'Manage');
+  };
+
+  const handleApproveShop = async (shopId) => {
+    const result = await Swal.fire({
+      title: ct('ยืนยันการอนุมัติร้านค้า?', 'Approve this shop?'),
+      text: ct('ร้านค้าจะปรากฏในแผนที่และรายการเมื่อตรวจสอบผ่าน', 'The shop will become visible on listings once approved.'),
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: ct('อนุมัติ', 'Approve'),
+      cancelButtonText: ct('ยกเลิก', 'Cancel'),
+      confirmButtonColor: '#1E293B'
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      Swal.fire({
+        title: ct('กำลังอนุมัติ...', 'Approving...'),
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        didOpen: () => Swal.showLoading(),
+      });
+
+      await approveShop(shopId);
+
+      Swal.close();
+      await Swal.fire({
+        icon: 'success',
+        title: ct('อนุมัติร้านค้าสำเร็จ', 'Shop approved'),
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['community-shops-admin', community?._id] }),
+        queryClient.invalidateQueries({ queryKey: ['community-shops', community?._id] }),
+        queryClient.invalidateQueries({ queryKey: ['community-pending-shops', community?._id] }),
+      ]);
+    } catch (error) {
+      console.error('Failed to approve shop:', error);
+      Swal.close();
+      Swal.fire({
+        icon: 'error',
+        title: ct('อนุมัติร้านค้าไม่สำเร็จ', 'Shop approval failed'),
+        text: error.response?.data?.message || ct('กรุณาลองใหม่อีกครั้ง', 'Please try again later')
+      });
+    }
+  };
+
+  const handleSecondaryAction = (shop) => {
+    const normalized = normalizeStatus(shop.status);
+    if (normalized === 'PENDING') {
+      handleApproveShop(shop._id);
+    } else {
+      navigate(`/community-admin/shops/${shop._id}/approval`);
+    }
   };
 
   return (
@@ -195,7 +253,7 @@ const AdminShopList = () => {
                     {ct('ดูรายละเอียด', 'View details')}
                   </button>
                   <button
-                    onClick={() => navigate(`/community-admin/shops/${shop._id}/approval`)}
+                    onClick={() => handleSecondaryAction(shop)}
                     className="px-4 py-2 bg-[#1E293B] hover:bg-[#0F172A] text-white text-sm font-semibold rounded-lg transition-all transform hover:-translate-y-0.5"
                   >
                     {resolveSecondaryCta(shop.status)}
