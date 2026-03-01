@@ -7,8 +7,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CommunitiesModule } from './communities/communities.module';
 import { EventsModule } from './events/events.module';
 import { AuthModule } from './auth/auth.module';
-import { WorkshopsModule } from './workshops/workshops.module';
 import { ShopsModule } from './shops/shops.module';
+import { WorkshopsModule } from './workshops/workshops.module';
+import { WorkshopManagementModule } from './workshopmanagement/workshopmanagement.module';
 import { WorkshopregistrationsModule } from './workshopregistrations/workshopregistrations.module';
 import { CommunityAdminModule } from './community-admin/community-admin.module';
 import { CommunityMapModule } from './community-map/community-map.module';
@@ -60,8 +61,9 @@ import { CommunityViewModule } from './community-view/community-view.module';
     CommunitiesModule,
     EventsModule,
     AuthModule,
-    WorkshopsModule,
     ShopsModule,
+    WorkshopsModule,
+    WorkshopManagementModule,
     WorkshopregistrationsModule,
     CommunityAdminModule,
     CommunityMapModule,

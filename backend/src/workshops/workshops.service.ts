@@ -1,54 +1,43 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { CreateWorkshopDto } from './dto/create-workshop.dto';
-import { UpdateWorkshopDto } from './dto/update-workshop.dto';
+import { Model, Types } from 'mongoose';
 import { Workshop, WorkshopDocument } from './schemas/workshop.schema';
 
 @Injectable()
 export class WorkshopsService {
   constructor(
-    @InjectModel(Workshop.name)
-    private readonly workshopModel: Model<WorkshopDocument>,
+    @InjectModel(Workshop.name) private readonly workshopModel: Model<WorkshopDocument>,
   ) {}
 
-  async create(createWorkshopDto: CreateWorkshopDto): Promise<Workshop> {
-    /* Adds a new workshop to the database */
-    const createdWorkshop = new this.workshopModel(createWorkshopDto);
-    return createdWorkshop.save();
-  }
+  // PUBLIC: Fetch only approved and active workshops
+  async findAllActive(): Promise<Workshop[]> {
+  return this.workshopModel.find({ 
+    approvalStatus: 'ACTIVE', 
+    registrationStatus: 'OPEN' 
+  }).exec();
+}
 
-  async findAll(): Promise<Workshop[]> {
-    /* Returns all workshops */
-    return this.workshopModel.find().exec();
-  }
-
+  // PUBLIC: Fetch details of a specific workshop
   async findOne(id: string): Promise<Workshop> {
-    /* Finds a workshop by its ID */
     const workshop = await this.workshopModel.findById(id).exec();
     if (!workshop) {
       throw new NotFoundException(`Workshop with ID ${id} not found`);
     }
+    // Optional: You could add a check here to ensure clients can't fetch a PENDING workshop by ID
     return workshop;
   }
 
-  async update(id: string, updateWorkshopDto: UpdateWorkshopDto): Promise<Workshop> {
-    /* Updates workshop details */
-    const updated = await this.workshopModel
-      .findByIdAndUpdate(id, { $set: updateWorkshopDto }, { new: true })
-      .exec();
-    if (!updated) {
-      throw new NotFoundException(`Workshop with ID ${id} not found`);
-    }
-    return updated;
-  }
+  async incrementView(id: string) {
+    const updatedWorkshop = await this.workshopModel.findByIdAndUpdate(
+      id,
+      { $inc: { views: 1 } },
+      { new: true }
+    ).exec();
 
-  async remove(id: string) {
-    /* Deletes the workshop */
-    const result = await this.workshopModel.findByIdAndDelete(id).exec();
-    if (!result) {
-      throw new NotFoundException(`Workshop with ID ${id} not found`);
+    if (!updatedWorkshop) {
+      throw new NotFoundException(`Workshop not found`);
     }
-    return { deleted: true };
+
+    return updatedWorkshop;
   }
 }
