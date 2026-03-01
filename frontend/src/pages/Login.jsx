@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { X, AlertCircle } from 'lucide-react';
+import { X } from 'lucide-react';
+import Swal from 'sweetalert2';
 import { useTranslation } from '../hooks/useTranslation';
 import { useAuth } from '../hooks/useAuth';
 import api from '../services/api';
@@ -14,12 +15,24 @@ const Login = () => {
     email: '',
     password: ''
   });
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const showErrorAlert = (message) => {
+    Swal.fire({
+      icon: 'error',
+      title: t('common.error') || 'เกิดข้อผิดพลาด',
+      text: message,
+      confirmButtonColor: '#d33',
+    });
+  };
+
+  const extractErrorMessage = (fallback, error) => {
+    const msg = error?.response?.data?.message ?? error?.message ?? fallback;
+    return Array.isArray(msg) ? msg.join('\n') : msg;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     try {
@@ -87,10 +100,11 @@ const Login = () => {
         
         navigate(redirectPath, { replace: true });
       } else {
-        setError(result.message || 'Login failed');
+        showErrorAlert(result.message || t('auth.loginErrorMessage') || 'กรุณาตรวจสอบอีเมลหรือรหัสผ่านอีกครั้ง');
       }
-    } catch {
-      setError('An unexpected error occurred');
+    } catch (error) {
+      const message = extractErrorMessage(t('auth.loginErrorMessage') || 'ไม่สามารถเข้าสู่ระบบได้', error);
+      showErrorAlert(message);
     } finally {
       setLoading(false);
     }
@@ -139,18 +153,6 @@ const Login = () => {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start space-x-3">
-                <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm text-red-800">{error}</p>
-                  <p className="text-xs text-red-600 mt-1">
-                    Try: tourist@test.com / test123
-                  </p>
-                </div>
-              </div>
-            )}
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 {t('auth.email')}

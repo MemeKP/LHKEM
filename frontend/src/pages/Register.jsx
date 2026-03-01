@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
+import Swal from 'sweetalert2';
 import { useTranslation } from '../hooks/useTranslation';
 import { useAuth } from '../hooks/useAuth';
 
@@ -18,10 +19,20 @@ const Register = () => {
     confirmPassword: ''
   });
 
+  const extractErrorMessage = (fallback, error) => {
+    const msg = error?.response?.data?.message ?? error?.message ?? fallback;
+    return Array.isArray(msg) ? msg.join('\n') : msg;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      alert(t('common.error'));
+      Swal.fire({
+        icon: 'warning',
+        title: t('common.error') || 'ข้อมูลไม่ถูกต้อง',
+        text: t('auth.passwordMismatch') || 'รหัสผ่านไม่ตรงกัน กรุณาลองอีกครั้ง',
+        confirmButtonColor: '#f97316',
+      });
       return;
     }
     const payload = {
@@ -32,20 +43,41 @@ const Register = () => {
       password: formData.password,
       role: formData.role,
     };
-    const res = await register(payload);
-    if (res.success) {
-      // Redirect based on role
-      if (formData.role === 'SHOP_OWNER') {
-        navigate('/loeng-him-kaw/shop/dashboard'); // Default community
-      } else if (formData.role === 'COMMUNITY_ADMIN') {
-        navigate('/community-admin/dashboard');
-      } else if (formData.role === 'PLATFORM_ADMIN') {
-        navigate('/platform-admin/dashboard');
+    try {
+      const res = await register(payload);
+      if (res.success) {
+        await Swal.fire({
+          icon: 'success',
+          title: t('auth.registerSuccessTitle') || 'สมัครสมาชิกสำเร็จ',
+          text: t('auth.registerSuccessMessage') || 'บัญชีของคุณพร้อมใช้งานแล้ว',
+          confirmButtonColor: '#16a34a',
+        });
+
+        if (formData.role === 'SHOP_OWNER') {
+          navigate('/loeng-him-kaw/shop/dashboard');
+        } else if (formData.role === 'COMMUNITY_ADMIN') {
+          navigate('/community-admin/dashboard');
+        } else if (formData.role === 'PLATFORM_ADMIN') {
+          navigate('/platform-admin/dashboard');
+        } else {
+          navigate('/');
+        }
       } else {
-        navigate('/'); // TOURIST goes to landing page
+        Swal.fire({
+          icon: 'error',
+          title: t('common.error') || 'เกิดข้อผิดพลาด',
+          text: res.message || t('common.error'),
+          confirmButtonColor: '#d33',
+        });
       }
-    } else {
-      alert(res.message || t('common.error'));
+    } catch (error) {
+      const message = extractErrorMessage(t('common.error') || 'ไม่สามารถสมัครสมาชิกได้', error);
+      Swal.fire({
+        icon: 'error',
+        title: t('common.error') || 'เกิดข้อผิดพลาด',
+        text: message,
+        confirmButtonColor: '#d33',
+      });
     }
   };
 
