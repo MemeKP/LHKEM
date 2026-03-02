@@ -1,15 +1,36 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { CreateWorkshopregistrationDto } from './dto/create-workshopregistration.dto';
 import { UpdateWorkshopregistrationDto } from './dto/update-workshopregistration.dto';
 import { Workshopregistration, WorkshopregistrationDocument } from './schemas/workshopregistration.schema';
+import { Workshop, WorkshopDocument } from '../workshops/schemas/workshop.schema';
+import { Shop, ShopDocument } from '../shops/schemas/shop.schema';
+
+const normalizeId = (value: unknown): string | null => {
+  if (!value) return null;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object' && 'toString' in value) {
+    const str = (value as { toString: () => string }).toString();
+    return typeof str === 'string' ? str : null;
+  }
+  return String(value);
+};
+
+type WorkshopRegistrationWithWorkshop = Omit<Workshopregistration, 'workshopId'> & {
+  workshopId: Workshop | (Workshop & { shop?: Shop | null }) | string;
+  workshop?: (Workshop & { shop?: Shop | null }) | null;
+};
 
 @Injectable()
 export class WorkshopregistrationsService {
   constructor(
     @InjectModel(Workshopregistration.name)
     private readonly workshopregistrationModel: Model<WorkshopregistrationDocument>,
+    @InjectModel(Workshop.name)
+    private readonly workshopModel: Model<WorkshopDocument>,
+    @InjectModel(Shop.name)
+    private readonly shopModel: Model<ShopDocument>,
   ) {}
 
   async create(createWorkshopregistrationDto: CreateWorkshopregistrationDto): Promise<Workshopregistration> {
@@ -18,12 +39,110 @@ export class WorkshopregistrationsService {
     return createdRegistration.save();
   }
 
-  async findAll(): Promise<Workshopregistration[]> {
-    /* Retrieves all entries from the database */
-    return this.workshopregistrationModel.find().exec();
+  private async mapWorkshopsToRegistrations(
+    registrations: Workshopregistration[] | WorkshopregistrationDocument[],
+  ): Promise<WorkshopRegistrationWithWorkshop[]> {
+    if (!registrations.length) {
+      return registrations as WorkshopRegistrationWithWorkshop[];
+    }
+
+    const workshopIds = Array.from(
+      new Set(
+        registrations
+          .map((reg) => normalizeId(reg.workshopId))
+          .filter((id): id is string => typeof id === 'string' && !!id)
+      )
+    );
+
+    const validObjectIds = workshopIds
+      .filter((id) => Types.ObjectId.isValid(id))
+      .map((id) => new Types.ObjectId(id));
+
+    const workshops = await this.workshopModel
+      .find({ _id: { $in: validObjectIds } })
+      .lean();
+
+    const shopIds = Array.from(
+      new Set(
+        workshops
+          .map((workshop) => normalizeId(workshop.shopId))
+          .filter((id): id is string => typeof id === 'string' && !!id)
+      )
+    );
+
+    const shops = await this.shopModel
+      .find({ _id: { $in: shopIds } })
+      .lean();
+
+    const shopMap = new Map(shops.map((shop) => [shop._id.toString(), shop]));
+
+    const workshopMap = new Map(
+      workshops.map((workshop) => {
+        const shop = normalizeId(workshop.shopId) ? shopMap.get(normalizeId(workshop.shopId) as string) || null : null;
+        return [workshop._id.toString(), { ...workshop, shop }];
+      })
+    );
+
+    return registrations.map((reg) => {
+      const normalized = normalizeId(reg.workshopId);
+      const enrichedWorkshop = normalized ? workshopMap.get(normalized) || null : null;
+
+      return {
+        ...reg,
+        workshopId: enrichedWorkshop || reg.workshopId,
+        workshop: enrichedWorkshop,
+      };
+    });
   }
 
-  async findOne(id: string): Promise<Workshopregistration> {
+  private async adjustWorkshopParticipants(workshopId: unknown, delta: number) {
+    if (!delta) {
+      return;
+    }
+
+    const normalizedWorkshopId = normalizeId(workshopId);
+    if (!normalizedWorkshopId) {
+      return;
+    }
+
+    await this.workshopModel
+      .findByIdAndUpdate(normalizedWorkshopId, { $inc: { current_participants: delta } })
+      .exec();
+
+    if (delta < 0) {
+      await this.workshopModel
+        .updateOne(
+          { _id: normalizedWorkshopId, current_participants: { $lt: 0 } },
+          { $set: { current_participants: 0 } },
+        )
+        .exec();
+    }
+  }
+
+  async findAll(): Promise<WorkshopRegistrationWithWorkshop[]> {
+    /* Retrieves all entries from the database */
+    const registrations = await this.workshopregistrationModel
+      .find()
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return this.mapWorkshopsToRegistrations(registrations);
+  }
+
+  async findByUserId(userId: string): Promise<WorkshopRegistrationWithWorkshop[]> {
+    if (!userId) {
+      return [];
+    }
+
+    const registrations = await this.workshopregistrationModel
+      .find({ userId })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return this.mapWorkshopsToRegistrations(registrations);
+  }
+
+  async findOne(id: string): Promise<WorkshopRegistrationWithWorkshop> {
     /* Fetches one entry by MongoDB ID */
     const registration = await this.workshopregistrationModel.findById(id).exec();
     if (!registration) {
@@ -40,6 +159,34 @@ export class WorkshopregistrationsService {
     if (!updated) {
       throw new NotFoundException(`Registration with ID ${id} not found`);
     }
+    return updated;
+  }
+
+  async cancel(id: string): Promise<Workshopregistration> {
+    const registration = await this.workshopregistrationModel.findById(id).exec();
+    if (!registration) {
+      throw new NotFoundException(`Registration with ID ${id} not found`);
+    }
+
+    const currentStatus = (registration.status || '').toUpperCase();
+    const alreadyCancelled = ['CANCEL', 'CANCELLED'].includes(currentStatus);
+    if (alreadyCancelled) {
+      return registration;
+    }
+
+    const updated = await this.workshopregistrationModel
+      .findByIdAndUpdate(id, { $set: { status: 'CANCEL' } }, { new: true })
+      .exec();
+    if (!updated) {
+      throw new NotFoundException(`Registration with ID ${id} not found`);
+    }
+
+    const reservedStatuses = ['CONFIRMED', 'ACTIVE', 'COMPLETED'];
+    if (reservedStatuses.includes(currentStatus)) {
+      const seatsToRelease = registration.slots || 1;
+      await this.adjustWorkshopParticipants(registration.workshopId, -seatsToRelease);
+    }
+
     return updated;
   }
 

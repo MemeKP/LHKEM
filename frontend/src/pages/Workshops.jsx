@@ -6,6 +6,8 @@ import { useTranslation } from '../hooks/useTranslation';
 import WorkshopModal from '../components/WorkshopModal';
 import ETicketModal from '../components/ETicketModal';
 import { workshopService } from '../services/workshopService';
+import { formatNumericDate } from '../utils/dateFormatter';
+import { getWorkshopAvailabilityState } from '../utils/workshopAvailability';
 
 const Workshops = () => {
   const { t, ct } = useTranslation();
@@ -229,21 +231,12 @@ const Workshops = () => {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8 animate-stagger">
                   {paginatedWorkshops.map((workshop) => {
-                    
-                    const capacity = workshop.capacity || workshop.seatLimit || 0;
-                    const participants = workshop.current_participants || 0;
-                    const seatsLeft = capacity - participants;
-                    
-                    const isRegistrationOpen = workshop.registrationStatus === 'OPEN' || !workshop.registrationStatus;
-                    const isFull = seatsLeft <= 0;
-                    const canEnroll = isRegistrationOpen && !isFull;
+                    const { seatsLeft, isFull, isRegistrationClosed } = getWorkshopAvailabilityState(workshop);
+                    const isRegistrationStatusOpen = workshop.registrationStatus === 'OPEN' || !workshop.registrationStatus;
+                    const isRegistrationOpen = isRegistrationStatusOpen && !isRegistrationClosed;
 
                     const formattedDate = workshop.workshopDate || workshop.date
-                      ? new Date(workshop.workshopDate || workshop.date).toLocaleDateString('th-TH', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                        })
+                      ? formatNumericDate(workshop.workshopDate || workshop.date)
                       : ct('ไม่ระบุ', 'N/A');
 
                     return (
@@ -271,7 +264,11 @@ const Workshops = () => {
                           </div>
                           <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-white text-sm font-semibold drop-shadow">
                             <span className={`px-3 py-1 rounded-full text-xs ${isRegistrationOpen ? 'bg-green-500/80' : 'bg-gray-500/80'}`}>
-                              {isRegistrationOpen ? ct('เปิดรับสมัคร', 'Open') : ct('ปิดรับสมัคร', 'Closed')}
+                              {isRegistrationClosed
+                                ? ct('ปิดรับสมัครแล้ว', 'Registration closed')
+                                : isRegistrationOpen
+                                  ? ct('เปิดรับสมัคร', 'Open')
+                                  : ct('ปิดรับสมัคร', 'Closed')}
                             </span>
                           </div>
                         </div>
@@ -326,15 +323,18 @@ const Workshops = () => {
                               </div>
                             </div>
                             <button
-                              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-semibold text-white transition-all shadow-lg disabled:opacity-40 disabled:cursor-not-allowed bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-500"
-                              disabled={!canEnroll}
+                              className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-semibold transition-all shadow-lg bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-500 ${
+                                (isRegistrationClosed || isFull) ? 'opacity-80' : ''
+                              }`}
                               onClick={() => handleOpenModal(workshop)}
                             >
-                              {!isRegistrationOpen
-                                ? ct('ปิดรับสมัคร', 'Closed')
-                                : isFull
-                                  ? ct('เต็มแล้ว', 'Full')
-                                  : (t('workshops.enrollNow') || ct('สมัครเลย', 'Enroll'))}
+                              {isRegistrationClosed
+                                ? ct('ปิดรับสมัครแล้ว', 'Registration closed')
+                                : !isRegistrationStatusOpen
+                                  ? ct('ปิดรับสมัคร', 'Closed')
+                                  : isFull
+                                    ? ct('เต็มแล้ว', 'Full')
+                                    : (t('workshops.enrollNow') || ct('สมัครเลย', 'Enroll'))}
                             </button>
                           </div>
                         </div>

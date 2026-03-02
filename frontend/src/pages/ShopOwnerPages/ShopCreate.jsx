@@ -5,6 +5,7 @@ import { MapPin, Clock, Phone, Image as ImageIcon } from 'lucide-react';
 import Swal from 'sweetalert2';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
+import { useTranslation } from '../../hooks/useTranslation';
 import ShopMapPinModal from '../../components/ShopMapPinModal';
 import { saveShopMapPin } from '../../services/mapPinService';
 
@@ -12,6 +13,7 @@ const ShopCreate = () => {
   const navigate = useNavigate();
   const { slug } = useParams();
   const { token } = useAuth();
+  const { ct } = useTranslation();
   const [saving, setSaving] = useState(false);
   const [communityId, setCommunityId] = useState('');
   const [isPinModalOpen, setPinModalOpen] = useState(false);
@@ -134,14 +136,33 @@ const ShopCreate = () => {
     if (!communities.length) {
       Swal.fire({
         icon: 'warning',
-        title: 'ข้อมูลชุมชนยังไม่พร้อม',
-        text: 'ยังโหลดรายการชุมชนไม่เสร็จ กรุณาลองใหม่อีกครั้ง',
+        title: ct('ข้อมูลชุมชนยังไม่พร้อม', 'Community list not ready'),
+        text: ct('ยังโหลดรายการชุมชนไม่เสร็จ กรุณาลองใหม่อีกครั้ง', 'Communities are still loading. Please try again in a moment.'),
+        confirmButtonText: ct('ตกลง', 'OK'),
       });
       return;
     }
+
+    if (shopData.openTime && shopData.closeTime) {
+      const [openHour, openMinute] = shopData.openTime.split(':').map(Number);
+      const [closeHour, closeMinute] = shopData.closeTime.split(':').map(Number);
+      const openMinutes = openHour * 60 + openMinute;
+      const closeMinutes = closeHour * 60 + closeMinute;
+
+      if (openMinutes >= closeMinutes) {
+        Swal.fire({
+          icon: 'warning',
+          title: ct('เวลาเปิดต้องน้อยกว่าเวลาปิด', 'Opening time must be before closing time'),
+          text: ct('กรุณาตรวจสอบช่วงเวลาทำการของร้านให้ถูกต้องก่อนบันทึก', 'Please ensure the opening time occurs before the closing time.'),
+          confirmButtonText: ct('เข้าใจแล้ว', 'Understood'),
+        });
+        return;
+      }
+    }
+
     setSaving(true);
     Swal.fire({
-      title: 'กำลังบันทึกข้อมูลร้าน...',
+      title: ct('กำลังบันทึกข้อมูลร้าน...', 'Saving your shop...'),
       allowOutsideClick: false,
       showConfirmButton: false,
       didOpen: () => {
@@ -163,8 +184,9 @@ const ShopCreate = () => {
           console.error('Failed to save pin:', pinError);
           await Swal.fire({
             icon: 'warning',
-            title: 'บันทึกหมุดไม่สำเร็จ',
-            text: 'ระบบจะลองบันทึกหมุดอีกครั้งหลังจากอนุมัติร้าน คุณสามารถแก้ไขภายหลังได้',
+            title: ct('บันทึกหมุดไม่สำเร็จ', 'Could not save the pin'),
+            text: ct('ระบบจะลองบันทึกหมุดอีกครั้งหลังจากอนุมัติร้าน คุณสามารถแก้ไขภายหลังได้', 'The system will retry after the shop is approved. You can update the pin later.'),
+            confirmButtonText: ct('ตกลง', 'OK'),
           });
         }
       }
@@ -172,8 +194,9 @@ const ShopCreate = () => {
       Swal.close();
       await Swal.fire({
         icon: 'success',
-        title: 'บันทึกร้านสำเร็จ',
-        text: 'ระบบบันทึกโปรไฟล์ร้านเรียบร้อยแล้ว รอการตรวจสอบจากแอดมิน',
+        title: ct('บันทึกร้านสำเร็จ', 'Shop saved successfully'),
+        text: ct('ระบบบันทึกโปรไฟล์ร้านเรียบร้อยแล้ว รอการตรวจสอบจากแอดมิน', 'Your shop profile has been saved and is awaiting admin review.'),
+        confirmButtonText: ct('เยี่ยมเลย', 'Great!'),
       });
       const selectedCommunity = communities.find((c) => c._id === communityId);
       const communitySlug = selectedCommunity?.slug || slug;
@@ -183,8 +206,11 @@ const ShopCreate = () => {
       Swal.close();
       Swal.fire({
         icon: 'error',
-        title: 'บันทึกไม่สำเร็จ',
-        text: Array.isArray(msg) ? msg.join(', ') : msg,
+        title: ct('บันทึกไม่สำเร็จ', 'Save failed'),
+        text: Array.isArray(msg)
+          ? msg.join(', ')
+          : ct('บันทึกร้านไม่สำเร็จ ลองใหม่อีกครั้ง', 'Could not save the shop. Please try again.') + (msg ? `\n${msg}` : ''),
+        confirmButtonText: ct('ลองใหม่', 'Try again'),
       });
     } finally {
       setSaving(false);
@@ -195,8 +221,9 @@ const ShopCreate = () => {
     if (!communityId) {
       Swal.fire({
         icon: 'info',
-        title: 'กรุณาเลือกชุมชน',
-        text: 'เลือกชุมชนก่อน เพื่อให้ระบบเพิ่มตำแหน่งร้านได้ถูกต้อง',
+        title: ct('กรุณาเลือกชุมชน', 'Select a community first'),
+        text: ct('เลือกชุมชนก่อน เพื่อให้ระบบเพิ่มตำแหน่งร้านได้ถูกต้อง', 'Please choose a community so we can place your shop on the correct map.'),
+        confirmButtonText: ct('เข้าใจแล้ว', 'Got it'),
       });
       return;
     }

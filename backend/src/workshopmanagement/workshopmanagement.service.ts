@@ -5,6 +5,7 @@ import { Workshop, WorkshopDocument } from '../workshops/schemas/workshop.schema
 import { CreateWorkshopDto } from '../workshops/dto/create-workshop.dto';
 import { Workshopregistration, WorkshopregistrationDocument } from '../workshopregistrations/schemas/workshopregistration.schema';
 import { User, UserDocument } from '../users/schemas/users.schema';
+import { Community, CommunityDocument } from '../communities/schemas/community.schema';
 
 const normalizeUserId = (value: unknown): string | null => {
   if (!value) return null;
@@ -16,15 +17,38 @@ const normalizeUserId = (value: unknown): string | null => {
   return String(value);
 };
 
-// import { UpdateWorkshopDto } from '../workshops/dto/update-workshop.dto';
-
 @Injectable()
 export class WorkshopManagementService {
   constructor(
     @InjectModel(Workshop.name) private readonly workshopModel: Model<WorkshopDocument>,
     @InjectModel(Workshopregistration.name) private readonly registeredWorkshopModel: Model<WorkshopregistrationDocument>,
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+    @InjectModel(Community.name) private readonly communityModel: Model<CommunityDocument>,
   ) {}
+
+  private async shouldAutoApprove(communityRef: any): Promise<boolean> {
+    const normalizedId = this.normalizeCommunityId(communityRef);
+    if (!normalizedId) return false;
+
+    const community = await this.communityModel
+      .findById(normalizedId)
+      .select('admin_permissions')
+      .lean();
+
+    if (!community) return false;
+
+    return community.admin_permissions?.require_workshop_approval === false;
+  }
+
+  private normalizeCommunityId(communityRef: any): string | null {
+    if (!communityRef) return null;
+    if (typeof communityRef === 'string') return communityRef;
+    if (communityRef instanceof Types.ObjectId) return communityRef.toString();
+    if (typeof communityRef === 'object' && 'toString' in communityRef) {
+      return communityRef.toString();
+    }
+    return null;
+  }
 
   // Force PENDING status on creation
   async create(createWorkshopDto: CreateWorkshopDto): Promise<Workshop> {
@@ -33,6 +57,8 @@ export class WorkshopManagementService {
     const rawEventDate = createWorkshopDto.workshopDate || createWorkshopDto.date;
     const normalizedEventDate = rawEventDate ? new Date(rawEventDate).toISOString() : new Date().toISOString();
 
+    const shouldAutoApprove = await this.shouldAutoApprove(createWorkshopDto.communityId);
+
     const createdWorkshop = new this.workshopModel({
       ...createWorkshopDto,
       date: normalizedEventDate,
@@ -40,7 +66,7 @@ export class WorkshopManagementService {
       locationType,
       customLocation: sanitizedCustomLocation,
       // CRITICAL FIX: Use the exact new variable names from the schema
-      approvalStatus: 'PENDING', 
+      approvalStatus: shouldAutoApprove ? 'ACTIVE' : 'PENDING', 
       registrationStatus: 'OPEN',
     });
     return createdWorkshop.save();
@@ -161,10 +187,17 @@ export class WorkshopManagementService {
   }
 
   async update(id: string, updateData: any): Promise<Workshop> {
+    const existingWorkshop = await this.workshopModel.findById(id).exec();
+    if (!existingWorkshop) {
+      throw new NotFoundException(`Workshop with ID ${id} not found`);
+    }
+
+    const shouldAutoApprove = await this.shouldAutoApprove(existingWorkshop.communityId || (existingWorkshop as any).community_id);
+
     // 1. Check if the incoming update already contains a status change
     // If it doesn't have an approvalStatus, it's a general edit, so we force PENDING.
     if (!updateData.approvalStatus) {
-      updateData.approvalStatus = 'PENDING';
+      updateData.approvalStatus = shouldAutoApprove ? 'ACTIVE' : 'PENDING';
     }
 
     if (typeof updateData.locationType !== 'undefined') {

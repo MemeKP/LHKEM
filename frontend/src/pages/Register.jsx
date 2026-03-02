@@ -7,7 +7,7 @@ import { useAuth } from '../hooks/useAuth';
 
 const Register = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, ct } = useTranslation();
   const { register } = useAuth();
   const [formData, setFormData] = useState({
     role: 'TOURIST',
@@ -19,9 +19,15 @@ const Register = () => {
     confirmPassword: ''
   });
 
-  const extractErrorMessage = (fallback, error) => {
-    const msg = error?.response?.data?.message ?? error?.message ?? fallback;
-    return Array.isArray(msg) ? msg.join('\n') : msg;
+  const safeMessage = (value, fallbackTH, fallbackEN) => {
+    if (Array.isArray(value)) {
+      const joined = value.filter(Boolean).join('\n');
+      if (joined.trim().length > 0) return joined;
+    }
+    if (typeof value === 'string' && value.trim().length > 0) {
+      return value;
+    }
+    return ct(fallbackTH, fallbackEN);
   };
 
   const handleSubmit = async (e) => {
@@ -29,8 +35,9 @@ const Register = () => {
     if (formData.password !== formData.confirmPassword) {
       Swal.fire({
         icon: 'warning',
-        title: t('common.error') || 'ข้อมูลไม่ถูกต้อง',
-        text: t('auth.passwordMismatch') || 'รหัสผ่านไม่ตรงกัน กรุณาลองอีกครั้ง',
+        title: t('common.error') || ct('ข้อมูลไม่ถูกต้อง', 'Invalid information'),
+        text: t('auth.passwordMismatch') || ct('รหัสผ่านไม่ตรงกัน กรุณาลองอีกครั้ง', 'Passwords do not match. Please try again.'),
+        confirmButtonText: t('common.ok') || ct('ตกลง', 'OK'),
         confirmButtonColor: '#f97316',
       });
       return;
@@ -48,8 +55,9 @@ const Register = () => {
       if (res.success) {
         await Swal.fire({
           icon: 'success',
-          title: t('auth.registerSuccessTitle') || 'สมัครสมาชิกสำเร็จ',
-          text: t('auth.registerSuccessMessage') || 'บัญชีของคุณพร้อมใช้งานแล้ว',
+          title: t('auth.registerSuccessTitle') || ct('สมัครสมาชิกสำเร็จ', 'Registration successful'),
+          text: t('auth.registerSuccessMessage') || ct('บัญชีของคุณพร้อมใช้งานแล้ว', 'Your account is ready to use.'),
+          confirmButtonText: t('common.continue') || ct('ดำเนินการต่อ', 'Continue'),
           confirmButtonColor: '#16a34a',
         });
 
@@ -65,17 +73,26 @@ const Register = () => {
       } else {
         Swal.fire({
           icon: 'error',
-          title: t('common.error') || 'เกิดข้อผิดพลาด',
-          text: res.message || t('common.error'),
+          title: t('common.error') || ct('เกิดข้อผิดพลาด', 'Something went wrong'),
+          text: safeMessage(
+            res?.message,
+            'ไม่สามารถดำเนินการได้ กรุณาลองใหม่อีกครั้ง',
+            'Unable to complete the action. Please try again.'
+          ),
+          confirmButtonText: t('common.ok') || ct('ตกลง', 'OK'),
           confirmButtonColor: '#d33',
         });
       }
     } catch (error) {
-      const message = extractErrorMessage(t('common.error') || 'ไม่สามารถสมัครสมาชิกได้', error);
       Swal.fire({
         icon: 'error',
-        title: t('common.error') || 'เกิดข้อผิดพลาด',
-        text: message,
+        title: t('common.error') || ct('เกิดข้อผิดพลาด', 'Something went wrong'),
+        text: safeMessage(
+          error?.response?.data?.message ?? error?.message,
+          'ไม่สามารถสมัครสมาชิกได้ กรุณาลองใหม่อีกครั้ง',
+          'Unable to register. Please try again.'
+        ),
+        confirmButtonText: t('common.ok') || ct('ตกลง', 'OK'),
         confirmButtonColor: '#d33',
       });
     }

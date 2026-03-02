@@ -345,7 +345,7 @@ const AdminDashboard = () => {
               <div className="w-10 h-10 bg-[#FFF3E0] rounded-lg flex items-center justify-center">
                 <AlertCircle className="h-5 w-5 text-[#F57C00]" />
               </div>
-              <span className="text-2xl font-bold text-[#1A1A1A]">{pendingCounts.total}</span>
+              <span className="text-2xl font-bold text-[#1A1A1A]">{pendingCounts.workshops}</span>
             </div>
             <p className="text-sm font-medium text-[#666666]">{ct('Workshops รออนุมัติ', 'Workshops Pending')}</p>
           </div>

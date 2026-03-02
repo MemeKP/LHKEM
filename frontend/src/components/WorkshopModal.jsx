@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../hooks/useTranslation';
 import { useAuth } from '../hooks/useAuth';
 import { useState, useEffect, useMemo } from 'react';
+
 import { workshopService } from '../services/workshopService';
 import { getShopById } from '../services/shopService';
 import { resolveImageUrl } from '../utils/image';
 import { useQuery } from '@tanstack/react-query';
+import { formatNumericDate } from '../utils/dateFormatter';
 
 const SectionCard = ({ icon, title, children }) => (
   <div className="rounded-3xl border border-gray-100 bg-white shadow-sm p-5 space-y-4 animate-scaleIn">
@@ -112,32 +114,19 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
     if (!resolvedWorkshopDate) {
       return ct('โปรดตรวจสอบกับร้านค้า', 'Check with shop');
     }
-    const date = new Date(resolvedWorkshopDate);
-    if (Number.isNaN(date.getTime())) {
+    const formatted = formatNumericDate(resolvedWorkshopDate);
+    if (formatted === '-') {
       return ct('โปรดตรวจสอบกับร้านค้า', 'Check with shop');
     }
-    return date.toLocaleDateString('th-TH', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
+    return formatted;
   }, [resolvedWorkshopDate, ct]);
 
+  const registrationStartDate = workshop?.startDate || workshop?.registrationStartDate;
+  const registrationEndDate = workshop?.endDate || workshop?.registrationEndDate;
+
   const formattedRegistrationWindow = useMemo(() => {
-    const start = workshop?.startDate
-      ? new Date(workshop.startDate).toLocaleDateString('th-TH', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric',
-        })
-      : null;
-    const end = workshop?.endDate
-      ? new Date(workshop.endDate).toLocaleDateString('th-TH', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric',
-        })
-      : null;
+    const start = registrationStartDate ? formatNumericDate(registrationStartDate) : null;
+    const end = registrationEndDate ? formatNumericDate(registrationEndDate) : null;
 
     if (!start && !end) {
       return ct('โปรดตรวจสอบช่วงรับสมัครกับร้านค้าโดยตรง', 'Please confirm the registration window with the shop.');
@@ -149,6 +138,22 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
 
     return start || end || ct('โปรดตรวจสอบช่วงรับสมัครกับร้านค้าโดยตรง', 'Please confirm the registration window with the shop.');
   }, [workshop, ct]);
+
+  const registrationEndDateObj = useMemo(() => {
+    if (!registrationEndDate) return null;
+    const parsed = new Date(registrationEndDate);
+    if (Number.isNaN(parsed.getTime())) {
+      return null;
+    }
+    return parsed;
+  }, [registrationEndDate]);
+
+  const isRegistrationClosed = useMemo(() => {
+    if (!registrationEndDateObj) return false;
+    const endOfDay = new Date(registrationEndDateObj);
+    endOfDay.setHours(23, 59, 59, 999);
+    return Date.now() > endOfDay.getTime();
+  }, [registrationEndDateObj]);
 
   const shopHoursInfo = useMemo(() => {
     const open = derivedShop?.openTime?.trim();
@@ -182,6 +187,15 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
     }
   };
 
+  useEffect(() => {
+    setGuestCount((prev) => {
+      const safeMax = Math.max(availableSeats, 1);
+      return Math.min(prev, safeMax);
+    });
+  }, [availableSeats]);
+
+  const isSeatRequestInvalid = availableSeats <= 0 || guestCount > availableSeats;
+
   const handleEnroll = async () => {
     if (!isAuthenticated) {
       onClose();
@@ -191,6 +205,16 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
 
     if (!isTourist) {
       setSubmitError(ct('สิทธิ์การจองจำกัดเฉพาะบัญชีนักท่องเที่ยวเท่านั้น', 'Only tourist accounts can place bookings.'));
+      return;
+    }
+
+    if (isRegistrationClosed) {
+      setSubmitError(ct('เกินวันปิดรับสมัครแล้ว ไม่สามารถจองได้', 'Registration for this workshop is closed.'));
+      return;
+    }
+
+    if (isSeatRequestInvalid) {
+      setSubmitError(ct('มีที่นั่งไม่เพียงพอสำหรับจำนวนที่เลือก', 'Not enough seats are available for your selection.'));
       return;
     }
     
@@ -485,26 +509,38 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
             onClick={handleEnroll}
             disabled={
               isSubmitting ||
-              availableSeats <= 0 ||
-              isNonTouristAuthenticated
+              isSeatRequestInvalid ||
+              isNonTouristAuthenticated ||
+              isRegistrationClosed
             } 
             className={`w-full font-semibold py-4 rounded-2xl transition-all shadow-lg hover:shadow-xl ${
-              isSubmitting || availableSeats <= 0 || isNonTouristAuthenticated
+              isSubmitting || isSeatRequestInvalid || isNonTouristAuthenticated || isRegistrationClosed
                 ? 'bg-gray-400 cursor-not-allowed text-white' 
                 : 'bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white'
             }`}
           >
             {isSubmitting 
               ? ct('กำลังดำเนินการ...', 'Processing...') 
-              : availableSeats <= 0 
-                ? ct('เต็มแล้ว', 'Full')
-                : isAuthenticated 
-                  ? isTourist
-                    ? ct('จองเลย', 'Book Now')
-                    : ct('สงวนสิทธิ์สำหรับนักท่องเที่ยว', 'Tourist accounts only')
-                  : ct('เข้าสู่ระบบเพื่อจอง', 'Login to Book')
+              : isRegistrationClosed
+                ? ct('ปิดรับสมัครแล้ว', 'Registration closed')
+                : isSeatRequestInvalid
+                  ? (availableSeats <= 0
+                      ? ct('เต็มแล้ว', 'Full')
+                      : ct('ที่นั่งไม่พอ', 'Not enough seats'))
+                  : isAuthenticated 
+                    ? isTourist
+                      ? ct('จองเลย', 'Book Now')
+                      : ct('สงวนสิทธิ์สำหรับนักท่องเที่ยว', 'Tourist accounts only')
+                    : ct('เข้าสู่ระบบเพื่อจอง', 'Login to Book')
             }
           </button>
+          {(isRegistrationClosed || isSeatRequestInvalid) && (
+            <p className="mt-2 text-center text-xs text-red-600">
+              {isRegistrationClosed
+                ? ct('เกินวันปิดรับสมัครแล้ว ไม่สามารถจองได้', 'Bookings are closed because the registration deadline has passed.')
+                : ct('มีที่นั่งไม่เพียงพอสำหรับจำนวนที่เลือก', 'Not enough seats are available for the selected guest count.')}
+            </p>
+          )}
         </div>
       </div>
     </div>

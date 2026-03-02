@@ -7,6 +7,8 @@ import ETicketModal from '../components/ETicketModal';
 import { getShopById } from '../services/shopService';
 import { workshopService } from '../services/workshopService';
 import { getShopCoverImage } from '../utils/image';
+import { formatNumericDate } from '../utils/dateFormatter';
+import { getWorkshopAvailabilityState } from '../utils/workshopAvailability';
 
 /**
  * ShopProfile - หน้าโปรไฟล์ร้านค้าสำหรับลูกค้า
@@ -65,8 +67,7 @@ const ShopProfile = () => {
           const workshopShopId = normalizeId(workshop.shopId) || normalizeId(workshop.shop);
           const matchesShop = workshopShopId === normalizeId(shopId);
           const isActive = (workshop.approvalStatus || 'ACTIVE') === 'ACTIVE';
-          const isOpen = (workshop.registrationStatus || 'OPEN') === 'OPEN';
-          return matchesShop && isActive && isOpen;
+          return matchesShop && isActive;
         });
         setShopWorkshops(filtered);
       } catch (error) {
@@ -170,6 +171,7 @@ const ShopProfile = () => {
       ? `${displayShop.openTime} - ${displayShop.closeTime}`
       : displayShop.openTime
     : ct('ไม่ระบุ', 'Not specified');
+  const contact = displayShop.contact || {};
 
   return (
     <div className="min-h-screen bg-[#fdf7ef]">
@@ -214,95 +216,106 @@ const ShopProfile = () => {
 
       {/* Hero Section with Shop Info */}
       <section className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Shop Description */}
-          <div className="mb-6">
-            <p className="text-lg text-[#3D3D3D] leading-relaxed">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <div className="mb-8">
+            <p className="text-xl md:text-2xl text-[#3D3D3D] leading-relaxed">
               {displayShop.description || ct('ไม่มีคำอธิบาย', 'No description available')}
             </p>
           </div>
 
-          {/* Contact Info Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
             <div>
-              {/* Contact Info Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                {/* Location */}
-                <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
-                  <MapPin className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+                <div className="flex items-start gap-3 p-5 bg-gray-50 rounded-2xl">
+                  <MapPin className="h-6 w-6 text-orange-500 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-semibold text-[#2F4F2F] mb-1">
+                    <p className="text-base font-semibold text-[#1F2F2F] mb-1">
                       {ct('ที่อยู่', 'Address')}
                     </p>
-                    <p className="text-sm text-[#6B6B6B]">
+                    <p className="text-base text-[#555555]">
                       {shopAddress || ct('ไม่ระบุที่อยู่', 'No address provided')}
                     </p>
                   </div>
                 </div>
 
-                {/* Opening Hours */}
-                <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
-                  <Clock className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />
+                <div className="flex items-start gap-3 p-5 bg-gray-50 rounded-2xl">
+                  <Clock className="h-6 w-6 text-orange-500 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-semibold text-[#2F4F2F] mb-1">
+                    <p className="text-base font-semibold text-[#1F2F2F] mb-1">
                       {ct('เวลาทำการ', 'Opening Hours')}
                     </p>
-                    <p className="text-sm text-[#6B6B6B]">
+                    <p className="text-base text-[#555555]">
                       {formattedHours}
                     </p>
                   </div>
                 </div>
 
-                {/* Phone */}
-                <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
-                  <Phone className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />
+                <div className="flex items-start gap-3 p-5 bg-gray-50 rounded-2xl">
+                  <Phone className="h-6 w-6 text-orange-500 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-semibold text-[#2F4F2F] mb-1">
+                    <p className="text-base font-semibold text-[#1F2F2F] mb-1">
                       {ct('โทรศัพท์', 'Phone')}
                     </p>
-                    <a href={`tel:${displayShop.contact?.phone}`} className="text-sm text-[#E07B39] hover:text-[#D66B29]">
-                      {displayShop.contact?.phone || ct('ไม่ระบุ', 'N/A')}
+                    <a href={`tel:${contact.phone || ''}`} className="text-base text-[#E07B39] hover:text-[#D66B29]">
+                      {contact.phone || ct('ไม่ระบุ', 'N/A')}
                     </a>
                   </div>
                 </div>
 
-                {/* LINE ID */}
-                {displayShop.contact?.line && (
-                  <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
-                    <div className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0 font-bold">L</div>
+                {contact.line && (
+                  <div className="flex items-start gap-3 p-5 bg-gray-50 rounded-2xl">
+                    <div className="h-6 w-6 text-green-500 mt-0.5 flex-shrink-0 font-bold">L</div>
                     <div>
-                      <p className="text-sm font-semibold text-[#2F4F2F] mb-1">
+                      <p className="text-base font-semibold text-[#1F2F2F] mb-1">
                         {ct('LINE ID', 'LINE ID')}
                       </p>
-                      <p className="text-sm text-[#6B6B6B]">
-                        {displayShop.contact.line}
+                      <p className="text-base text-[#555555]">
+                        {contact.line}
                       </p>
                     </div>
                   </div>
                 )}
 
-                {/* Facebook */}
-                {displayShop.contact?.facebook && (
-                  <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
-                    <Facebook className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                {contact.facebook && (
+                  <div className="flex items-start gap-3 p-5 bg-gray-50 rounded-2xl">
+                    <Facebook className="h-6 w-6 text-blue-600 mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="text-sm font-semibold text-[#2F4F2F] mb-1">
+                      <p className="text-base font-semibold text-[#1F2F2F] mb-1">
                         {ct('Facebook', 'Facebook')}
                       </p>
-                      <p className="text-sm text-[#6B6B6B]">
-                        {displayShop.contact.facebook}
+                      <p className="text-base text-[#555555]">
+                        {contact.facebook}
                       </p>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Call to Action Button */}
+              <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm mb-6">
+                <h3 className="text-xl font-semibold text-[#2F4F2F] mb-4 flex items-center gap-2">
+                  <Clock className="h-6 w-6 text-orange-500" />
+                  {ct('เวลาทำการของร้าน', 'Shop hours')}
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base text-[#3D3D3D]">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs uppercase tracking-wide text-gray-400">{ct('เปิดเวลา', 'Opens')}</span>
+                    <span className="font-semibold text-[#1F2937]">
+                      {displayShop.openTime?.trim() || ct('ไม่ระบุ', 'Not specified')}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs uppercase tracking-wide text-gray-400">{ct('ปิดเวลา', 'Closes')}</span>
+                    <span className="font-semibold text-[#1F2937]">
+                      {displayShop.closeTime?.trim() || ct('ไม่ระบุ', 'Not specified')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               <button 
                 onClick={() => navigate(`/${community.slug}/map`)}
-                className="w-full md:w-auto px-8 py-3 bg-[#E07B39] hover:bg-[#D66B29] text-white font-semibold rounded-full transition shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center gap-2"
+                className="w-full md:w-auto px-10 py-4 bg-[#E07B39] hover:bg-[#D66B29] text-white text-lg font-semibold rounded-full transition shadow-lg hover:shadow-xl"
               >
-                <MapPin className="h-5 w-5" />
                 {ct('ดูบนแผนที่', 'View on Map')}
               </button>
             </div>
@@ -348,24 +361,18 @@ const ShopProfile = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {paginatedWorkshops.map((workshop, index) => {
                   const eventDate = workshop.workshopDate || workshop.date;
-                  const formattedDate = eventDate
-                    ? new Date(eventDate).toLocaleDateString('th-TH', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                      })
-                    : ct('ไม่ระบุ', 'N/A');
+                  const formattedDate = eventDate ? formatNumericDate(eventDate) : ct('ไม่ระบุ', 'N/A');
                   const timeRange = workshop.startTime
                     ? `${workshop.startTime}${workshop.endTime ? ` - ${workshop.endTime}` : ''}`
                     : workshop.endTime
                       ? workshop.endTime
                       : ct('ไม่ระบุเวลา', 'Time TBD');
-                  const capacity = workshop.capacity || workshop.seatLimit || 0;
-                  const participants = workshop.current_participants || 0;
-                  const seatsLeft = Math.max(0, capacity - participants);
+                  const { seatsLeft, isFull, isRegistrationClosed } = getWorkshopAvailabilityState(workshop);
                   const locationLabel = workshop.locationType === 'custom'
                     ? (workshop.customLocation || ct('สถานที่จะประกาศภายหลัง', 'Location to be announced'))
                     : (workshop.location?.address || shopAddress || displayShop.shopName);
+                  const isRegistrationStatusOpen = workshop.registrationStatus === 'OPEN' || !workshop.registrationStatus;
+                  const isRegistrationOpen = isRegistrationStatusOpen && !isRegistrationClosed;
 
                   return (
                     <div
@@ -431,7 +438,24 @@ const ShopProfile = () => {
                             </div>
                             <div>
                               <p className="text-xs uppercase tracking-wide text-orange-600">{ct('ที่นั่งคงเหลือ', 'Seats left')}</p>
-                              <p className="text-sm font-semibold text-gray-900">{seatsLeft}</p>
+                              <p className="text-sm font-semibold text-gray-900">{Math.max(0, seatsLeft)}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
+                              <Users className="h-4 w-4 text-blue-500" />
+                            </div>
+                            <div>
+                              <p className="text-xs uppercase tracking-wide text-orange-600">{ct('สถานะลงทะเบียน', 'Registration status')}</p>
+                              <p className="text-sm font-semibold text-gray-900">
+                                {isRegistrationClosed
+                                  ? ct('ปิดรับสมัครแล้ว', 'Registration closed')
+                                  : isFull
+                                    ? ct('เต็มแล้ว', 'Full')
+                                    : isRegistrationOpen
+                                      ? ct('เปิดรับสมัคร', 'Open')
+                                      : ct('ปิดรับสมัคร', 'Closed')}
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -443,10 +467,16 @@ const ShopProfile = () => {
                             </p>
                           </div>
                           <button
-                            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-semibold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-500 transition shadow-lg"
+                            className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-semibold text-white transition shadow-lg ${
+                              (isRegistrationClosed || isFull) ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-500'
+                            }`}
                             onClick={() => handleOpenModal(workshop)}
                           >
-                            {t('workshops.enrollNow') || ct('สมัครเลย', 'Enroll Now')}
+                            {isRegistrationClosed
+                              ? ct('ปิดรับสมัครแล้ว', 'Registration closed')
+                              : isRegistrationStatusOpen
+                                ? (isFull ? ct('เต็มแล้ว', 'Full') : (t('workshops.enrollNow') || ct('สมัครเลย', 'Enroll Now')))
+                                : ct('ปิดรับสมัคร', 'Closed')}
                           </button>
                         </div>
                       </div>

@@ -4,6 +4,8 @@ import { ArrowLeft, MapPin, Clock, Users, Calendar, Plus, X, AlertCircle, Image 
 
 import Swal from 'sweetalert2';
 import { useMyShop } from '../../hooks/useMyShop';
+import { useTranslation } from '../../hooks/useTranslation';
+
 import ShopPendingApprovalNotice from '../../components/ShopPendingApprovalNotice';
 import api from '../../services/api'; // ADDED: API import
 
@@ -18,6 +20,8 @@ const ShopWorkshopEdit = () => {
   const { id, slug } = useParams();
   const navigate = useNavigate();
   const { data: shop, isLoading: shopLoading } = useMyShop();
+  const { ct } = useTranslation();
+
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -81,8 +85,9 @@ const ShopWorkshopEdit = () => {
         console.error("Failed to load workshop:", error);
         Swal.fire({
           icon: 'error',
-          title: 'โหลดข้อมูลไม่สำเร็จ',
-          text: 'ไม่สามารถโหลดข้อมูลเวิร์กชอปได้ กรุณาลองใหม่',
+          title: ct('โหลดข้อมูลไม่สำเร็จ', 'Failed to load data'),
+          text: ct('ไม่สามารถโหลดข้อมูลเวิร์กชอปได้ กรุณาลองใหม่', 'Unable to load this workshop. Please try again.'),
+          confirmButtonText: ct('ตกลง', 'OK'),
         });
       } finally {
         setLoading(false);
@@ -149,9 +154,84 @@ const ShopWorkshopEdit = () => {
   // FIX 2: Updated handleSubmit to send PATCH to backend
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const { registrationStartDate, registrationEndDate, workshopDate, workshopStartTime, workshopEndTime } = form;
+    if (!registrationStartDate || !registrationEndDate || !workshopDate) {
+      Swal.fire({
+        icon: 'warning',
+        title: ct('กรุณาเลือกวันที่ให้ครบ', 'Please select all dates'),
+        text: ct('โปรดระบุวันเปิดรับสมัคร วันปิดรับสมัคร และวันจัดกิจกรรมให้ครบถ้วน', 'Please specify registration start, registration end, and workshop dates.'),
+        confirmButtonText: ct('ตกลง', 'OK'),
+      });
+      return;
+    }
+
+    if (!workshopStartTime || !workshopEndTime) {
+      Swal.fire({
+        icon: 'warning',
+        title: ct('กรุณากรอกเวลาให้ครบ', 'Please provide both start and end times'),
+        text: ct('ระบุเวลาเริ่มและเวลาสิ้นสุดของกิจกรรมให้ครบถ้วนก่อนบันทึก', 'Please enter both the start and end times before saving.'),
+        confirmButtonText: ct('ตกลง', 'OK'),
+      });
+      return;
+    }
+
+    const start = new Date(registrationStartDate);
+    const end = new Date(registrationEndDate);
+    const workshop = new Date(workshopDate);
+    const minGap = 7 * 24 * 60 * 60 * 1000;
+    const latestAllowedEnd = new Date(workshop.getTime() - minGap);
+
+    const toMinutes = (time) => {
+      const [h, m] = time.split(':').map(Number);
+      return h * 60 + m;
+    };
+
+    const startMinutes = toMinutes(workshopStartTime);
+    const endMinutes = toMinutes(workshopEndTime);
+
+    if (startMinutes >= endMinutes) {
+      Swal.fire({
+        icon: 'warning',
+        title: ct('เวลาเริ่มต้องอยู่ก่อนเวลาสิ้นสุด', 'Start time must be before end time'),
+        text: ct('กรุณาตรวจสอบช่วงเวลาให้ถูกต้องก่อนบันทึก', 'Please ensure the workshop start time occurs before the end time.'),
+        confirmButtonText: ct('เข้าใจแล้ว', 'Understood'),
+      });
+      return;
+    }
+
+    if (end < start) {
+      Swal.fire({
+        icon: 'warning',
+        title: ct('วันปิดรับสมัครไม่ถูกต้อง', 'Invalid registration deadline'),
+        text: ct('วันปิดรับสมัครต้องไม่อยู่ก่อนวันเปิดรับสมัคร', 'Registration end date cannot be before the start date.'),
+        confirmButtonText: ct('ตกลง', 'OK'),
+      });
+      return;
+    }
+
+    if (end > workshop) {
+      Swal.fire({
+        icon: 'warning',
+        title: ct('วันปิดรับสมัครต้องไม่เกินวันจัดงาน', 'Deadline cannot exceed event date'),
+        text: ct('กรุณากำหนดวันปิดรับสมัครให้ก่อนหรือในวันจัดกิจกรรม', 'Please keep the registration cutoff on or before the workshop date.'),
+        confirmButtonText: ct('ตกลง', 'OK'),
+      });
+      return;
+    }
+
+    if (end > latestAllowedEnd) {
+      Swal.fire({
+        icon: 'warning',
+        title: ct('กรุณาปิดรับสมัครล่วงหน้า 7 วัน', 'Close registration at least 7 days early'),
+        text: ct('เพื่อเตรียมงานให้พร้อม กรุณากำหนดวันปิดรับสมัครอย่างน้อย 7 วันก่อนวันจัดกิจกรรม', 'Please set the registration deadline at least seven days before the workshop so the shop can prepare.'),
+        confirmButtonText: ct('เข้าใจแล้ว', 'Understood'),
+      });
+      return;
+    }
+
     setSaving(true);
     Swal.fire({
-      title: 'กำลังบันทึกการแก้ไข...',
+      title: ct('กำลังบันทึกการแก้ไข...', 'Saving changes...'),
       allowOutsideClick: false,
       showConfirmButton: false,
       didOpen: () => Swal.showLoading(),
@@ -193,20 +273,23 @@ const ShopWorkshopEdit = () => {
       Swal.close();
       await Swal.fire({
         icon: 'success',
-        title: 'บันทึกสำเร็จ',
-        text: 'ส่งข้อมูลให้แอดมินตรวจสอบแล้ว',
+        title: ct('บันทึกสำเร็จ', 'Saved successfully'),
+        text: ct('ส่งข้อมูลให้แอดมินตรวจสอบแล้ว', 'Your updates were sent for admin review.'),
+        confirmButtonText: ct('เยี่ยมเลย', 'Great!'),
       });
 
       navigate(`/${slug}/shop/dashboard`);
 
     } catch (error) {
-      const errorMsg = error.response?.data?.message || 'บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง';
+      const errorMsg = error.response?.data?.message || ct('บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง', 'Unable to save changes. Please try again.');
       Swal.close();
       Swal.fire({
         icon: 'error',
-        title: 'บันทึกไม่สำเร็จ',
+        title: ct('บันทึกไม่สำเร็จ', 'Save failed'),
         text: Array.isArray(errorMsg) ? errorMsg[0] : errorMsg,
+        confirmButtonText: ct('ลองใหม่', 'Try again'),
       });
+
     } finally {
       setSaving(false);
     }
@@ -461,22 +544,6 @@ const ShopWorkshopEdit = () => {
               </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-[#3D3D3D] mb-3">บรรยากาศ Workshop</label>
-            <div className="grid grid-cols-2 gap-3">
-              {['ไม่ต้องมีพื้นฐาน', 'งานทำมือพื้นฐาน', 'ทำงานร่วมกัน/กลุ่มเล็ก', 'ชวนเพื่อน/ครอบครัว'].map(option => (
-                <label key={option} className="flex items-center gap-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={form.categories.includes(option)}
-                    onChange={() => toggleCategory(option)}
-                    className="w-4 h-4 text-[#E07B39] border-gray-300 rounded focus:ring-[#E07B39]"
-                  />
-                  <span className="text-sm text-gray-700">{option}</span>
-                </label>
-              ))}
-            </div>
-          </div>
 
           <div className="flex justify-center gap-4 pt-6">
             <button

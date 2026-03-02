@@ -9,7 +9,7 @@ import api from '../services/api';
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useTranslation();
+  const { t, ct } = useTranslation();
   const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
@@ -20,8 +20,9 @@ const Login = () => {
   const showErrorAlert = (message) => {
     Swal.fire({
       icon: 'error',
-      title: t('common.error') || 'เกิดข้อผิดพลาด',
-      text: message,
+      title: t('common.error') || ct('เกิดข้อผิดพลาด', 'Something went wrong'),
+      text: message || ct('ไม่สามารถดำเนินการได้ กรุณาลองใหม่อีกครั้ง', 'Unable to complete the action. Please try again.'),
+      confirmButtonText: t('common.ok') || ct('ตกลง', 'OK'),
       confirmButtonColor: '#d33',
     });
   };

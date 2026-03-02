@@ -60,9 +60,10 @@ const updateCommunity = async ({ id, formData, coverSlot, gallerySlots }) => {
      formDataToSend.append('admins', JSON.stringify(adminList));
   }
 
-  // formDataToSend.append('admin_permissions', JSON.stringify({
-  //   can_approve_workshop: formData.workshopApproval
-  // }));
+  formDataToSend.append('admin_permissions', JSON.stringify({
+    can_approve_workshop: formData.workshopApproval,
+    require_workshop_approval: formData.requireApprove,
+  }));
   
   const manifest = buildImageSlotsPayload({
     coverSlot,
@@ -112,7 +113,8 @@ const PlatformEditCommunity = () => {
     images: null,
     admins: [],
     admin_email: '',
-    workshopApproval: true
+    workshopApproval: true,
+    requireApprove: false,
   });
   const API_URL = import.meta.env.VITE_API_URL
   const [imagePreview, setImagePreview] = useState(null);
@@ -158,6 +160,8 @@ const PlatformEditCommunity = () => {
           facebook: community.contact_info?.facebook || '', 
         },
         admins: community.admins || [],
+        workshopApproval: community.admin_permissions?.can_approve_workshop ?? true,
+        requireApprove: community.admin_permissions?.require_workshop_approval ?? false,
       });
 
       if (community.images && community.images.length > 0) {
@@ -183,7 +187,14 @@ const PlatformEditCommunity = () => {
   }, [community]);
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
+    if (type === 'checkbox') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: checked,
+      }));
+      return;
+    }
     if (name.includes('.')) {
       const parts = name.split('.'); 
       if (parts.length === 2) {
@@ -513,6 +524,34 @@ const PlatformEditCommunity = () => {
                 type="hidden"
                 value={formData.location.coordinates.lng}
               />
+            </div>
+
+            <div className="flex items-start space-x-3 mb-4 p-4 bg-gray-50 rounded-lg">
+              <input
+                type="checkbox"
+                name="workshopApproval"
+                checked={formData.workshopApproval}
+                onChange={handleInputChange}
+                className="mt-1 h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
+                id="edit-workshop-approval"
+              />
+              <label htmlFor="edit-workshop-approval" className="text-sm text-gray-700">
+                {ct('ผู้ดูแลเป็นผู้ที่มีสิทธิ์อนุมัติการสร้าง workshop', 'This admin has permission to approve workshop creation')}
+              </label>
+            </div>
+
+            <div className="flex items-start space-x-3 mb-4 p-4 bg-gray-50 rounded-lg">
+              <input
+                type="checkbox"
+                name="requireApprove"
+                checked={formData.requireApprove}
+                onChange={handleInputChange}
+                className="mt-1 h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
+                id="edit-require-approval"
+              />
+              <label htmlFor="edit-require-approval" className="text-sm text-gray-700">
+                {ct('เวิร์กชอปใหม่ต้องได้รับการอนุมัติก่อนเผยแพร่', 'Require approval before workshops go live')}
+              </label>
             </div>
           </div>
 

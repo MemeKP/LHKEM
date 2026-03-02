@@ -5,6 +5,8 @@ import { ArrowLeft, MapPin, Clock, Users, Calendar, Plus, X, Image as ImageIcon 
 import Swal from 'sweetalert2';
 
 import { useMyShop } from '../../hooks/useMyShop';
+import { useTranslation } from '../../hooks/useTranslation';
+
 import ShopPendingApprovalNotice from '../../components/ShopPendingApprovalNotice';
 import api from '../../services/api'; // ADDED: For backend connection
 
@@ -19,6 +21,8 @@ const ShopWorkshopCreate = () => {
   const navigate = useNavigate();
   const { slug } = useParams();
   const { data: shop, isLoading: shopLoading } = useMyShop();
+  const { ct } = useTranslation();
+
   const [saving, setSaving] = useState(false);
 
   const [form, setForm] = useState({
@@ -102,15 +106,91 @@ const ShopWorkshopCreate = () => {
     if (!shop?._id) {
       Swal.fire({
         icon: 'error',
-        title: 'ไม่พบข้อมูลร้านค้า',
-        text: 'กรุณากลับไปสร้างโปรไฟล์ร้านก่อนสร้าง Workshop',
+        title: ct('ไม่พบข้อมูลร้านค้า', 'Shop not found'),
+        text: ct('กรุณากลับไปสร้างโปรไฟล์ร้านก่อนสร้าง Workshop', 'Please create your shop profile before creating a workshop'),
+      });
+      return;
+    }
+
+    const { registrationStartDate, registrationEndDate, workshopDate, workshopStartTime, workshopEndTime } = form;
+
+    if (!registrationStartDate || !registrationEndDate || !workshopDate) {
+      Swal.fire({
+        icon: 'warning',
+        title: ct('กรุณาเลือกวันที่ให้ครบ', 'Please select all dates'),
+        text: ct('โปรดระบุวันเปิดรับสมัคร วันปิดรับสมัคร และวันจัดกิจกรรมให้ครบถ้วน', 'Please specify registration start, registration end, and workshop dates.'),
+        confirmButtonText: ct('ตกลง', 'OK'),
+      });
+      return;
+    }
+
+    if (!workshopStartTime || !workshopEndTime) {
+      Swal.fire({
+        icon: 'warning',
+        title: ct('กรุณากรอกเวลาให้ครบ', 'Please provide both start and end times'),
+        text: ct('ระบุเวลาเริ่มและเวลาสิ้นสุดของกิจกรรมให้ครบถ้วนก่อนบันทึก', 'Please enter both the start and end times before saving.'),
+        confirmButtonText: ct('ตกลง', 'OK'),
+      });
+      return;
+    }
+
+    const start = new Date(registrationStartDate);
+    const end = new Date(registrationEndDate);
+    const workshop = new Date(workshopDate);
+    const minGap = 7 * 24 * 60 * 60 * 1000; // 7 days
+    const latestAllowedEnd = new Date(workshop.getTime() - minGap);
+
+    const toMinutes = (time) => {
+      const [h, m] = time.split(':').map(Number);
+      return h * 60 + m;
+    };
+
+    const startMinutes = toMinutes(workshopStartTime);
+    const endMinutes = toMinutes(workshopEndTime);
+
+    if (startMinutes >= endMinutes) {
+      Swal.fire({
+        icon: 'warning',
+        title: ct('เวลาเริ่มต้องอยู่ก่อนเวลาสิ้นสุด', 'Start time must be before end time'),
+        text: ct('กรุณาตรวจสอบช่วงเวลาให้ถูกต้องก่อนบันทึก', 'Please ensure the workshop start time occurs before the end time.'),
+        confirmButtonText: ct('เข้าใจแล้ว', 'Understood'),
+      });
+      return;
+    }
+
+    if (end < start) {
+      Swal.fire({
+        icon: 'warning',
+        title: ct('วันปิดรับสมัครไม่ถูกต้อง', 'Invalid registration deadline'),
+        text: ct('วันปิดรับสมัครต้องไม่อยู่ก่อนวันเปิดรับสมัคร', 'Registration end date cannot be before the start date.'),
+        confirmButtonText: ct('ตกลง', 'OK'),
+      });
+      return;
+    }
+
+    if (end > workshop) {
+      Swal.fire({
+        icon: 'warning',
+        title: ct('วันปิดรับสมัครต้องไม่เกินวันจัดงาน', 'Deadline cannot exceed event date'),
+        text: ct('กรุณากำหนดวันปิดรับสมัครให้ก่อนหรือในวันจัดกิจกรรม', 'Please keep the registration cutoff on or before the workshop date.'),
+        confirmButtonText: ct('ตกลง', 'OK'),
+      });
+      return;
+    }
+
+    if (end > latestAllowedEnd) {
+      Swal.fire({
+        icon: 'warning',
+        title: ct('กรุณาปิดรับสมัครล่วงหน้า 7 วัน', 'Close registration at least 7 days early'),
+        text: ct('เพื่อเตรียมงานให้พร้อม กรุณากำหนดวันปิดรับสมัครอย่างน้อย 7 วันก่อนวันจัดกิจกรรม', 'Please set the registration deadline at least seven days before the workshop so the shop can prepare.'),
+        confirmButtonText: ct('เข้าใจแล้ว', 'Understood'),
       });
       return;
     }
 
     setSaving(true);
     Swal.fire({
-      title: 'กำลังบันทึก Workshop...',
+      title: ct('กำลังบันทึก Workshop...', 'Saving workshop...'),
       allowOutsideClick: false,
       showConfirmButton: false,
       didOpen: () => Swal.showLoading(),
@@ -454,24 +534,6 @@ const ShopWorkshopCreate = () => {
                     className="w-4 h-4 text-[#E07B39] border-gray-300 focus:ring-[#E07B39]"
                   />
                   <span className="text-sm text-gray-700">{option.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Workshop Atmosphere */}
-          <div className="animate-fadeIn" style={{animationDelay: '1.1s'}}>
-            <label className="block text-sm font-semibold text-[#3D3D3D] mb-3">บรรยากาศ Workshop</label>
-            <div className="grid grid-cols-2 gap-3">
-              {['ไม่ต้องมีพื้นฐาน', 'งานทำมือพื้นฐาน', 'ทำงานร่วมกัน/กลุ่มเล็ก', 'ชวนเพื่อน/ครอบครัว'].map((c) => (
-                <label key={c} className="flex items-center gap-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={form.categories.includes(c)}
-                    onChange={() => toggleCategory(c)}
-                    className="w-4 h-4 text-[#E07B39] border-gray-300 rounded focus:ring-[#E07B39]"
-                  />
-                  <span className="text-sm text-gray-700">{c}</span>
                 </label>
               ))}
             </div>

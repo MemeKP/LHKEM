@@ -38,7 +38,7 @@ export class Workshopregistration {
 
     @Prop({
         type: String,
-        enum: ['PENDING', 'ACTIVE', 'CANCELLED'],
+        enum: ['PENDING', 'ACTIVE', 'CANCELLED', 'CANCEL'],
         default: 'PENDING',
         index: true,
     })

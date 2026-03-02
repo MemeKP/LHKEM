@@ -9,6 +9,7 @@ import { LocationDto } from './location.dto';
 import { ContactInfoDto } from './contact-info.dto';
 import { CulturalHighlightDto } from './cultural-highlight.dto';
 import { HeroSectionDto } from './hero-section.dto';
+import { AdminPermissionsDto } from './admin-permissions.dto';
 
 export class CreateCommunityDto {
 
@@ -105,4 +106,19 @@ export class CreateCommunityDto {
         return value;
     })
     admins?: string[];
+
+    @IsOptional()
+    @ValidateNested()
+    @Transform(({ value }) => {
+        if (typeof value === 'string') {
+            try {
+                return JSON.parse(value);
+            } catch (error) {
+                return value;
+            }
+        }
+        return value;
+    })
+    @Type(() => AdminPermissionsDto)
+    admin_permissions?: AdminPermissionsDto;
 }

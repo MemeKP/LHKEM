@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Plus, Edit, Trash2, Eye, Users, DollarSign, Clock, CheckCircle, XCircle, AlertCircle, Camera, Settings as SettingsIcon, Bell, Calendar, TrendingUp, Star, Edit3 } from 'lucide-react';
+import Swal from 'sweetalert2';
 import { useTranslation } from '../../hooks/useTranslation';
+
 import { useMyShop } from '../../hooks/useMyShop';
 import { resolveImageUrl } from '../../utils/image';
 import api from '../../services/api';
@@ -97,18 +99,45 @@ const ShopDashboard = () => {
   };
 
   const handleDeleteWorkshop = async (workshopId) => {
-    const confirmDelete = window.confirm(ct('คุณต้องการลบ Workshop นี้และข้อมูลการลงทะเบียนทั้งหมดใช่หรือไม่?', 'Do you want to delete this Workshop and all registration data?'));
-    if (!confirmDelete) return;
+    const result = await Swal.fire({
+      icon: 'warning',
+      title: ct('ยืนยันการลบ Workshop?', 'Delete this workshop?'),
+      text: ct('การลบครั้งนี้จะลบข้อมูลการลงทะเบียนทั้งหมดด้วย คุณแน่ใจหรือไม่?', 'Deleting will remove all registrations for this workshop. Are you sure?'),
+      showCancelButton: true,
+      confirmButtonText: ct('ลบ Workshop', 'Delete workshop'),
+      cancelButtonText: ct('ยกเลิก', 'Cancel'),
+      reverseButtons: true,
+      focusCancel: true,
+    });
+    if (!result.isConfirmed) return;
 
     try {
+      Swal.fire({
+        title: ct('กำลังลบ...', 'Deleting...'),
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        didOpen: () => Swal.showLoading(),
+      });
+
       await api.delete(`/management/workshops/${workshopId}`);
-      
-      setWorkshops(prev => prev.filter(w => (w._id === workshopId || w.id === workshopId)));
-      
-      alert(ct('ลบข้อมูลสำเร็จเรียบร้อยแล้ว', 'Data deleted successfully'));
+
+      setWorkshops((prev) => prev.filter((w) => (w._id || w.id) !== workshopId));
+
+      Swal.fire({
+        icon: 'success',
+        title: ct('ลบ Workshop แล้ว', 'Workshop deleted'),
+        text: ct('ระบบลบข้อมูลเรียบร้อย', 'The workshop and its registrations have been removed.'),
+        confirmButtonText: ct('เรียบร้อย', 'Done'),
+      });
     } catch (error) {
       console.error('Delete failed:', error);
-      alert(ct('ไม่สามารถลบข้อมูลได้ กรุณาลองใหม่อีกครั้ง', 'Unable to delete data. Please try again.'));
+      const message = error?.response?.data?.message || error.message || ct('ไม่สามารถลบข้อมูลได้ กรุณาลองใหม่อีกครั้ง', 'Unable to delete data. Please try again.');
+      Swal.fire({
+        icon: 'error',
+        title: ct('ลบไม่สำเร็จ', 'Delete failed'),
+        text: message,
+        confirmButtonText: ct('ลองใหม่', 'Try again'),
+      });
     }
   };
   

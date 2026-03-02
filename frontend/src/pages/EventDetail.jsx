@@ -4,6 +4,7 @@ import { useTranslation } from '../hooks/useTranslation';
 import { useQuery } from '@tanstack/react-query';
 import { getCommunityEventDetail } from '../services/eventService';
 import { resolveImageUrl } from '../utils/image';
+import { formatNumericDate, formatNumericDateTime } from '../utils/dateFormatter';
 
 const EventDetail = () => {
   const { slug, id } = useParams();
@@ -15,14 +16,12 @@ const EventDetail = () => {
     enabled: !!slug && !!id,
   });
 
-  const startAt = event?.start_at ? new Date(event.start_at) : null;
-  const endAt = event?.end_at ? new Date(event.end_at) : null;
-  const dateLabel = startAt
-    ? startAt.toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-    : ct('ไม่ระบุวันที่', 'Date not specified');
-  const timeLabel = startAt && endAt
-    ? `${startAt.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} - ${endAt.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}`
-    : ct('ไม่ระบุเวลา', 'Time not specified');
+  const startDate = event?.start_at ? formatNumericDate(event.start_at) : '-';
+  const endDate = event?.end_at ? formatNumericDate(event.end_at) : '-';
+  const startTime = event?.start_at ? new Date(event.start_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '-';
+  const endTime = event?.end_at ? new Date(event.end_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '-';
+  const dateLabel = `${startDate} ${startTime}`;
+  const timeLabel = `${endDate} ${endTime}`;
   const coverImage = Array.isArray(event?.images) ? event?.images[0] : event?.images;
   const locationValue = typeof event?.location === 'string'
     ? event.location
@@ -137,7 +136,7 @@ const EventDetail = () => {
   ].filter(Boolean);
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] py-10 px-4 animate-fadeIn">
+    <div className="min-h-screen bg-[#fdf7ef] py-10 px-4 animate-fadeIn">
       <div className="max-w-6xl mx-auto space-y-8">
         <Link
           to={`/${slug}/events`}
@@ -178,12 +177,12 @@ const EventDetail = () => {
             </div>
             <div className="absolute bottom-6 left-6 right-6 flex flex-col gap-3 text-white">
               <div className="text-sm font-semibold px-4 py-2 bg-white/20 backdrop-blur rounded-2xl w-fit">
-                {dateLabel}
+                {startDate}
               </div>
               <div className="flex flex-wrap gap-3 text-sm text-white/90">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15">
                   <Clock className="h-4 w-4" />
-                  {timeLabel}
+                  {startTime}
                 </div>
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15">
                   <MapPin className="h-4 w-4" />
@@ -237,13 +236,13 @@ const EventDetail = () => {
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="rounded-2xl border border-orange-100 bg-orange-50/60 p-4">
                   <p className="text-xs uppercase tracking-wide text-orange-600 mb-1">{ct('เริ่ม', 'Starts')}</p>
-                  <p className="text-base font-semibold text-gray-900">{startAt?.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }) || '-'}</p>
-                  <p className="text-sm text-gray-600">{startAt?.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) || '-'}</p>
+                  <p className="text-sm text-gray-500">{formatNumericDate(event.start_at)}</p>
+                  <p className="text-sm text-gray-600">{startTime}</p>
                 </div>
                 <div className="rounded-2xl border border-orange-100 bg-white p-4">
                   <p className="text-xs uppercase tracking-wide text-gray-400 mb-1">{ct('สิ้นสุด', 'Ends')}</p>
-                  <p className="text-base font-semibold text-gray-900">{endAt?.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }) || '-'}</p>
-                  <p className="text-sm text-gray-600">{endAt?.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) || '-'}</p>
+                  <p className="text-sm text-gray-500">{formatNumericDate(event.end_at)}</p>
+                  <p className="text-sm text-gray-600">{endTime}</p>
                 </div>
               </div>
             </div>

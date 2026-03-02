@@ -9,6 +9,8 @@ import { useQuery } from '@tanstack/react-query';
 import { getShopsByCommunity } from '../services/shopService';
 import { getShopCoverImage, resolveImageUrl } from '../utils/image';
 import { getCommunityEvents } from '../services/eventService';
+import { formatNumericDate } from '../utils/dateFormatter';
+import { getWorkshopAvailabilityState } from '../utils/workshopAvailability';
 
 const fetchPopularWorkshops = async (communityId) => {
   if (!communityId) return [];
@@ -121,7 +123,7 @@ const CommunityHome = () => {
 
   const stats = [
     {
-      number: workshopCount > 0 ? `${workshopCount}+` : '0',
+      number: workshopCount > 0 ? `${workshopCount}` : '0',
       label: t('stats.workshops')
     },
     {
@@ -143,7 +145,6 @@ const CommunityHome = () => {
 
   const formattedEvents = useMemo(() => {
     if (!Array.isArray(eventsData)) return [];
-    const dateOptions = { day: 'numeric', month: 'short', year: 'numeric' };
     const timeOptions = { hour: '2-digit', minute: '2-digit' };
     const fallbackDate = ct('ไม่ระบุวันที่', 'No date');
     const fallbackTime = ct('ไม่ระบุเวลา', 'No time info');
@@ -160,12 +161,9 @@ const CommunityHome = () => {
       ];
       const gradient = gradients[index % gradients.length];
 
-      const startDateLabel = startAt
-        ? startAt.toLocaleDateString('th-TH', dateOptions)
-        : fallbackDate;
-      const endDateLabel = endAt
-        ? endAt.toLocaleDateString('th-TH', dateOptions)
-        : fallbackDate;
+      const startDateLabel = startAt ? formatNumericDate(startAt) : fallbackDate;
+      const endDateLabel = endAt ? formatNumericDate(endAt) : fallbackDate;
+
       const startTimeLabel = startAt
         ? startAt.toLocaleTimeString('th-TH', timeOptions)
         : fallbackTime;
@@ -678,15 +676,9 @@ const CommunityHome = () => {
               {workshopCards.map((card) => {
                 if (!card) return null;
                 
-                // CRITICAL FIX: Robust capacity and status checking
-                const capacity = card.capacity || 0;
-                const participants = card.current_participants || 0;
-                const seatsLeft = capacity - participants;
-                
-                // Treat undefined registrationStatus as OPEN for backward compatibility
+                const { seatsLeft, isFull, isRegistrationClosed } = getWorkshopAvailabilityState(card);
                 const isRegistrationOpen = card.registrationStatus === 'OPEN' || !card.registrationStatus;
-                const isFull = seatsLeft <= 0;
-                const canEnroll = isRegistrationOpen && !isFull;
+                const canEnroll = isRegistrationOpen && !isFull && !isRegistrationClosed;
 
                 const coverImage = resolveImageUrl(
                   card.image ||
@@ -731,7 +723,7 @@ const CommunityHome = () => {
                     <div className="flex items-center gap-4 text-sm text-gray-500">
                       <div className="flex items-center gap-1">
                         <Clock className="h-4 w-4 text-gray-400" />
-                        {card.date ? new Date(card.date).toLocaleDateString('th-TH') : 'ไม่ระบุ'}
+                        {card.date ? formatNumericDate(card.date) : 'ไม่ระบุ'}
                       </div>
                       <div className="flex items-center gap-1">
                         <UsersIcon className="h-4 w-4 text-gray-400" />
@@ -744,12 +736,21 @@ const CommunityHome = () => {
                         <span className="text-sm text-gray-500 ml-1">{t('workshops.perPerson')}</span>
                       </p>
                       <button
-                        className="px-5 py-2 bg-gray-900 text-white rounded-full text-sm font-semibold hover:bg-gray-800 transition disabled:opacity-50"
-                        // CRITICAL FIX: Safe button checking
-                        disabled={!canEnroll}
+                        className={`px-5 py-2 rounded-full text-sm font-semibold transition ${
+                          canEnroll
+                            ? 'bg-gray-900 text-white hover:bg-gray-800'
+                            : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                        }`}
+                        disabled={false}
                         onClick={() => handleOpenModal(card)}
                       >
-                        {!isRegistrationOpen ? ct('ปิดรับสมัคร', 'Closed') : isFull ? ct('เต็มแล้ว', 'Full') : t('workshops.enrollNow')}
+                        {isRegistrationClosed
+                          ? ct('ปิดรับสมัครแล้ว', 'Registration closed')
+                          : !isRegistrationOpen
+                            ? ct('ปิดรับสมัคร', 'Closed')
+                            : isFull
+                              ? ct('เต็มแล้ว', 'Full')
+                              : t('workshops.enrollNow')}
                       </button>
                     </div>
                   </div>

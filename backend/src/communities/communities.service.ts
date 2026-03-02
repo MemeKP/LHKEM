@@ -100,12 +100,17 @@ export class CommunitiesService {
       ];
     }
 
+    const adminPermissions = this.parseAdminPermissions(createCommunityDto.admin_permissions);
+
     const dataToSave: any = {
       ...createCommunityDto,
       location: formattedLocation,
       contact_info: contactData,
       hero_section: heroData,
       cultural_highlights: highlights,
+      admin_permissions: {
+        require_workshop_approval: !!adminPermissions.require_workshop_approval,
+      },
     };
 
     await this.fillEnglishFields(dataToSave);
@@ -144,13 +149,6 @@ export class CommunitiesService {
       const users = await this.userModel.find({
         email: { $in: adminsList }
       }).select('_id email role');
-
-      let adminPermissions: any = {};
-      if (createCommunityDto['admin_permissions']) {
-        try { adminPermissions = JSON.parse(createCommunityDto['admin_permissions']); } catch (e) { }
-      }
-
-      // console.log('Users found:', users)
 
       if (users.length > 0) {
         const adminDocs: any[] = []
@@ -302,9 +300,17 @@ export class CommunitiesService {
       ? previousImages.filter(imagePath => imagePath && !nextImages.includes(imagePath))
       : [];
 
+    const adminPermissions = this.parseAdminPermissions(updateCommunityDto.admin_permissions);
+
     const updateData: any = { ...updateCommunityDto };
     delete updateData.admins;
     delete updateData.existing_images;
+
+    if (updateCommunityDto.admin_permissions !== undefined) {
+      updateData.admin_permissions = {
+        require_workshop_approval: !!adminPermissions.require_workshop_approval,
+      };
+    }
 
     // userRole === UserRole.PLATFORM_ADMIN && ถ้าอยากให้มีแค่ platform admin ที่แก้ admin lists ได้
     if (updateCommunityDto.admins !== undefined) {
@@ -327,7 +333,7 @@ export class CommunitiesService {
           user: user._id,
           community: new Types.ObjectId(id),
           assigned_by: new Types.ObjectId(userId),
-          can_approve_workshop: false
+          can_approve_workshop: adminPermissions.can_approve_workshop || false
         }));
 
         await this.communityadminModel.insertMany(adminDocs);
@@ -371,6 +377,32 @@ export class CommunitiesService {
         }
       }
     }));
+  }
+
+  private parseAdminPermissions(input: any) {
+    if (!input) return {};
+
+    let value = input;
+    if (typeof input === 'string') {
+      try {
+        value = JSON.parse(input);
+      } catch (error) {
+        value = {};
+      }
+    }
+
+    if (typeof value !== 'object' || value === null) {
+      return {};
+    }
+
+    return {
+      can_approve_workshop: typeof value.can_approve_workshop === 'boolean'
+        ? value.can_approve_workshop
+        : undefined,
+      require_workshop_approval: typeof value.require_workshop_approval === 'boolean'
+        ? value.require_workshop_approval
+        : undefined,
+    };
   }
 
   async addAdminByEmail(communityId: string, email: string, addedById: string) {

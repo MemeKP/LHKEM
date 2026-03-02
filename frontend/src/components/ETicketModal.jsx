@@ -3,26 +3,36 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getShopById } from '../services/shopService';
 import { useTranslation } from '../hooks/useTranslation';
+import { formatNumericDate } from '../utils/dateFormatter';
 
 /**
  * E-Ticket Modal - แสดงตั๋วอิเล็กทรอนิกส์หลังจากจองเวิร์กช็อปสำเร็จ
  * ใช้แสดงรายละเอียดการจอง และให้ผู้ใช้สามารถบันทึกภาพหรือติดต่อร้านค้า
  */
 
+const statusStyles = {
+  confirmed: { label: 'ยืนยันแล้ว', fallback: 'Confirmed', bg: 'bg-emerald-100', text: 'text-emerald-700' },
+  active: { label: 'ยืนยันแล้ว', fallback: 'Confirmed', bg: 'bg-emerald-100', text: 'text-emerald-700' },
+  pending: { label: 'รอการยืนยัน', fallback: 'Pending', bg: 'bg-amber-100', text: 'text-amber-700' },
+  completed: { label: 'เสร็จสมบูรณ์', fallback: 'Completed', bg: 'bg-indigo-100', text: 'text-indigo-700' },
+  cancelled: { label: 'ยกเลิกโดยร้านค้า', fallback: 'Cancelled', bg: 'bg-rose-100', text: 'text-rose-700' },
+  cancel: { label: 'ยกเลิกโดยคุณ', fallback: 'Cancelled by you', bg: 'bg-rose-100', text: 'text-rose-700' },
+  rejected: { label: 'ถูกปฏิเสธ', fallback: 'Rejected', bg: 'bg-gray-200', text: 'text-gray-700' },
+};
+
 const ETicketModal = ({ booking, isOpen, onClose }) => {
   const { ct } = useTranslation();
 
   if (!isOpen || !booking) return null;
 
-  const { workshop, guestCount, bookingDate } = booking;
+  const { workshop, guestCount, bookingDate, status: bookingStatus = 'pending' } = booking;
   const [isContactPanelOpen, setIsContactPanelOpen] = useState(false);
   const bookingDateObj = new Date(bookingDate);
+  const normalizedStatus = (bookingStatus || 'pending').toLowerCase();
+  const statusVisual = statusStyles[normalizedStatus] || statusStyles.pending;
 
-  const formattedDate = bookingDateObj.toLocaleDateString('th-TH', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  const formattedDate = formatNumericDate(bookingDateObj);
+
   const formattedTime = bookingDateObj.toLocaleTimeString('th-TH', {
     hour: '2-digit',
     minute: '2-digit'
@@ -120,6 +130,12 @@ const ETicketModal = ({ booking, isOpen, onClose }) => {
           <div className="relative">
             <h2 className="text-2xl font-bold mb-2">Workshop</h2>
             <div className="w-16 h-1 bg-white/50 mx-auto rounded-full"></div>
+            <div className="mt-4 flex items-center justify-center">
+              <span className={`inline-flex items-center gap-2 rounded-full px-4 py-1 text-sm font-semibold ${statusVisual.bg} ${statusVisual.text}`}>
+                <span className="h-2 w-2 rounded-full bg-current"></span>
+                {ct(statusVisual.label, statusVisual.fallback)}
+              </span>
+            </div>
           </div>
         </div>
 
