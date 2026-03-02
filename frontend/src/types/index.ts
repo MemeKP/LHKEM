@@ -118,7 +118,8 @@ export interface CommunityEvent {
 }
 
 // Enrollment/Booking Types
-export type EnrollmentStatus = 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
+export type EnrollmentStatus = 'PENDING' | 'CONFIRMED' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED' | 'REJECTED' | 'CANCEL';
+
 export type PaymentStatus = 'PENDING' | 'PAID' | 'REFUNDED';
 
 export interface Enrollment {

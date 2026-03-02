@@ -1,13 +1,24 @@
 import axios from 'axios';
 
-// const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const api = axios.create({
-  // baseURL: "/",
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+export const withQuery = (path, params = {}) => {
+  const searchParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') return;
+    searchParams.append(key, String(value));
+  });
+
+  const queryString = searchParams.toString();
+  return queryString ? `${path}?${queryString}` : path;
+};
 
 api.interceptors.request.use(
   (config) => {

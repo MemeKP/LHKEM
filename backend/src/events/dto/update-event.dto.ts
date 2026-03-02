@@ -9,4 +9,11 @@ export class UpdateEventDto extends PartialType(CreateEventDto) {
     status?: EventStatus;
 
     existing_images?: string[] | string
+
+    contact?: {
+        phone?: string;
+        line?: string;
+        facebook?: string;
+        coordinator_name?: string;
+    } | string;
 }

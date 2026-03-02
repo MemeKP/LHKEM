@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Store, MapPin, Users, Search, List, AlertCircle, Filter } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
-import { getAdminShopsByCommunity } from '../../services/shopService';
+import { getAdminShopsByCommunity, approveShop } from '../../services/shopService';
 import { getShopCoverImage } from '../../utils/image';
+import Swal from 'sweetalert2';
 
 const statusFilters = [
   { id: 'ALL', label: { th: 'ทั้งหมด', en: 'All' } },
@@ -34,6 +35,7 @@ const AdminShopList = () => {
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
+  const queryClient = useQueryClient();
 
   const {
     data: shops = [],
@@ -81,10 +83,66 @@ const AdminShopList = () => {
     return ct('จัดการ', 'Manage');
   };
 
+  const handleApproveShop = async (shopId) => {
+    const result = await Swal.fire({
+      title: ct('ยืนยันการอนุมัติร้านค้า?', 'Approve this shop?'),
+      text: ct('ร้านค้าจะปรากฏในแผนที่และรายการเมื่อตรวจสอบผ่าน', 'The shop will become visible on listings once approved.'),
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: ct('อนุมัติ', 'Approve'),
+      cancelButtonText: ct('ยกเลิก', 'Cancel'),
+      confirmButtonColor: '#1E293B'
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      Swal.fire({
+        title: ct('กำลังอนุมัติ...', 'Approving...'),
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        didOpen: () => Swal.showLoading(),
+      });
+
+      await approveShop(shopId);
+
+      Swal.close();
+      await Swal.fire({
+        icon: 'success',
+        title: ct('อนุมัติร้านค้าสำเร็จ', 'Shop approved'),
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['community-shops-admin', community?._id] }),
+        queryClient.invalidateQueries({ queryKey: ['community-shops', community?._id] }),
+        queryClient.invalidateQueries({ queryKey: ['community-pending-shops', community?._id] }),
+      ]);
+    } catch (error) {
+      console.error('Failed to approve shop:', error);
+      Swal.close();
+      Swal.fire({
+        icon: 'error',
+        title: ct('อนุมัติร้านค้าไม่สำเร็จ', 'Shop approval failed'),
+        text: error.response?.data?.message || ct('กรุณาลองใหม่อีกครั้ง', 'Please try again later')
+      });
+    }
+  };
+
+  const handleSecondaryAction = (shop) => {
+    const normalized = normalizeStatus(shop.status);
+    if (normalized === 'PENDING') {
+      handleApproveShop(shop._id);
+    } else {
+      navigate(`/community-admin/shops/${shop._id}/approval`);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#F5EFE7] py-10">
+    <div className="min-h-screen bg-[#F5EFE7] py-10 animate-fadeIn">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between animate-slideUp">
           <div>
             <p className="text-sm uppercase tracking-wide text-[#8E24AA] font-semibold">
               {ct('ร้านค้าในชุมชน', 'Community Shops')}
@@ -105,7 +163,7 @@ const AdminShopList = () => {
           </button>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 items-stretch">
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 items-stretch animate-slideUp">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
@@ -134,25 +192,25 @@ const AdminShopList = () => {
         </div>
 
         {isLoading ? (
-          <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center text-gray-500">
+          <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center text-gray-500 animate-slideUp">
             {ct('กำลังโหลดรายชื่อร้านค้า...', 'Loading shop list...')}
           </div>
         ) : isError ? (
-          <div className="bg-white rounded-2xl border border-red-200 p-10 text-center text-red-600">
+          <div className="bg-white rounded-2xl border border-red-200 p-10 text-center text-red-600 animate-slideUp">
             {ct('ไม่สามารถโหลดรายชื่อร้านค้าได้', 'Unable to load shop list.')}
           </div>
         ) : filteredShops.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-dashed border-gray-300 p-10 flex flex-col items-center text-center text-gray-500">
+          <div className="bg-white rounded-2xl border border-dashed border-gray-300 p-10 flex flex-col items-center text-center text-gray-500 animate-slideUp">
             <AlertCircle className="h-10 w-10 mb-3 text-gray-400" />
             <p className="text-base font-medium">{ct('ไม่พบร้านค้าตามเงื่อนไขที่เลือก', 'No shops matched the selected filters.')}</p>
             <p className="text-sm text-gray-400">{ct('ลองปรับสถานะหรือคำค้นหาใหม่', 'Try changing the status filter or search term')}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-stagger">
             {filteredShops.map((shop) => {
               const coverImage = getShopCoverImage(shop);
               return (
-              <div key={shop._id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all p-5 flex flex-col gap-4">
+              <div key={shop._id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all p-5 flex flex-col gap-4 transform hover:-translate-y-1">
                 {coverImage && (
                   <div className="w-full h-36 rounded-xl overflow-hidden bg-gray-100">
                     <img
@@ -190,13 +248,13 @@ const AdminShopList = () => {
                 <div className="flex gap-2">
                   <button
                     onClick={() => navigate(`/community-admin/shops/${shop._id}/approval`)}
-                    className="flex-1 px-4 py-2 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-sm font-semibold rounded-lg transition-all"
+                    className="flex-1 px-4 py-2 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-sm font-semibold rounded-lg transition-all transform hover:-translate-y-0.5"
                   >
                     {ct('ดูรายละเอียด', 'View details')}
                   </button>
                   <button
-                    onClick={() => navigate(`/community-admin/shops/${shop._id}/approval`)}
-                    className="px-4 py-2 bg-[#1E293B] hover:bg-[#0F172A] text-white text-sm font-semibold rounded-lg transition-all"
+                    onClick={() => handleSecondaryAction(shop)}
+                    className="px-4 py-2 bg-[#1E293B] hover:bg-[#0F172A] text-white text-sm font-semibold rounded-lg transition-all transform hover:-translate-y-0.5"
                   >
                     {resolveSecondaryCta(shop.status)}
                   </button>

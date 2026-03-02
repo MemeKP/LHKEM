@@ -64,6 +64,19 @@ export class Community {
 
     @Prop({
         type: {
+            require_workshop_approval: { type: Boolean, default: false },
+        },
+        _id: false,
+        default: {
+            require_workshop_approval: false,
+        },
+    })
+    admin_permissions?: {
+        require_workshop_approval: boolean;
+    };
+
+    @Prop({
+        type: {
             full_address: { type: String, required: true },
             full_address_en: { type: String },
             house_no: { type: String },

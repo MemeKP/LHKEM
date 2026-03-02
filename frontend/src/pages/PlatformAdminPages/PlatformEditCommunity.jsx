@@ -5,13 +5,15 @@ import { useTranslation } from '../../hooks/useTranslation';
 import api from '../../services/api';
 import { useQuery } from '@tanstack/react-query';
 import Swal from 'sweetalert2'
+import CommunityImageUploader from '../../components/CommunityImageUploader';
+import { buildImageSlotsPayload } from '../../utils/communityImages';
 
 const fetchCommunityDetail = async (id) => {
   const res = await api.get(`/api/platform-admin/communities/${id}/for-update`);
   return res.data; 
 };
 
-const updateCommunity = async (id, formData, newImages, existingImages) => {
+const updateCommunity = async ({ id, formData, coverSlot, gallerySlots }) => {
   const formDataToSend = new FormData();
   formDataToSend.append('name', formData.name);
   if (formData.name_en) formDataToSend.append('name_en', formData.name_en);
@@ -58,21 +60,18 @@ const updateCommunity = async (id, formData, newImages, existingImages) => {
      formDataToSend.append('admins', JSON.stringify(adminList));
   }
 
-  // formDataToSend.append('admin_permissions', JSON.stringify({
-  //   can_approve_workshop: formData.workshopApproval
-  // }));
+  formDataToSend.append('admin_permissions', JSON.stringify({
+    can_approve_workshop: formData.workshopApproval,
+    require_workshop_approval: formData.requireApprove,
+  }));
   
-  if (newImages && newImages.length > 0) {
-    newImages.forEach((file) => {
-      formDataToSend.append('files', file); 
-    });
-  }
+  const manifest = buildImageSlotsPayload({
+    coverSlot,
+    gallerySlots,
+    appendFile: (file) => formDataToSend.append('files', file),
+  });
 
-  if (existingImages && existingImages.length > 0) {
-    existingImages.forEach((url) => {
-      formDataToSend.append('existing_images', url);
-    });
-  }
+  formDataToSend.append('image_slots', JSON.stringify(manifest));
 
   const res = await api.patch(`/api/communities/${id}`, formDataToSend, {
     headers: {
@@ -114,7 +113,8 @@ const PlatformEditCommunity = () => {
     images: null,
     admins: [],
     admin_email: '',
-    workshopApproval: true
+    workshopApproval: true,
+    requireApprove: false,
   });
   const API_URL = import.meta.env.VITE_API_URL
   const [imagePreview, setImagePreview] = useState(null);
@@ -123,6 +123,8 @@ const PlatformEditCommunity = () => {
   const [mapImage, setMapImage] = useState(null);
   const [mapPreview, setMapPreview] = useState(null);
   const [existingMapUrl, setExistingMapUrl] = useState(null);
+  const [galleryInitialImages, setGalleryInitialImages] = useState([]);
+  const [gallerySlots, setGallerySlots] = useState([]);
 
   const { data: community, isLoading } = useQuery({
     queryKey: ['community-update', id],
@@ -158,10 +160,15 @@ const PlatformEditCommunity = () => {
           facebook: community.contact_info?.facebook || '', 
         },
         admins: community.admins || [],
+        workshopApproval: community.admin_permissions?.can_approve_workshop ?? true,
+        requireApprove: community.admin_permissions?.require_workshop_approval ?? false,
       });
 
       if (community.images && community.images.length > 0) {
         setExistingImage(community.images[0]);
+        setGalleryInitialImages(community.images.slice(1, 5));
+      } else {
+        setGalleryInitialImages([]);
       }
 
       // Fetch existing community map
@@ -180,7 +187,14 @@ const PlatformEditCommunity = () => {
   }, [community]);
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
+    if (type === 'checkbox') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: checked,
+      }));
+      return;
+    }
     if (name.includes('.')) {
       const parts = name.split('.'); 
       if (parts.length === 2) {
@@ -282,19 +296,20 @@ const PlatformEditCommunity = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const newImagesArray = coverImageFile ? [coverImageFile] : [];
-    let existingImagesArray = community?.images || [];
 
-    // if (currentImages && currentImages.length > 0) {
-    //    existingImagesArray = [...currentImages]; 
-    // }
-    
-    //const existingImagesArray = (existingImage && !coverImageFile) ? [existingImage] : [];
+    const coverSlot = coverImageFile
+      ? { file: coverImageFile }
+      : existingImage
+        ? { existingUrl: existingImage }
+        : null;
 
     try {
-      // console.log("Sending Existing:", existingImagesArray); 
-      // console.log("Sending New:", newImagesArray);
-      await updateCommunity(id, formData, newImagesArray, existingImagesArray);
+      await updateCommunity({
+        id,
+        formData,
+        coverSlot,
+        gallerySlots: gallerySlots?.length ? gallerySlots : [],
+      });
 
       // Upload map image if provided 
       if (mapImage) {
@@ -321,7 +336,7 @@ const PlatformEditCommunity = () => {
   if (isLoading) return <div>Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-[#FAF8F3] animate-fadeIn">
+    <div className="min-h-screen bg-[#F5EFE7] animate-fadeIn">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
         <button
@@ -510,6 +525,34 @@ const PlatformEditCommunity = () => {
                 value={formData.location.coordinates.lng}
               />
             </div>
+
+            <div className="flex items-start space-x-3 mb-4 p-4 bg-gray-50 rounded-lg">
+              <input
+                type="checkbox"
+                name="workshopApproval"
+                checked={formData.workshopApproval}
+                onChange={handleInputChange}
+                className="mt-1 h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
+                id="edit-workshop-approval"
+              />
+              <label htmlFor="edit-workshop-approval" className="text-sm text-gray-700">
+                {ct('ผู้ดูแลเป็นผู้ที่มีสิทธิ์อนุมัติการสร้าง workshop', 'This admin has permission to approve workshop creation')}
+              </label>
+            </div>
+
+            <div className="flex items-start space-x-3 mb-4 p-4 bg-gray-50 rounded-lg">
+              <input
+                type="checkbox"
+                name="requireApprove"
+                checked={formData.requireApprove}
+                onChange={handleInputChange}
+                className="mt-1 h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
+                id="edit-require-approval"
+              />
+              <label htmlFor="edit-require-approval" className="text-sm text-gray-700">
+                {ct('เวิร์กชอปใหม่ต้องได้รับการอนุมัติก่อนเผยแพร่', 'Require approval before workshops go live')}
+              </label>
+            </div>
           </div>
 
           {/* Community Map Upload */}
@@ -593,6 +636,17 @@ const PlatformEditCommunity = () => {
             <p className="text-xs text-gray-500 mt-2">
               {ct('บอกเล่า ทิศทาง + ข้อมูลเพิ่มเติม', 'Share directions and additional information')}
             </p>
+          </div>
+
+          {/* Community Atmosphere Images */}
+          <div className="mb-6">
+            <label className="block text-sm font-semibold text-gray-900 mb-2">
+              {ct('บรรยากาศในชุมชน', 'Community Atmosphere')}
+            </label>
+            <CommunityImageUploader
+              initialImages={galleryInitialImages}
+              onChange={setGallerySlots}
+            />
           </div>
 
           {/* Contact Email */}

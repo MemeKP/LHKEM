@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Image as ImageIcon, Plus, X } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
 import api from '../../services/api';
 import { useMutation } from '@tanstack/react-query';
+import CommunityImageUploader from '../../components/CommunityImageUploader';
+import { buildImageSlotsPayload } from '../../utils/communityImages';
 
-const createCommunity = async (formData) => {
+const createCommunity = async ({ formData, coverSlot, gallerySlots }) => {
   const formDataToSend = new FormData();
   formDataToSend.append('name', formData.name);
 
@@ -49,12 +51,17 @@ const createCommunity = async (formData) => {
     formDataToSend.append('admins', JSON.stringify(formData.admins));
   }
 
-  if (formData.coverImage) {
-    formDataToSend.append('images', formData.coverImage);
-  }
+  const manifest = buildImageSlotsPayload({
+    coverSlot,
+    gallerySlots,
+    appendFile: (file) => formDataToSend.append('images', file),
+  });
+
+  formDataToSend.append('image_slots', JSON.stringify(manifest));
 
   formDataToSend.append('admin_permissions', JSON.stringify({
-    can_approve_workshop: formData.workshopApproval
+    can_approve_workshop: formData.workshopApproval,
+    require_workshop_approval: formData.requireApprove,
   }));
 
   const res = await api.post('/api/communities', formDataToSend, {
@@ -96,12 +103,15 @@ const PlatformCreateCommunity = () => {
     images: null,
     admins: [],
     admin_email: '',
-    workshopApproval: false
+    workshopApproval: false,
+    requireApprove: false,
   });
 
   const [imagePreview, setImagePreview] = useState(null);
   const [mapImage, setMapImage] = useState(null);
   const [mapPreview, setMapPreview] = useState(null);
+  const [gallerySlots, setGallerySlots] = useState([]);
+  const initialGalleryImages = useMemo(() => [], []);
 
   const mutation = useMutation({
     mutationFn: createCommunity,
@@ -190,11 +200,12 @@ const PlatformCreateCommunity = () => {
   // };
   const handleSubmit = (e) => {
     e.preventDefault();
-    mutation.mutate(formData);
+    const coverSlot = formData.coverImage ? { file: formData.coverImage } : null;
+    mutation.mutate({ formData, coverSlot, gallerySlots });
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF8F3] animate-fadeIn">
+    <div className="min-h-screen bg-[#F5EFE7] animate-fadeIn">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
         <button
@@ -384,6 +395,14 @@ const PlatformCreateCommunity = () => {
               />
             </div>
           </div>
+
+          {/* Community Atmosphere Images */}
+          <div className="mb-6">
+            <label className="block text-sm font-semibold text-gray-900 mb-2">
+              {ct('รูปภาพบรรยากาศในชุมชน', 'Community Atmosphere Images')}
+            </label>
+            <CommunityImageUploader initialImages={initialGalleryImages} onChange={setGallerySlots} />
+          </div>
           {/* Community Map Upload */}
           <div className="mb-6">
             <label className="block text-sm font-semibold text-gray-900 mb-2">
@@ -531,7 +550,21 @@ const PlatformCreateCommunity = () => {
                 id="workshop-approval"
               />
               <label htmlFor="workshop-approval" className="text-sm text-gray-700">
-                {ct('ผู้ดูแลชื่อนี้เป็นผู้ที่มีสิทธิ์อนุมัติการสร้าง workshop', 'This admin has permission to approve workshop creation')}
+                {ct('ผู้ดูแลเป็นผู้ที่มีสิทธิ์อนุมัติการสร้าง workshop', 'This admin has permission to approve workshop creation')}
+              </label>
+            </div>
+
+            <div className="flex items-start space-x-3 mb-4 p-4 bg-gray-50 rounded-lg">
+              <input
+                type="checkbox"
+                name="requireApprove"
+                checked={formData.requireApprove}
+                onChange={handleInputChange}
+                className="mt-1 h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
+                id="require-approval"
+              />
+              <label htmlFor="require-approval" className="text-sm text-gray-700">
+                {ct('เวิร์กชอปใหม่ต้องได้รับการอนุมัติก่อนเผยแพร่', 'Require approval before workshops go live')}
               </label>
             </div>
 

@@ -18,9 +18,7 @@ import Swal from 'sweetalert2';
  * - location (required) - สถานที่ (Object: full_address, province, coordinates)
  * - start_at (required) - วันและเวลาเริ่ม (ISO DateTime)
  * - end_at (required) - วันและเวลาสิ้นสุด (ISO DateTime)
- * - seat_limit (required) - จำนวนที่นั่ง
  * - deposit_amount (optional) - ค่าใช้จ่าย/ค่าม��ดจำ
- * - status (OPEN, CLOSED, CANCELLED) - สถานะ
  * - is_featured (boolean) - แนะนำ
  * - is_pinned (boolean) - ปักหมุด
  * - images (string) - รูปภาพปก (TODO: รอ Image Upload API)
@@ -75,25 +73,19 @@ const EventCreateForm = () => {
     description: '',
     descriptionEn: '',
     event_date: '',
+    end_date: '',
     start_time: '',
     end_time: '',
     location: '',
     event_type: '',
-    workshops: [],
     target_audience: '',
     cost_type: 'free', // 'free' or 'paid'
     deposit_amount: '',
-    contact: {
-      contact_phone: '',
-      contact_line: '',
-      contact_facebook: '',
-      coordinator_name: '',
-    },
+    contact_phone: '',
+    contact_line: '',
+    contact_facebook: '',
+    coordinator_name: '',
     additional_info: '',
-    seat_limit: '',
-    status: 'OPEN',
-    is_featured: false,
-    is_pinned: false,
   });
 
   const handleChange = (e) => {
@@ -108,18 +100,18 @@ const EventCreateForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.event_date || !formData.start_time || !formData.end_time) {
+    if (!formData.event_date || !formData.end_date || !formData.start_time || !formData.end_time) {
       Swal.fire({
         icon: 'warning',
         title: 'ข้อมูลไม่ครบถ้วน',
-        text: 'กรุณาระบุวันและเวลา',
+        text: 'กรุณาระบุวันเริ่ม วันสิ้นสุด และเวลา',
         confirmButtonColor: '#3085d6',
       });
       return;
     }
 
     const startDateTime = new Date(`${formData.event_date}T${formData.start_time}`);
-    const endDateTime = new Date(`${formData.event_date}T${formData.end_time}`);
+    const endDateTime = new Date(`${formData.end_date}T${formData.end_time}`);
 
     if (endDateTime < startDateTime) {
       Swal.fire({
@@ -132,6 +124,7 @@ const EventCreateForm = () => {
     }
 
     try {
+      setLoading(true);
       Swal.fire({
         title: 'กำลังสร้างกิจกรรม...',
         text: 'กรุณารอสักครู่ ระบบกำลังอัปโหลดข้อมูลและรูปภาพ',
@@ -150,20 +143,13 @@ const EventCreateForm = () => {
       submitData.append('title_en', formData.titleEn || formData.title);
       submitData.append('description', formData.description);
       submitData.append('description_en', formData.descriptionEn || formData.description);
-      submitData.append('seat_limit', parseInt(formData.seat_limit) || 1);
       submitData.append('deposit_amount', formData.cost_type === 'free' ? 0 : (parseFloat(formData.deposit_amount) || 0));
+
       submitData.append('start_at', startDateTime.toISOString());
       submitData.append('end_at', endDateTime.toISOString());
-      submitData.append('status', formData.status);
-      submitData.append('is_featured', formData.is_featured);
-      submitData.append('is_pinned', formData.is_pinned);
+
       submitData.append('event_type', formData.event_type || '');
       submitData.append('target_audience', formData.target_audience || '');
-
-      submitData.append(
-        'workshops',
-        JSON.stringify(formData.workshops || [])
-      );
 
       const contactData = {
         phone: formData.contact_phone,
@@ -176,7 +162,6 @@ const EventCreateForm = () => {
 
       submitData.append('additional_info', formData.additional_info || '');
 
-
       const locationData = {
         full_address: formData.location || "ไม่ระบุ",
       };
@@ -184,6 +169,7 @@ const EventCreateForm = () => {
 
       await createEvent(submitData);
 
+      Swal.close();
       await Swal.fire({
         icon: 'success',
         title: 'สำเร็จ!',
@@ -196,6 +182,7 @@ const EventCreateForm = () => {
 
     } catch (error) {
       console.error('Failed to create event:', error);
+      Swal.close();
 
       const msg = error?.response?.data?.message;
       const errorMessage = Array.isArray(msg) ? msg.join('\n') : (msg || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
@@ -206,6 +193,8 @@ const EventCreateForm = () => {
         text: errorMessage,
         confirmButtonColor: '#d33',
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -218,15 +207,15 @@ const EventCreateForm = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5EFE7] py-8">
+    <div className="min-h-screen bg-[#F5EFE7] py-8 animate-fadeIn">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-6 text-center">
+        <div className="mb-6 text-center animate-fadeIn">
           <h1 className="text-2xl font-bold text-[#1A1A1A] mb-1">{ct('สร้างกิจกรรมของชุมชน', 'Create Community Event')}</h1>
           <p className="text-[#666666] text-sm">{ct('กรอกข้อมูลกิจกรรมพิเศษหรือเทศกาลของชุมชน', 'Fill in information for special events or community festivals')}</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+        <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
           {/* 1. ชื่องาน/กิจกรรม */}
           <div className="mb-6">
             <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
@@ -332,18 +321,33 @@ const EventCreateForm = () => {
               วันและเวลา <span className="text-red-500">*</span>
             </label>
             <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-[#666666] mb-1.5">
-                  วันที่จัดกิจกรรม
-                </label>
-                <input
-                  type="date"
-                  name="event_date"
-                  value={formData.event_date}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A]"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-[#666666] mb-1.5">
+                    วันที่จัดกิจกรรม
+                  </label>
+                  <input
+                    type="date"
+                    name="event_date"
+                    value={formData.event_date}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[#666666] mb-1.5">
+                    วันที่สิ้นสุดกิจกรรม
+                  </label>
+                  <input
+                    type="date"
+                    name="end_date"
+                    value={formData.end_date}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A]"
+                  />
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -390,19 +394,6 @@ const EventCreateForm = () => {
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A] mb-3"
               placeholder="ระบุสถานที่"
             />
-            <div className="border-2 border-dashed border-[#E0E0E0] rounded-lg p-6 text-center bg-[#F0F9F4]">
-              <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center mx-auto mb-3">
-                <MapPin className="h-6 w-6 text-[#4CAF50]" />
-              </div>
-              <p className="text-sm text-[#666666] mb-3">เลือกสถานที่บนแผนที่</p>
-              <button
-                type="button"
-                className="px-4 py-2 bg-white border border-gray-300 text-[#666666] rounded-lg hover:bg-gray-50 transition text-sm font-medium"
-              >
-                เปิดแผนที่
-              </button>
-              <p className="text-xs text-[#999999] mt-3">{ct('คลิกเพื่อเลือกตำแหน่งที่แม่นยำบนแผนที่', 'Click to select precise location on map')}</p>
-            </div>
           </div>
 
           {/* 6. ประเภทกิจกรรม */}
@@ -423,39 +414,6 @@ const EventCreateForm = () => {
               <option value="market">ตลาดนัด</option>
               <option value="other">อื่นๆ</option>
             </select>
-          </div>
-
-          {/* 7. Workshop ที่เข้าร่วม  ลองดูหน่อยว่าจะเอามั้ย*/}
-          <div className="mb-6">
-            <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
-              Workshop ที่เข้าร่วม (ถ้ามี)
-            </label>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="workshop1"
-                  className="w-4 h-4 text-[#FFC107] border-gray-300 rounded focus:ring-[#FFC107]"
-                />
-                <label htmlFor="workshop1" className="text-sm text-[#666666]">Workshop ย้อมผ้าครามธรรมชาติ</label>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="workshop2"
-                  className="w-4 h-4 text-[#FFC107] border-gray-300 rounded focus:ring-[#FFC107]"
-                />
-                <label htmlFor="workshop2" className="text-sm text-[#666666]">Workshop เครื่องปั้นดินเผา</label>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="workshop3"
-                  className="w-4 h-4 text-[#FFC107] border-gray-300 rounded focus:ring-[#FFC107]"
-                />
-                <label htmlFor="workshop3" className="text-sm text-[#666666]">Workshop งานไม้แกะสลัก</label>
-              </div>
-            </div>
           </div>
 
           {/* 8. กลุ่มเป้าหมาย */}
@@ -597,9 +555,6 @@ const EventCreateForm = () => {
               placeholder="ข้อมูลเพิ่มเติม (ถ้ามี)"
             />
           </div>
-
-          {/* Hidden fields for backend compatibility */}
-          <input type="hidden" name="seat_limit" value={formData.seat_limit || "100"} />
 
           {/* Actions */}
           <div className="flex items-center justify-center gap-3 pt-4">

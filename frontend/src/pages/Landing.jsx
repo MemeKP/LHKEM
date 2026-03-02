@@ -55,18 +55,25 @@ const Landing = () => {
     queryFn: async () => {
       const communitiesRes = await api.get('/api/communities');
 
-      const totalWorkshops = communitiesRes.data.reduce((sum, comm) =>
-        sum + (comm.workshops?.length || 0), 0
-      );
-
-      // Count active shops from all communities
+      let totalWorkshops = 0;
       let totalShops = 0;
+
       for (const comm of communitiesRes.data) {
+        // Fetch active shops
         try {
           const shopsRes = await api.get(`/api/shops/community/${comm._id}`);
           totalShops += shopsRes.data.filter(shop => shop.status === 'ACTIVE').length;
         } catch (err) {
           console.error('Failed to fetch shops for community:', comm._id);
+        }
+
+        // Fetch workshops dynamically instead of relying on the virtual array
+        try {
+          // You already have an endpoint for this in CommunityHome!
+          const workshopRes = await api.get(`/api/communities/${comm._id}/workshops`);
+          totalWorkshops += Array.isArray(workshopRes.data) ? workshopRes.data.length : 0;
+        } catch (err) {
+          console.error('Failed to fetch workshops for community:', comm._id);
         }
       }
 

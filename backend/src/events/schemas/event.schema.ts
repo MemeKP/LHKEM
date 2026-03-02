@@ -102,19 +102,16 @@ export class Event {
   @Prop({ required: true })
   end_at: Date;
 
-  @Prop({ required: true })
-  seat_limit: number;
+    @Prop({})
+    deposit_amount: number;
 
-  @Prop({ default: 0 })
-  deposit_amount: number;
-
-  @Prop({
-    type: String,
-    enum: EventStatus,
-    default: EventStatus.OPEN,
-    index: true,
-  })
-  status: EventStatus;
+    @Prop({
+        type: String,
+        enum: EventStatus,
+        default: EventStatus.PENDING,
+        index: true,
+    })
+    status: EventStatus;
 
     @Prop({ default: false, index: true })
     is_featured: boolean;

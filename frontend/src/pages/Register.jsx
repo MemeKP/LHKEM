@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
+import Swal from 'sweetalert2';
 import { useTranslation } from '../hooks/useTranslation';
 import { useAuth } from '../hooks/useAuth';
 
 const Register = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, ct } = useTranslation();
   const { register } = useAuth();
   const [formData, setFormData] = useState({
     role: 'TOURIST',
@@ -18,10 +19,27 @@ const Register = () => {
     confirmPassword: ''
   });
 
+  const safeMessage = (value, fallbackTH, fallbackEN) => {
+    if (Array.isArray(value)) {
+      const joined = value.filter(Boolean).join('\n');
+      if (joined.trim().length > 0) return joined;
+    }
+    if (typeof value === 'string' && value.trim().length > 0) {
+      return value;
+    }
+    return ct(fallbackTH, fallbackEN);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      alert(t('common.error'));
+      Swal.fire({
+        icon: 'warning',
+        title: t('common.error') || ct('ข้อมูลไม่ถูกต้อง', 'Invalid information'),
+        text: t('auth.passwordMismatch') || ct('รหัสผ่านไม่ตรงกัน กรุณาลองอีกครั้ง', 'Passwords do not match. Please try again.'),
+        confirmButtonText: t('common.ok') || ct('ตกลง', 'OK'),
+        confirmButtonColor: '#f97316',
+      });
       return;
     }
     const payload = {
@@ -32,20 +50,51 @@ const Register = () => {
       password: formData.password,
       role: formData.role,
     };
-    const res = await register(payload);
-    if (res.success) {
-      // Redirect based on role
-      if (formData.role === 'SHOP_OWNER') {
-        navigate('/loeng-him-kaw/shop/dashboard'); // Default community
-      } else if (formData.role === 'COMMUNITY_ADMIN') {
-        navigate('/community-admin/dashboard');
-      } else if (formData.role === 'PLATFORM_ADMIN') {
-        navigate('/platform-admin/dashboard');
+    try {
+      const res = await register(payload);
+      if (res.success) {
+        await Swal.fire({
+          icon: 'success',
+          title: t('auth.registerSuccessTitle') || ct('สมัครสมาชิกสำเร็จ', 'Registration successful'),
+          text: t('auth.registerSuccessMessage') || ct('บัญชีของคุณพร้อมใช้งานแล้ว', 'Your account is ready to use.'),
+          confirmButtonText: t('common.continue') || ct('ดำเนินการต่อ', 'Continue'),
+          confirmButtonColor: '#16a34a',
+        });
+
+        if (formData.role === 'SHOP_OWNER') {
+          navigate('/loeng-him-kaw/shop/dashboard');
+        } else if (formData.role === 'COMMUNITY_ADMIN') {
+          navigate('/community-admin/dashboard');
+        } else if (formData.role === 'PLATFORM_ADMIN') {
+          navigate('/platform-admin/dashboard');
+        } else {
+          navigate('/');
+        }
       } else {
-        navigate('/'); // TOURIST goes to landing page
+        Swal.fire({
+          icon: 'error',
+          title: t('common.error') || ct('เกิดข้อผิดพลาด', 'Something went wrong'),
+          text: safeMessage(
+            res?.message,
+            'ไม่สามารถดำเนินการได้ กรุณาลองใหม่อีกครั้ง',
+            'Unable to complete the action. Please try again.'
+          ),
+          confirmButtonText: t('common.ok') || ct('ตกลง', 'OK'),
+          confirmButtonColor: '#d33',
+        });
       }
-    } else {
-      alert(res.message || t('common.error'));
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: t('common.error') || ct('เกิดข้อผิดพลาด', 'Something went wrong'),
+        text: safeMessage(
+          error?.response?.data?.message ?? error?.message,
+          'ไม่สามารถสมัครสมาชิกได้ กรุณาลองใหม่อีกครั้ง',
+          'Unable to register. Please try again.'
+        ),
+        confirmButtonText: t('common.ok') || ct('ตกลง', 'OK'),
+        confirmButtonColor: '#d33',
+      });
     }
   };
 

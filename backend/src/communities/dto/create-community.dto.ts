@@ -9,6 +9,7 @@ import { LocationDto } from './location.dto';
 import { ContactInfoDto } from './contact-info.dto';
 import { CulturalHighlightDto } from './cultural-highlight.dto';
 import { HeroSectionDto } from './hero-section.dto';
+import { AdminPermissionsDto } from './admin-permissions.dto';
 
 export class CreateCommunityDto {
 
@@ -51,6 +52,34 @@ export class CreateCommunityDto {
     @IsOptional()
     @IsArray()
     @IsString({ each: true })
+    @Transform(({ value }) => {
+        if (typeof value === 'string') {
+            try {
+                const parsed = JSON.parse(value);
+                if (Array.isArray(parsed)) {
+                    return parsed;
+                }
+            } catch (error) {
+                return value ? [value] : [];
+            }
+            return value ? [value] : [];
+        }
+
+        if (Array.isArray(value)) {
+            return value;
+        }
+
+        if (value === undefined || value === null) {
+            return [];
+        }
+
+        return [value];
+    })
+    image_slots?: string[];
+
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
     videos?: string[];
 
     @Transform(({ value }) =>
@@ -77,4 +106,19 @@ export class CreateCommunityDto {
         return value;
     })
     admins?: string[];
+
+    @IsOptional()
+    @ValidateNested()
+    @Transform(({ value }) => {
+        if (typeof value === 'string') {
+            try {
+                return JSON.parse(value);
+            } catch (error) {
+                return value;
+            }
+        }
+        return value;
+    })
+    @Type(() => AdminPermissionsDto)
+    admin_permissions?: AdminPermissionsDto;
 }

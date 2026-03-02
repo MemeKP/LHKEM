@@ -1,15 +1,28 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Clock, Users, Calendar, Plus, X, AlertCircle, Image as ImageIcon, Camera } from 'lucide-react';
+
+import Swal from 'sweetalert2';
 import { useMyShop } from '../../hooks/useMyShop';
+import { useTranslation } from '../../hooks/useTranslation';
+
 import ShopPendingApprovalNotice from '../../components/ShopPendingApprovalNotice';
+import api from '../../services/api'; // ADDED: API import
+
+const WORKSHOP_CATEGORY_OPTIONS = [
+  { value: 'งานฝีมือ', label: 'งานฝีมือ (Crafts)' },
+  { value: 'ศิลปะ', label: 'ศิลปะ (Art)' },
+  { value: 'อาหาร', label: 'อาหาร (Cooking)' },
+  { value: 'วัฒนธรรม', label: 'วัฒนธรรม (Culture)' },
+];
 
 const ShopWorkshopEdit = () => {
   const { id, slug } = useParams();
   const navigate = useNavigate();
   const { data: shop, isLoading: shopLoading } = useMyShop();
+  const { ct } = useTranslation();
+
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState({ type: '', text: '' });
   const [loading, setLoading] = useState(true);
 
   const [form, setForm] = useState({
@@ -17,6 +30,7 @@ const ShopWorkshopEdit = () => {
     description: '',
     registrationStartDate: '',
     registrationEndDate: '',
+    workshopDate: '',
     workshopStartTime: '',
     workshopEndTime: '',
     locationType: 'shop',
@@ -24,35 +38,63 @@ const ShopWorkshopEdit = () => {
     seatLimit: '',
     price: '',
     imageUrl: '',
+    category: 'งานฝีมือ',
     categories: [],
     activities: [
       { id: 1, title: '', description: '', duration: '' }
     ]
   });
 
+  const toDateInputValue = (value) => {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toISOString().split('T')[0];
+  };
+
+  // FIX 1: Fetch real data from Backend instead of localStorage
   useEffect(() => {
-    // Load workshop data from localStorage
-    const draft = JSON.parse(localStorage.getItem('shopDraft') || '{}');
-    const workshop = (draft.workshops || []).find(w => w.id === id);
-    
-    if (workshop) {
-      setForm({
-        title: workshop.title || '',
-        description: workshop.description || '',
-        registrationStartDate: workshop.registrationStartDate || '',
-        registrationEndDate: workshop.registrationEndDate || '',
-        workshopStartTime: workshop.workshopStartTime || '',
-        workshopEndTime: workshop.workshopEndTime || '',
-        locationType: workshop.locationType || 'shop',
-        customLocation: workshop.customLocation || '',
-        seatLimit: workshop.seatLimit || '',
-        price: workshop.price || '',
-        imageUrl: workshop.imageUrl || '',
-        categories: workshop.categories || [],
-        activities: workshop.activities || [{ id: 1, title: '', description: '', duration: '' }]
-      });
-    }
-    setLoading(false);
+    const fetchWorkshop = async () => {
+      try {
+        setLoading(true);
+        // Using the management route to see PENDING workshops
+        const res = await api.get(`/management/workshops/${id}`);
+        const workshop = res.data?.data || res.data;
+
+        if (workshop) {
+          const resolvedWorkshopDate = workshop.workshopDate || workshop.date;
+          setForm({
+            title: workshop.title || '',
+            description: workshop.description || '',
+            registrationStartDate: workshop.startDate || '',
+            registrationEndDate: workshop.endDate || '',
+            workshopDate: toDateInputValue(resolvedWorkshopDate),
+            workshopStartTime: workshop.startTime || '',
+            workshopEndTime: workshop.endTime || '',
+            locationType: workshop.locationType || 'shop',
+            customLocation: workshop.customLocation || '',
+            seatLimit: workshop.capacity || '', // Map capacity to seatLimit
+            price: workshop.price || '',
+            imageUrl: workshop.image || '', // Map image to imageUrl
+            category: workshop.category || 'งานฝีมือ',
+            categories: workshop.categories || [],
+            activities: workshop.activities || [{ id: 1, title: '', description: '', duration: '' }]
+          });
+        }
+      } catch (error) {
+        console.error("Failed to load workshop:", error);
+        Swal.fire({
+          icon: 'error',
+          title: ct('โหลดข้อมูลไม่สำเร็จ', 'Failed to load data'),
+          text: ct('ไม่สามารถโหลดข้อมูลเวิร์กชอปได้ กรุณาลองใหม่', 'Unable to load this workshop. Please try again.'),
+          confirmButtonText: ct('ตกลง', 'OK'),
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) fetchWorkshop();
   }, [id]);
 
   const toggleCategory = (c) => {
@@ -75,6 +117,14 @@ const ShopWorkshopEdit = () => {
       activities: prev.activities.map(a => 
         a.id === activityId ? { ...a, [field]: value } : a
       )
+    }));
+  };
+
+  const handleLocationRadioChange = (nextType) => {
+    setForm(prev => ({
+      ...prev,
+      locationType: nextType,
+      customLocation: nextType === 'custom' ? prev.customLocation : ''
     }));
   };
 
@@ -101,29 +151,145 @@ const ShopWorkshopEdit = () => {
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = (e) => {
+  // FIX 2: Updated handleSubmit to send PATCH to backend
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    const { registrationStartDate, registrationEndDate, workshopDate, workshopStartTime, workshopEndTime } = form;
+    if (!registrationStartDate || !registrationEndDate || !workshopDate) {
+      Swal.fire({
+        icon: 'warning',
+        title: ct('กรุณาเลือกวันที่ให้ครบ', 'Please select all dates'),
+        text: ct('โปรดระบุวันเปิดรับสมัคร วันปิดรับสมัคร และวันจัดกิจกรรมให้ครบถ้วน', 'Please specify registration start, registration end, and workshop dates.'),
+        confirmButtonText: ct('ตกลง', 'OK'),
+      });
+      return;
+    }
+
+    if (!workshopStartTime || !workshopEndTime) {
+      Swal.fire({
+        icon: 'warning',
+        title: ct('กรุณากรอกเวลาให้ครบ', 'Please provide both start and end times'),
+        text: ct('ระบุเวลาเริ่มและเวลาสิ้นสุดของกิจกรรมให้ครบถ้วนก่อนบันทึก', 'Please enter both the start and end times before saving.'),
+        confirmButtonText: ct('ตกลง', 'OK'),
+      });
+      return;
+    }
+
+    const start = new Date(registrationStartDate);
+    const end = new Date(registrationEndDate);
+    const workshop = new Date(workshopDate);
+    const minGap = 7 * 24 * 60 * 60 * 1000;
+    const latestAllowedEnd = new Date(workshop.getTime() - minGap);
+
+    const toMinutes = (time) => {
+      const [h, m] = time.split(':').map(Number);
+      return h * 60 + m;
+    };
+
+    const startMinutes = toMinutes(workshopStartTime);
+    const endMinutes = toMinutes(workshopEndTime);
+
+    if (startMinutes >= endMinutes) {
+      Swal.fire({
+        icon: 'warning',
+        title: ct('เวลาเริ่มต้องอยู่ก่อนเวลาสิ้นสุด', 'Start time must be before end time'),
+        text: ct('กรุณาตรวจสอบช่วงเวลาให้ถูกต้องก่อนบันทึก', 'Please ensure the workshop start time occurs before the end time.'),
+        confirmButtonText: ct('เข้าใจแล้ว', 'Understood'),
+      });
+      return;
+    }
+
+    if (end < start) {
+      Swal.fire({
+        icon: 'warning',
+        title: ct('วันปิดรับสมัครไม่ถูกต้อง', 'Invalid registration deadline'),
+        text: ct('วันปิดรับสมัครต้องไม่อยู่ก่อนวันเปิดรับสมัคร', 'Registration end date cannot be before the start date.'),
+        confirmButtonText: ct('ตกลง', 'OK'),
+      });
+      return;
+    }
+
+    if (end > workshop) {
+      Swal.fire({
+        icon: 'warning',
+        title: ct('วันปิดรับสมัครต้องไม่เกินวันจัดงาน', 'Deadline cannot exceed event date'),
+        text: ct('กรุณากำหนดวันปิดรับสมัครให้ก่อนหรือในวันจัดกิจกรรม', 'Please keep the registration cutoff on or before the workshop date.'),
+        confirmButtonText: ct('ตกลง', 'OK'),
+      });
+      return;
+    }
+
+    if (end > latestAllowedEnd) {
+      Swal.fire({
+        icon: 'warning',
+        title: ct('กรุณาปิดรับสมัครล่วงหน้า 7 วัน', 'Close registration at least 7 days early'),
+        text: ct('เพื่อเตรียมงานให้พร้อม กรุณากำหนดวันปิดรับสมัครอย่างน้อย 7 วันก่อนวันจัดกิจกรรม', 'Please set the registration deadline at least seven days before the workshop so the shop can prepare.'),
+        confirmButtonText: ct('เข้าใจแล้ว', 'Understood'),
+      });
+      return;
+    }
+
     setSaving(true);
+    Swal.fire({
+      title: ct('กำลังบันทึกการแก้ไข...', 'Saving changes...'),
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      didOpen: () => Swal.showLoading(),
+    });
+
     try {
-      const draft = JSON.parse(localStorage.getItem('shopDraft') || '{}');
-      const workshops = Array.isArray(draft.workshops) ? draft.workshops : [];
-      const idx = workshops.findIndex(w => w.id === id);
-      
-      if (idx !== -1) {
-        const updated = {
-          ...workshops[idx],
-          ...form,
-          seatLimit: Number(form.seatLimit || 0),
-          price: Number(form.price || 0),
-          updatedAt: new Date().toISOString()
-        };
-        workshops[idx] = updated;
-        localStorage.setItem('shopDraft', JSON.stringify({ ...draft, workshops }));
-        setMessage({ type: 'success', text: 'แก้ไข Workshop สำเร็จ' });
-        setTimeout(() => navigate(`/${slug}/shop/dashboard`), 1500);
-      }
-    } catch {
-      setMessage({ type: 'error', text: 'บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง' });
+      const sanitizedCustomLocation = form.customLocation.trim();
+      const eventDateIso = form.workshopDate
+        ? new Date(`${form.workshopDate}T${form.workshopStartTime || '00:00'}:00`).toISOString()
+        : new Date().toISOString();
+
+      const payload = {
+        title: form.title,
+        description: form.description,
+        startDate: form.registrationStartDate,
+        endDate: form.registrationEndDate,
+        workshopDate: form.workshopDate,
+        startTime: form.workshopStartTime,
+        endTime: form.workshopEndTime,
+        locationType: form.locationType,
+        customLocation: form.locationType === 'custom' ? sanitizedCustomLocation : '',
+        capacity: Number(form.seatLimit), // Mapping back to backend schema
+        price: Number(form.price),
+        image: form.imageUrl, // Mapping back to backend schema
+        category: form.category || 'งานฝีมือ',
+        categories: form.categories,
+        activities: form.activities,
+        
+        // CRITICAL REQUIREMENT: Reset status to PENDING on every edit
+        approvalStatus: 'PENDING',
+        
+        // Update the main date field used for listing
+        date: eventDateIso
+      };
+
+      // Ensure no /api prefix in URL
+      await api.patch(`/management/workshops/${id}`, payload);
+
+      Swal.close();
+      await Swal.fire({
+        icon: 'success',
+        title: ct('บันทึกสำเร็จ', 'Saved successfully'),
+        text: ct('ส่งข้อมูลให้แอดมินตรวจสอบแล้ว', 'Your updates were sent for admin review.'),
+        confirmButtonText: ct('เยี่ยมเลย', 'Great!'),
+      });
+
+      navigate(`/${slug}/shop/dashboard`);
+
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || ct('บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง', 'Unable to save changes. Please try again.');
+      Swal.close();
+      Swal.fire({
+        icon: 'error',
+        title: ct('บันทึกไม่สำเร็จ', 'Save failed'),
+        text: Array.isArray(errorMsg) ? errorMsg[0] : errorMsg,
+        confirmButtonText: ct('ลองใหม่', 'Try again'),
+      });
+
     } finally {
       setSaving(false);
     }
@@ -175,19 +341,13 @@ const ShopWorkshopEdit = () => {
         <div className="text-center mb-8 animate-fadeIn">
           <h1 className="text-3xl md:text-4xl font-bold text-[#2F4F2F] mb-3">แก้ไขรายละเอียด Workshop</h1>
           <p className="text-[#6B6B6B] text-base">คุณสามารถแก้ไขข้อมูล Workshop ของคุณได้ตามต้องการ</p>
-          <p className="text-sm text-[#9CA3AF] mt-1">ในกรณีที่แก้ไข Workshop จะต้องรอการอนุมัติจากแอดมินอีกครั้ง</p>
+          <p className="text-sm text-red-500 font-medium mt-1">⚠️ เมื่อบันทึกแล้ว สถานะจะกลับเป็น "รออนุมัติ" เพื่อให้แอดมินตรวจสอบใหม่</p>
         </div>
 
-        {message.text && (
-          <div
-            className={`mb-4 p-3 rounded-lg ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}
-          >
-            {message.text}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm p-8 space-y-6 border border-gray-100 animate-slideUp" style={{animationDelay: '0.1s'}}>
-          {/* Workshop Title */}
+        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm p-8 space-y-6 border border-gray-100 animate-slideUp">
+          
+          {/* Form Fields - Same as Create but now wired to real state */}
+          
           <div>
             <label className="block text-sm font-semibold text-[#3D3D3D] mb-2">ชื่อ Workshop</label>
             <input
@@ -195,13 +355,11 @@ const ShopWorkshopEdit = () => {
               name="title"
               value={form.title}
               onChange={handleChange}
-              placeholder="เช่น ทดลองสานตะกร้าไม้ไผ่แบบดั้งเดิม"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] transition-all"
               required
             />
           </div>
 
-          {/* Workshop Image */}
           <div className="space-y-3">
             <label className="block text-sm font-medium text-gray-700">รูปภาพ Workshop</label>
             <div className="relative aspect-video w-full bg-orange-50 border-2 border-dashed border-orange-300 rounded-xl overflow-hidden flex items-center justify-center">
@@ -211,29 +369,40 @@ const ShopWorkshopEdit = () => {
                 <div className="text-center text-orange-600">
                   <Camera className="h-12 w-12 mx-auto mb-2" />
                   <p className="text-sm">อัปโหลดรูปภาพ Workshop</p>
-                  <p className="text-xs text-gray-500 mt-1">รองรับไฟล์ JPG, PNG</p>
                 </div>
               )}
             </div>
             <div className="flex gap-2">
               <label className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg cursor-pointer hover:bg-orange-600 shadow-sm transition-colors">
                 <Camera className="h-4 w-4" />
-                เลือกรูปภาพ
+                เปลี่ยนรูปภาพ
                 <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImagePick(e.target.files?.[0])} />
               </label>
-              {form.imageUrl && (
-                <button
-                  type="button"
-                  onClick={() => setForm(prev => ({ ...prev, imageUrl: '' }))}
-                  className="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
-                >
-                  ลบรูป
-                </button>
-              )}
             </div>
           </div>
 
-          {/* Workshop Description */}
+          <div>
+            <label className="block text-sm font-semibold text-[#3D3D3D] mb-3">หมวดหมู่หลักของ Workshop</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {WORKSHOP_CATEGORY_OPTIONS.map(option => (
+                <label
+                  key={option.value}
+                  className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${form.category === option.value ? 'border-[#E07B39] bg-[#FFF7ED]' : 'border-gray-200 hover:bg-gray-50'}`}
+                >
+                  <input
+                    type="radio"
+                    name="category"
+                    value={option.value}
+                    checked={form.category === option.value}
+                    onChange={handleChange}
+                    className="w-4 h-4 text-[#E07B39] border-gray-300 focus:ring-[#E07B39]"
+                  />
+                  <span className="text-sm text-gray-700">{option.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm font-semibold text-[#3D3D3D] mb-2">คำอธิบาย Workshop</label>
             <textarea
@@ -241,15 +410,12 @@ const ShopWorkshopEdit = () => {
               value={form.description}
               onChange={handleChange}
               rows={4}
-              placeholder="อธิบายรายละเอียด Workshop ของคุณ เช่น สิ่งที่จะได้เรียนรู้ กิจกรรมที่จะทำ"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] transition-all"
+              required
             />
           </div>
 
-          {/* Registration Period */}
-          <div>
-            <label className="block text-sm font-semibold text-[#3D3D3D] mb-3">📅 ระยะเวลาการลงทะเบียน</label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs text-[#6B6B6B] mb-1.5">วันที่เปิดรับลงทะเบียน</label>
                 <input
@@ -257,7 +423,8 @@ const ShopWorkshopEdit = () => {
                   name="registrationStartDate"
                   value={form.registrationStartDate}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none"
+                  required
                 />
               </div>
               <div>
@@ -267,51 +434,59 @@ const ShopWorkshopEdit = () => {
                   name="registrationEndDate"
                   value={form.registrationEndDate}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none"
                 />
               </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-[#6B6B6B] mb-1.5">เวลาเริ่มกิจกรรม</label>
+              <input
+                type="time"
+                name="workshopStartTime"
+                value={form.workshopStartTime}
+                onChange={handleChange}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-[#6B6B6B] mb-1.5">เวลาสิ้นสุดกิจกรรม</label>
+              <input
+                type="time"
+                name="workshopEndTime"
+                value={form.workshopEndTime}
+                onChange={handleChange}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none"
+                required
+              />
             </div>
           </div>
 
-          {/* Workshop Time */}
           <div>
-            <label className="block text-sm font-semibold text-[#3D3D3D] mb-3">⏰ ช่วงเวลาทำ Workshop</label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs text-[#6B6B6B] mb-1.5">เวลาเริ่มกิจกรรม</label>
-                <input
-                  type="time"
-                  name="workshopStartTime"
-                  value={form.workshopStartTime}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-[#6B6B6B] mb-1.5">เวลาสิ้นสุดกิจกรรม</label>
-                <input
-                  type="time"
-                  name="workshopEndTime"
-                  value={form.workshopEndTime}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
-                />
-              </div>
-            </div>
+            <label className="block text-sm font-semibold text-[#3D3D3D] mb-3">📆 วันที่จัด Workshop</label>
+            <input
+              type="date"
+              name="workshopDate"
+              value={form.workshopDate}
+              onChange={handleChange}
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none"
+              required
+            />
           </div>
 
-          {/* Location */}
           <div>
             <label className="block text-sm font-semibold text-[#3D3D3D] mb-3">📍 สถานที่</label>
             <div className="space-y-3">
-              <div className="flex gap-4">
+              <div className="flex gap-4 flex-wrap">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
                     name="locationType"
                     value="shop"
                     checked={form.locationType === 'shop'}
-                    onChange={handleChange}
+                    onChange={() => handleLocationRadioChange('shop')}
                     className="w-4 h-4 text-[#E07B39] border-gray-300 focus:ring-[#E07B39]"
                   />
                   <span className="text-sm text-[#3D3D3D]">ใช้สถานที่ร้าน</span>
@@ -322,80 +497,55 @@ const ShopWorkshopEdit = () => {
                     name="locationType"
                     value="custom"
                     checked={form.locationType === 'custom'}
-                    onChange={handleChange}
+                    onChange={() => handleLocationRadioChange('custom')}
                     className="w-4 h-4 text-[#E07B39] border-gray-300 focus:ring-[#E07B39]"
                   />
                   <span className="text-sm text-[#3D3D3D]">ระบุสถานที่เอง</span>
                 </label>
               </div>
               {form.locationType === 'custom' && (
-                <div>
-                  <input
-                    type="text"
-                    name="customLocation"
-                    value={form.customLocation}
-                    onChange={handleChange}
-                    placeholder="ระบุสถานที่จัด Workshop"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
-                  />
-                </div>
+                <input
+                  type="text"
+                  name="customLocation"
+                  value={form.customLocation}
+                  onChange={handleChange}
+                  placeholder="ระบุสถานที่จัด Workshop"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none"
+                  required
+                />
               )}
             </div>
           </div>
 
-          {/* Seat Limit */}
-          <div>
-            <label className="block text-sm font-semibold text-[#3D3D3D] mb-3">👥 จำนวนที่รับ</label>
-            <div>
-              <label className="block text-xs text-[#6B6B6B] mb-1.5">จำนวนที่นั่ง</label>
-              <input
-                type="number"
-                name="seatLimit"
-                value={form.seatLimit}
-                onChange={handleChange}
-                placeholder="เช่น 20"
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
-              />
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs text-[#6B6B6B] mb-1.5">ราคา (บาท)</label>
+                <input
+                  type="number"
+                  name="price"
+                  value={form.price}
+                  onChange={handleChange}
+                  min="0"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-[#6B6B6B] mb-1.5">จำนวนที่นั่ง</label>
+                <input
+                  type="number"
+                  name="seatLimit"
+                  value={form.seatLimit}
+                  onChange={handleChange}
+                  min="1"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none"
+                  required
+                />
+              </div>
           </div>
 
-          {/* Price */}
-          <div>
-            <label className="block text-sm font-semibold text-[#3D3D3D] mb-3">💰 ค่าสมัคร</label>
-            <div>
-              <label className="block text-xs text-[#6B6B6B] mb-1.5">ราคา</label>
-              <input
-                type="number"
-                name="price"
-                value={form.price}
-                onChange={handleChange}
-                placeholder="฿0"
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] focus:border-transparent transition-all"
-              />
-              <p className="text-xs text-[#9CA3AF] mt-1.5">ใส่ 0 ถ้าเป็น Workshop ฟรี</p>
-            </div>
-          </div>
 
-          {/* Workshop Atmosphere */}
-          <div>
-            <label className="block text-sm font-semibold text-[#3D3D3D] mb-3">บรรยากาศ Workshop</label>
-            <div className="grid grid-cols-2 gap-3">
-              {['ไม่ต้องมีพื้นฐาน', 'งานทำมือพื้นฐาน', 'ทำงานร่วมกัน/กลุ่มเล็ก', 'ชวนเพื่อน/ครอบครัว'].map((c) => (
-                <label key={c} className="flex items-center gap-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={form.categories.includes(c)}
-                    onChange={() => toggleCategory(c)}
-                    className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
-                  />
-                  <span className="text-sm text-gray-700">{c}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Submit Button */}
-          <div className="flex justify-center gap-4 pt-4">
+          <div className="flex justify-center gap-4 pt-6">
             <button
               type="button"
               onClick={() => navigate(`/${slug}/shop/workshops/${id}`)}
@@ -406,15 +556,11 @@ const ShopWorkshopEdit = () => {
             <button
               type="submit"
               disabled={saving}
-              className="w-full py-3.5 bg-[#E07B39] hover:bg-[#D66B29] text-white font-semibold rounded-full transition-all disabled:opacity-60 shadow-md hover:shadow-lg hover:scale-[1.02] transform"
+              className="flex-1 py-3.5 bg-[#E07B39] hover:bg-[#D66B29] text-white font-semibold rounded-full transition-all disabled:opacity-60 shadow-md transform hover:scale-[1.01]"
             >
               {saving ? 'กำลังบันทึก...' : 'บันทึกการแก้ไข'}
             </button>
           </div>
-          
-          <p className="text-center text-xs text-[#6B6B6B] mt-3">
-            Workshop ที่แก้ไขจะถูกส่งไปยังแอดมินเพื่อตรวจสอบอีกครั้ง
-          </p>
         </form>
       </div>
     </div>

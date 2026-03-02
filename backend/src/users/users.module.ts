@@ -8,6 +8,7 @@ import { EventSchema } from 'src/events/schemas/event.schema';
 import { Workshop, WorkshopSchema } from 'src/workshops/schemas/workshop.schema';
 import { Shop, ShopSchema } from 'src/shops/schemas/shop.schema';
 import { Community, CommunitySchema } from 'src/communities/schemas/community.schema';
+import { Workshopregistration, WorkshopregistrationSchema } from 'src/workshopregistrations/schemas/workshopregistration.schema';
 import { DashboardModule } from 'src/dashboard/dashboard.module';
 
 @Module({
@@ -19,6 +20,7 @@ import { DashboardModule } from 'src/dashboard/dashboard.module';
       { name: Workshop.name, schema: WorkshopSchema },
       { name: Shop.name, schema: ShopSchema },
       { name: Community.name, schema: CommunitySchema },
+      { name: Workshopregistration.name, schema: WorkshopregistrationSchema },
     ]),
   ],
   controllers: [UsersController],

@@ -12,443 +12,456 @@ import {
   MapPin,
   Building2,
   Bell,
-  ClipboardList
+  ClipboardList,
+  Mail,
+  Phone,
+  MessageCircle,
+  Facebook
 } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
-
-/**
- * Admin Workshop Confirmation - หน้ายืนยัน Workshop พร้อม Modal
- * ตาม Figma Design: Admin-confirm workshop.png
- * 
- * TODO: Backend APIs:
- * - GET /api/workshops/:id - ดึงรายละเอียด Workshop
- * - PATCH /api/workshops/:id/approve - อนุมัติ Workshop
- * - PATCH /api/workshops/:id/reject - ปฏิเสธ Workshop
- */
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import Swal from 'sweetalert2';
+import api from '../../services/api'; 
+import { getShopForAdmin } from '../../services/shopService';
 
 const AdminWorkshopConfirmation = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { ct } = useTranslation();
-  const [showModal, setShowModal] = useState(false);
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [rejectReason, setRejectReason] = useState('');
+  
   const [adminNote, setAdminNote] = useState('');
-  const [loading, setLoading] = useState(false);
 
-  // TODO: Fetch from API
-  const workshop = {
-    id: id || '1',
-    title: 'ย้อมผ้าครามธรรมชาติ',
-    statusLabel: ct('รอการอนุมัติ', 'Pending Approval'),
-    statusColor: '#F4A236',
-    shop: {
-      name: 'บ้านครามโหล่งฮิมคาว',
-      owner: 'คุณสมชาย'
+  const { data: workshopData, isLoading: isFetching } = useQuery({
+    queryKey: ['workshop-detail', id],
+    queryFn: async () => {
+      const res = await api.get(`/management/workshops/${id}`);
+      return res.data?.data || res.data;
     },
-    communityName: 'ชุมชนโหล่งฮิมคาว',
-    date: '15 มกราคม 2568',
-    time: '10:00 - 13:00',
-    location: 'โซน B ซอย 2 (บ้านจำกานฟ้า)',
-    duration: '3 ชม.',
-    price: 450,
-    seats: 30,
-    description: 'Workshop นี้จะพาคุณเรียนรู้กระบวนการย้อมผ้าด้วยสีครามจากธรรมชาติ ตั้งแต่การเตรียมน้ำย้อม การพับผ้าแบบต่างๆ ไปจนถึงการย้อมและการดูแลรักษาผ้าครามให้คงความสวยงาม',
-    requirements: [
-      'เสื้อผ้าที่สามารถเปื้อนได้',
-      'ผ้าขาวสำหรับย้อม (ถ้ามี)',
-      'ถุงมือยาง',
-      'ผ้าเช็ดมือ'
-    ],
-    whatYouWillLearn: [
-      'เรียนรู้ประวัติและความสำคัญของการย้อมผ้าคราม',
-      'เทคนิคการพับผ้าเพื่อสร้างลวดลายต่างๆ',
-      'กระบวนการย้อมผ้าด้วยสีครามธรรมชาติ',
-      'วิธีการดูแลรักษาผ้าครามให้คงสภาพ'
-    ],
-    targetAudience: [
-      'ผู้ที่อยากเรียนรู้การย้อมผ้าครามแบบดั้งเดิม',
-      'นักออกแบบสิ่งทอและงานคราฟต์',
-      'นักท่องเที่ยวที่มองหาประสบการณ์ใหม่'
-    ],
-    atmosphereNotes: [
-      'บรรยากาศสบาย ๆ ในบ้านไม้ของชุมชน',
-      'มีการเสิร์ฟชาสมุนไพรโฮมเมด',
-      'จำกัดจำนวนผู้เข้าร่วมเพื่อดูแลอย่างใกล้ชิด'
-    ],
-    schedule: [
-      { time: '10:00 - 10:30', activity: 'แนะนำ Workshop และประวัติผ้าคราม', detail: 'รู้จักกับผ้าครามและความสำคัญ' },
-      { time: '10:30 - 12:00', activity: 'ฝึกปฏิบัติการพับและย้อมผ้า', detail: 'ลงมือทำจริงกับผ้าของตัวเอง' }
-    ],
-    enrolledHistory: [
-      { date: '10 ม.ค. 2568', user: 'คุณสมหญิง ใจดี', participants: 2, status: 'เข้าร่วมแล้ว' },
-      { date: '3 ม.ค. 2568', user: 'คุณวิชัย รักเรียน', participants: 1, status: 'เข้าร่วมแล้ว' }
-    ],
-    editHistory: [
-      {
-        date: '12 ม.ค. 2568 • 10:20 น.',
-        action: ct('แก้ไขรายละเอียดกำหนดการ', 'Schedule updated'),
-        detail: ct('ปรับเวลาเริ่มต้นให้เร็วขึ้น 30 นาทีเพื่อรองรับกิจกรรมพิเศษ', 'Start time moved 30 minutes earlier for additional activity')
-      },
-      {
-        date: '9 ม.ค. 2568 • 18:45 น.',
-        action: ct('อัปโหลดรูปภาพหน้าปกใหม่', 'Cover image updated'),
-        detail: ct('เพิ่มรูปบรรยากาศย้อมผ้าชุดล่าสุด', 'Added latest workshop ambience photo')
-      }
-    ],
-    notificationHistory: [
-      {
-        date: '11 ม.ค. 2568 • 09:00 น.',
-        channel: 'Email',
-        detail: ct('แจ้งผู้ลงทะเบียนเรื่องการเตรียมอุปกรณ์', 'Sent equipment checklist to registrants')
-      },
-      {
-        date: '8 ม.ค. 2568 • 17:30 น.',
-        channel: 'LINE OA',
-        detail: ct('ส่ง Broadcast แจ้งเตือนรอบสุดท้าย', 'Broadcast reminder about remaining seats')
-      }
-    ]
+    enabled: !!id,
+  });
+
+  const workshopShopId = typeof workshopData?.shopId === 'string'
+    ? workshopData.shopId
+    : workshopData?.shopId?._id || workshopData?.shopId?.id;
+
+  const { data: shopData, isFetching: isFetchingShop, isError: isShopError } = useQuery({
+    queryKey: ['admin-shop-detail', workshopShopId],
+    queryFn: async () => {
+      const res = await getShopForAdmin(workshopShopId);
+      return res?.data?.data || res?.data || res;
+    },
+    enabled: !!workshopShopId,
+    staleTime: 1000 * 60 * 5,
+    onError: () => {
+      Swal.fire({
+        icon: 'warning',
+        title: ct('โหลดข้อมูลร้านค้าไม่สำเร็จ', 'Failed to load shop info'),
+        text: ct('ระบบยังแสดงข้อมูลจาก Workshop ที่ส่งมาให้', 'Showing submitted shop info instead'),
+      });
+    },
+  });
+
+  const invalidateWorkshopCaches = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['community-workshops'] }),
+      queryClient.invalidateQueries({ queryKey: ['community-admin-pending-workshops'] }),
+      queryClient.invalidateQueries({ queryKey: ['workshop-detail', id] }),
+    ]);
   };
 
-  const infoItems = [
-    {
-      label: ct('ร้านค้า', 'Shop'),
-      value: workshop.shop.name,
-      icon: Store
-    },
-    {
-      label: ct('ชุมชน', 'Community'),
-      value: workshop.communityName,
-      icon: Building2
-    },
-    {
-      label: ct('วันจัด Workshop', 'Workshop Date'),
-      value: workshop.date,
-      icon: Calendar
-    },
-    {
-      label: ct('ช่วงเวลา', 'Time'),
-      value: workshop.time,
-      icon: Clock
-    },
-    {
-      label: ct('สถานที่จัดงาน', 'Venue'),
-      value: workshop.location,
-      icon: MapPin
-    },
-    {
-      label: ct('จำนวนที่นั่ง', 'Seats'),
-      value: `${workshop.seats} ${ct('ที่นั่ง', 'seats')}`,
-      icon: Users
-    },
-    {
-      label: ct('ราคาค่าสมัคร', 'Price'),
-      value: `฿${workshop.price}`,
-      icon: DollarSign
-    }
-  ];
-
   const handleApprove = async () => {
-    setLoading(true);
+    const confirm = await Swal.fire({
+      title: ct('ยืนยันการอนุมัติ?', 'Approve this workshop?'),
+      text: ct('Workshops ที่อนุมัติแล้วจะแสดงบนหน้าเว็บไซต์ทันที', 'Approved workshops will immediately appear on the website.'),
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: ct('อนุมัติ', 'Approve'),
+      cancelButtonText: ct('ยกเลิก', 'Cancel'),
+      confirmButtonColor: '#2F7B4D'
+    });
+
+    if (!confirm.isConfirmed) return;
+
     try {
-      // TODO: Call API - PATCH /api/workshops/:id/approve
-      console.log('Approving workshop:', id, 'Note:', adminNote);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      alert(ct('อนุมัติ Workshop สำเร็จ!', 'Workshop approved successfully!'));
+      Swal.fire({
+        title: ct('กำลังอนุมัติ...', 'Approving...'),
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        didOpen: () => Swal.showLoading(),
+      });
+
+      await api.patch(`/management/workshops/${id}`, {
+        approvalStatus: 'ACTIVE',
+        registrationStatus: 'OPEN',
+        adminNote,
+        rejectReason: '',
+      });
+
+      await invalidateWorkshopCaches();
+      Swal.fire({
+        icon: 'success',
+        title: ct('อนุมัติสำเร็จ', 'Workshop approved'),
+        timer: 1800,
+        showConfirmButton: false,
+      });
       navigate('/community-admin/dashboard');
     } catch (error) {
       console.error('Failed to approve:', error);
-      alert(ct('เกิดข้อผิดพลาด', 'An error occurred'));
-    } finally {
-      setLoading(false);
-      setShowModal(false);
+      Swal.fire({
+        icon: 'error',
+        title: ct('อนุมัติไม่สำเร็จ', 'Approval failed'),
+        text: error.response?.data?.message || ct('กรุณาลองใหม่ภายหลัง', 'Please try again later'),
+      });
     }
   };
 
-  const handleReject = async () => {
-    if (!rejectReason.trim()) {
-      alert(ct('กรุณาระบุเหตุผล', 'Please provide a reason'));
-      return;
-    }
+  const handleUpdateStatus = async (mode) => {
+    const { value: reason } = await Swal.fire({
+      title: mode === 'REVISION'
+        ? ct('ขอให้แก้ไขรายละเอียด', 'Request changes')
+        : ct('ปฏิเสธ Workshop', 'Reject workshop'),
+      input: 'textarea',
+      inputLabel: ct('เหตุผล', 'Reason'),
+      inputPlaceholder: ct('ระบุเหตุผลเพื่อแจ้งผู้จัด...', 'Provide a reason...'),
+      inputValidator: (value) => (!value?.trim() ? ct('กรุณาระบุเหตุผล', 'Please provide a reason') : undefined),
+      icon: mode === 'REVISION' ? 'warning' : 'error',
+      showCancelButton: true,
+      confirmButtonText: ct('ยืนยัน', 'Submit'),
+      cancelButtonText: ct('ยกเลิก', 'Cancel'),
+      confirmButtonColor: mode === 'REVISION' ? '#F4A236' : '#C14949',
+    });
 
-    setLoading(true);
+    if (!reason) return;
+
     try {
-      // TODO: Call API - PATCH /api/workshops/:id/reject
-      console.log('Rejecting workshop:', id, 'Reason:', rejectReason);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      alert(ct('ปฏิเสธ Workshop สำเร็จ', 'Workshop rejected successfully'));
+      Swal.fire({
+        title: ct('กำลังบันทึก...', 'Processing...'),
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        didOpen: () => Swal.showLoading(),
+      });
+
+      const approvalStatus = mode === 'REVISION' ? 'CHANGE' : 'REJECTED';
+      await api.patch(`/management/workshops/${id}`, {
+        approvalStatus,
+        rejectReason: reason,
+        adminNote,
+      });
+
+      await invalidateWorkshopCaches();
+      Swal.fire({
+        icon: 'success',
+        title: mode === 'REVISION'
+          ? ct('ส่งคำขอแก้ไขแล้ว', 'Revision request sent')
+          : ct('ปฏิเสธเรียบร้อย', 'Workshop rejected'),
+        timer: 1800,
+        showConfirmButton: false,
+      });
       navigate('/community-admin/dashboard');
     } catch (error) {
-      console.error('Failed to reject:', error);
-      alert(ct('เกิดข้อผิดพลาด', 'An error occurred'));
-    } finally {
-      setLoading(false);
-      setShowRejectModal(false);
+      console.error('Failed to update status:', error);
+      Swal.fire({
+        icon: 'error',
+        title: ct('ดำเนินการไม่สำเร็จ', 'Action failed'),
+        text: error.response?.data?.message || ct('กรุณาลองใหม่ภายหลัง', 'Please try again later'),
+      });
     }
   };
 
+  if (isFetching) {
+    return <div className="min-h-screen flex items-center justify-center bg-[#F5EFE7]">กำลังโหลดข้อมูล...</div>;
+  }
+
+  if (!workshopData) {
+    return <div className="min-h-screen flex items-center justify-center bg-[#F5EFE7]">ไม่พบข้อมูล Workshop</div>;
+  }
+
+  const coverImage = workshopData.image || workshopData.imageUrl;
+  const shopName = workshopData.shopId?.shopName || workshopData.shopName || ct('ไม่ระบุร้านค้า', 'Unknown Shop');
+  const price = Number(workshopData.price) || 0;
+  const capacity = workshopData.capacity ?? workshopData.seatLimit ?? workshopData.seats ?? 0;
+  const currentParticipants = workshopData.current_participants ?? workshopData.currentParticipants ?? workshopData.bookedSeats ?? 0;
+  const remainingSeats = capacity ? Math.max(capacity - currentParticipants, 0) : 0;
+
+  const requirements = Array.isArray(workshopData.requirements) ? workshopData.requirements : [];
+
+  const formatDate = (value) => {
+    if (!value) return ct('ไม่ระบุ', 'N/A');
+    return new Date(value).toLocaleDateString('th-TH', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
+
+  const resolvedWorkshopDate = workshopData.workshopDate || workshopData.date || workshopData.startDate || workshopData.endDate;
+  const formattedWorkshopDate = formatDate(resolvedWorkshopDate);
+
+  const formatTimeRange = () => {
+    if (!workshopData.startTime && !workshopData.endTime) return ct('ไม่ระบุ', 'N/A');
+    return `${workshopData.startTime || '--:--'} - ${workshopData.endTime || '--:--'}`;
+  };
+
+  const shopDataFromWorkshop = typeof workshopData.shopId === 'object' ? workshopData.shopId : null;
+  const mergedShopData = shopData || shopDataFromWorkshop || {};
+
+  const shopInfo = {
+    name: mergedShopData.shopName || workshopData.shopName || ct('ไม่ระบุร้านค้า', 'Unknown Shop'),
+    owner: mergedShopData.owner?.name || mergedShopData.ownerName || mergedShopData.contactName || workshopData.shopOwnerName || ct('ไม่ระบุ', 'N/A'),
+    phone: mergedShopData.owner?.phone || mergedShopData.contact?.phone || mergedShopData.phone || workshopData.shopPhone || '-',
+    line: mergedShopData.contact?.line || mergedShopData.line || '-',
+    facebook: mergedShopData.contact?.facebook || mergedShopData.facebook || '-',
+    address: mergedShopData.address || mergedShopData.location?.address || workshopData.location || ct('ไม่ระบุที่อยู่', 'No address provided'),
+    cover: mergedShopData.coverUrl || mergedShopData.picture || mergedShopData.images?.[0],
+    description: mergedShopData.description || workshopData.shopDescription || ct('ยังไม่มีคำอธิบาย', 'No description'),
+  };
+
+  const shopInfoNote = !workshopShopId
+    ? ct('Workshop นี้ไม่ได้แนบข้อมูลร้านค้าไว้', 'This workshop was submitted without shop info')
+    : isShopError
+      ? ct('แสดงข้อมูลร้านจาก Workshop เนื่องจากโหลดจากระบบไม่สำเร็จ', 'Showing embedded shop data because fetch failed')
+      : null;
+
+  const locationText = workshopData.locationType === 'custom'
+    ? (workshopData.customLocation || workshopData.location || ct('ไม่ระบุสถานที่', 'No venue specified'))
+    : (shopInfo.address || workshopData.location || ct('ใช้สถานที่ร้าน', 'Shop location'));
+
+  const highlightMetrics = [
+    {
+      label: ct('ราคาต่อคน', 'Price per seat'),
+      value: price ? `฿${price.toLocaleString('th-TH')}` : '฿0',
+      icon: DollarSign,
+      accent: 'bg-emerald-50 text-emerald-600',
+    },
+    {
+      label: ct('จำนวนที่นั่ง', 'Seat capacity'),
+      value: capacity ? `${currentParticipants}/${capacity} ${ct('คน', 'people')}` : ct('ไม่ระบุ', 'N/A'),
+      icon: Users,
+      accent: 'bg-blue-50 text-blue-600',
+    },
+    {
+      label: ct('หมวดหมู่', 'Category'),
+      value: workshopData.category || '-',
+      icon: Bell,
+      accent: 'bg-amber-50 text-amber-600',
+    },
+  ];
+
+  const scheduleDetails = [
+    {
+      label: ct('วันที่จัดเวิร์กช็อป', 'Workshop Date'),
+      value: formattedWorkshopDate,
+      icon: Calendar,
+    },
+    {
+      label: ct('เวลาจัดเวิร์กช็อป', 'Workshop Time'),
+      value: formatTimeRange(),
+      icon: Clock,
+    },
+    {
+      label: ct('สถานที่จัดงาน', 'Venue'),
+      value: locationText,
+      icon: MapPin,
+    },
+    {
+      label: ct('ระยะเวลารับสมัคร', 'Registration window'),
+      value: `${formatDate(workshopData.startDate)} - ${formatDate(workshopData.endDate)}`,
+      icon: Building2,
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-[#F5EFE7] py-10">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Back Button */}
+    <div className="min-h-screen bg-[#F5EFE7] py-10 animate-fadeIn">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <button
           onClick={() => navigate('/community-admin/dashboard')}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition"
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-8 transition"
         >
           <ArrowLeft className="h-5 w-5" />
-          {ct('กลับ', 'Back')}
+          {ct('กลับไปหน้า Dashboard', 'Back to Dashboard')}
         </button>
 
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">
-          {ct('ตรวจสอบและอนุมัติ Workshop', 'Review and Approve Workshop')}
-        </h1>
-        <p className="text-gray-600 text-sm mb-8">
-          {ct('ตรวจสอบรายละเอียด Workshop ก่อนอนุมัติให้แสดงบนเว็บไซต์', 'Review workshop details before approving for public display')}
-        </p>
+        <div className="space-y-8">
+          <section className="grid lg:grid-cols-12 gap-6 items-stretch">
+            <div className="lg:col-span-5">
+              <div className="rounded-[32px] border border-[#F2E4D4] bg-white shadow-sm overflow-hidden h-full min-h-[260px] flex items-center justify-center">
+                {coverImage ? (
+                  <img src={coverImage} alt={workshopData.title} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="text-gray-400 text-sm">{ct('ไม่มีรูปภาพหน้าปก', 'No cover image')}</div>
+                )}
+              </div>
+            </div>
 
-        {/* Main Content */}
-        <div className="space-y-6">
-          {/* Hero Card */}
-          <section className="bg-white rounded-[28px] shadow-sm border border-[#F2E4D4] p-6 lg:p-8">
-            <div className="flex flex-col lg:flex-row gap-8">
-              <div className="lg:w-1/2">
-                <div className="w-full h-64 bg-[#F7EFD8] rounded-2xl flex items-center justify-center text-[#C9B799] text-sm font-medium">
-                  {ct('รออัปโหลดรูปภาพหน้าปก', 'Cover image pending upload')}
+            <div className="lg:col-span-7 bg-white rounded-[32px] border border-[#F2E4D4] shadow-sm p-8 lg:p-10 flex flex-col gap-5">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="px-4 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                  {workshopData.approvalStatus === 'PENDING' ? ct('รอการอนุมัติ', 'Pending Approval') : workshopData.approvalStatus}
+                </span>
+                <span className="px-3 py-1 text-xs font-semibold rounded-full bg-[#F5EFE7] text-gray-700 border border-[#F2E4D4]">
+                  {shopInfo.name}
+                </span>
+                <span className="ml-auto px-3 py-1 text-xs font-semibold rounded-full bg-white border border-gray-200 text-gray-500">
+                  {ct('คงเหลือ', 'Seats left')}: {capacity ? remainingSeats : ct('ไม่ระบุ', 'N/A')}
+                </span>
+              </div>
+              <div>
+                <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">{workshopData.title}</h1>
+                <p className="text-gray-600 max-w-3xl">
+                  {workshopData.shortDescription || workshopData.description?.slice(0, 160) || ct('ไม่มีคำอธิบาย', 'No description')}
+                </p>
+                <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500 mt-3">
+                  <MapPin className="h-4 w-4 text-[#B48433]" />
+                  <span className="font-medium text-gray-700">{locationText || ct('ไม่ระบุสถานที่', 'No venue specified')}</span>
+                </div>
+              </div>
+              <div className="grid sm:grid-cols-3 gap-4">
+                {highlightMetrics.map((metric, index) => (
+                  <div key={metric.label} className={`flex items-center gap-3 rounded-2xl border border-[#F2E4D4] bg-white px-4 py-3 animate-slideUp`} style={{ animationDelay: `${0.05 * index}s` }}>
+                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${metric.accent}`}>
+                      <metric.icon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-gray-500">{metric.label}</p>
+                      <p className="text-base font-semibold text-gray-900">{metric.value}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="grid lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-7 space-y-6">
+              <div className="bg-white rounded-[28px] border border-[#F2E4D4] p-6 lg:p-7 shadow-sm">
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">{ct('รายละเอียด Workshop', 'Workshop Details')}</h3>
+                <div className="space-y-4">
+                  <div className="p-5 rounded-2xl bg-[#FFF8EA] border border-[#F4E4C4]">
+                    <p className="text-sm font-semibold text-[#B48433] mb-1">{ct('คำอธิบาย', 'Description')}</p>
+                    <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{workshopData.description || ct('ไม่มีคำอธิบาย', 'No description')}</p>
+                  </div>
+                  {requirements.length > 0 && (
+                    <div className="p-5 rounded-2xl bg-[#FAF5EE] border border-[#E8DCCB]">
+                      <p className="text-sm font-semibold text-[#B48433] mb-3">{ct('สิ่งที่ต้องเตรียมมา', 'Requirements')}</p>
+                      <ul className="space-y-2">
+                        {requirements.map((req, index) => (
+                          <li key={index} className="flex items-center gap-2 text-gray-700">
+                            <CheckCircle className="h-4 w-4 text-[#9CC47F]" />
+                            {req}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <div className="lg:flex-1 space-y-5">
-                <div>
-                  <span
-                    className="inline-flex px-4 py-1 rounded-full text-sm font-semibold"
-                    style={{ backgroundColor: '#FEF3C7', color: workshop.statusColor }}
-                  >
-                    {workshop.statusLabel}
-                  </span>
-                  <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mt-3">
-                    {workshop.title}
-                  </h2>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {ct('จัดโดย', 'Hosted by')} {workshop.shop.name}
-                  </p>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-3">
-                  {infoItems.map((item, index) => (
-                    <div key={index} className="flex items-start gap-3 p-3 rounded-2xl border border-[#F2E4D4] bg-[#FFFCF6]">
-                      <div className="w-9 h-9 rounded-full bg-[#F5E4C8] flex items-center justify-center text-[#B48433]">
-                        <item.icon className="h-4 w-4" />
+              <div className="bg-white rounded-[28px] border border-[#F2E4D4] p-6 lg:p-7 shadow-sm">
+                <h3 className="text-xl font-semibold text-gray-900 mb-5">{ct('ข้อมูลการจัดเวิร์กช็อป', 'Workshop Logistics')}</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  {scheduleDetails.map((item) => (
+                    <div key={item.label} className="flex items-start gap-3 rounded-2xl border border-[#F2E4D4] bg-[#FFFCF6] p-4">
+                      <div className="w-10 h-10 rounded-xl bg-[#F5E4C8] text-[#B48433] flex items-center justify-center">
+                        <item.icon className="h-5 w-5" />
                       </div>
                       <div>
                         <p className="text-xs text-gray-500">{item.label}</p>
-                        <p className="text-sm font-semibold text-gray-900">{item.value}</p>
+                        <p className="text-sm font-semibold text-gray-900 whitespace-pre-line">{item.value}</p>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
-          </section>
 
-          {/* Workshop Details */}
-          <section className="bg-white rounded-[28px] shadow-sm border border-[#F2E4D4] p-6 lg:p-8">
-            <h3 className="text-xl font-semibold text-gray-900 mb-6">{ct('รายละเอียด Workshop', 'Workshop Details')}</h3>
-            <div className="space-y-4">
-              <div className="p-5 rounded-2xl bg-[#FFF8EA] border border-[#F4E4C4]">
-                <p className="text-sm font-semibold text-[#B48433] mb-1">{ct('คำอธิบาย', 'Description')}</p>
-                <p className="text-gray-700 leading-relaxed">{workshop.description}</p>
-              </div>
-
-              <div className="p-5 rounded-2xl bg-[#FAF5EE] border border-[#E8DCCB]">
-                <p className="text-sm font-semibold text-[#B48433] mb-3">{ct('ผู้ที่เข้าร่วม', 'Target Participants')}</p>
-                <ul className="space-y-2">
-                  {workshop.targetAudience.map((audience, index) => (
-                    <li key={index} className="flex items-center gap-2 text-gray-700">
-                      <CheckCircle className="h-4 w-4 text-[#9CC47F]" />
-                      {audience}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="p-5 rounded-2xl bg-[#E9F7EF] border border-[#CCE7D1]">
-                <p className="text-sm font-semibold text-[#2A7F53] mb-3">{ct('บรรยากาศ Workshop', 'Workshop Atmosphere')}</p>
-                <ul className="space-y-2 text-gray-700">
-                  {workshop.atmosphereNotes.map((note, index) => (
-                    <li key={index} className="flex items-start gap-2">
-                      <span className="text-[#2A7F53] font-semibold">•</span>
-                      <span>{note}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </section>
-
-          {/* Edit History */}
-          <section className="bg-white rounded-[28px] shadow-sm border border-[#F2E4D4] p-6 lg:p-8">
-            <div className="flex items-center gap-3 mb-6">
-              <ClipboardList className="h-5 w-5 text-[#B48433]" />
-              <h3 className="text-xl font-semibold text-gray-900">{ct('ประวัติการแก้ไข', 'Edit History')}</h3>
-            </div>
-            <div className="space-y-6">
-              {workshop.editHistory.map((entry, index) => (
-                <div key={index} className="flex gap-4">
-                  <div className="flex flex-col items-center">
-                    <span className="w-3 h-3 rounded-full bg-[#B48433]" />
-                    {index !== workshop.editHistory.length - 1 && <span className="w-px flex-1 bg-[#E5D7C4]" />}
+            <div className="lg:col-span-5 space-y-6">
+              <div className="bg-white rounded-[28px] border border-[#E3D7C6] shadow-sm overflow-hidden">
+                {shopInfo.cover && (
+                  <div className="h-40 w-full bg-gray-100">
+                    <img src={shopInfo.cover} alt={shopInfo.name} className="w-full h-full object-cover" />
                   </div>
-                  <div className="flex-1 p-4 border border-[#F2E4D4] rounded-2xl bg-[#FFFBF4]">
-                    <p className="text-xs text-gray-500">{entry.date}</p>
-                    <p className="text-sm font-semibold text-gray-900 mt-1">{entry.action}</p>
-                    <p className="text-sm text-gray-700 mt-1">{entry.detail}</p>
+                )}
+                <div className="p-6 space-y-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold">{ct('ข้อมูลร้านค้า', 'Shop Information')}</p>
+                    <h3 className="text-2xl font-bold text-gray-900 mt-1">{shopInfo.name}</h3>
+                    <p className="text-sm text-gray-500">{shopInfo.description}</p>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <Users className="h-4 w-4 text-[#B48433]" />
+                      <p className="text-sm text-gray-700">{ct('ผู้ติดต่อ', 'Contact')}: <span className="font-medium">{shopInfo.owner}</span></p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Phone className="h-4 w-4 text-[#B48433]" />
+                      <p className="text-sm text-gray-700 break-all">{shopInfo.phone}</p>
+                    </div>
+                    {shopInfo.line && shopInfo.line !== '-' && (
+                      <div className="flex items-center gap-3">
+                        <MessageCircle className="h-4 w-4 text-[#B48433]" />
+                        <p className="text-sm text-gray-700 break-all">Line: {shopInfo.line}</p>
+                      </div>
+                    )}
+                    {shopInfo.facebook && shopInfo.facebook !== '-' && (
+                      <div className="flex items-center gap-3">
+                        <Facebook className="h-4 w-4 text-[#B48433]" />
+                        <p className="text-sm text-gray-700 break-all">Facebook: {shopInfo.facebook}</p>
+                      </div>
+                    )}
+                    <div className="flex items-start gap-3">
+                      <MapPin className="h-4 w-4 mt-0.5 text-[#B48433]" />
+                      <p className="text-sm text-gray-700">
+                        {shopInfo.address}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              ))}
+              </div>
             </div>
           </section>
 
-          {/* Notifications */}
-          <section className="bg-white rounded-[28px] shadow-sm border border-[#F2E4D4] p-6 lg:p-8">
-            <div className="flex items-center gap-3 mb-6">
-              <Bell className="h-5 w-5 text-[#B48433]" />
-              <h3 className="text-xl font-semibold text-gray-900">{ct('ประวัติการแจ้งผู้ลงทะเบียน', 'Registrant Notifications')}</h3>
-            </div>
-            <div className="space-y-4">
-              {workshop.notificationHistory.map((note, index) => (
-                <div key={index} className="p-4 rounded-2xl border border-[#E8DCCB] bg-[#FFFCF6]">
-                  <p className="text-xs text-gray-500">{note.date}</p>
-                  <p className="text-sm font-semibold text-gray-900">{note.channel}</p>
-                  <p className="text-sm text-gray-700 mt-1">{note.detail}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Admin Actions */}
-          <section className="bg-gradient-to-br from-[#FFF4DA] via-[#FFE7C1] to-[#FFDDB1] rounded-[28px] border border-[#F3C992] p-6 lg:p-8">
+          <section className="bg-gradient-to-br from-[#FFF4DA] via-[#FFE7C1] to-[#FFDDB1] rounded-[28px] border border-[#F3C992] p-6 lg:p-8 shadow-sm">
             <h3 className="text-xl font-semibold text-gray-900 mb-4">{ct('การดำเนินการโดยชุมชน', 'Community Admin Actions')}</h3>
-            <p className="text-sm text-gray-700 mb-6">{ct('กรุณาตรวจสอบข้อมูลและตัดสินใจว่าจะอนุมัติ ขอให้แก้ไข หรือปฏิเสธ Workshop นี้', 'Review every section before deciding to approve, request changes, or reject this workshop')}</p>
             <div className="bg-white/60 border border-[#F3C992] rounded-2xl p-4 mb-6">
-              <p className="text-sm font-semibold text-gray-800 mb-2">{ct('ข้อความถึงผู้จัด', 'Message to facilitator')}</p>
+              <p className="text-sm font-semibold text-gray-800 mb-2">{ct('ข้อความถึงผู้จัด (แสดงให้ผู้จัดเห็น)', 'Note to facilitator')}</p>
               <textarea
                 value={adminNote}
                 onChange={(e) => setAdminNote(e.target.value)}
-                rows={4}
-                className="w-full px-4 py-3 rounded-xl border border-[#E2C9A5] bg-white/80 focus:ring-2 focus:ring-[#E2A754] focus:border-transparent resize-none text-sm"
+                rows={3}
+                className="w-full px-4 py-3 rounded-xl border border-[#E2C9A5] bg-white/80 focus:ring-2 focus:ring-[#E2A754] resize-none text-sm"
                 placeholder={ct('ระบุคำแนะนำเพิ่มเติมเพื่อแจ้งผู้จัดหากจำเป็น...', 'Add instructions for the facilitator if needed...')}
               />
             </div>
+
             <div className="grid md:grid-cols-3 gap-3">
               <button
-                onClick={() => setShowModal(true)}
-                disabled={loading}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-[#2F7B4D] hover:bg-[#25633E] text-white font-semibold rounded-xl transition shadow-sm disabled:opacity-60"
+                onClick={handleApprove}
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-[#2F7B4D] hover:bg-[#25633E] text-white font-semibold rounded-xl transition shadow-sm"
               >
                 <CheckCircle className="h-5 w-5" />
-                {ct('อนุมัติ Workshop', 'Approve Workshop')}
+                {ct('อนุมัติ', 'Approve')}
               </button>
+
               <button
-                onClick={() => navigate(`/community-admin/workshops/${id}/edit`)}
+                onClick={() => handleUpdateStatus('REVISION')}
                 className="flex items-center justify-center gap-2 px-6 py-3 bg-[#F4A236] hover:bg-[#E38E1D] text-white font-semibold rounded-xl transition shadow-sm"
               >
-                {ct('ขอให้แก้ไข', 'Request Changes')}
+                <ClipboardList className="h-5 w-5" />
+                {ct('ขอแก้ไข', 'Request')}
               </button>
+
               <button
-                onClick={() => setShowRejectModal(true)}
-                disabled={loading}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-[#C14949] hover:bg-[#A63A3A] text-white font-semibold rounded-xl transition shadow-sm disabled:opacity-60"
+                onClick={() => handleUpdateStatus('REJECT')}
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-[#C14949] hover:bg-[#A63A3A] text-white font-semibold rounded-xl transition shadow-sm"
               >
                 <XCircle className="h-5 w-5" />
-                {ct('ปฏิเสธ Workshop', 'Reject Workshop')}
+                {ct('ปฏิเสธ', 'Reject')}
               </button>
             </div>
           </section>
         </div>
       </div>
-
-      {/* Approve Confirmation Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="h-10 w-10 text-green-600" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                {ct('ยืนยันการอนุมัติ', 'Confirm Approval')}
-              </h3>
-              <p className="text-gray-600">
-                {ct('คุณต้องการอนุมัติ Workshop นี้ใช่หรือไม่?', 'Do you want to approve this workshop?')}
-              </p>
-            </div>
-
-            <div className="bg-gray-50 rounded-xl p-4 mb-6">
-              <p className="text-sm text-gray-700">
-                <strong>{workshop.title}</strong>
-              </p>
-              <p className="text-xs text-gray-500 mt-1">{ct('โดยร้าน', 'By')} {workshop.shop.name}</p>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowModal(false)}
-                disabled={loading}
-                className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition disabled:opacity-50"
-              >
-                {ct('ยกเลิก', 'Cancel')}
-              </button>
-              <button
-                onClick={handleApprove}
-                disabled={loading}
-                className="flex-1 px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition disabled:opacity-50"
-              >
-                {loading ? ct('กำลังดำเนินการ...', 'Processing...') : ct('ยืนยัน', 'Confirm')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Reject Modal */}
-      {showRejectModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <XCircle className="h-10 w-10 text-red-600" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                {ct('ปฏิเสธ Workshop', 'Reject Workshop')}
-              </h3>
-              <p className="text-gray-600">
-                {ct('กรุณาระบุเหตุผลในการปฏิเสธ', 'Please provide a reason for rejection')}
-              </p>
-            </div>
-
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setShowRejectModal(false);
-                  setRejectReason('');
-                }}
-                disabled={loading}
-                className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition disabled:opacity-50"
-              >
-                {ct('ยกเลิก', 'Cancel')}
-              </button>
-              <button
-                onClick={handleReject}
-                disabled={loading || !rejectReason.trim()}
-                className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition disabled:opacity-50"
-              >
-                {loading ? ct('กำลังดำเนินการ...', 'Processing...') : ct('ยืนยันปฏิเสธ', 'Confirm Reject')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

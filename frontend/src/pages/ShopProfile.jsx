@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams, useOutletContext, useNavigate } from 'react-router-dom';
-import { MapPin, Clock, Phone, Facebook, Globe, ArrowLeft, Store, Calendar, Users, Star } from 'lucide-react';
+import { MapPin, Clock, Phone, Facebook, Globe, ArrowLeft, Store, Calendar, Users, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import WorkshopModal from '../components/WorkshopModal';
 import ETicketModal from '../components/ETicketModal';
 import { getShopById } from '../services/shopService';
+import { workshopService } from '../services/workshopService';
 import { getShopCoverImage } from '../utils/image';
+import { formatNumericDate } from '../utils/dateFormatter';
+import { getWorkshopAvailabilityState } from '../utils/workshopAvailability';
 
 /**
  * ShopProfile - หน้าโปรไฟล์ร้านค้าสำหรับลูกค้า
@@ -25,6 +28,9 @@ const ShopProfile = () => {
   const [showETicket, setShowETicket] = useState(false);
   const [shop, setShop] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [shopWorkshops, setShopWorkshops] = useState([]);
+  const [workshopsLoading, setWorkshopsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const fetchShop = async () => {
@@ -38,6 +44,43 @@ const ShopProfile = () => {
       }
     };
     fetchShop();
+  }, [shopId]);
+
+  const normalizeId = (value) => {
+    if (!value) return null;
+    if (typeof value === 'string') return value;
+    if (typeof value === 'object') {
+      if (value._id) return value._id;
+      if (value.id) return value.id;
+      if (typeof value.toString === 'function') return value.toString();
+    }
+    return String(value);
+  };
+
+  useEffect(() => {
+    const fetchShopWorkshops = async () => {
+      try {
+        setWorkshopsLoading(true);
+        const data = await workshopService.getAllWorkshops();
+        const list = Array.isArray(data) ? data : (data?.data || []);
+        const filtered = list.filter((workshop) => {
+          const workshopShopId = normalizeId(workshop.shopId) || normalizeId(workshop.shop);
+          const matchesShop = workshopShopId === normalizeId(shopId);
+          const isActive = (workshop.approvalStatus || 'ACTIVE') === 'ACTIVE';
+          return matchesShop && isActive;
+        });
+        setShopWorkshops(filtered);
+      } catch (error) {
+        console.error('Failed to fetch shop workshops:', error);
+        setShopWorkshops([]);
+      } finally {
+        setWorkshopsLoading(false);
+      }
+    };
+
+    if (shopId) {
+      fetchShopWorkshops();
+    }
   }, [shopId]);
 
   // Mock shop data for fallback
@@ -68,41 +111,25 @@ const ShopProfile = () => {
     gradient: 'from-orange-300 via-orange-400 to-orange-500'
   };
 
-  // Mock workshops offered by this shop
-  const mockWorkshops = [
-    {
-      id: 1,
-      title: 'ย้อมสีธรรมชาติบนผ้าฝ้าย',
-      title_en: 'Natural Dyeing on Cotton',
-      shortDescription: 'เรียนรู้การย้อมสีธรรมชาติจากพืชท้องถิ่น',
-      shortDescription_en: 'Learn natural dyeing from local plants',
-      price: 350,
-      duration: '2 ชั่วโมง',
-      seatsLeft: 8,
-      rating: 4.8,
-      level: 'เริ่มต้น',
-      badge: 'ยอดนิยม',
-      gradient: 'from-blue-400 via-blue-500 to-blue-600',
-      location: 'ร้านมีนา',
-      location_en: 'Meena Shop'
-    },
-    {
-      id: 2,
-      title: 'สานตะกร้าไม้ไผ่',
-      title_en: 'Bamboo Basket Weaving',
-      shortDescription: 'สานตะกร้าไม้ไผ่ด้วยเทคนิคดั้งเดิม',
-      shortDescription_en: 'Weave bamboo baskets with traditional techniques',
-      price: 250,
-      duration: '3 ชั่วโมง',
-      seatsLeft: 5,
-      rating: 4.9,
-      level: 'กลาง',
-      badge: 'แนะนำ',
-      gradient: 'from-green-400 via-green-500 to-green-600',
-      location: 'ร้านมีนา',
-      location_en: 'Meena Shop'
-    }
-  ];
+  const pageSize = 3;
+  const totalPages = Math.max(1, Math.ceil(shopWorkshops.length / pageSize));
+  const paginatedWorkshops = shopWorkshops.slice((currentPage - 1) * pageSize, (currentPage - 1) * pageSize + pageSize);
+
+  useEffect(() => {
+    setCurrentPage((prev) => {
+      if (shopWorkshops.length === 0) return 1;
+      if (prev < 1) return 1;
+      if (prev > totalPages) return totalPages;
+      return prev;
+    });
+  }, [shopWorkshops.length, totalPages]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [shopId]);
+
+  const handlePrevPage = () => setCurrentPage((prev) => Math.max(1, prev - 1));
+  const handleNextPage = () => setCurrentPage((prev) => Math.min(totalPages, prev + 1));
 
   const handleOpenModal = (workshop) => setActiveWorkshop(workshop);
   const handleCloseModal = () => setActiveWorkshop(null);
@@ -144,6 +171,7 @@ const ShopProfile = () => {
       ? `${displayShop.openTime} - ${displayShop.closeTime}`
       : displayShop.openTime
     : ct('ไม่ระบุ', 'Not specified');
+  const contact = displayShop.contact || {};
 
   return (
     <div className="min-h-screen bg-[#fdf7ef]">
@@ -188,95 +216,106 @@ const ShopProfile = () => {
 
       {/* Hero Section with Shop Info */}
       <section className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Shop Description */}
-          <div className="mb-6">
-            <p className="text-lg text-[#3D3D3D] leading-relaxed">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <div className="mb-8">
+            <p className="text-xl md:text-2xl text-[#3D3D3D] leading-relaxed">
               {displayShop.description || ct('ไม่มีคำอธิบาย', 'No description available')}
             </p>
           </div>
 
-          {/* Contact Info Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
             <div>
-              {/* Contact Info Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                {/* Location */}
-                <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
-                  <MapPin className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+                <div className="flex items-start gap-3 p-5 bg-gray-50 rounded-2xl">
+                  <MapPin className="h-6 w-6 text-orange-500 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-semibold text-[#2F4F2F] mb-1">
+                    <p className="text-base font-semibold text-[#1F2F2F] mb-1">
                       {ct('ที่อยู่', 'Address')}
                     </p>
-                    <p className="text-sm text-[#6B6B6B]">
+                    <p className="text-base text-[#555555]">
                       {shopAddress || ct('ไม่ระบุที่อยู่', 'No address provided')}
                     </p>
                   </div>
                 </div>
 
-                {/* Opening Hours */}
-                <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
-                  <Clock className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />
+                <div className="flex items-start gap-3 p-5 bg-gray-50 rounded-2xl">
+                  <Clock className="h-6 w-6 text-orange-500 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-semibold text-[#2F4F2F] mb-1">
+                    <p className="text-base font-semibold text-[#1F2F2F] mb-1">
                       {ct('เวลาทำการ', 'Opening Hours')}
                     </p>
-                    <p className="text-sm text-[#6B6B6B]">
+                    <p className="text-base text-[#555555]">
                       {formattedHours}
                     </p>
                   </div>
                 </div>
 
-                {/* Phone */}
-                <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
-                  <Phone className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />
+                <div className="flex items-start gap-3 p-5 bg-gray-50 rounded-2xl">
+                  <Phone className="h-6 w-6 text-orange-500 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-semibold text-[#2F4F2F] mb-1">
+                    <p className="text-base font-semibold text-[#1F2F2F] mb-1">
                       {ct('โทรศัพท์', 'Phone')}
                     </p>
-                    <a href={`tel:${displayShop.contact?.phone}`} className="text-sm text-[#E07B39] hover:text-[#D66B29]">
-                      {displayShop.contact?.phone || ct('ไม่ระบุ', 'N/A')}
+                    <a href={`tel:${contact.phone || ''}`} className="text-base text-[#E07B39] hover:text-[#D66B29]">
+                      {contact.phone || ct('ไม่ระบุ', 'N/A')}
                     </a>
                   </div>
                 </div>
 
-                {/* LINE ID */}
-                {displayShop.contact?.line && (
-                  <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
-                    <div className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0 font-bold">L</div>
+                {contact.line && (
+                  <div className="flex items-start gap-3 p-5 bg-gray-50 rounded-2xl">
+                    <div className="h-6 w-6 text-green-500 mt-0.5 flex-shrink-0 font-bold">L</div>
                     <div>
-                      <p className="text-sm font-semibold text-[#2F4F2F] mb-1">
+                      <p className="text-base font-semibold text-[#1F2F2F] mb-1">
                         {ct('LINE ID', 'LINE ID')}
                       </p>
-                      <p className="text-sm text-[#6B6B6B]">
-                        {displayShop.contact.line}
+                      <p className="text-base text-[#555555]">
+                        {contact.line}
                       </p>
                     </div>
                   </div>
                 )}
 
-                {/* Facebook */}
-                {displayShop.contact?.facebook && (
-                  <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
-                    <Facebook className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                {contact.facebook && (
+                  <div className="flex items-start gap-3 p-5 bg-gray-50 rounded-2xl">
+                    <Facebook className="h-6 w-6 text-blue-600 mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="text-sm font-semibold text-[#2F4F2F] mb-1">
+                      <p className="text-base font-semibold text-[#1F2F2F] mb-1">
                         {ct('Facebook', 'Facebook')}
                       </p>
-                      <p className="text-sm text-[#6B6B6B]">
-                        {displayShop.contact.facebook}
+                      <p className="text-base text-[#555555]">
+                        {contact.facebook}
                       </p>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Call to Action Button */}
+              <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm mb-6">
+                <h3 className="text-xl font-semibold text-[#2F4F2F] mb-4 flex items-center gap-2">
+                  <Clock className="h-6 w-6 text-orange-500" />
+                  {ct('เวลาทำการของร้าน', 'Shop hours')}
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base text-[#3D3D3D]">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs uppercase tracking-wide text-gray-400">{ct('เปิดเวลา', 'Opens')}</span>
+                    <span className="font-semibold text-[#1F2937]">
+                      {displayShop.openTime?.trim() || ct('ไม่ระบุ', 'Not specified')}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs uppercase tracking-wide text-gray-400">{ct('ปิดเวลา', 'Closes')}</span>
+                    <span className="font-semibold text-[#1F2937]">
+                      {displayShop.closeTime?.trim() || ct('ไม่ระบุ', 'Not specified')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               <button 
                 onClick={() => navigate(`/${community.slug}/map`)}
-                className="w-full md:w-auto px-8 py-3 bg-[#E07B39] hover:bg-[#D66B29] text-white font-semibold rounded-full transition shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center gap-2"
+                className="w-full md:w-auto px-10 py-4 bg-[#E07B39] hover:bg-[#D66B29] text-white text-lg font-semibold rounded-full transition shadow-lg hover:shadow-xl"
               >
-                <MapPin className="h-5 w-5" />
                 {ct('ดูบนแผนที่', 'View on Map')}
               </button>
             </div>
@@ -299,7 +338,18 @@ const ShopProfile = () => {
             </p>
           </div>
 
-          {mockWorkshops.length === 0 ? (
+          {workshopsLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {Array.from({ length: 2 }).map((_, idx) => (
+                <div key={idx} className="bg-white rounded-3xl border border-gray-100 p-6 animate-pulse">
+                  <div className="h-40 bg-gray-100 rounded-2xl mb-4" />
+                  <div className="h-4 bg-gray-100 rounded w-2/3 mb-2" />
+                  <div className="h-4 bg-gray-100 rounded w-full mb-2" />
+                  <div className="h-4 bg-gray-100 rounded w-1/2" />
+                </div>
+              ))}
+            </div>
+          ) : shopWorkshops.length === 0 ? (
             <div className="text-center py-20 bg-white rounded-2xl border border-gray-200">
               <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500 text-lg">
@@ -307,56 +357,158 @@ const ShopProfile = () => {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {mockWorkshops.map((workshop) => (
-                <div key={workshop.id} className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-lg transition">
-                  <div className={`h-44 bg-gradient-to-br ${workshop.gradient} relative`}>
-                    <div className="absolute top-4 left-4 bg-white/85 text-xs font-semibold text-gray-700 px-3 py-1 rounded-full">
-                      {workshop.badge}
-                    </div>
-                    <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-white">
-                        <Star className="h-4 w-4 text-yellow-300" />
-                        <span className="text-sm font-semibold">{workshop.rating}</span>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {paginatedWorkshops.map((workshop, index) => {
+                  const eventDate = workshop.workshopDate || workshop.date;
+                  const formattedDate = eventDate ? formatNumericDate(eventDate) : ct('ไม่ระบุ', 'N/A');
+                  const timeRange = workshop.startTime
+                    ? `${workshop.startTime}${workshop.endTime ? ` - ${workshop.endTime}` : ''}`
+                    : workshop.endTime
+                      ? workshop.endTime
+                      : ct('ไม่ระบุเวลา', 'Time TBD');
+                  const { seatsLeft, isFull, isRegistrationClosed } = getWorkshopAvailabilityState(workshop);
+                  const locationLabel = workshop.locationType === 'custom'
+                    ? (workshop.customLocation || ct('สถานที่จะประกาศภายหลัง', 'Location to be announced'))
+                    : (workshop.location?.address || shopAddress || displayShop.shopName);
+                  const isRegistrationStatusOpen = workshop.registrationStatus === 'OPEN' || !workshop.registrationStatus;
+                  const isRegistrationOpen = isRegistrationStatusOpen && !isRegistrationClosed;
+
+                  return (
+                    <div
+                      key={workshop._id || `${workshop.title}-${index}`}
+                      className="group bg-white rounded-[32px] border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all hover:-translate-y-1"
+                    >
+                      <div className="relative h-48 overflow-hidden">
+                        {workshop.image ? (
+                          <img
+                            src={workshop.image}
+                            alt={workshop.title}
+                            className="w-full h-full object-cover scale-105 group-hover:scale-110 transition duration-500"
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-orange-200 via-amber-200 to-orange-300 flex items-center justify-center">
+                            <Calendar className="h-12 w-12 text-white/70" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                        <div className="absolute top-4 left-4">
+                          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-white/90 text-gray-800">
+                            {workshop.category || ct('เวิร์กชอป', 'Workshop')}
+                          </span>
+                        </div>
+                        <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-white text-sm font-semibold">
+                          <span className="px-3 py-1 bg-white/20 backdrop-blur rounded-full text-xs">
+                            {formattedDate}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4" />
+                            {timeRange}
+                          </div>
+                        </div>
                       </div>
-                      <span className="text-xs text-white/80">{workshop.level}</span>
-                    </div>
-                  </div>
-                  <div className="p-6 space-y-4">
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <MapPin className="h-4 w-4 text-red-400" />
-                      {ct(workshop.location, workshop.location_en)}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-[#2F4F2F]">{ct(workshop.title, workshop.title_en)}</h3>
-                      <p className="text-sm text-[#6B6B6B]">{ct(workshop.shortDescription, workshop.shortDescription_en)}</p>
-                    </div>
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4 text-gray-400" />
-                        {workshop.duration}
+
+                      <div className="p-6 space-y-4">
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <MapPin className="h-4 w-4 text-orange-500" />
+                          <span className="line-clamp-1">{locationLabel}</span>
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
+                            {workshop.title || ct('ไม่มีชื่อ', 'Untitled')}
+                          </h3>
+                          <p className="text-sm text-gray-600 line-clamp-2">
+                            {workshop.description || ct('ยังไม่มีคำอธิบาย', 'Description coming soon')}
+                          </p>
+                        </div>
+                        <div className="grid grid-cols-1 gap-3 rounded-2xl border border-orange-100 bg-gradient-to-br from-orange-50/60 to-amber-50 p-4">
+                          <div className="flex items-start gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
+                              <Clock className="h-4 w-4 text-orange-500" />
+                            </div>
+                            <div>
+                              <p className="text-xs uppercase tracking-wide text-orange-600">{ct('วันที่จัด', 'Date')}</p>
+                              <p className="text-sm font-semibold text-gray-900">{formattedDate}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
+                              <Users className="h-4 w-4 text-orange-500" />
+                            </div>
+                            <div>
+                              <p className="text-xs uppercase tracking-wide text-orange-600">{ct('ที่นั่งคงเหลือ', 'Seats left')}</p>
+                              <p className="text-sm font-semibold text-gray-900">{Math.max(0, seatsLeft)}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
+                              <Users className="h-4 w-4 text-blue-500" />
+                            </div>
+                            <div>
+                              <p className="text-xs uppercase tracking-wide text-orange-600">{ct('สถานะลงทะเบียน', 'Registration status')}</p>
+                              <p className="text-sm font-semibold text-gray-900">
+                                {isRegistrationClosed
+                                  ? ct('ปิดรับสมัครแล้ว', 'Registration closed')
+                                  : isFull
+                                    ? ct('เต็มแล้ว', 'Full')
+                                    : isRegistrationOpen
+                                      ? ct('เปิดรับสมัคร', 'Open')
+                                      : ct('ปิดรับสมัคร', 'Closed')}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between pt-2">
+                          <div>
+                            <p className="text-sm text-gray-400">{t('workshops.perPerson') || ct('/คน', '/person')}</p>
+                            <p className="text-2xl font-bold text-orange-500">
+                              {workshop.price === 0 ? (t('workshops.free') || ct('ฟรี', 'Free')) : `฿${workshop.price}`}
+                            </p>
+                          </div>
+                          <button
+                            className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-semibold text-white transition shadow-lg ${
+                              (isRegistrationClosed || isFull) ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-500'
+                            }`}
+                            onClick={() => handleOpenModal(workshop)}
+                          >
+                            {isRegistrationClosed
+                              ? ct('ปิดรับสมัครแล้ว', 'Registration closed')
+                              : isRegistrationStatusOpen
+                                ? (isFull ? ct('เต็มแล้ว', 'Full') : (t('workshops.enrollNow') || ct('สมัครเลย', 'Enroll Now')))
+                                : ct('ปิดรับสมัคร', 'Closed')}
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Users className="h-4 w-4 text-gray-400" />
-                        {t('workshops.seatsLeft')}: {workshop.seatsLeft}
-                      </div>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-lg font-semibold text-[#2F4F2F]">
-                        {workshop.price === 0 ? t('workshops.free') : `฿${workshop.price}`}
-                        <span className="text-sm text-[#9CA3AF] ml-1">{t('workshops.perPerson')}</span>
-                      </p>
-                      <button
-                        className="px-5 py-2 bg-[#2F4F2F] text-white rounded-full text-sm font-semibold hover:bg-[#1F3F1F] transition hover:scale-105"
-                        onClick={() => handleOpenModal(workshop)}
-                      >
-                        {t('workshops.enrollNow')}
-                      </button>
-                    </div>
-                  </div>
+                  );
+                })}
+              </div>
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-4 pt-8">
+                  <button
+                    type="button"
+                    onClick={handlePrevPage}
+                    disabled={currentPage === 1}
+                    className={`p-3 rounded-full border transition ${currentPage === 1 ? 'border-gray-100 text-gray-300 cursor-not-allowed' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <span className="text-sm font-semibold text-gray-600">
+                    {ct('หน้า', 'Page')} {currentPage} / {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className={`p-3 rounded-full border transition ${currentPage === totalPages ? 'border-gray-100 text-gray-300 cursor-not-allowed' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </div>
       </section>

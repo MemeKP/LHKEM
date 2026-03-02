@@ -36,7 +36,7 @@ const PlatformAdminLayout = () => {
                 onClick={toggleLanguage}
                 className="px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-orange-500 transition-colors"
               >
-                {language?.toUpperCase() === 'TH' ? 'TH' : 'EN'}
+                {language?.toUpperCase() === 'TH' ? 'TH / EN' : 'EN / TH'}
               </button>
 
               {/* User Info with Dropdown */}

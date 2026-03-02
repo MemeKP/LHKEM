@@ -1,42 +1,121 @@
-import { X, Calendar, Clock, MapPin, Users, Download, MessageCircle, Store } from 'lucide-react';
+import { X, Calendar, Clock, MapPin, Users, Download, MessageCircle, Store, Phone, Facebook, Mail } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { getShopById } from '../services/shopService';
 import { useTranslation } from '../hooks/useTranslation';
+import { formatNumericDate } from '../utils/dateFormatter';
 
 /**
  * E-Ticket Modal - แสดงตั๋วอิเล็กทรอนิกส์หลังจากจองเวิร์กช็อปสำเร็จ
  * ใช้แสดงรายละเอียดการจอง และให้ผู้ใช้สามารถบันทึกภาพหรือติดต่อร้านค้า
  */
 
+const statusStyles = {
+  confirmed: { label: 'ยืนยันแล้ว', fallback: 'Confirmed', bg: 'bg-emerald-100', text: 'text-emerald-700' },
+  active: { label: 'ยืนยันแล้ว', fallback: 'Confirmed', bg: 'bg-emerald-100', text: 'text-emerald-700' },
+  pending: { label: 'รอการยืนยัน', fallback: 'Pending', bg: 'bg-amber-100', text: 'text-amber-700' },
+  completed: { label: 'เสร็จสมบูรณ์', fallback: 'Completed', bg: 'bg-indigo-100', text: 'text-indigo-700' },
+  cancelled: { label: 'ยกเลิกโดยร้านค้า', fallback: 'Cancelled', bg: 'bg-rose-100', text: 'text-rose-700' },
+  cancel: { label: 'ยกเลิกโดยคุณ', fallback: 'Cancelled by you', bg: 'bg-rose-100', text: 'text-rose-700' },
+  rejected: { label: 'ถูกปฏิเสธ', fallback: 'Rejected', bg: 'bg-gray-200', text: 'text-gray-700' },
+};
+
 const ETicketModal = ({ booking, isOpen, onClose }) => {
   const { ct } = useTranslation();
 
   if (!isOpen || !booking) return null;
 
-  const { workshop, guestCount, bookingDate } = booking;
+  const { workshop, guestCount, bookingDate, status: bookingStatus = 'pending' } = booking;
+  const [isContactPanelOpen, setIsContactPanelOpen] = useState(false);
   const bookingDateObj = new Date(bookingDate);
-  const formattedDate = bookingDateObj.toLocaleDateString('th-TH', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  const normalizedStatus = (bookingStatus || 'pending').toLowerCase();
+  const statusVisual = statusStyles[normalizedStatus] || statusStyles.pending;
+
+  const formattedDate = formatNumericDate(bookingDateObj);
+
   const formattedTime = bookingDateObj.toLocaleTimeString('th-TH', {
     hour: '2-digit',
     minute: '2-digit'
   });
 
-  const handleSaveImage = () => {
-    // TODO: Implement screenshot/download functionality
-    alert(ct('กำลังบันทึกภาพ E-ticket...', 'Saving E-ticket image...'));
-  };
+  const workshopShopId = useMemo(() => {
+    if (!workshop) return null;
+    if (typeof workshop.shopId === 'string') return workshop.shopId;
+    if (workshop?.shopId?._id) return workshop.shopId._id;
+    if (workshop?.shop?._id) return workshop.shop._id;
+    return workshop?.shopId || workshop?.shop?.id || null;
+  }, [workshop]);
+
+  const { data: shopResponse } = useQuery({
+    queryKey: ['eticket-shop-detail', workshopShopId],
+    queryFn: () => getShopById(workshopShopId),
+    enabled: Boolean(workshopShopId),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const derivedShop = useMemo(() => {
+    if (shopResponse?.data) return shopResponse.data;
+    if (shopResponse) return shopResponse;
+    if (typeof workshop?.shopId === 'object') return workshop.shopId;
+    return workshop?.shop || null;
+  }, [shopResponse, workshop]);
+
+  const resolvedShopName =
+    derivedShop?.shopName ||
+    workshop?.shopName ||
+    workshop?.host ||
+    ct('ไม่มีชื่อร้าน', 'No Shop');
+
+  const resolvedLocation =
+    workshop?.customLocation ||
+    workshop?.location?.address ||
+    workshop?.location ||
+    derivedShop?.address ||
+    derivedShop?.location?.address ||
+    ct('ยังไม่ระบุสถานที่ กรุณาติดต่อร้านค้า', 'Location not provided, please contact the shop.');
 
   const handleContactShop = () => {
-    // TODO: Implement contact shop functionality (open chat/phone)
-    alert(ct('กำลังเปิดช่องทางติดต่อร้าน...', 'Opening shop contact...'));
+    setIsContactPanelOpen(true);
   };
 
+  const contactInfo = useMemo(() => {
+    const phone =
+      derivedShop?.owner?.phone ||
+      derivedShop?.contact?.phone ||
+      derivedShop?.phone ||
+      workshop?.shopPhone ||
+      '-';
+    const line = derivedShop?.contact?.line || workshop?.shopLine || '';
+    const facebook = derivedShop?.contact?.facebook || workshop?.shopFacebook || '';
+    const email =
+      derivedShop?.owner?.email ||
+      derivedShop?.contact?.email ||
+      derivedShop?.email ||
+      workshop?.shopEmail ||
+      '';
+
+    return {
+      phone,
+      line,
+      facebook,
+      email,
+    };
+  }, [derivedShop, workshop]);
+
+  const hasContactDetail = useMemo(() => {
+    return Object.values(contactInfo).some((value) => value && value !== '-' && value.trim?.());
+  }, [contactInfo]);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8 bg-black/70 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden relative animate-slideUp">
-        {/* Close Button */}
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8 bg-black/70 backdrop-blur-sm animate-fadeIn"
+      onClick={onClose} // Added: Clicking the dark background will call onClose
+    >
+      <div 
+        className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden relative animate-slideUp"
+        onClick={(e) => e.stopPropagation()} // Added: Stops the background click from triggering when clicking inside the white modal
+      >
+        {/* Close Button (Top Right) */}
         <button
           className="absolute top-4 right-4 z-10 p-2 bg-white/90 rounded-full text-gray-600 hover:text-gray-900 transition shadow-md"
           onClick={onClose}
@@ -51,6 +130,12 @@ const ETicketModal = ({ booking, isOpen, onClose }) => {
           <div className="relative">
             <h2 className="text-2xl font-bold mb-2">Workshop</h2>
             <div className="w-16 h-1 bg-white/50 mx-auto rounded-full"></div>
+            <div className="mt-4 flex items-center justify-center">
+              <span className={`inline-flex items-center gap-2 rounded-full px-4 py-1 text-sm font-semibold ${statusVisual.bg} ${statusVisual.text}`}>
+                <span className="h-2 w-2 rounded-full bg-current"></span>
+                {ct(statusVisual.label, statusVisual.fallback)}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -59,11 +144,11 @@ const ETicketModal = ({ booking, isOpen, onClose }) => {
           {/* Workshop Title */}
           <div className="text-center">
             <h3 className="text-xl font-bold text-gray-900 mb-2">
-              {workshop.title}
+              {workshop?.title || ct('ไม่มีชื่อกิจกรรม', 'No Title')}
             </h3>
             <p className="text-sm text-gray-600 flex items-center justify-center gap-2">
               <Store className="h-4 w-4" />
-              {ct('โดยร้าน', 'By')} {workshop.host}
+              {ct('โดยร้าน', 'By')} {resolvedShopName}
             </p>
           </div>
 
@@ -75,8 +160,8 @@ const ETicketModal = ({ booking, isOpen, onClose }) => {
                 <Calendar className="h-5 w-5 text-orange-600" />
               </div>
               <div className="flex-1">
-                <p className="text-xs text-gray-500 mb-1">{ct('วันที่ (Date)', 'Date')}</p>
-                <p className="text-sm font-semibold text-gray-900">{ct('อาทิตย์, 19 ม.ค. 69', 'Sunday, Jan 19, 2026')}</p>
+                <p className="text-xs text-gray-500 mb-1">{ct('วันที่จอง (Booking Date)', 'Booking Date')}</p>
+                <p className="text-sm font-semibold text-gray-900">{formattedDate}</p>
               </div>
             </div>
 
@@ -86,8 +171,8 @@ const ETicketModal = ({ booking, isOpen, onClose }) => {
                 <Clock className="h-5 w-5 text-orange-600" />
               </div>
               <div className="flex-1">
-                <p className="text-xs text-gray-500 mb-1">{ct('เวลา (Time)', 'Time')}</p>
-                <p className="text-sm font-semibold text-gray-900">{ct('10:00 - 11:30 น.', '10:00 - 11:30')}</p>
+                <p className="text-xs text-gray-500 mb-1">{ct('เวลาที่จอง (Booking Time)', 'Booking Time')}</p>
+                <p className="text-sm font-semibold text-gray-900">{formattedTime}</p>
               </div>
             </div>
 
@@ -103,21 +188,6 @@ const ETicketModal = ({ booking, isOpen, onClose }) => {
                 </p>
               </div>
             </div>
-
-            {/* Total Price */}
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 mt-1">
-                <div className="h-5 w-5 flex items-center justify-center">
-                  <span className="text-orange-600 font-bold">฿</span>
-                </div>
-              </div>
-              <div className="flex-1">
-                <p className="text-xs text-gray-500 mb-1">{ct('ค่าใช้จ่ายทั้งหมด', 'Total')}</p>
-                <p className="text-lg font-bold text-orange-600">
-                  {ct('ค่าเข้าชมฟรี', 'Free')} {guestCount} {ct('ท่าน', 'person(s)')}
-                </p>
-              </div>
-            </div>
           </div>
 
           {/* Location */}
@@ -127,31 +197,37 @@ const ETicketModal = ({ booking, isOpen, onClose }) => {
               <div>
                 <p className="text-sm font-semibold text-gray-900 mb-1">{ct('สถานที่', 'Location')}</p>
                 <p className="text-sm text-gray-700">
-                  {ct('โซน B ซอย 2', 'Zone B Soi 2')}
+                  {resolvedLocation}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  {ct('(บ้านจำกานฟ้า) ในชุมชนคาว', '(Baan Jamkan Fah) in Loeng Him Kaw')}
-                </p>
+                {workshop?.shop?.address && !workshop?.customLocation && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    {ct('อ้างอิงจากที่อยู่ร้าน', 'Using shop address as venue')}
+                  </p>
+                )}
               </div>
             </div>
           </div>
 
           {/* Action Buttons */}
           <div className="space-y-3 pt-2">
-            <button
-              onClick={handleSaveImage}
-              className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3.5 rounded-2xl transition shadow-lg"
-            >
-              <Download className="h-5 w-5" />
-              {ct('บันทึกภาพ (Save Ticket)', 'Save Ticket')}
-            </button>
-            
+            <p className="text-sm text-gray-600 text-center">
+              {ct('กรุณาติดต่อทางร้านค้าเพื่อดำเนินการชำระเงิน', 'Please contact the shop to complete payment')}
+            </p>
+
             <button
               onClick={handleContactShop}
               className="w-full flex items-center justify-center gap-2 border-2 border-orange-500 text-orange-600 hover:bg-orange-50 font-semibold py-3.5 rounded-2xl transition"
             >
               <MessageCircle className="h-5 w-5" />
               {ct('ติดต่อร้านค้า', 'Contact Shop')}
+            </button>
+
+            {/* Added: Explicit Close Button at the bottom */}
+            <button
+              onClick={onClose}
+              className="w-full flex items-center justify-center gap-2 text-gray-500 hover:text-gray-700 font-semibold py-2 transition"
+            >
+              {ct('ปิด', 'Close')}
             </button>
           </div>
 
@@ -163,6 +239,80 @@ const ETicketModal = ({ booking, isOpen, onClose }) => {
           </div>
         </div>
       </div>
+      {isContactPanelOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-4" onClick={() => setIsContactPanelOpen(false)}>
+          <div
+            className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 space-y-4 animate-slideUp"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase text-gray-400">{ct('ช่องทางติดต่อร้านค้า', 'Shop contact info')}</p>
+                <p className="text-lg font-semibold text-gray-900">{resolvedShopName}</p>
+              </div>
+              <button
+                onClick={() => setIsContactPanelOpen(false)}
+                className="p-2 text-gray-500 hover:text-gray-700"
+                aria-label={ct('ปิด', 'Close')}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {hasContactDetail ? (
+              <div className="space-y-3">
+                {contactInfo.phone && contactInfo.phone !== '-' && (
+                  <div className="flex items-center gap-3 p-3 rounded-2xl border border-gray-100 bg-gray-50">
+                    <Phone className="h-4 w-4 text-green-600" />
+                    <div>
+                      <p className="text-xs uppercase text-gray-400">{ct('โทรศัพท์', 'Phone')}</p>
+                      <p className="text-sm font-semibold text-gray-900">{contactInfo.phone}</p>
+                    </div>
+                  </div>
+                )}
+                {contactInfo.line && (
+                  <div className="flex items-center gap-3 p-3 rounded-2xl border border-gray-100 bg-gray-50">
+                    <MessageCircle className="h-4 w-4 text-green-600" />
+                    <div>
+                      <p className="text-xs uppercase text-gray-400">Line</p>
+                      <p className="text-sm font-semibold text-gray-900">{contactInfo.line}</p>
+                    </div>
+                  </div>
+                )}
+                {contactInfo.facebook && (
+                  <div className="flex items-center gap-3 p-3 rounded-2xl border border-gray-100 bg-gray-50">
+                    <Facebook className="h-4 w-4 text-blue-600" />
+                    <div>
+                      <p className="text-xs uppercase text-gray-400">Facebook</p>
+                      <p className="text-sm font-semibold text-gray-900 break-all">{contactInfo.facebook}</p>
+                    </div>
+                  </div>
+                )}
+                {contactInfo.email && (
+                  <div className="flex items-center gap-3 p-3 rounded-2xl border border-gray-100 bg-gray-50">
+                    <Mail className="h-4 w-4 text-gray-600" />
+                    <div>
+                      <p className="text-xs uppercase text-gray-400">Email</p>
+                      <p className="text-sm font-semibold text-gray-900 break-all">{contactInfo.email}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="p-4 rounded-2xl border border-yellow-100 bg-yellow-50 text-sm text-yellow-800">
+                {ct('ร้านค้ายังไม่ได้ระบุช่องทางติดต่อ กรุณาใช้หมายเลขโทรศัพท์หลักของชุมชน', 'No contact info provided. Please reach out via the main community channels.')}
+              </div>
+            )}
+
+            <button
+              onClick={() => setIsContactPanelOpen(false)}
+              className="w-full mt-2 py-3 rounded-2xl bg-orange-500 text-white font-semibold hover:bg-orange-600 transition"
+            >
+              {ct('ปิดหน้าต่างนี้', 'Close panel')}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

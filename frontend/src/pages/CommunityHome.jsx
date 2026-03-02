@@ -1,21 +1,31 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useOutletContext, useParams } from 'react-router-dom';
 import { MapPin, Calendar, Heart, Leaf, Users, Palette, HomeIcon, List, BookXIcon, Box, BoxesIcon, Sparkle, SparklesIcon, Clock, Users as UsersIcon, Star, Store, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
-import workshopData from '../data/workshops';
 import WorkshopModal from '../components/WorkshopModal';
 import ETicketModal from '../components/ETicketModal';
 import api from '../services/api';
 import { useQuery } from '@tanstack/react-query';
-import { communityEventsMock } from '../data/eventsMock';
 import { getShopsByCommunity } from '../services/shopService';
 import { getShopCoverImage, resolveImageUrl } from '../utils/image';
+import { getCommunityEvents } from '../services/eventService';
+import { formatNumericDate } from '../utils/dateFormatter';
+import { getWorkshopAvailabilityState } from '../utils/workshopAvailability';
 
 const fetchPopularWorkshops = async (communityId) => {
-  const res = await api.get(`/api/communities/${communityId}/workshops`, {
-    params: { limit: 3 }
-  });
-  return res.data;
+  if (!communityId) return [];
+  try {
+    const res = await api.get('/workshops'); 
+    const allWorkshops = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+    return allWorkshops.filter(w => 
+      w.communityId === communityId || 
+      w.community === communityId || 
+      w.community?._id === communityId
+    );
+  } catch (error) {
+    console.error("Failed to fetch community workshops", error);
+    return [];
+  }
 };
 
 const fetchCommunityMap = async (communityId) => {
@@ -32,40 +42,37 @@ const fetchCommunityMap = async (communityId) => {
 
 const CommunityHome = () => {
   const { t, ct } = useTranslation();
-  const { community } = useOutletContext()
-  const highlights = community.cultural_highlights || []
-  const workshopCount = community.workshops?.length || 0;
+  const { community = {} } = useOutletContext() || {};
+  const highlights = community?.cultural_highlights || [];
   const params = useParams();
   const [activeWorkshop, setActiveWorkshop] = useState(null);
   const [currentBooking, setCurrentBooking] = useState(null);
   const [showETicket, setShowETicket] = useState(false);
   const [shops, setShops] = useState([]);
   const [activeShopCount, setActiveShopCount] = useState(0);
+  const eventsCarouselRef = useRef(null);
+  const [eventScrollState, setEventScrollState] = useState({ canLeft: false, canRight: false });
 
   useEffect(() => {
     const fetchCommunity = async () => {
-      const response = await api.get(`/api/communities/${params.slug}`);
-      const communityData = response.data;
+      try {
+        const response = await api.get(`/api/communities/${params.slug}`);
+        const communityData = response.data;
 
-      // Fetch shops for this community
-      if (communityData._id) {
-        try {
+        if (communityData._id) {
           const shopsData = await getShopsByCommunity(communityData._id);
           setActiveShopCount(Array.isArray(shopsData) ? shopsData.length : 0);
-          setShops((shopsData || []).slice(0, 3)); // Show only first 3 shops on home page
-        } catch (error) {
-          console.error('Failed to fetch shops:', error);
+          setShops((shopsData || []).slice(0, 3)); 
         }
+      } catch (error) {
+        console.error('Failed to fetch community data:', error);
       }
     };
-    fetchCommunity();
+    if (params.slug) fetchCommunity();
   }, [params.slug]);
+  
   const API_URL = import.meta.env.VITE_API_URL;
 
-  // console.log("images: ", `${API_URL}${community.images?.[1]}`)
-  // console.log("DATA:", community)
-
-  // ไว้แมชไอคอนกับชื่อไฮไลท
   const getIcon = (title) => {
     if (!title) return <Star className="h-4 w-4 text-yellow-300" />
     const text = title.toLowerCase()
@@ -84,23 +91,39 @@ const CommunityHome = () => {
   }
 
   const { data: workshops, isLoading } = useQuery({
-    queryKey: ['popular-workshops', community._id],
-    queryFn: () => fetchPopularWorkshops(community._id),
-    enabled: !!community._id,
+    queryKey: ['popular-workshops', community?._id],
+    queryFn: () => fetchPopularWorkshops(community?._id),
+    enabled: !!community?._id,
     initialData: []
   });
 
   const { data: communityMap, isLoading: mapPreviewLoading } = useQuery({
-    queryKey: ['community-map-preview', community._id],
-    queryFn: () => fetchCommunityMap(community._id),
-    enabled: !!community._id,
+    queryKey: ['community-map-preview', community?._id],
+    queryFn: () => fetchCommunityMap(community?._id),
+    enabled: !!community?._id,
     staleTime: 1000 * 60 * 5,
     retry: false,
   });
 
+  const actualWorkshopsArray = Array.isArray(workshops) ? workshops : [];
+
+  const workshopCards = useMemo(() => {
+    if (actualWorkshopsArray.length <= 3) {
+      return actualWorkshopsArray;
+    }
+    const shuffled = [...actualWorkshopsArray];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled.slice(0, 3);
+  }, [actualWorkshopsArray]);
+  
+  const workshopCount = actualWorkshopsArray.length;
+
   const stats = [
     {
-      number: workshopCount > 0 ? `${workshopCount}+` : '0',
+      number: workshopCount > 0 ? `${workshopCount}` : '0',
       label: t('stats.workshops')
     },
     {
@@ -108,20 +131,92 @@ const CommunityHome = () => {
       label: t('stats.locations')
     },
     {
-      // ให้ static เหมือนกันหมด
       number: '100%',
       label: 'Eco-Friendly'
     }
   ];
 
-  const workshopCards = workshopData.slice(0, 3);
-  const eventCards = communityEventsMock.map((ev) => ({
-    ...ev,
-    title: ct(ev.title, ev.title_en),
-    description: ct(ev.description, ev.description_en),
-    date: ct(ev.date, ev.date_en),
-    location: ct(ev.location, ev.location_en),
-  }));
+  //const workshopCards = workshopData.slice(0, 3);
+  const { data: eventsData = [], isLoading: eventsLoading, isError: eventsError } = useQuery({
+    queryKey: ['community-events', community.slug],
+    queryFn: () => getCommunityEvents(community.slug),
+    enabled: !!community.slug,
+  });
+
+  const formattedEvents = useMemo(() => {
+    if (!Array.isArray(eventsData)) return [];
+    const timeOptions = { hour: '2-digit', minute: '2-digit' };
+    const fallbackDate = ct('ไม่ระบุวันที่', 'No date');
+    const fallbackTime = ct('ไม่ระบุเวลา', 'No time info');
+
+    return eventsData.map((event, index) => {
+      const startAt = event.start_at ? new Date(event.start_at) : null;
+      const endAt = event.end_at ? new Date(event.end_at) : null;
+      const gradients = [
+        'from-orange-300 via-orange-400 to-orange-500',
+        'from-amber-300 via-yellow-400 to-orange-400',
+        'from-rose-300 via-pink-400 to-red-400',
+        'from-green-300 via-emerald-400 to-teal-400',
+        'from-blue-300 via-indigo-400 to-purple-400'
+      ];
+      const gradient = gradients[index % gradients.length];
+
+      const startDateLabel = startAt ? formatNumericDate(startAt) : fallbackDate;
+      const endDateLabel = endAt ? formatNumericDate(endAt) : fallbackDate;
+
+      const startTimeLabel = startAt
+        ? startAt.toLocaleTimeString('th-TH', timeOptions)
+        : fallbackTime;
+      const endTimeLabel = endAt
+        ? endAt.toLocaleTimeString('th-TH', timeOptions)
+        : fallbackTime;
+
+      return {
+        _id: event._id,
+        title: ct(event.title, event.title_en),
+        description: ct(event.description, event.description_en),
+        location: typeof event.location === 'string'
+          ? event.location
+          : event.location?.full_address || ct('ไม่ระบุสถานที่', 'No location info'),
+        dateLabel: startDateLabel,
+        startFullLabel: `${startDateLabel} • ${startTimeLabel}`,
+        endFullLabel: `${endDateLabel} • ${endTimeLabel}`,
+        coverImage: Array.isArray(event.images) ? event.images[0] : event.images,
+        gradient,
+      };
+    });
+  }, [eventsData, ct]);
+
+  const updateEventScrollState = () => {
+    const container = eventsCarouselRef.current;
+    if (!container) return;
+    const { scrollLeft, scrollWidth, clientWidth } = container;
+    setEventScrollState({
+      canLeft: scrollLeft > 16,
+      canRight: scrollLeft + clientWidth < scrollWidth - 16,
+    });
+  };
+
+  useEffect(() => {
+    updateEventScrollState();
+  }, [formattedEvents.length]);
+
+  useEffect(() => {
+    window.addEventListener('resize', updateEventScrollState);
+    return () => window.removeEventListener('resize', updateEventScrollState);
+  }, []);
+
+  const handleEventScroll = (direction) => {
+    const container = eventsCarouselRef.current;
+    if (!container) return;
+    const card = container.querySelector('.event-card');
+    const scrollAmount = card ? card.offsetWidth + 24 : container.clientWidth;
+    container.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth',
+    });
+    requestAnimationFrame(updateEventScrollState);
+  };
 
   const handleOpenModal = (workshop) => setActiveWorkshop(workshop);
   const handleCloseModal = () => setActiveWorkshop(null);
@@ -165,24 +260,24 @@ const CommunityHome = () => {
                 </div>
                 <h1 className="text-4xl md:text-5xl font-extrabold leading-tight mb-4 drop-shadow-md">
                   {ct(
-                    community.hero_section?.title || `${community.name} ชุมชนแห่งความสุข`,
-                    community.hero_section?.title_en || `${community.name_en} Community of Happiness`
+                    community?.hero_section?.title || `${community?.name || ''} ชุมชนแห่งความสุข`,
+                    community?.hero_section?.title_en || `${community?.name_en || ''} Community of Happiness`
                   )}
                 </h1>
                 <p className="text-lg text-white/90 mb-8 line-clamp-2 drop-shadow-sm">
-                  {ct(community.hero_section?.description, community.hero_section?.description_en)}
+                  {ct(community?.hero_section?.description, community?.hero_section?.description_en)}
                 </p>
 
                 <div className="flex flex-col sm:flex-row justify-center gap-4">
                   <Link
-                    to={`/${community.slug}/workshops`}
+                    to={`/${community?.slug || ''}/workshops`}
                     className="inline-flex items-center justify-center gap-2 bg-orange-400 hover:bg-orange-500 text-white font-semibold px-8 py-3 rounded-full shadow-lg transition"
                   >
                     <BoxesIcon className="h-5 w-5" />
                     {t('hero.viewWorkshops')}
                   </Link>
                   <Link
-                    to={`/${community.slug}/map`}
+                    to={`/${community?.slug || ''}/map`}
                     className="inline-flex items-center justify-center gap-2 border border-white/40 text-white px-8 py-3 rounded-full hover:bg-white/10 transition backdrop-blur-sm"
                   >
                     <MapPin className="h-5 w-5" />
@@ -204,7 +299,7 @@ const CommunityHome = () => {
       </section>
 
       {/* Image Gallery Section */}
-      {community.images && community.images.length >= 4 && <section className="px-4 py-16 bg-white">
+      {community?.images && community.images.length >= 4 && <section className="px-4 py-16 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-8">
             <span className="inline-block bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-sm font-semibold mb-4">
@@ -215,36 +310,28 @@ const CommunityHome = () => {
             </h2>
           </div>
 
-          {/* Gallery Grid */}
           <div className="grid grid-cols-1 gap-4">
-            {/* Top Large Image - Full Width */}
             <div className="h-[300px] md:h-[400px] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow relative">
               <img
-                // src={`${API_URL}${community.images?.[1]}`}
                  src={resolveImageUrl(community.images?.[1])}
                 alt={ct('รูปภาพหลัก', 'Main Image')}
                 className="w-full h-full object-cover"
               />
             </div>
-
-            {/* Bottom Row: 1 Large Left + 2 Small Right */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[700px] md:h-[850px]">
-              {/* Large image - Left side */}
               <div className="h-full rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow relative">
                 <img
                   //src={`${API_URL}${community.images?.[0]}`}
-                  src={resolveImageUrl(community.images?.[0])}
+                  src={resolveImageUrl(community.images?.[2])}
                   alt={ct('รูปภาพหลัก 2', 'Main Image 2')}
                   className="w-full h-full object-cover"
                 />
               </div>
-
-              {/* Small images - Right side, stacked */}
               <div className="grid grid-rows-2 gap-4 h-full">
                 <div className="rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow relative">
                   <img
                     // src={`${API_URL}${community.images?.[2]}`}
-                    src={resolveImageUrl(community.images?.[2])}
+                    src={resolveImageUrl(community.images?.[3])}
                     alt={ct('รูปภาพ 2', 'Image 2')}
                     className="w-full h-full object-cover"
                   />
@@ -252,7 +339,7 @@ const CommunityHome = () => {
                 <div className="rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow relative">
                   <img
                     // src={`${API_URL}${community.images?.[3]}`}
-                    src={resolveImageUrl(community.images?.[3])}
+                    src={resolveImageUrl(community.images?.[4])}
                     alt={ct('รูปภาพ 3', 'Image 3')}
                     className="w-full h-full object-cover"
                   />
@@ -270,13 +357,13 @@ const CommunityHome = () => {
               {t('homeHighlight.badge')}
             </span>
             <h2 className="text-3xl md:text-4xl font-extrabold text-[#0f2f3a] mb-4 leading-tight">
-              {ct(community.name, community.name_en)}
+              {ct(community?.name || '', community?.name_en || '')}
             </h2>
             <p className="text-gray-600 mb-8 text-lg leading-relaxed line-clamp-4">
-              {ct(community.history, community.history_en)}
+              {ct(community?.history || '', community?.history_en || '')}
             </p>
             <Link
-              to={`/${community.slug}/about`}
+              to={`/${community?.slug || ''}/about`}
               className="inline-flex items-center justify-center gap-2 bg-[#0f2f3a] text-white px-6 py-3 rounded-full hover:bg-[#112f3d] transition shadow-lg"
             >
               {t('homeHighlight.button')}
@@ -306,7 +393,7 @@ const CommunityHome = () => {
         </div>
       </section>
 
-      {/* Map Section - Enlarged */}
+      {/* Map Section */}
       <section className="py-16 px-4 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-8">
@@ -317,7 +404,6 @@ const CommunityHome = () => {
             <p className="text-gray-600 max-w-2xl mx-auto mb-8">{t('explore.description')}</p>
           </div>
 
-          {/* Community Map Preview */}
           <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-gray-200">
             <div className="h-96 md:h-[500px]">
               {mapPreviewLoading ? (
@@ -330,7 +416,6 @@ const CommunityHome = () => {
               ) : communityMap?.map_image ? (
                 <div
                   className="w-full h-full bg-cover bg-center"
-                  //style={{ backgroundImage: `url(${communityMap.map_image})` }}
                   style={{ backgroundImage: `url(${resolveImageUrl(communityMap.map_image)})` }}
                 />
               ) : (
@@ -345,10 +430,9 @@ const CommunityHome = () => {
               )}
             </div>
 
-            {/* View Full Map Button Overlay */}
             <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
               <Link
-                to={`/${community.slug}/map`}
+                to={`/${community?.slug || ''}/map`}
                 className="inline-flex items-center justify-center gap-2 bg-white text-gray-900 px-8 py-4 rounded-full font-semibold hover:bg-gray-100 transition shadow-xl border-2 border-gray-200"
               >
                 <MapPin className="h-5 w-5" />
@@ -362,66 +446,131 @@ const CommunityHome = () => {
       {/* Events Section */}
       <section className="py-20 px-4 bg-white">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <span className="inline-block bg-orange-50 text-orange-600 px-4 py-2 rounded-full text-sm font-semibold mb-4">
-              {ct('กิจกรรมในชุมชน', 'Community Events')}
-            </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-              {ct('กำลังจะจัดขึ้น', 'Upcoming Events')}
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              {ct('ติดตามกิจกรรมพิเศษ เทศกาล และงานชุมชนที่กำลังจะเกิดขึ้น', 'See festivals and special events happening in the community')}
-            </p>
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12 text-center md:text-left">
+            <div>
+              <span className="inline-block bg-orange-50 text-orange-600 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+                {ct('กิจกรรมในชุมชน', 'Community Events')}
+              </span>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+                {ct('กำลังจะจัดขึ้น', 'Upcoming Events')}
+              </h2>
+              <p className="text-gray-600 max-w-2xl">
+                {ct('ติดตามกิจกรรมพิเศษ เทศกาล และงานชุมชนที่กำลังจะเกิดขึ้น', 'See festivals and special events happening in the community')}
+              </p>
+            </div>
+            {formattedEvents.length > 1 && (
+              <div className="flex items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleEventScroll('left')}
+                  disabled={!eventScrollState.canLeft}
+                  className={`p-3 rounded-full border transition ${eventScrollState.canLeft ? 'border-gray-300 text-gray-700 hover:bg-gray-50' : 'border-gray-100 text-gray-300 cursor-not-allowed'}`}
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleEventScroll('right')}
+                  disabled={!eventScrollState.canRight}
+                  className={`p-3 rounded-full border transition ${eventScrollState.canRight ? 'border-gray-300 text-gray-700 hover:bg-gray-50' : 'border-gray-100 text-gray-300 cursor-not-allowed'}`}
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {eventCards.map((event) => (
-              <Link
-                to={`/${community.slug}/events/${event.id}`}
-                key={event.id}
-                className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition block"
+          {eventsLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 3 }).map((_, idx) => (
+                <div key={idx} className="bg-white rounded-2xl border border-gray-200 p-6 animate-pulse">
+                  <div className="h-44 bg-gray-100 rounded-xl mb-4" />
+                  <div className="h-4 bg-gray-100 rounded w-1/2 mb-2" />
+                  <div className="h-4 bg-gray-100 rounded w-3/4 mb-2" />
+                  <div className="h-4 bg-gray-100 rounded w-full" />
+                </div>
+              ))}
+            </div>
+          ) : eventsError ? (
+            <div className="text-center text-red-500">{ct('ไม่สามารถโหลดกิจกรรมได้', 'Unable to load events')}</div>
+          ) : formattedEvents.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-2xl border border-gray-200">
+              <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500">{ct('ยังไม่มีกิจกรรมที่เปิดอยู่ในขณะนี้', 'No open events at the moment')}</p>
+            </div>
+          ) : (
+            <div className="relative">
+              <div
+                ref={eventsCarouselRef}
+                onScroll={updateEventScrollState}
+                className="flex gap-6 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-4"
               >
-                <div className={`relative h-44 bg-gradient-to-br ${event.gradient}`}>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Calendar className="h-16 w-16 text-white/60" />
-                  </div>
-                  <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 rounded-full text-xs font-semibold text-gray-700">
-                    {event.date}
-                  </div>
-                </div>
-                <div className="p-6 space-y-3">
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <Clock className="h-4 w-4" />
-                    <span>{event.time}</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 leading-snug line-clamp-2">
-                    {event.title}
-                  </h3>
-                  <p className="text-sm text-gray-600 line-clamp-2">{event.description}</p>
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <MapPin className="h-4 w-4" />
-                    <span className="line-clamp-1">{event.location}</span>
-                  </div>
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="text-sm font-semibold text-orange-600">{ct('ดูรายละเอียด', 'View details')}</span>
-                    <button className="px-4 py-2 bg-gray-900 text-white rounded-full text-sm font-semibold hover:bg-gray-800 transition">
-                      {ct('เข้าร่วม', 'Join')}
-                    </button>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-
-          <div className="text-center mt-10">
-            <Link
-              to={`/${community.slug}/events`}
-              className="inline-flex items-center justify-center gap-2 px-8 py-3 border-2 border-gray-300 rounded-full text-gray-700 hover:border-gray-400 hover:bg-gray-50 transition font-semibold"
-            >
-              {ct('ดู Event ทั้งหมด', 'View All Events')}
-              <ArrowRight className="h-5 w-5" />
-            </Link>
-          </div>
+                {formattedEvents.map((event) => (
+                  <Link
+                    to={`/${community.slug}/events/${event._id}`}
+                    key={event._id}
+                    className="event-card min-w-[280px] sm:min-w-[340px] lg:min-w-[380px] bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all snap-start"
+                  >
+                    <div className="relative h-48">
+                      {event.coverImage ? (
+                        <img
+                          src={resolveImageUrl(event.coverImage)}
+                          alt={event.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className={`h-full bg-gradient-to-br ${event.gradient} flex items-center justify-center`}>
+                          <Calendar className="h-16 w-16 text-white/70" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+                      <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-white">
+                        <span className="px-3 py-1 bg-white/20 backdrop-blur rounded-full text-xs font-semibold">
+                          {event.dateLabel}
+                        </span>
+                        <div className="flex items-center gap-2 text-sm font-semibold">
+                          <Clock className="h-4 w-4" />
+                          {event.startFullLabel.split('•')[1] || ''}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-6 space-y-4">
+                      <h3 className="text-xl font-bold text-gray-900">{event.title}</h3>
+                      <p className="text-sm text-gray-600 line-clamp-3">{event.description}</p>
+                      <div className="grid grid-cols-1 gap-3 rounded-2xl border border-orange-100 bg-gradient-to-br from-orange-50/60 to-amber-50 p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
+                            <Clock className="h-4 w-4 text-orange-500" />
+                          </div>
+                          <div>
+                            <p className="text-xs uppercase tracking-wide text-orange-600">{ct('เริ่ม', 'Starts')}</p>
+                            <p className="text-sm font-semibold text-gray-900">{event.startFullLabel}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
+                            <Clock className="h-4 w-4 text-orange-500" />
+                          </div>
+                          <div>
+                            <p className="text-xs uppercase tracking-wide text-orange-600">{ct('สิ้นสุด', 'Ends')}</p>
+                            <p className="text-sm font-semibold text-gray-900">{event.endFullLabel}</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <MapPin className="h-4 w-4" />
+                        <span className="line-clamp-1">{event.location}</span>
+                      </div>
+                      <div className="flex items-center justify-between pt-2 text-sm font-semibold text-orange-600">
+                        <span>{ct('ดูรายละเอียด', 'View details')}</span>
+                        <ArrowRight className="h-4 w-4" />
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -440,7 +589,6 @@ const CommunityHome = () => {
             </p>
           </div>
 
-          {/* Shops Grid */}
           <div className="relative">
             {shops.length === 0 ? (
               <div className="text-center py-12 bg-white rounded-2xl border border-gray-200">
@@ -461,7 +609,7 @@ const CommunityHome = () => {
                   const coverImage = getShopCoverImage(shop);
 
                   return (
-                    <Link key={shop._id} to={`/${community.slug}/shops/${shop._id}`} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition group">
+                    <Link key={shop._id} to={`/${community?.slug || ''}/shops/${shop._id}`} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition group">
                       <div className="relative h-48 overflow-hidden">
                         {coverImage ? (
                           <img
@@ -480,9 +628,6 @@ const CommunityHome = () => {
                             </div>
                           </div>
                         )}
-                        <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 rounded-full text-xs font-semibold text-gray-700">
-                          {shop.status === 'ACTIVE' ? ct('เปิดให้บริการ', 'Active') : ct('รอการอนุมัติ', 'Pending')}
-                        </div>
                       </div>
                       <div className="p-6">
                         <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition">
@@ -491,40 +636,12 @@ const CommunityHome = () => {
                         <p className="text-sm text-gray-600 mb-4 line-clamp-2">
                           {shop.description || ct('ไม่มีคำอธิบาย', 'No description')}
                         </p>
-                        {shop.location?.address && (
-                          <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-                            <MapPin className="h-4 w-4" />
-                            <span className="line-clamp-1">{shop.location.address}</span>
-                          </div>
-                        )}
-                        <div className="flex items-center justify-between">
-                          {shop.openTime && (
-                            <div className="flex items-center gap-1 text-sm text-gray-500">
-                              <Clock className="h-4 w-4" />
-                              <span>{shop.openTime}</span>
-                            </div>
-                          )}
-                          <span className="px-4 py-2 bg-gray-900 text-white rounded-full text-sm font-semibold group-hover:bg-gray-800 transition">
-                            {ct('ดูร้าน', 'View Shop')}
-                          </span>
-                        </div>
                       </div>
                     </Link>
                   );
                 })}
               </div>
             )}
-          </div>
-
-          {/* View All Shops Button */}
-          <div className="text-center mt-10">
-            <Link
-              to={`/${community.slug}/shops`}
-              className="inline-flex items-center justify-center gap-2 px-8 py-3 border-2 border-gray-300 rounded-full text-gray-700 hover:border-gray-400 hover:bg-gray-50 transition font-semibold"
-            >
-              {ct('ดูร้านค้าทั้งหมด', 'View All Shops')}
-              <ArrowRight className="h-5 w-5" />
-            </Link>
           </div>
         </div>
       </section>
@@ -552,41 +669,65 @@ const CommunityHome = () => {
           ) : workshopCards.length === 0 ? (
             <div className="text-center py-20">
               <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 text-lg">{t('workshops.noData')}</p>
+              <p className="text-gray-500 text-lg">{t('workshops.noData') || 'No workshops available'}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {workshopCards.map((card) => (
-                <div key={card.id} className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-lg transition">
-                  <div className={`h-44 bg-gradient-to-br ${card.gradient || 'from-gray-200 via-gray-300 to-gray-400'} relative`}>
+              {workshopCards.map((card) => {
+                if (!card) return null;
+                
+                const { seatsLeft, isFull, isRegistrationClosed } = getWorkshopAvailabilityState(card);
+                const isRegistrationOpen = card.registrationStatus === 'OPEN' || !card.registrationStatus;
+                const canEnroll = isRegistrationOpen && !isFull && !isRegistrationClosed;
+
+                const coverImage = resolveImageUrl(
+                  card.image ||
+                  card.imageUrl ||
+                  card.coverImage ||
+                  card.cover ||
+                  (Array.isArray(card.images) ? card.images[0] : null)
+                );
+
+                const cardGradient = 'from-orange-200 to-orange-300';
+
+                return (
+                <div key={card._id} className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-lg transition">
+                  <div className="h-44 relative overflow-hidden">
+                    {coverImage ? (
+                      <img
+                        src={coverImage}
+                        alt={card.title || 'Workshop cover'}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div className={`w-full h-full bg-gradient-to-br ${cardGradient}`}></div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
                     <div className="absolute top-4 left-4 bg-white/85 text-xs font-semibold text-gray-700 px-3 py-1 rounded-full">
-                      {card.badge}
+                      {card.category || 'Workshop'}
                     </div>
                     <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-white">
-                        <Star className="h-4 w-4 text-yellow-300" />
-                        <span className="text-sm font-semibold">{card.rating}</span>
-                      </div>
-                      <span className="text-xs text-white/80">{card.level}</span>
+                      <span className="text-xs text-white/80">
+                        {isRegistrationOpen ? ct('เปิดรับสมัคร', 'Open') : ct('ปิดรับสมัคร', 'Closed')}
+                      </span>
                     </div>
                   </div>
                   <div className="p-6 space-y-4">
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <MapPin className="h-4 w-4 text-red-400" />
-                      {ct(card.location, card.location_en)}
-                    </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{ct(card.title, card.title_en)}</h3>
-                      <p className="text-sm text-gray-600">{ct(card.shortDescription, card.shortDescription_en)}</p>
+                      <h3 className="text-lg font-semibold text-gray-900">{card.title || 'Untitled'}</h3>
+                      <p className="text-sm text-gray-600 line-clamp-2">{card.description}</p>
                     </div>
                     <div className="flex items-center gap-4 text-sm text-gray-500">
                       <div className="flex items-center gap-1">
                         <Clock className="h-4 w-4 text-gray-400" />
-                        {card.duration}
+                        {card.date ? formatNumericDate(card.date) : 'ไม่ระบุ'}
                       </div>
                       <div className="flex items-center gap-1">
                         <UsersIcon className="h-4 w-4 text-gray-400" />
-                        {t('workshops.seatsLeft')}: {card.seatsLeft}
+                        {t('workshops.seatsLeft')}: {Math.max(0, seatsLeft)}
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
@@ -595,19 +736,31 @@ const CommunityHome = () => {
                         <span className="text-sm text-gray-500 ml-1">{t('workshops.perPerson')}</span>
                       </p>
                       <button
-                        className="px-5 py-2 bg-gray-900 text-white rounded-full text-sm font-semibold hover:bg-gray-800 transition"
+                        className={`px-5 py-2 rounded-full text-sm font-semibold transition ${
+                          canEnroll
+                            ? 'bg-gray-900 text-white hover:bg-gray-800'
+                            : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                        }`}
+                        disabled={false}
                         onClick={() => handleOpenModal(card)}
                       >
-                        {t('workshops.enrollNow')}
+                        {isRegistrationClosed
+                          ? ct('ปิดรับสมัครแล้ว', 'Registration closed')
+                          : !isRegistrationOpen
+                            ? ct('ปิดรับสมัคร', 'Closed')
+                            : isFull
+                              ? ct('เต็มแล้ว', 'Full')
+                              : t('workshops.enrollNow')}
                       </button>
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>)}
+              )})}
+            </div>
+          )}
 
           <div className="text-center mt-10">
-            <Link to={`/${community.slug}/workshops`} className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-gray-200 rounded-full text-gray-700 hover:border-gray-400 transition">
+            <Link to={`/${community?.slug || ''}/workshops`} className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-gray-200 rounded-full text-gray-700 hover:border-gray-400 transition">
               {t('workshopSection.viewAll')}
               <span>→</span>
             </Link>

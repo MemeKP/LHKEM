@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+
 import { WorkshopregistrationsService } from './workshopregistrations.service';
 import { CreateWorkshopregistrationDto } from './dto/create-workshopregistration.dto';
 import { UpdateWorkshopregistrationDto } from './dto/update-workshopregistration.dto';
 
-@Controller('workshopregistrations')
+@Controller('enroll')
 export class WorkshopregistrationsController {
   constructor(private readonly workshopregistrationsService: WorkshopregistrationsService) {}
 
@@ -13,7 +14,10 @@ export class WorkshopregistrationsController {
   }
 
   @Get()
-  findAll() {
+  findAll(@Query('userId') userId?: string) {
+    if (userId) {
+      return this.workshopregistrationsService.findByUserId(userId);
+    }
     return this.workshopregistrationsService.findAll();
   }
 
@@ -26,6 +30,11 @@ export class WorkshopregistrationsController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateWorkshopregistrationDto: UpdateWorkshopregistrationDto) {
     return this.workshopregistrationsService.update(id, updateWorkshopregistrationDto);
+  }
+
+  @Patch(':id/cancel')
+  cancel(@Param('id') id: string) {
+    return this.workshopregistrationsService.cancel(id);
   }
 
   @Delete(':id')

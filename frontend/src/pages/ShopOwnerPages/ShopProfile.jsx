@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, MapPin, Clock, Phone, Image as ImageIcon } from 'lucide-react';
+import Swal from 'sweetalert2';
 import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from '../../hooks/useTranslation';
 import { getMyShop, updateShop, uploadShopImage } from '../../services/shopService';
@@ -10,7 +11,7 @@ import { resolveImageUrl } from '../../utils/image';
 
 const ShopProfile = () => {
   const { user } = useAuth();
-  const { t } = useTranslation();
+  const { t, ct } = useTranslation();
   const navigate = useNavigate();
   const { slug } = useParams();
   const [loading, setLoading] = useState(true);
@@ -152,9 +153,36 @@ const ShopProfile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!shopId) {
-      setMessage({ type: 'error', text: 'ไม่พบข้อมูลร้านค้า' });
+      await Swal.fire({
+        icon: 'error',
+        title: ct('ไม่พบข้อมูลร้านค้า', 'Shop data not found'),
+        text: ct('กรุณารีเฟรชหน้าแล้วลองใหม่อีกครั้ง', 'Please refresh the page and try again.'),
+        confirmButtonText: ct('ตกลง', 'OK'),
+      });
+      setMessage({ type: 'error', text: ct('ไม่พบข้อมูลร้านค้า', 'Shop record is missing') });
       return;
     }
+
+    if (shopData.openTime && shopData.closeTime) {
+      const toMinutes = (time) => {
+        const [hour, minute] = time.split(':').map(Number);
+        return hour * 60 + minute;
+      };
+
+      const openMinutes = toMinutes(shopData.openTime);
+      const closeMinutes = toMinutes(shopData.closeTime);
+
+      if (openMinutes >= closeMinutes) {
+        await Swal.fire({
+          icon: 'warning',
+          title: ct('เวลาเปิดต้องน้อยกว่าเวลาปิด', 'Opening time must be before closing time'),
+          text: ct('กรุณาตรวจสอบช่วงเวลาทำการของร้านให้ถูกต้องก่อนบันทึก', 'Please ensure the opening time occurs before the closing time.'),
+          confirmButtonText: ct('เข้าใจแล้ว', 'Understood'),
+        });
+        return;
+      }
+    }
+
     setSaving(true);
     setMessage({ type: '', text: '' });
 
@@ -170,11 +198,29 @@ const ShopProfile = () => {
       if (refreshed.communityId) {
         setCommunityId(refreshed.communityId);
       }
-      setMessage({ type: 'success', text: 'บันทึกข้อมูลสำเร็จ' });
+      setMessage({ type: 'success', text: ct('บันทึกข้อมูลสำเร็จ', 'Saved changes successfully') });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+      await Swal.fire({
+        icon: 'success',
+        title: ct('อัปเดตข้อมูลร้านแล้ว', 'Shop profile updated'),
+        text: ct('ระบบบันทึกการแก้ไขเรียบร้อย และจะแสดงผลทันที', 'Your changes have been saved and are now live.'),
+        confirmButtonText: ct('เยี่ยมเลย', 'Great!'),
+      });
     } catch (error) {
       console.error('Failed to update shop:', error);
-      setMessage({ type: 'error', text: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล' });
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        ct('เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'Something went wrong while saving.');
+      setMessage({ type: 'error', text: Array.isArray(message) ? message.join(', ') : message });
+      await Swal.fire({
+        icon: 'error',
+        title: ct('บันทึกไม่สำเร็จ', 'Save failed'),
+        text: Array.isArray(message)
+          ? message.join('\n')
+          : message,
+        confirmButtonText: ct('ลองใหม่', 'Try again'),
+      });
     } finally {
       setSaving(false);
     }
@@ -191,7 +237,13 @@ const ShopProfile = () => {
   const handleImageUpload = async (type, file) => {
     if (!file) return;
     if (!shopId) {
-      setMessage({ type: 'error', text: 'ไม่พบรหัสร้านค้า โปรดลองใหม่' });
+      setMessage({ type: 'error', text: ct('ไม่พบรหัสร้านค้า โปรดลองใหม่', 'Missing shop ID, please try again') });
+      Swal.fire({
+        icon: 'error',
+        title: ct('ไม่พบรหัสร้านค้า', 'Shop ID not found'),
+        text: ct('กรุณารีเฟรชหน้าแล้วลองอัปโหลดอีกครั้ง', 'Please refresh and upload again.'),
+        confirmButtonText: ct('ตกลง', 'OK'),
+      });
       return;
     }
 
@@ -205,12 +257,28 @@ const ShopProfile = () => {
     try {
       const updatedShop = await uploadShopImage(shopId, type, file);
       setShopData(mapShopToState(updatedShop));
-      setMessage({ type: 'success', text: type === 'icon' ? 'อัปโหลดรูปไอคอนสำเร็จ' : 'อัปโหลดรูปหน้าปกสำเร็จ' });
+      const successText = type === 'icon'
+        ? ct('อัปโหลดรูปไอคอนสำเร็จ', 'Icon image uploaded successfully')
+        : ct('อัปโหลดรูปหน้าปกสำเร็จ', 'Cover image uploaded successfully');
+      setMessage({ type: 'success', text: successText });
       setTimeout(() => setMessage({ type: '', text: '' }), 2500);
+      Swal.fire({
+        icon: 'success',
+        title: ct('อัปโหลดสำเร็จ', 'Upload complete'),
+        text: successText,
+        confirmButtonText: ct('เรียบร้อย', 'Done'),
+      });
     } catch (error) {
       console.error('Failed to upload image', error);
       const errorMsg = error?.response?.data?.message || error.message || 'อัปโหลดรูปไม่สำเร็จ';
-      setMessage({ type: 'error', text: Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg });
+      const formatted = Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg;
+      setMessage({ type: 'error', text: formatted });
+      Swal.fire({
+        icon: 'error',
+        title: ct('อัปโหลดไม่สำเร็จ', 'Upload failed'),
+        text: formatted,
+        confirmButtonText: ct('ลองใหม่', 'Try again'),
+      });
       setShopData((prev) => ({ ...prev, [fieldKey]: previousValue }));
     } finally {
       setUploadingField(null);
@@ -220,7 +288,13 @@ const ShopProfile = () => {
 
   const handleOpenPinModal = () => {
     if (!communityId) {
-      setMessage({ type: 'error', text: 'ยังไม่ทราบชุมชนของร้าน กรุณาตรวจสอบอีกครั้ง' });
+      setMessage({ type: 'error', text: ct('ยังไม่ทราบชุมชนของร้าน กรุณาตรวจสอบอีกครั้ง', 'Community information is missing. Please check again.') });
+      Swal.fire({
+        icon: 'info',
+        title: ct('กรุณาเลือกชุมชนก่อน', 'Select a community first'),
+        text: ct('ระบบต้องทราบชุมชนเพื่อกำหนดตำแหน่งร้านอย่างถูกต้อง', 'We need the community to place your shop pin accurately.'),
+        confirmButtonText: ct('เข้าใจแล้ว', 'Got it'),
+      });
       return;
     }
     setPinModalOpen(true);
@@ -234,10 +308,23 @@ const ShopProfile = () => {
       });
       setSelectedPinPosition(position);
       setPinStatusMessage('บันทึกหมุดตำแหน่งใหม่เรียบร้อย (สถานะ: รออนุมัติ)');
+      await Swal.fire({
+        icon: 'success',
+        title: ct('บันทึกหมุดสำเร็จ', 'Map pin saved'),
+        text: ct('ตำแหน่งใหม่ถูกส่งให้ทีมงานตรวจสอบแล้ว', 'Your new location has been submitted for review.'),
+        confirmButtonText: ct('ดีมาก', 'Nice!'),
+      });
     } catch (error) {
       console.error('Failed to save map pin', error);
       const msg = error?.response?.data?.message || error.message || 'บันทึกหมุดไม่สำเร็จ';
-      setMessage({ type: 'error', text: Array.isArray(msg) ? msg.join(', ') : msg });
+      const formatted = Array.isArray(msg) ? msg.join(', ') : msg;
+      setMessage({ type: 'error', text: formatted });
+      await Swal.fire({
+        icon: 'error',
+        title: ct('บันทึกหมุดไม่สำเร็จ', 'Could not save pin'),
+        text: formatted,
+        confirmButtonText: ct('ลองใหม่', 'Try again'),
+      });
     }
   };
 

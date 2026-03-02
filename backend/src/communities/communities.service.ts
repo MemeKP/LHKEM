@@ -14,6 +14,8 @@ import { LocationDto } from './dto/location.dto';
 import { User } from 'src/users/schemas/users.schema';
 import { UserRole } from 'src/common/enums/user-role.enum';
 import { CommunityView } from 'src/community-view/schemas/community-view.schema';
+import * as path from 'path';
+import { promises as fsPromises } from 'fs';
 
 @Injectable()
 export class CommunitiesService {
@@ -98,12 +100,17 @@ export class CommunitiesService {
       ];
     }
 
+    const adminPermissions = this.parseAdminPermissions(createCommunityDto.admin_permissions);
+
     const dataToSave: any = {
       ...createCommunityDto,
       location: formattedLocation,
       contact_info: contactData,
       hero_section: heroData,
       cultural_highlights: highlights,
+      admin_permissions: {
+        require_workshop_approval: !!adminPermissions.require_workshop_approval,
+      },
     };
 
     await this.fillEnglishFields(dataToSave);
@@ -142,13 +149,6 @@ export class CommunitiesService {
       const users = await this.userModel.find({
         email: { $in: adminsList }
       }).select('_id email role');
-
-      let adminPermissions: any = {};
-      if (createCommunityDto['admin_permissions']) {
-        try { adminPermissions = JSON.parse(createCommunityDto['admin_permissions']); } catch (e) { }
-      }
-
-      // console.log('Users found:', users)
 
       if (users.length > 0) {
         const adminDocs: any[] = []
@@ -259,29 +259,58 @@ export class CommunitiesService {
       // delete updateCommunityDto.admins
     }
 
-    let finalImages: string[] = [];
+    const existingCommunity = await this.communityModel.findById(id).select('images');
+    if (!existingCommunity) {
+      throw new NotFoundException(`Community #${id} not found`);
+    }
 
-    if (updateCommunityDto.existing_images) {
-      if (Array.isArray(updateCommunityDto.existing_images)) {
-        finalImages = [...updateCommunityDto.existing_images];
-      } else {
-        finalImages = [updateCommunityDto.existing_images];
+    const previousImages = Array.isArray(existingCommunity.images)
+      ? [...existingCommunity.images]
+      : [];
+
+    let nextImages: string[] | null = null;
+
+    if (Array.isArray(updateCommunityDto.images)) {
+      nextImages = updateCommunityDto.images;
+    } else {
+      let computedImages: string[] = [];
+
+      if (updateCommunityDto.existing_images) {
+        if (Array.isArray(updateCommunityDto.existing_images)) {
+          computedImages = [...updateCommunityDto.existing_images];
+        } else {
+          computedImages = [updateCommunityDto.existing_images];
+        }
+      }
+
+      if (files && files.length > 0) {
+        const newImagePaths = files.map(file =>
+          `/uploads/communities/${file.filename}`
+        );
+        computedImages = [...newImagePaths, ...computedImages];
+      }
+
+      if (computedImages.length > 0) {
+        nextImages = computedImages;
+        updateCommunityDto.images = computedImages;
       }
     }
 
-    if (files && files.length > 0) {
-      const newImagePaths = files.map(file =>
-        `/uploads/communities/${file.filename}`
-      );
-      finalImages = [...newImagePaths, ...finalImages];
-    }
+    const imagesToDelete = Array.isArray(nextImages)
+      ? previousImages.filter(imagePath => imagePath && !nextImages.includes(imagePath))
+      : [];
 
-    if (files?.length > 0 || updateCommunityDto.existing_images) {
-      updateCommunityDto.images = finalImages;
-    }
+    const adminPermissions = this.parseAdminPermissions(updateCommunityDto.admin_permissions);
+
     const updateData: any = { ...updateCommunityDto };
     delete updateData.admins;
     delete updateData.existing_images;
+
+    if (updateCommunityDto.admin_permissions !== undefined) {
+      updateData.admin_permissions = {
+        require_workshop_approval: !!adminPermissions.require_workshop_approval,
+      };
+    }
 
     // userRole === UserRole.PLATFORM_ADMIN && ถ้าอยากให้มีแค่ platform admin ที่แก้ admin lists ได้
     if (updateCommunityDto.admins !== undefined) {
@@ -304,7 +333,7 @@ export class CommunitiesService {
           user: user._id,
           community: new Types.ObjectId(id),
           assigned_by: new Types.ObjectId(userId),
-          can_approve_workshop: false
+          can_approve_workshop: adminPermissions.can_approve_workshop || false
         }));
 
         await this.communityadminModel.insertMany(adminDocs);
@@ -319,7 +348,61 @@ export class CommunitiesService {
     if (!updatedCommunity) {
       throw new NotFoundException(`Community #${id} not found`);
     }
+
+    if (imagesToDelete.length > 0) {
+      await this.deleteImageFiles(imagesToDelete);
+    }
+
     return updatedCommunity;
+  }
+
+  private async deleteImageFiles(imagePaths: string[]) {
+    if (!Array.isArray(imagePaths) || imagePaths.length === 0) {
+      return;
+    }
+
+    await Promise.all(imagePaths.map(async (imagePath) => {
+      if (!imagePath || /^https?:\/\//i.test(imagePath)) {
+        return;
+      }
+
+      const normalized = imagePath.replace(/^[/\\]+/, '');
+      const absolutePath = path.join(process.cwd(), normalized);
+
+      try {
+        await fsPromises.unlink(absolutePath);
+      } catch (error: any) {
+        if (error?.code !== 'ENOENT') {
+          console.warn(`Failed to delete unused community image at ${absolutePath}:`, error);
+        }
+      }
+    }));
+  }
+
+  private parseAdminPermissions(input: any) {
+    if (!input) return {};
+
+    let value = input;
+    if (typeof input === 'string') {
+      try {
+        value = JSON.parse(input);
+      } catch (error) {
+        value = {};
+      }
+    }
+
+    if (typeof value !== 'object' || value === null) {
+      return {};
+    }
+
+    return {
+      can_approve_workshop: typeof value.can_approve_workshop === 'boolean'
+        ? value.can_approve_workshop
+        : undefined,
+      require_workshop_approval: typeof value.require_workshop_approval === 'boolean'
+        ? value.require_workshop_approval
+        : undefined,
+    };
   }
 
   async addAdminByEmail(communityId: string, email: string, addedById: string) {
@@ -583,7 +666,7 @@ export class CommunitiesService {
       community = await this.communityModel.findOne({ slug: identifier }); 
     }
     if (!community) {
-      throw new NotFoundException('ไม่พบข้อมูลชุมชนนี้');
+      throw new NotFoundException('Community not found');
     }
 
     const shops = await this.shopModel
