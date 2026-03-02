@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Clock, Users, CheckCircle, Calendar, DollarSign, Edit, X, Pause, Eye, Mail, AlertCircle, Edit3 } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Users, CheckCircle, Calendar, DollarSign, Edit, X, Pause, Eye, Mail, AlertCircle, Edit3, MessageSquare } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useMyShop } from '../../hooks/useMyShop';
 import ShopPendingApprovalNotice from '../../components/ShopPendingApprovalNotice';
@@ -142,6 +142,22 @@ const ShopWorkshopDetail = () => {
           <ArrowLeft className="h-4 w-4" /> {ct('กลับ', 'Back')}
         </button>
 
+        {/* 1. NEW: ADMIN NOTE BLOCK (General Note to Facilitator) */}
+        {workshop.adminNote && (
+          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-2xl p-4 flex gap-4 items-start shadow-sm">
+            <div className="p-2 bg-blue-100 rounded-full text-blue-600">
+              <MessageSquare className="h-6 w-6" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-blue-900">{ct('ข้อความจากผู้ดูแลระบบ', 'Note from Admin')}</h3>
+              <p className="text-sm text-blue-800 mt-1 whitespace-pre-wrap">
+                {workshop.adminNote}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* 2. REVISION NEEDED BANNER */}
         {workshop.approvalStatus === 'CHANGE' && (
           <div className="mb-6 bg-orange-50 border border-orange-200 rounded-2xl p-4 flex gap-4 items-start shadow-sm">
             <div className="p-2 bg-orange-100 rounded-full text-orange-600">
@@ -157,6 +173,7 @@ const ShopWorkshopDetail = () => {
           </div>
         )}
 
+        {/* 3. REJECTED BANNER */}
         {workshop.approvalStatus === 'REJECTED' && (
           <div className="mb-6 bg-red-50 border border-red-200 rounded-2xl p-4 flex gap-4 items-start shadow-sm">
             <div className="p-2 bg-red-100 rounded-full text-red-600">
@@ -305,7 +322,6 @@ const ShopWorkshopDetail = () => {
                   </tr>
                 ) : (
                   enrollments.map((e, idx) => {
-                    // Extracting the fetched user data strictly from the new backend process
                     const userData = e.fetchedUser || e;
                     const userName = userData?.name || userData?.displayName || userData?.username || ct('ไม่ระบุชื่อ', 'Unknown Name');
                     const userEmail = userData?.email || '-';

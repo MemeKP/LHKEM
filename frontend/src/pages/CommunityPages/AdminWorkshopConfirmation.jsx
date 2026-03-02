@@ -31,10 +31,12 @@ const AdminWorkshopConfirmation = () => {
   const [loading, setLoading] = useState(false);
   const [rejectType, setRejectType] = useState('REJECT'); 
 
+  // Fetch Workshop Data
   const { data: workshopData, isLoading: isFetching } = useQuery({
     queryKey: ['workshop-detail', id],
     queryFn: async () => {
-      const res = await api.get(`/management/workshops/${id}`);
+      const timestamp = new Date().getTime(); // Cache busting
+      const res = await api.get(`/management/workshops/${id}?_t=${timestamp}`);
       return res.data?.data || res.data;
     },
     enabled: !!id,
@@ -47,7 +49,7 @@ const AdminWorkshopConfirmation = () => {
         approvalStatus: 'ACTIVE',
         registrationStatus: 'OPEN',
         adminNote: adminNote,
-        rejectReason: '' // Clear any previous rejection reasons
+        rejectReason: '' 
       });
       alert(ct('อนุมัติ Workshop สำเร็จ!', 'Workshop approved successfully!'));
       queryClient.invalidateQueries(['community-workshops']);
@@ -71,7 +73,6 @@ const AdminWorkshopConfirmation = () => {
     try {
       const targetStatus = rejectType === 'REVISION' ? 'CHANGE' : 'REJECTED'; 
 
-      // Payload explicitly includes rejectReason
       await api.patch(`/management/workshops/${id}`, {
         approvalStatus: targetStatus,
         rejectReason: rejectReason, 
@@ -102,20 +103,25 @@ const AdminWorkshopConfirmation = () => {
     return <div className="min-h-screen flex items-center justify-center bg-[#F5EFE7]">ไม่พบข้อมูล Workshop</div>;
   }
 
-  const coverImage = workshopData.image || workshopData.imageUrl;
-  const shopName = workshopData.shopId?.shopName || workshopData.shopName || ct('ไม่ระบุร้านค้า', 'Unknown Shop');
-  const price = workshopData.price || 0;
-  const seats = workshopData.seatLimit || workshopData.seats || 0;
-  
+  // ✅ ROBUST SEAT CALCULATION (Uses capacity & current_participants from DB)
+  const totalCapacity = workshopData.capacity || workshopData.seatLimit || 0;
+  const currentBooked = workshopData.current_participants || 0;
+  const seatsAvailable = Math.max(0, totalCapacity - currentBooked);
+
+  // ✅ EXTRACT SHOP DATA FROM POPULATED BACKEND
+  // If backend populates it, shopId becomes an object containing the name
+  const displayShopName = workshopData.shopId?.shopName || workshopData.shopId?.name || workshopData.shopName || workshopData.host || ct('ไม่ระบุร้านค้า', 'Unknown Shop');
+  const coverImage = workshopData.image || workshopData.imageUrl || workshopData.picture;
+
   const requirements = Array.isArray(workshopData.requirements) ? workshopData.requirements : [];
 
   const infoItems = [
-    { label: ct('ร้านค้า', 'Shop'), value: shopName, icon: Store },
-    { label: ct('วันจัด Workshop', 'Workshop Date'), value: workshopData.date ? new Date(workshopData.date).toLocaleDateString('th-TH') : ct('ไม่ระบุ', 'N/A'), icon: Calendar },
-    { label: ct('ช่วงเวลา', 'Time'), value: workshopData.startTime ? `${workshopData.startTime} - ${workshopData.endTime}` : ct('ไม่ระบุ', 'N/A'), icon: Clock },
-    { label: ct('สถานที่จัดงาน', 'Venue'), value: workshopData.location || ct('ไม่ระบุ', 'N/A'), icon: MapPin },
-    { label: ct('จำนวนที่นั่ง', 'Seats'), value: `${seats} ${ct('ที่นั่ง', 'seats')}`, icon: Users },
-    { label: ct('ราคาค่าสมัคร', 'Price'), value: `฿${price}`, icon: DollarSign }
+    { label: ct('ร้านค้า', 'Shop'), value: displayShopName, icon: Store },
+    { label: ct('วันจัด Workshop', 'Workshop Date'), value: workshopData.date || workshopData.startDate ? new Date(workshopData.date || workshopData.startDate).toLocaleDateString('th-TH') : ct('ไม่ระบุ', 'N/A'), icon: Calendar },
+    { label: ct('ช่วงเวลา', 'Time'), value: workshopData.time || (workshopData.startTime ? `${workshopData.startTime} - ${workshopData.endTime}` : ct('ไม่ระบุ', 'N/A')), icon: Clock },
+    { label: ct('สถานที่จัดงาน', 'Venue'), value: workshopData.customLocation || workshopData.location || ct('ไม่ระบุ', 'N/A'), icon: MapPin },
+    { label: ct('จำนวนที่นั่ง', 'Seats'), value: `${seatsAvailable} / ${totalCapacity} ${ct('ที่นั่ง', 'seats')}`, icon: Users },
+    { label: ct('ราคาค่าสมัคร', 'Price'), value: `฿${(workshopData.price || 0).toLocaleString()}`, icon: DollarSign }
   ];
 
   return (
@@ -141,9 +147,9 @@ const AdminWorkshopConfirmation = () => {
           <section className="bg-white rounded-[28px] shadow-sm border border-[#F2E4D4] p-6 lg:p-8">
             <div className="flex flex-col lg:flex-row gap-8">
               <div className="lg:w-1/2">
-                <div className="w-full h-64 bg-[#F7EFD8] rounded-2xl overflow-hidden flex items-center justify-center text-[#C9B799] text-sm font-medium">
+                <div className="w-full h-64 bg-[#F7EFD8] rounded-2xl overflow-hidden flex items-center justify-center text-[#C9B799] text-sm font-medium relative">
                   {coverImage ? (
-                    <img src={coverImage} alt={workshopData.title} className="w-full h-full object-cover" />
+                    <img src={coverImage} alt={workshopData.title} className="w-full h-full object-cover absolute inset-0" />
                   ) : (
                     ct('ไม่มีรูปภาพหน้าปก', 'No cover image')
                   )}
@@ -159,7 +165,7 @@ const AdminWorkshopConfirmation = () => {
                     {workshopData.title}
                   </h2>
                   <p className="text-sm text-gray-500 mt-1">
-                    {ct('จัดโดย', 'Hosted by')} {shopName}
+                    {ct('จัดโดย', 'Hosted by')} {displayShopName}
                   </p>
                 </div>
 
@@ -206,6 +212,7 @@ const AdminWorkshopConfirmation = () => {
 
           <section className="bg-gradient-to-br from-[#FFF4DA] via-[#FFE7C1] to-[#FFDDB1] rounded-[28px] border border-[#F3C992] p-6 lg:p-8">
             <h3 className="text-xl font-semibold text-gray-900 mb-4">{ct('การดำเนินการโดยชุมชน', 'Community Admin Actions')}</h3>
+            
             <div className="bg-white/60 border border-[#F3C992] rounded-2xl p-4 mb-6">
               <p className="text-sm font-semibold text-gray-800 mb-2">{ct('ข้อความถึงผู้จัด (แสดงให้ผู้จัดเห็น)', 'Note to facilitator')}</p>
               <textarea
@@ -255,6 +262,7 @@ const AdminWorkshopConfirmation = () => {
         </div>
       </div>
 
+      {/* Approve Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl">
@@ -285,6 +293,7 @@ const AdminWorkshopConfirmation = () => {
         </div>
       )}
 
+      {/* Reject / Revise Modal */}
       {showRejectModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl">

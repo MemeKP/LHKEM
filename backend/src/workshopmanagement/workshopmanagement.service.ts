@@ -4,6 +4,7 @@ import { Model, Types } from 'mongoose';
 import { Workshop, WorkshopDocument } from '../workshops/schemas/workshop.schema';
 import { CreateWorkshopDto } from '../workshops/dto/create-workshop.dto';
 import { Workshopregistration, WorkshopregistrationDocument } from '../workshopregistrations/schemas/workshopregistration.schema';
+import { User, UserDocument } from '../users/schemas/users.schema';
 // import { UpdateWorkshopDto } from '../workshops/dto/update-workshop.dto';
 
 @Injectable()
@@ -11,6 +12,7 @@ export class WorkshopManagementService {
   constructor(
     @InjectModel(Workshop.name) private readonly workshopModel: Model<WorkshopDocument>,
     @InjectModel(Workshopregistration.name) private readonly registeredWorkshopModel: Model<WorkshopregistrationDocument>,
+    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
   ) {}
 
   // Force PENDING status on creation
@@ -57,36 +59,56 @@ export class WorkshopManagementService {
     }
   }
 
-  async findOne(id: string): Promise<Workshop> {
-    const workshop = await this.workshopModel.findById(id).exec();
-    if (!workshop) {
-      throw new NotFoundException(`Workshop with ID ${id} not found`);
-    }
-    return workshop;
+  async findOne(id: string) {
+    return await this.workshopModel
+      .findById(id)
+      // 👇 ADD THIS LINE 👇
+      .populate('shopId', 'shopName name picture image') 
+      .exec();
   }
 
   async findEnrollmentsByWorkshop(workshopId: string) {
     try {
-      // 1. Type this as 'any' to stop the TypeScript "overload" error
+      // 1. Fetch the raw registration records
       const filter: any = { 
         $or: [
-          { workshopId: new Types.ObjectId(workshopId) },
-          { workshop_id: new Types.ObjectId(workshopId) },
-          { workshopId: workshopId } // Fallback just in case it saved as a raw string
+          { workshopId: workshopId },
+          { workshop_id: workshopId }
         ]
       };
 
-      // 2. Pass the filter and populate the user data
-      return await this.registeredWorkshopModel
+      const enrollments = await this.registeredWorkshopModel
         .find(filter)
-        .populate('userId', 'name email phone') 
         .sort({ createdAt: -1 })
+        .lean() // Use lean to allow modifying the object
         .exec();
+
+      // 2. Manually fetch the user info for each enrollment
+      for (const enrollment of enrollments) {
+        // Cast to 'any' to add the fetchedUser property dynamically
+        const e = enrollment as any;
         
+        // Look for the user ID string in either field
+        const uid = e.user_id || e.userId;
+
+        if (uid) {
+          // Query your users collection using the custom user_id string
+          const userDoc = await this.userModel.findOne({ user_id: uid }).lean().exec();
+          
+          if (userDoc) {
+            e.fetchedUser = {
+              name: userDoc.firstname,
+              email: userDoc.email,
+              phone: userDoc.phone
+            };
+          }
+        }
+      }
+
+      return enrollments;
     } catch (error) {
       console.error('Error fetching enrollments:', error);
-      // If it throws an ObjectId casting error, it will safely return an empty array
-      return []; 
+      return [];
     }
   }
 
