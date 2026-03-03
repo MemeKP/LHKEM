@@ -223,7 +223,7 @@ const ShopDashboard = () => {
           <div className="flex items-center justify-between mt-4 animate-slideUp">
             <div>
               <h1 className="text-3xl font-bold text-[#2F4F2F]">{profile.name || t('shopDashboard.title')}</h1>
-              <p className="text-[#6B6B6B]">{profile.description}</p>
+              <p className="text-[#6B6B6B] whitespace-pre-line wrap-break-word max-h-48 overflow-y-auto scrollbar-thin w-full max-w-2xl ">{profile.description}</p>
             </div>
             <div className="flex flex-col sm:flex-row justify-end gap-3">
               <button
@@ -364,9 +364,9 @@ const ShopDashboard = () => {
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-4 mb-2">
-                          <div className="flex-1">
+                          <div className="flex-1 ">
                             <h3 className="text-lg font-semibold text-[#2F4F2F] mb-1">{workshop.title}</h3>
-                            <p className="text-sm text-[#6B6B6B] line-clamp-2">{workshop.description || ct('ไม่มีคำอธิบาย', 'No description')}</p>
+                            <p className="text-sm text-[#6B6B6B] whitespace-pre-line wrap-break-word max-h-48 overflow-y-auto scrollbar-thin w-full max-w-2xl">{workshop.description || ct('ไม่มีคำอธิบาย', 'No description')}</p>
                           </div>
                           {renderBadges(workshop.approvalStatus, workshop.registrationStatus)}
                         </div>

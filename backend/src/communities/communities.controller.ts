@@ -44,6 +44,9 @@ export class CommunitiesController {
     if (typeof createCommunityDto.admins === 'string') {
       createCommunityDto.admins = JSON.parse(createCommunityDto.admins);
     }
+    if (typeof createCommunityDto.admin_permissions === 'string') {
+      createCommunityDto.admin_permissions = JSON.parse(createCommunityDto.admin_permissions);
+    }
     if (typeof createCommunityDto.image_slots === 'string') {
       try {
         createCommunityDto.image_slots = JSON.parse(createCommunityDto.image_slots);
@@ -172,6 +175,10 @@ export class CommunitiesController {
 
     if (typeof updateCommunityDto.admins === 'string') {
       updateCommunityDto.admins = JSON.parse(updateCommunityDto.admins);
+    }
+
+    if (typeof updateCommunityDto.admin_permissions === 'string') {
+      updateCommunityDto.admin_permissions = JSON.parse(updateCommunityDto.admin_permissions);
     }
 
     if (typeof updateCommunityDto.image_slots === 'string') {

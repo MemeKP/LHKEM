@@ -76,9 +76,15 @@ const ShopWorkshopDetail = () => {
       await api.patch(`/management/workshops/enrollments/${enrollmentId}/status`, { 
         status: newStatus 
       });
-      setEnrollments(prev => prev.map(e => 
-        (e._id === enrollmentId || e.id === enrollmentId) ? { ...e, status: newStatus } : e
-      ));
+      // รีโหลดข้อมูลทั้ง enrollments และ workshop เพื่อให้ตัวเลขที่นั่งถูกต้อง
+      const timestamp = new Date().getTime();
+      const [workshopRes, enrollRes] = await Promise.all([
+        api.get(`/management/workshops/${id}?_t=${timestamp}`),
+        api.get(`/management/workshops/${id}/enrollments?_t=${timestamp}`)
+      ]);
+      setWorkshop(workshopRes.data?.data || workshopRes.data);
+      setEnrollments(Array.isArray(enrollRes.data) ? enrollRes.data : (enrollRes.data?.data || []));
+      
       Swal.close();
       Swal.fire({
         icon: 'success',
@@ -90,10 +96,11 @@ const ShopWorkshopDetail = () => {
     } catch (error) {
       console.error('Failed to update status:', error);
       Swal.close();
+      const errMsg = error?.response?.data?.message || ct('ไม่สามารถอัปเดตสถานะได้ กรุณาลองใหม่อีกครั้ง', 'Unable to update status, please try again.');
       Swal.fire({
         icon: 'error',
         title: ct('อัปเดตไม่สำเร็จ', 'Update failed'),
-        text: ct('ไม่สามารถอัปเดตสถานะได้ กรุณาลองใหม่อีกครั้ง', 'Unable to update status, please try again.'),
+        text: errMsg,
       });
     }
   };
@@ -189,12 +196,20 @@ const ShopWorkshopDetail = () => {
   const capacity = workshop.capacity || workshop.seatLimit || 0;
   
   const confirmedEnrollments = enrollments.filter(e => e.status === 'CONFIRMED' || e.status === 'ยืนยันแล้ว');
+  const pendingEnrollments = enrollments.filter(e => e.status === 'PENDING' || e.status === 'รอตอบรับ');
   
   const participants = confirmedEnrollments.reduce((sum, e) => {
     const bookedSeats = Number(e.slots) || Number(e.guestCount) || 1;
     return sum + bookedSeats;
   }, 0);
+
+  const pendingParticipants = pendingEnrollments.reduce((sum, e) => {
+    const bookedSeats = Number(e.slots) || Number(e.guestCount) || 1;
+    return sum + bookedSeats;
+  }, 0);
   
+  // ที่ว่างที่เหลือ = capacity - confirmed เท่านั้น (pending ยังไม่แน่ว่า confirm)
+  // Shop Owner เห็น breakdown ชัด: confirmed | pending | seats left
   const seatsLeft = Math.max(0, capacity - participants);
   const totalViews = workshop.views || 0; 
 
@@ -433,7 +448,7 @@ const ShopWorkshopDetail = () => {
                 </div>
                 <div className="flex items-center gap-3 text-gray-700">
                   <MapPin className="h-5 w-5 text-gray-400" />
-                  <span className="text-sm">{resolvedLocation}</span>
+                  <span className="text-sm whitespace-pre-line wrap-break-word max-h-24 overflow-y-auto scrollbar-thin w-full max-w-2xl">{resolvedLocation}</span>
                 </div>
                 <div className="flex items-center gap-3 text-gray-700">
                   <Users className="h-5 w-5 text-gray-400" />
@@ -453,7 +468,7 @@ const ShopWorkshopDetail = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 animate-stagger">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6 animate-stagger">
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
@@ -477,12 +492,25 @@ const ShopWorkshopDetail = () => {
               </div>
             </div>
           </div>
+
+          <div className="bg-white rounded-xl shadow-sm p-6 border border-yellow-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-[#6B6B6B] mb-1">{ct('รอยืนยัน', 'Pending')}</p>
+                <p className="text-3xl font-bold text-yellow-600">{pendingParticipants} {ct('คน', 'people')}</p>
+              </div>
+              <div className="p-3 bg-yellow-50 rounded-lg">
+                <AlertCircle className="h-6 w-6 text-yellow-500" />
+              </div>
+            </div>
+          </div>
           
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-[#6B6B6B] mb-1">{ct('ที่ว่างคงเหลือ', 'Seats Left')}</p>
-                <p className="text-3xl font-bold text-[#3D3D3D]">{ct('เหลือ', 'Left')} {seatsLeft} {ct('ที่นั่ง', 'seats')}</p>
+                <p className={`text-3xl font-bold ${seatsLeft === 0 ? 'text-red-600' : 'text-[#3D3D3D]'}`}>{ct('เหลือ', 'Left')} {seatsLeft} {ct('ที่นั่ง', 'seats')}</p>
+                <p className="text-xs text-gray-400 mt-1">{ct(`จาก ${capacity} ที่นั่ง`, `of ${capacity} seats`)}</p>
               </div>
               <div className="p-3 bg-[#FFF7ED] rounded-lg">
                 <Calendar className="h-6 w-6 text-[#E07B39]" />

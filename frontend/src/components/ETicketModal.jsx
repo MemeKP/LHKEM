@@ -108,12 +108,12 @@ const ETicketModal = ({ booking, isOpen, onClose }) => {
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8 bg-black/70 backdrop-blur-sm animate-fadeIn"
-      onClick={onClose} // Added: Clicking the dark background will call onClose
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4 pt-20 sm:p-6 sm:pt-24 bg-black/70 backdrop-blur-sm animate-fadeIn overflow-y-auto"
+      onClick={onClose}
     >
       <div 
-        className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden relative animate-slideUp"
-        onClick={(e) => e.stopPropagation()} // Added: Stops the background click from triggering when clicking inside the white modal
+        className="bg-white w-full max-w-md max-h-[85vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden relative animate-slideUp my-auto"
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button (Top Right) */}
         <button
@@ -125,7 +125,7 @@ const ETicketModal = ({ booking, isOpen, onClose }) => {
         </button>
 
         {/* Orange Header */}
-        <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-8 text-white text-center relative overflow-hidden">
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-8 text-white text-center relative shrink-0">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLW9wYWNpdHk9IjAuMSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-20"></div>
           <div className="relative">
             <h2 className="text-2xl font-bold mb-2">Workshop</h2>
@@ -140,7 +140,7 @@ const ETicketModal = ({ booking, isOpen, onClose }) => {
         </div>
 
         {/* Ticket Content */}
-        <div className="p-6 space-y-5">
+        <div className="p-6 space-y-5 overflow-y-auto flex-1 scrollbar-hide">
           {/* Workshop Title */}
           <div className="text-center">
             <h3 className="text-xl font-bold text-gray-900 mb-2">

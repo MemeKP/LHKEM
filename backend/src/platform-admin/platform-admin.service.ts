@@ -153,34 +153,40 @@ export class PlatformAdminService {
       }
     ];
 
-    // Popular Activity (Bar Chart) นับจาก Workshop 
-    let popularActivityData: any[] = [];
+    // Popular Activity (Bar Chart) - ดึงข้อมูล Event เฉพาะของชุมชนนี้
+    const communityEventTypeRaw = await this.eventModel.aggregate([
+      { $match: { community_id: objectId, status: { $ne: 'CANCELLED' } } },
+      { $group: { _id: "$event_type", count: { $sum: 1 } } }
+    ]);
 
-    if (workshops.length > 0) {
-      const categoryCount = workshops.reduce((acc, curr) => {
-        const cat = curr['category'] || curr['type'] || 'Workshop'; 
-        acc[cat] = (acc[cat] || 0) + 1;
-        return acc;
-      }, {});
+    const totalCommunityEvents = communityEventTypeRaw.reduce((sum, item) => sum + item.count, 0);
 
-      popularActivityData = Object.keys(categoryCount).map(key => ({
-        name: key,
-        value: categoryCount[key]
-      }));
-      
-      // เรียงลำดับมากไปน้อย และตัดเอาแค่ 5 อันดับแรก
-      popularActivityData.sort((a, b) => b.value - a.value).splice(5);
-    }
+    const eventMapping = {
+      'festival': { name: 'เทศกาล', color: '#ef4444' },
+      'workshop': { name: 'Workshop', color: '#f97316' },
+      'cultural': { name: 'กิจกรรมวัฒนธรรม', color: '#3b82f6' },
+      'market': { name: 'ตลาดนัด', color: '#8b5cf6' },
+      'other': { name: 'อื่นๆ', color: '#84cc16' }
+    };
 
-    // ถ้าไม่มี Workshop เลย (หรือ Data ว่าง) ให้ส่งค่า Mock ไปก่อน
+    let popularActivityData: any[] = communityEventTypeRaw.map(item => {
+      const key = (item._id || 'other').toLowerCase();
+      const cat = eventMapping[key] || eventMapping['other'];
+      const percentage = totalCommunityEvents > 0 ? (item.count / totalCommunityEvents) * 100 : 0;
+
+      return {
+        name: cat.name,
+        count: item.count,
+        value: item.count,
+        percentage: parseFloat(percentage.toFixed(1)),
+        color: cat.color
+      };
+    }).sort((a, b) => b.count - a.count);
+
     if (popularActivityData.length === 0) {
-      popularActivityData = [
-        { name: 'Craft', value: 12 },
-        { name: 'Cooking', value: 8 },
-        { name: 'Culture', value: 6 },
-        { name: 'Nature', value: 4 }
-      ];
+      popularActivityData = [{ name: 'ไม่มีข้อมูล', count: 0, value: 0, percentage: 0, color: '#e5e7eb' }];
     }
+
 
     // Participant Types (Pie Chart) - Mock ไปก่อน
     const localCount = shops.length + adminDocs.length; // ร้านค้า + แอดมิน = คนพื้นที่

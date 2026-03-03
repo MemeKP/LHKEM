@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, MapPin, Store, Users, Calendar, TrendingUp, AlertCircle, CheckCircle, Edit, XCircle, UserPlus } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend, Tooltip, LabelList } from 'recharts';
 import api from '../../services/api';
 import { useQuery } from '@tanstack/react-query';
 import Swal from 'sweetalert2';
@@ -138,59 +138,6 @@ const handleDeleteAdmin = async (adminId, adminEmail) => {
     }
   }, [communities]);
 
-
-  // useEffect(() => {
-  //   // Mock community data
-  //   const mockCommunity = {
-  //     id: id,
-  //     name: 'ชุมชนโหล่งฮิมคาว',
-  //     location: 'เชียงใหม่',
-  //     locationBadge: 'กำลังดำเนินการ',
-  //     description: 'ชุมชนท้องถิ่นที่มีวัฒนธรรมและประเพณีที่เก่าแก่ มีการทำงานร่วมกันของชาวบ้านในการอนุรักษ์วัฒนธรรม .slow life',
-  //     stats: {
-  //       shops: { current: 3, total: 4 },
-  //       admins: 3,
-  //       workshops: 18,
-  //       participants: 334,
-  //       growth: '+25%'
-  //     },
-  //     alerts: [
-  //       { type: 'warning', message: 'ร้านหนึ่งยังไม่ได้ยืนยันตัวตนภายใน 45 วัน', time: '15 นาทีที่แล้ว' },
-  //       { type: 'success', message: 'Workshop ได้รับอนุมัติแล้ว 75%', time: 'ก่อนหน้านี้' }
-  //     ],
-  //     shopsList: [
-  //       { name: 'ร้านหนึ่งในชุมชนหมู่บ้าน', workshops: 8, members: 124, status: 'active' },
-  //       { name: 'ร้านหนึ่งในชุมชนหมู่บ้าน', workshops: 6, members: 88, status: 'active' },
-  //       { name: 'ร้านหนึ่งในชุมชนหมู่บ้าน', workshops: 4, members: 67, status: 'active' },
-  //       { name: 'ร้านหนึ่งในชุมชนหมู่บ้าน', workshops: 2, members: 45, status: 'pending' }
-  //     ],
-  //     workshopsEvents: [
-  //       { type: 'workshop', label: 'Workshop ทั้งหมด', count: 18, color: 'green' },
-  //       { type: 'pending', label: 'รอการอนุมัติ', count: 3, color: 'orange' },
-  //       { type: 'ongoing', label: 'กำลังดำเนินการ', count: 5, color: 'orange' },
-  //       { type: 'completed', label: 'เสร็จสิ้น', count: 1, color: 'gray' }
-  //     ],
-  //     admins: [
-  //       { name: 'กฤษณพงศ์ ไชย', email: 'krissapong@gmail.com', role: 'Community Admin', joinDate: '2567' },
-  //       { name: 'กฤษณพงศ์ สุขสันต์', email: 'krissapong@gmail.com', role: 'Community Admin', joinDate: '2567' },
-  //       { name: 'กฤษณพงศ์ วิจิตร', email: 'krissapong@gmail.com', role: 'Community Admin', joinDate: '2567' }
-  //     ],
-  //     participantTypeData: [
-  //       { name: 'คนในพื้นที่', value: 60, color: '#16a34a' },
-  //       { name: 'นักท่องเที่ยว', value: 40, color: '#f97316' }
-  //     ],
-  //     popularActivityData: [
-  //       { name: 'แกะสลัก', value: 5 },
-  //       { name: 'เครื่องปั้น', value: 8 },
-  //       { name: 'ทำเนียม', value: 7 },
-  //       { name: 'วัฒนธรรม', value: 2 }
-  //     ]
-  //   };
-
-  //   setCommunity(mockCommunity);
-  // }, [id]);
-
-
   const StatCard = ({ icon: Icon, value, label, sublabel, color = 'orange' }) => (
     <div className="bg-white rounded-xl p-6 shadow-sm">
       <div className="flex items-center justify-between mb-2">
@@ -316,30 +263,7 @@ const handleDeleteAdmin = async (adminId, adminEmail) => {
           />
         </div>
 
-        {/* Alert Boxes */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {community?.alerts.map((alert, index) => (
-            <div
-              key={index}
-              className={`rounded-xl p-4 flex items-start space-x-3 ${alert.type === 'warning' ? 'bg-orange-50 border border-orange-200' : 'bg-green-50 border border-green-200'
-                }`}
-            >
-              {alert.type === 'warning' ? (
-                <AlertCircle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
-              ) : (
-                <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-              )}
-              <div className="flex-1">
-                <p className={`text-sm font-medium ${alert.type === 'warning' ? 'text-orange-900' : 'text-green-900'}`}>
-                  {alert.message}
-                </p>
-                <p className={`text-xs mt-1 ${alert.type === 'warning' ? 'text-orange-600' : 'text-green-600'}`}>
-                  {alert.time}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
+
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* Shops Table */}
@@ -494,15 +418,41 @@ const handleDeleteAdmin = async (adminId, adminEmail) => {
 
             {/* Popular Activity Types Bar Chart */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">{ct('ประเภทกิจกรรมยอดนิยม', 'Popular Activity Types')}</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">{ct('ประเภทกิจกรรม', 'Events Types')}</h3>
 
               {communities.popularActivityData && communities.popularActivityData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={150}>
-                  <BarChart data={communities.popularActivityData} layout="vertical" margin={{ left: 10 }}>
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart 
+                    data={communities.popularActivityData} 
+                    layout="vertical" 
+                    margin={{ left: 10, right: 60, top: 10, bottom: 10 }}
+                  >
                     <XAxis type="number" hide />
-                    <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 12 }} />
-                    <Tooltip />
-                    <Bar dataKey="value" fill="#f97316" radius={[0, 4, 4, 0]} barSize={20} />
+                    <YAxis 
+                      type="category" 
+                      dataKey="name" 
+                      width={120} 
+                      tick={{ fontSize: 12, fontWeight: 500 }} 
+                    />
+                    <Tooltip 
+                      formatter={(value, name, props) => [
+                        `${props.payload.count} งาน (${props.payload.percentage}%)`, 
+                        'จำนวนกิจกรรม'
+                      ]}
+                      contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    />
+                    <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={24}>
+                      {communities.popularActivityData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color || "#f97316"} />
+                      ))}
+                      <LabelList 
+                        dataKey="percentage" 
+                        position="right" 
+                        formatter={(val) => `${val}%`}
+                        style={{ fontSize: 11, fill: '#666666', fontWeight: 600 }}
+                        offset={10}
+                      />
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               ) : (

@@ -186,7 +186,7 @@ const Shops = () => {
 
                   {/* Location */}
                   {(shop.address || shop.location?.address) && (
-                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
+                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-3 line-clamp-2">
                       <MapPin className="h-4 w-4" />
                       <span>{shop.address || shop.location?.address}</span>
                     </div>

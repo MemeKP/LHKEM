@@ -37,15 +37,33 @@ export class WorkshopManagementService {
 
     if (!community) return false;
 
-    return community.admin_permissions?.require_workshop_approval === false;
+    const perms = community.admin_permissions;
+    if (!perms) return false;
+
+    // require_workshop_approval = false → ไม่ต้องรออนุมัติ → auto-approve
+    // require_workshop_approval = true  → ต้องรออนุมัติ → ไม่ auto-approve
+    // Default ของ schema คือ false (ไม่ต้องอนุมัติ) ดังนั้น:
+    // - ถ้า field ยังไม่ได้ตั้ง → default เป็น false = ไม่ auto-approve ไว้ก่อน (safe default)
+    // - ถ้า require_workshop_approval = false อย่างชัดเจน → auto-approve
+    if (typeof perms.require_workshop_approval === 'boolean') {
+      return perms.require_workshop_approval === false;
+    }
+
+    // ถ้าไม่มี field นี้ในเอกสาร → ต้องรออนุมัติ (safe default)
+    return false;
   }
 
   private normalizeCommunityId(communityRef: any): string | null {
     if (!communityRef) return null;
     if (typeof communityRef === 'string') return communityRef;
     if (communityRef instanceof Types.ObjectId) return communityRef.toString();
-    if (typeof communityRef === 'object' && 'toString' in communityRef) {
-      return communityRef.toString();
+    if (typeof communityRef === 'object') {
+      if (communityRef._id) return communityRef._id.toString();
+      if (communityRef.id) return communityRef.id.toString();
+      if (typeof communityRef.toString === 'function') {
+        const str = communityRef.toString();
+        if (str !== '[object Object]') return str;
+      }
     }
     return null;
   }
@@ -168,45 +186,113 @@ export class WorkshopManagementService {
       throw new NotFoundException('Registration record not found');
     }
 
-    const currentStatus = registration.status;
-    const slots = registration.slots || 1;
+    const currentStatus = String(registration.status || '').toUpperCase();
+    const newStatus = status.toUpperCase();
+    const slots = Number(registration.slots || 1);
 
-    // อัปเดตสถานะใน collection workshopregistrations
+    // Normalize workshopId to ObjectId
+    let workshopObjectId: Types.ObjectId | null = null;
+    try {
+      const rawId = registration.workshopId;
+      if (rawId instanceof Types.ObjectId) {
+        workshopObjectId = rawId;
+      } else if (typeof rawId === 'string' && Types.ObjectId.isValid(rawId)) {
+        workshopObjectId = new Types.ObjectId(rawId);
+      } else if (rawId && typeof rawId === 'object' && rawId.toString) {
+        const str = rawId.toString();
+        if (Types.ObjectId.isValid(str)) {
+          workshopObjectId = new Types.ObjectId(str);
+        }
+      }
+    } catch (e) {
+      console.error('Cannot parse workshopId:', registration.workshopId);
+    }
+
+    const workshopsCollection = this.workshopModel.db.collection('workshops');
+
+    // =========================================================
+    // ตรวจสอบก่อน CONFIRM เพื่อป้องกัน overbooking
+    // =========================================================
+    if (newStatus === 'CONFIRMED' && currentStatus === 'PENDING') {
+      if (!workshopObjectId) {
+        throw new NotFoundException(`Cannot find workshop – invalid workshopId on registration`);
+      }
+
+      const ws = await workshopsCollection.findOne({ _id: workshopObjectId });
+      if (!ws) {
+        throw new NotFoundException(`Workshop ${registration.workshopId} not found`);
+      }
+
+      const confirmed = Number(ws.current_participants || 0);
+      if (confirmed + slots > ws.capacity) {
+        throw new BadRequestException(
+          `ไม่สามารถยืนยันได้: ที่นั่งที่ยืนยันแล้วเต็ม (${confirmed}/${ws.capacity}) กรุณา Reject รายการบางรายการก่อน`
+        );
+      }
+
+      // อัปเดตสถานะ registration ก่อน
+      await this.workshopModel.db.collection('workshopregistrations').updateOne(
+        { _id: new Types.ObjectId(registrationId) },
+        { $set: { status: 'CONFIRMED' } }
+      );
+
+      // อัปเดต workshop counters ด้วย pipeline (กัน pendingRegistrationSeat ติดลบ)
+      await workshopsCollection.updateOne(
+        { _id: workshopObjectId },
+        [
+          {
+            $set: {
+              current_participants: { $add: ['$current_participants', slots] },
+              pendingRegistrationSeat: {
+                $max: [0, { $subtract: ['$pendingRegistrationSeat', slots] }]
+              }
+            }
+          }
+        ]
+      );
+
+      return { success: true, newStatus: 'CONFIRMED' };
+    }
+
+    // =========================================================
+    // REJECT: คืน pending seat, กัน pendingRegistrationSeat ติดลบ
+    // =========================================================
+    if (newStatus === 'REJECTED' && currentStatus === 'PENDING') {
+      await this.workshopModel.db.collection('workshopregistrations').updateOne(
+        { _id: new Types.ObjectId(registrationId) },
+        { $set: { status: 'REJECTED' } }
+      );
+
+      if (workshopObjectId) {
+        await workshopsCollection.updateOne(
+          { _id: workshopObjectId },
+          [
+            {
+              $set: {
+                pendingRegistrationSeat: {
+                  $max: [0, { $subtract: ['$pendingRegistrationSeat', slots] }]
+                }
+              }
+            }
+          ]
+        );
+      }
+
+      return { success: true, newStatus: 'REJECTED' };
+    }
+
+    // =========================================================
+    // สำหรับ status อื่นๆ (เช่น CANCEL จาก shop owner)
+    // =========================================================
     await this.workshopModel.db.collection('workshopregistrations').updateOne(
       { _id: new Types.ObjectId(registrationId) },
       { $set: { status: status } }
     );
 
-    // ปรับลดยอดที่นั่งตามเงื่อนไขใหม่
-    let incQuery: any = {};
-    if (status === 'CONFIRMED' && currentStatus === 'PENDING') {
-      
-      // Add this capacity check before confirming
-      const ws = await this.workshopModel.findById(registration.workshopId);
-      if (ws) {
-        const current = ws.current_participants || 0;
-        if (current + slots > ws.capacity) {
-          throw new BadRequestException('Cannot confirm: exceeds workshop capacity');
-        }
-      }
-
-      incQuery = { 
-        current_participants: slots,
-        pendingRegistrationSeat: -slots 
-      };
-    } else if (status === 'REJECTED' && currentStatus === 'PENDING') {
-      incQuery = { pendingRegistrationSeat: -slots };
-    }
-
-    if (Object.keys(incQuery).length > 0) {
-      await this.workshopModel.findByIdAndUpdate(
-        registration.workshopId,
-        { $inc: incQuery }
-      );
-    }
-
     return { success: true, newStatus: status };
   }
+
+
 
   async update(id: string, updateData: any): Promise<Workshop> {
     const existingWorkshop = await this.workshopModel.findById(id).exec();
