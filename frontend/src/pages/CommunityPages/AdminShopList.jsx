@@ -220,20 +220,25 @@ const AdminShopList = () => {
                     />
                   </div>
                 )}
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">{ct('ร้านค้า', 'Shop')}</p>
-                    <h3 className="text-lg font-semibold text-[#1A1A1A]">{shop.shopName}</h3>
-                    <p className="text-sm text-[#666666] line-clamp-2">{shop.description || ct('ยังไม่มีคำอธิบาย', 'No description')}</p>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">{ct('ร้านค้า', 'Shop')}</p>
+                      <h3 className="text-lg font-semibold text-[#1A1A1A] truncate">{shop.shopName}</h3>
+                    </div>
+                    <span className={`px-2 py-1 rounded-full text-xs font-semibold shrink-0 ${resolveBadgeClasses(shop.status)}`}>
+                      {resolveStatusLabel(shop.status)}
+                    </span>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${resolveBadgeClasses(shop.status)}`}>
-                    {resolveStatusLabel(shop.status)}
-                  </span>
+
+                  <p className="text-sm text-[#666666] whitespace-pre-line wrap-break-word max-h-20 overflow-y-auto w-full leading-relaxed scrollbar-thin">
+                    {shop.description || ct('ยังไม่มีคำอธิบาย', 'No description')}
+                  </p>
                 </div>
                 <div className="space-y-2 text-sm text-[#555555]">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-[#8E24AA]" />
-                    <span className="line-clamp-1">{shop.address || shop.location?.address || ct('ยังไม่ระบุที่อยู่', 'No address provided')}</span>
+                  <div className="flex items-start gap-2">
+                    <MapPin className="h-4 w-4 text-[#8E24AA] mt-0.5 flex-shrink-0" />
+                    <span className="text-sm break-words line-clamp-2" title={shop.address || shop.location?.address || ''}>{shop.address || shop.location?.address || ct('ยังไม่ระบุที่อยู่', 'No address provided')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-[#8E24AA]" />

@@ -53,32 +53,47 @@ const Landing = () => {
   const { data: platformStats } = useQuery({
     queryKey: ['platform-stats'],
     queryFn: async () => {
-      const communitiesRes = await api.get('/api/communities');
+      const [communitiesRes, workshopsRes] = await Promise.all([
+        api.get('/api/communities'),
+        api
+          .get('/workshops')
+          .catch((err) => {
+            console.error('Failed to fetch workshops overview:', err);
+            return { data: [] };
+          }),
+      ]);
 
-      let totalWorkshops = 0;
-      let totalShops = 0;
+      const communityList = Array.isArray(communitiesRes.data)
+        ? communitiesRes.data
+        : Array.isArray(communitiesRes.data?.data)
+          ? communitiesRes.data.data
+          : [];
 
-      for (const comm of communitiesRes.data) {
-        // Fetch active shops
-        try {
-          const shopsRes = await api.get(`/api/shops/community/${comm._id}`);
-          totalShops += shopsRes.data.filter(shop => shop.status === 'ACTIVE').length;
-        } catch (err) {
-          console.error('Failed to fetch shops for community:', comm._id);
-        }
+      const allWorkshops = Array.isArray(workshopsRes.data)
+        ? workshopsRes.data
+        : Array.isArray(workshopsRes.data?.data)
+          ? workshopsRes.data.data
+          : [];
 
-        // Fetch workshops dynamically instead of relying on the virtual array
-        try {
-          // You already have an endpoint for this in CommunityHome!
-          const workshopRes = await api.get(`/api/communities/${comm._id}/workshops`);
-          totalWorkshops += Array.isArray(workshopRes.data) ? workshopRes.data.length : 0;
-        } catch (err) {
-          console.error('Failed to fetch workshops for community:', comm._id);
-        }
-      }
+      const shopCounts = await Promise.all(
+        communityList.map(async (comm) => {
+          try {
+            const shopsRes = await api.get(`/api/shops/community/${comm._id}`);
+            return Array.isArray(shopsRes.data)
+              ? shopsRes.data.filter((shop) => (shop.status || '').toUpperCase() === 'ACTIVE').length
+              : 0;
+          } catch (err) {
+            console.error('Failed to fetch shops for community:', comm._id, err);
+            return 0;
+          }
+        })
+      );
+
+      const totalShops = shopCounts.reduce((sum, count) => sum + count, 0);
+      const totalWorkshops = allWorkshops.length;
 
       return [
-        { number: `${communitiesRes.data.length}`, label: ct('ชุมชน', 'Communities') },
+        { number: `${communityList.length}`, label: ct('ชุมชน', 'Communities') },
         { number: `${totalWorkshops}`, label: ct('กิจกรรม', 'Workshops') },
         { number: `${totalShops}`, label: ct('ร้านค้า', 'Shops') }
       ];
@@ -93,12 +108,6 @@ const Landing = () => {
   const handleCommunityClick = (slug) => {
     navigate(`/${slug}`);
   };
-
-  // Filter tags
-  const filterTags = [
-    'ทั้งหมด', 'กิจกรรม', 'เครื่องจักร', 'ร้าน', 'ร้านอาหาร', 'ท่องเที่ยว', 'สถานที่',
-    'วัด', 'ศาลา', 'ผลิตภัณฑ์', 'ผ้า', 'งานฝีมือ', 'จักสาน'
-  ];
 
   const API_URL = import.meta.env.VITE_API_URL
 

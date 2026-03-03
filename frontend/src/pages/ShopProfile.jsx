@@ -218,7 +218,7 @@ const ShopProfile = () => {
       <section className="bg-white border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <div className="mb-8">
-            <p className="text-xl md:text-2xl text-[#3D3D3D] leading-relaxed">
+            <p className="text-xl md:text-2xl text-[#3D3D3D] leading-relaxed whitespace-pre-line break-words max-h-56 overflow-y-auto pr-1">
               {displayShop.description || ct('ไม่มีคำอธิบาย', 'No description available')}
             </p>
           </div>
@@ -228,11 +228,11 @@ const ShopProfile = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
                 <div className="flex items-start gap-3 p-5 bg-gray-50 rounded-2xl">
                   <MapPin className="h-6 w-6 text-orange-500 mt-0.5 flex-shrink-0" />
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-base font-semibold text-[#1F2F2F] mb-1">
                       {ct('ที่อยู่', 'Address')}
                     </p>
-                    <p className="text-base text-[#555555]">
+                    <p className="text-base text-[#555555] whitespace-pre-line break-words max-h-32 overflow-y-auto pr-1">
                       {shopAddress || ct('ไม่ระบุที่อยู่', 'No address provided')}
                     </p>
                   </div>

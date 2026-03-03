@@ -509,7 +509,7 @@ const CommunityHome = () => {
                   <Link
                     to={`/${community.slug}/events/${event._id}`}
                     key={event._id}
-                    className="event-card min-w-[280px] sm:min-w-[340px] lg:min-w-[380px] bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all snap-start"
+                    className="event-card flex-none w-[280px] sm:w-[320px] lg:w-[360px] max-w-[360px] bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all snap-start"
                   >
                     <div className="relative h-48">
                       {event.coverImage ? (

@@ -308,7 +308,7 @@ const AdminWorkshopConfirmation = () => {
               </div>
               <div>
                 <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">{workshopData.title}</h1>
-                <p className="text-gray-600 max-w-3xl">
+                <p className="text-gray-600 max-w-3xl max-h-20 overflow-y-auto scrollbar-thin leading-relaxed whitespace-pre-line wrap-break-word">
                   {workshopData.shortDescription || workshopData.description?.slice(0, 160) || ct('ไม่มีคำอธิบาย', 'No description')}
                 </p>
                 <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500 mt-3">
@@ -337,9 +337,9 @@ const AdminWorkshopConfirmation = () => {
               <div className="bg-white rounded-[28px] border border-[#F2E4D4] p-6 lg:p-7 shadow-sm">
                 <h3 className="text-xl font-semibold text-gray-900 mb-4">{ct('รายละเอียด Workshop', 'Workshop Details')}</h3>
                 <div className="space-y-4">
-                  <div className="p-5 rounded-2xl bg-[#FFF8EA] border border-[#F4E4C4]">
+                  <div className="p-5 rounded-2xl bg-[#FFF8EA] border border-[#F4E4C4] ">
                     <p className="text-sm font-semibold text-[#B48433] mb-1">{ct('คำอธิบาย', 'Description')}</p>
-                    <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{workshopData.description || ct('ไม่มีคำอธิบาย', 'No description')}</p>
+                    <p className="text-gray-700 leading-relaxed wrap-break-word whitespace-pre-wrap max-h-48 overflow-y-auto scrollbar-thin pr-1">{workshopData.description || ct('ไม่มีคำอธิบาย', 'No description')}</p>
                   </div>
                   {requirements.length > 0 && (
                     <div className="p-5 rounded-2xl bg-[#FAF5EE] border border-[#E8DCCB]">
@@ -386,7 +386,7 @@ const AdminWorkshopConfirmation = () => {
                   <div>
                     <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold">{ct('ข้อมูลร้านค้า', 'Shop Information')}</p>
                     <h3 className="text-2xl font-bold text-gray-900 mt-1">{shopInfo.name}</h3>
-                    <p className="text-sm text-gray-500">{shopInfo.description}</p>
+                    <p className="text-sm text-gray-500 max-h-16 overflow-y-auto scrollbar-thin leading-relaxed whitespace-pre-line wrap-break-word">{shopInfo.description}</p>
                   </div>
                   <div className="space-y-3">
                     <div className="flex items-center gap-3">
@@ -410,8 +410,8 @@ const AdminWorkshopConfirmation = () => {
                       </div>
                     )}
                     <div className="flex items-start gap-3">
-                      <MapPin className="h-4 w-4 mt-0.5 text-[#B48433]" />
-                      <p className="text-sm text-gray-700">
+                      <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-[#B48433]" />
+                      <p className="text-sm text-gray-700 wrap-break-word max-h-16 overflow-y-auto scrollbar-thin leading-relaxed">
                         {shopInfo.address}
                       </p>
                     </div>
@@ -423,16 +423,6 @@ const AdminWorkshopConfirmation = () => {
 
           <section className="bg-gradient-to-br from-[#FFF4DA] via-[#FFE7C1] to-[#FFDDB1] rounded-[28px] border border-[#F3C992] p-6 lg:p-8 shadow-sm">
             <h3 className="text-xl font-semibold text-gray-900 mb-4">{ct('การดำเนินการโดยชุมชน', 'Community Admin Actions')}</h3>
-            <div className="bg-white/60 border border-[#F3C992] rounded-2xl p-4 mb-6">
-              <p className="text-sm font-semibold text-gray-800 mb-2">{ct('ข้อความถึงผู้จัด (แสดงให้ผู้จัดเห็น)', 'Note to facilitator')}</p>
-              <textarea
-                value={adminNote}
-                onChange={(e) => setAdminNote(e.target.value)}
-                rows={3}
-                className="w-full px-4 py-3 rounded-xl border border-[#E2C9A5] bg-white/80 focus:ring-2 focus:ring-[#E2A754] resize-none text-sm"
-                placeholder={ct('ระบุคำแนะนำเพิ่มเติมเพื่อแจ้งผู้จัดหากจำเป็น...', 'Add instructions for the facilitator if needed...')}
-              />
-            </div>
 
             <div className="grid md:grid-cols-3 gap-3">
               <button

@@ -291,12 +291,12 @@ const EventDetailPage = () => {
               <div className="space-y-4">
                 <div>
                   <p className="text-sm font-semibold text-[#555555] mb-1">ภาษาไทย</p>
-                  <p className="text-[#666666] leading-relaxed whitespace-pre-line">{event.description}</p>
+                  <p className="text-[#666666] leading-relaxed scrollbar-thin whitespace-pre-line wrap-break-word max-h-52 overflow-y-auto scrollbar-thin pr-1">{event.description}</p>
                 </div>
                 {event.description_en && (
                   <div className="pt-4 border-t border-gray-100">
                     <p className="text-sm font-semibold text-[#555555] mb-1">English</p>
-                    <p className="text-[#666666] leading-relaxed whitespace-pre-line">{event.description_en}</p>
+                    <p className="text-[#666666] leading-relaxed scrollbar-thin whitespace-pre-line wrap-break-word max-h-52 overflow-y-auto scrollbar-thin pr-1">{event.description_en}</p>
                   </div>
                 )}
               </div>
@@ -357,13 +357,13 @@ const EventDetailPage = () => {
                   {event.description_en && (
                     <div>
                       <p className="font-semibold text-[#1A1A1A] mb-1">คำอธิบายภาษาอังกฤษ</p>
-                      <p className="text-[#666666] whitespace-pre-line">{event.description_en}</p>
+                      <p className="text-[#666666] whitespace-pre-line wrap-break-word max-h-36 overflow-y-auto scrollbar-thin pr-1">{event.description_en}</p>
                     </div>
                   )}
                   {event.additional_info && (
                     <div>
                       <p className="font-semibold text-[#1A1A1A] mb-1">ข้อมูลเพิ่มเติม</p>
-                      <p className="text-[#666666] whitespace-pre-line">{event.additional_info}</p>
+                      <p className="text-[#666666] whitespace-pre-line wrap-break-word max-h-36 overflow-y-auto scrollbar-thin pr-1">{event.additional_info}</p>
                     </div>
                   )}
                 </div>
@@ -431,7 +431,7 @@ const EventDetailPage = () => {
                 <MapPin className="h-5 w-5 text-[#FFC107]" />
                 สถานที่
               </h3>
-              <p className="text-[#666666] leading-relaxed">{locationDisplay}</p>
+              <p className="text-[#666666] leading-relaxed max-h-28 overflow-y-auto scrollbar-thin wrap-break-word">{locationDisplay}</p>
             </div>
 
             {/* Metadata */}

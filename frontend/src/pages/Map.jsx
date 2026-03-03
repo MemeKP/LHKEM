@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { MapPin, Store, Map as MapIcon } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
@@ -12,6 +12,9 @@ const Map = () => {
   const navigate = useNavigate();
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [communityId, setCommunityId] = useState(null);
+  const mapContainerRef = useRef(null);
+  const mapImageRef = useRef(null);
+  const [mapMetrics, setMapMetrics] = useState(null);
 
   // Fetch community ID from slug
   const { data: community } = useQuery({
@@ -28,6 +31,37 @@ const Map = () => {
       setCommunityId(community._id);
     }
   }, [community]);
+
+  const updateMapMetrics = useCallback(() => {
+    const container = mapContainerRef.current;
+    const image = mapImageRef.current;
+    if (!container || !image) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const naturalWidth = image.naturalWidth || containerRect.width;
+    const naturalHeight = image.naturalHeight || containerRect.height;
+    if (!naturalWidth || !naturalHeight) return;
+
+    const scale = Math.min(
+      containerRect.width / naturalWidth,
+      containerRect.height / naturalHeight
+    );
+
+    const displayWidth = naturalWidth * scale;
+    const displayHeight = naturalHeight * scale;
+
+    setMapMetrics({
+      width: displayWidth,
+      height: displayHeight,
+      offsetX: (containerRect.width - displayWidth) / 2,
+      offsetY: (containerRect.height - displayHeight) / 2,
+    });
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('resize', updateMapMetrics);
+    return () => window.removeEventListener('resize', updateMapMetrics);
+  }, [updateMapMetrics]);
 
   // Fetch community map and pins
   const { data: mapData, isLoading: mapLoading } = useQuery({
@@ -68,10 +102,34 @@ const Map = () => {
     }
   }, [locations, selectedLocation]);
 
+  useEffect(() => {
+    updateMapMetrics();
+  }, [mapData?.map_image, locations.length, updateMapMetrics]);
+
+  const getPinPositionStyle = useCallback((location) => {
+    const xPercent = Number(location.positionX ?? 0) / 100;
+    const yPercent = Number(location.positionY ?? 0) / 100;
+
+    if (!mapMetrics) {
+      return {
+        left: `${location.positionX}%`,
+        top: `${location.positionY}%`,
+      };
+    }
+
+    const left = mapMetrics.offsetX + xPercent * mapMetrics.width;
+    const top = mapMetrics.offsetY + yPercent * mapMetrics.height;
+
+    return {
+      left: `${left}px`,
+      top: `${top}px`,
+    };
+  }, [mapMetrics]);
+
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn">
       <div className="flex flex-col lg:flex-row h-[calc(100vh-4rem)]">
-        <div className="flex-1 relative overflow-hidden animate-slideUp">
+        <div ref={mapContainerRef} className="flex-1 relative overflow-hidden animate-slideUp">
           {mapLoading ? (
             <div className="absolute inset-0 flex items-center justify-center bg-white/70">
               <div className="flex flex-col items-center text-gray-500">
@@ -80,18 +138,19 @@ const Map = () => {
               </div>
             </div>
           ) : mapData?.map_image ? (
-            <div 
-              className="w-full h-full relative bg-cover bg-center"
-              style={{ 
-                // backgroundImage: `url(${mapData.map_image})`,
-                backgroundImage: `url(${resolveImageUrl(mapData.map_image)})`,
-              }}
-            >
+            <>
+              <img
+                ref={mapImageRef}
+                src={resolveImageUrl(mapData.map_image)}
+                alt={ct('แผนที่ชุมชน', 'Community map')}
+                className="absolute inset-0 w-full h-full object-contain select-none pointer-events-none"
+                onLoad={updateMapMetrics}
+              />
               {locations.map((location) => (
                 <button
                   key={location.id}
                   className="absolute transform -translate-x-1/2 -translate-y-1/2 group"
-                  style={{ top: `${location.positionY}%`, left: `${location.positionX}%` }}
+                  style={getPinPositionStyle(location)}
                   onClick={() => setSelectedLocation(location)}
                 >
                   <div className="relative">
@@ -112,7 +171,7 @@ const Map = () => {
                   </div>
                 </button>
               ))}
-            </div>
+            </>
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100">
               <div className="text-center p-8">
@@ -184,7 +243,10 @@ const Map = () => {
                       )}
                     </div>
                     
-                    <p className="text-sm mb-3" style={{ color: '#4b5563' }}>
+                    <p
+                      className="text-sm mb-3 whitespace-pre-line break-words max-h-16 overflow-hidden"
+                      style={{ color: '#4b5563' }}
+                    >
                       {location.ownerShop?.description || ct('รายละเอียดร้านค้า', 'Shop details')}
                     </p>
 
