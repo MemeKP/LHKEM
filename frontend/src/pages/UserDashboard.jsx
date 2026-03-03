@@ -699,7 +699,24 @@ const UserDashboard = () => {
                         <div className="flex items-baseline justify-between">
                           <div>
                             <p className="text-xs text-gray-500">{t('dashboard.totalPrice')}</p>
-                            <p className="text-2xl font-bold text-gray-900">฿{(enrollment.totalPrice || 0).toLocaleString()}</p>
+                            {(() => {
+                              const workshop = getWorkshop(enrollment);
+                              const slots = getReservedSeats(enrollment);
+                              const pricePerPerson = Number(workshop?.price ?? enrollment.price ?? 0);
+                              const totalPrice = Number(enrollment.totalPrice) || (pricePerPerson * slots);
+                              return (
+                                <>
+                                  <p className="text-2xl font-bold text-gray-900">
+                                    {totalPrice === 0 ? ct('ฟรี', 'Free') : `฿${totalPrice.toLocaleString()}`}
+                                  </p>
+                                  {totalPrice > 0 && (
+                                    <p className="text-xs text-gray-400">
+                                      ฿{pricePerPerson.toLocaleString()} × {slots} {ct('ที่นั่ง', 'seat(s)')}
+                                    </p>
+                                  )}
+                                </>
+                              );
+                            })()}
                           </div>
                           <div className="text-right text-sm text-gray-500">
                             <div>{getStatusBadge(enrollment.status)}</div>

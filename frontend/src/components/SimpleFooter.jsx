@@ -38,7 +38,7 @@ const SimpleFooter = () => {
             <ul className="space-y-2">
               <li>
                 <Link to="/" className="text-gray-600 hover:text-gray-900 text-sm transition-colors inline-block">
-                  {ct('หน้าแรก', 'Home')}
+                  {ct('หน้ารวมชุมชน', 'Community Home')}
                 </Link>
               </li>
               <li>

@@ -158,7 +158,7 @@ const About = () => {
                   )}
                 </p>
               </div> */}
-              <div className="space-y-4 text-gray-700 leading-relaxed">
+              <div className="space-y-4 text-gray-700 leading-relaxed whitespace-pre-line break-words max-h-80 overflow-y-auto pr-1">
                 {ct(community.history, community.history_en)
                   ?.split('\n')
                   .filter(Boolean)

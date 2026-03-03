@@ -406,16 +406,24 @@ const AdminDashboard = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 animate-fadeIn">
               {communityShops.slice(0, 6).map((shop) => (
-                <div key={shop._id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 p-5 flex flex-col gap-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">{ct('ร้านค้า', 'Shop')}</p>
-                      <h3 className="text-lg font-semibold text-[#1A1A1A]">{shop.shopName}</h3>
-                      <p className="text-sm text-[#666666] line-clamp-2">{shop.description || ct('ยังไม่มีคำอธิบาย', 'No description')}</p>
+                <div
+                  key={shop._id}
+                  className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 p-5 flex flex-col gap-3"
+                >
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">{ct('ร้านค้า', 'Shop')}</p>
+                        <h3 className="text-lg font-semibold text-[#1A1A1A] truncate">{shop.shopName}</h3>
+                      </div>
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold shrink-0 ${getStatusColor(shop.status)}`}>
+                        {statusLabel(shop.status)}
+                      </span>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(shop.status)}`}>
-                      {statusLabel(shop.status)}
-                    </span>
+
+                    <p className="text-sm text-[#666666] whitespace-pre-line wrap-break-word max-h-32 overflow-y-auto scrollbar-thin w-full">
+                      {shop.description || ct('ยังไม่มีคำอธิบาย', 'No description')}
+                    </p>
                   </div>
                   <div className="text-sm text-[#666666] flex flex-col gap-1">
                     <div className="flex items-center gap-2">

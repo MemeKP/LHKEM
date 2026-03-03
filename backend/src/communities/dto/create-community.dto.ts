@@ -24,7 +24,7 @@ export class CreateCommunityDto {
     @IsString()
     title_en?: string;
 
-    @IsString()
+    @IsString({ message: 'กรุณาระบุประวัติหรือเรื่องราวของชุมชน' })
     history: string;
 
     @IsOptional()

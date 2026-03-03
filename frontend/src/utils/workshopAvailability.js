@@ -7,14 +7,17 @@ export const getWorkshopCapacityStats = (workshop) => {
   const currentParticipants = Number(workshop?.current_participants || workshop?.seatsBooked || 0);
   const pendingSeats = Math.max(0, Number(workshop?.pendingRegistrationSeat || 0));
   
+  // ที่ว่างสำหรับลูกค้า = capacity - confirmed เท่านั้น
+  // pending ไม่นับว่าเต็ม เพราะยังไม่ได้ confirm และอาจถูก reject
+  const seatsLeft = Math.max(0, capacity - currentParticipants);
+  // booked ยังคงไว้สำหรับ shop owner view (รวม pending)
   const booked = currentParticipants + pendingSeats;
-  const seatsLeft = Math.max(0, capacity - booked);
   
   return { capacity, booked, seatsLeft, currentParticipants, pendingSeats };
 };
 
 export const getWorkshopAvailabilityState = (workshop, now = Date.now()) => {
-  const { capacity, booked, seatsLeft } = getWorkshopCapacityStats(workshop);
+  const { capacity, booked, seatsLeft, pendingSeats } = getWorkshopCapacityStats(workshop);
   const registrationEndRaw = getWorkshopRegistrationEndDate(workshop);
 
   let registrationEndDate = null;
@@ -41,6 +44,7 @@ export const getWorkshopAvailabilityState = (workshop, now = Date.now()) => {
     capacity,
     booked,
     seatsLeft,
+    pendingSeats,
     registrationEndDate,
     // It is closed if the date passed OR the status is not OPEN
     isRegistrationClosed: isRegistrationClosed || isStatusClosed,

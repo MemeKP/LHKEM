@@ -39,11 +39,13 @@ export class WorkshopregistrationsService {
     
     if (workshop) {
       const requestedSlots = createWorkshopregistrationDto.slots || 1;
-      const current = workshop.current_participants || 0;
-      const pending = Math.max(0, workshop.pendingRegistrationSeat || 0);
+      const confirmed = workshop.current_participants || 0;
       
-      if (current + pending + requestedSlots > workshop.capacity) {
-        throw new BadRequestException('Not enough available seats');
+      // ตรวจสอบจากที่นั่งที่ยืนยันแล้วเท่านั้น:
+      // ลูกค้าสามารถจองได้ตราบที่ confirmed + requested <= capacity
+      // (pending ของคนอื่นยังไม่แน่ว่าจะถูก confirm หรือ reject)
+      if (confirmed + requestedSlots > workshop.capacity) {
+        throw new BadRequestException(`ที่นั่งที่ยืนยันแล้วเต็มแล้ว (${confirmed}/${workshop.capacity}) ไม่สามารถจองเพิ่มได้`);
       }
 
       await this.workshopModel.findByIdAndUpdate(workshopId, {

@@ -167,18 +167,18 @@ const BookingDetailModal = ({
   const canViewTicket = ['confirmed', 'active'].includes(statusKey);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center px-4 py-8 bg-black/60 backdrop-blur-sm overflow-y-auto">
-      <div className="bg-white w-full max-w-3xl rounded-[32px] shadow-2xl overflow-hidden relative animate-slideUp">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 pt-20 sm:p-6 sm:pt-24 bg-black/60 backdrop-blur-sm animate-fadeIn overflow-y-auto">
+      <div className="bg-white w-full max-w-3xl max-h-[85vh] flex flex-col rounded-[32px] shadow-2xl relative animate-slideUp overflow-hidden my-auto">
         <button
-          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition"
+          className="absolute top-4 right-4 p-2 bg-white/80 backdrop-blur-sm rounded-full text-gray-700 hover:text-gray-900 hover:bg-white transition-all z-10"
           onClick={onClose}
           aria-label={t('common.close') || ct('ปิด', 'Close')}
         >
           <X className="h-5 w-5" />
         </button>
 
-        <div className="max-h-[85vh] overflow-y-auto">
-          <div className="h-56 relative">
+        <div className="overflow-y-auto flex-1 scrollbar-hide">
+          <div className="h-56 relative shrink-0">
             <img src={workshopImage} alt={workshop?.title || 'Workshop cover'} className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
             <div className="absolute bottom-5 left-6 right-6 flex flex-col gap-2 text-white">
@@ -208,7 +208,7 @@ const BookingDetailModal = ({
                 <p className="text-xs uppercase text-gray-500 tracking-wide">{ct('สถานที่', 'Location')}</p>
                 <p className="text-sm text-gray-900 flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-rose-600" />
-                  <span className="line-clamp-2">
+                  <span className="line-clamp-2 whitespace-pre-line wrap-break-word max-h-24 overflow-y-auto scrollbar-thin w-full">
                     {workshop?.location?.customLocation ||
                       workshop?.location?.address ||
                       workshop?.customLocation ||
@@ -260,7 +260,7 @@ const BookingDetailModal = ({
             {workshop?.description && (
               <div className="rounded-3xl border border-gray-100 bg-gray-50 p-5">
                 <p className="text-sm font-semibold text-gray-900 mb-2">{ct('รายละเอียดเวิร์กช็อป', 'Workshop description')}</p>
-                <p className="text-sm text-gray-700 leading-relaxed">{workshop.description}</p>
+                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line wrap-break-word max-h-48 overflow-y-auto scrollbar-thin w-full">{workshop.description}</p>
               </div>
             )}
           </div>

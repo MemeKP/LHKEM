@@ -298,42 +298,37 @@ export class DashboardService {
 
     // !!!! pie chart จัดกลุ่ม Workshop ตาม Category (ยังไม่แน่ใจว่าต้องใช้ event หรือ workshop)
     async getActivityTypesData() {
-
-        const categoryRaw = await this.workshopModel.aggregate([
-            // เอาเฉพาะอันที่ไม่ได้ถูกยกเลิก 
+        const eventTypeRaw = await this.eventModel.aggregate([
             { $match: { status: { $ne: 'CANCELLED' } } },
-            { $group: { _id: "$category", count: { $sum: 1 } } }
+            { $group: { _id: "$event_type", count: { $sum: 1 } } }
         ]);
 
-        const totalActivities = categoryRaw.reduce((sum, item) => sum + item.count, 0);
+        const totalEvents = eventTypeRaw.reduce((sum, item) => sum + item.count, 0);
 
         const categoryMapping = {
-            'CRAFTS': { name: 'งานฝีมือ', color: '#f97316' },   // ส้ม
-            'FOOD': { name: 'อาหาร', color: '#16a34a' },       // เขียว
-            'ART': { name: 'ศิลปะ', color: '#eab308' },        // เหลือง
-            'CULTURE': { name: 'วัฒนธรรม', color: '#3b82f6' }, // ฟ้า
-            'OTHER': { name: 'อื่นๆ', color: '#8b5cf6' }        // ม่วง
+            'festival': { name: 'เทศกาล', color: '#ef4444' }, // แดง
+            'market': { name: 'ตลาดนัด', color: '#8b5cf6' },  // ม่วง
+            'cultural': { name: 'กิจกรรมวัฒนธรรม', color: '#3b82f6' },
+            'workshop': { name: 'เวิร์กชอป', color: '#f97316' },
+            'other': { name: 'อื่นๆ', color: '#84cc16' }
         };
 
-        const activityData = categoryRaw.map(item => {
-            const cat = categoryMapping[item._id] || categoryMapping['OTHER'];
-
-            // คำนวณเปอร์เซ็นต์ (ปัดเศษ)
-            const percent = totalActivities > 0
-                ? Math.round((item.count / totalActivities) * 100)
-                : 0;
+        const activityData = eventTypeRaw.map(item => {
+            const key = (item._id || 'other').toLowerCase();
+            const cat = categoryMapping[key] || categoryMapping['other'];
+            const percentage = totalEvents > 0 ? (item.count / totalEvents) * 100 : 0;
 
             return {
                 name: cat.name,
-                value: percent,
-                actualCount: item.count,
+                count: item.count,
+                value: item.count, // value for bar length
+                percentage: parseFloat(percentage.toFixed(1)),
                 color: cat.color
             };
-        }).sort((a, b) => b.value - a.value); // เรียงจากเปอร์เซ็นต์มากไปน้อย
+        }).sort((a, b) => b.count - a.count);
 
-        // ป้องกันกรณีไม่มีข้อมูลเลย ให้ส่งข้อมูลเปล่าๆ ไปโชว์กราฟเทาๆ
         if (activityData.length === 0) {
-            return [{ name: 'ไม่มีข้อมูล', value: 100, color: '#e5e7eb' }];
+            return [{ name: 'ไม่มีข้อมูล', count: 0, value: 0, percentage: 0, color: '#e5e7eb' }];
         }
 
         return activityData;

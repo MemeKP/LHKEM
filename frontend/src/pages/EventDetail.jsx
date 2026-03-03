@@ -205,7 +205,7 @@ const EventDetail = () => {
               <h1 className="text-3xl lg:text-4xl font-bold text-[#1A1A1A] leading-tight">
                 {ct(event.title, event.title_en)}
               </h1>
-              <p className="text-[#5C5C5C] leading-relaxed whitespace-pre-line">
+              <p className="text-[#5C5C5C] leading-relaxed whitespace-pre-line break-words max-h-56 overflow-y-auto pr-1">
                 {ct(event.description, event.description_en)}
               </p>
             </div>
@@ -218,7 +218,7 @@ const EventDetail = () => {
                   </div>
                   <div>
                     <p className="text-xs uppercase tracking-wide text-gray-400">{block.label}</p>
-                    <p className="text-sm font-semibold text-gray-800 whitespace-pre-line">{block.value}</p>
+                    <p className="text-sm font-semibold text-gray-800 whitespace-pre-line break-words max-h-32 overflow-y-auto pr-1">{block.value}</p>
                   </div>
                 </div>
               ))}
@@ -250,7 +250,9 @@ const EventDetail = () => {
             {event.additional_info && (
               <div className="bg-white rounded-3xl shadow-sm border border-orange-100 p-6 animate-fadeIn">
                 <h3 className="text-xl font-semibold text-[#8C4A00] mb-3">{ct('ข้อมูลเพิ่มเติม', 'Additional info')}</h3>
-                <p className="text-sm text-[#7A4A0C] whitespace-pre-line">{event.additional_info}</p>
+                <p className="text-sm text-[#7A4A0C] whitespace-pre-line break-words max-h-48 overflow-y-auto pr-1">
+                  {event.additional_info}
+                </p>
               </div>
             )}
 
@@ -280,7 +282,9 @@ const EventDetail = () => {
                 <MapPin className="h-5 w-5 text-orange-500" />
                 {ct('สถานที่จัดกิจกรรม', 'Event Location')}
               </h3>
-              <p className="text-sm text-gray-600 mb-4 line-clamp-3">{locationValue}</p>
+              <p className="text-sm text-gray-600 mb-4 whitespace-pre-line break-words max-h-40 overflow-y-auto pr-1">
+                {locationValue}
+              </p>
             </div>
 
             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 animate-fadeIn">

@@ -4,6 +4,7 @@ import { ArrowLeft, MapPin, Image as ImageIcon, Plus, X } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
 import api from '../../services/api';
 import { useMutation } from '@tanstack/react-query';
+import Swal from 'sweetalert2';
 import CommunityImageUploader from '../../components/CommunityImageUploader';
 import { buildImageSlotsPayload } from '../../utils/communityImages';
 
@@ -60,7 +61,7 @@ const createCommunity = async ({ formData, coverSlot, gallerySlots }) => {
   formDataToSend.append('image_slots', JSON.stringify(manifest));
 
   formDataToSend.append('admin_permissions', JSON.stringify({
-    can_approve_workshop: formData.workshopApproval,
+    can_approve_workshop: true,
     require_workshop_approval: formData.requireApprove,
   }));
 
@@ -103,7 +104,6 @@ const PlatformCreateCommunity = () => {
     images: null,
     admins: [],
     admin_email: '',
-    workshopApproval: false,
     requireApprove: false,
   });
 
@@ -128,10 +128,24 @@ const PlatformCreateCommunity = () => {
           console.error('Failed to upload map:', error);
         }
       }
+      await Swal.fire({
+        title: ct('สำเร็จ', 'Success'),
+        text: ct('สร้างชุมชนใหม่เรียบร้อยแล้ว', 'New community created successfully'),
+        icon: 'success',
+        confirmButtonText: ct('ตกลง', 'OK'),
+        confirmButtonColor: '#F97316'
+      });
       navigate('/platform-admin/dashboard');
     },
     onError: (error) => {
-      console.log(error.response?.data);
+      const errorMessage = error.response?.data?.message || ct('ไม่สามารถสร้างชุมชนได้', 'Failed to create community');
+      Swal.fire({
+        title: ct('เกิดข้อผิดพลาด', 'Error'),
+        text: errorMessage,
+        icon: 'error',
+        confirmButtonText: ct('ตกลง', 'OK'),
+        confirmButtonColor: '#F97316'
+      });
     }
 
   });
@@ -185,19 +199,7 @@ const PlatformCreateCommunity = () => {
     }));
   };
 
-  // const handleSubmit = (e) => {
-  //   e.preventDefault();
-  //   // Save to localStorage for demo
-  //   const communities = JSON.parse(localStorage.getItem('communities') || '[]');
-  //   const newCommunity = {
-  //     id: Date.now().toString(),
-  //     ...formData,
-  //     createdAt: new Date().toISOString()
-  //   };
-  //   communities.push(newCommunity);
-  //   localStorage.setItem('communities', JSON.stringify(communities));
-  //   navigate('/platform-admin/dashboard');
-  // };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const coverSlot = formData.coverImage ? { file: formData.coverImage } : null;
@@ -278,24 +280,6 @@ const PlatformCreateCommunity = () => {
             </p>
           </div>
 
-          {/* Location */}
-          {/* <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
-              {ct('ที่ตั้ง', 'Location')} <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <MapPin className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                name="location"
-                value={formData.location}
-                onChange={handleInputChange}
-                placeholder={ct('เช่น เชียงใหม่, ประเทศไทย', 'e.g., Chiang Mai, Thailand')}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                required
-              />
-            </div>
-          </div> */}
           {/* Location */}
           <div className="mb-6">
             <label className="block text-sm font-semibold text-gray-900 mb-2">
@@ -539,34 +523,9 @@ const PlatformCreateCommunity = () => {
               {ct('ผู้ดูแลชุมชน', 'Community Admins')}
             </label>
 
-            {/* Checkbox */}
-            <div className="flex items-start space-x-3 mb-4 p-4 bg-gray-50 rounded-lg">
-              <input
-                type="checkbox"
-                name="workshopApproval"
-                checked={formData.workshopApproval}
-                onChange={handleInputChange}
-                className="mt-1 h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
-                id="workshop-approval"
-              />
-              <label htmlFor="workshop-approval" className="text-sm text-gray-700">
-                {ct('ผู้ดูแลเป็นผู้ที่มีสิทธิ์อนุมัติการสร้าง workshop', 'This admin has permission to approve workshop creation')}
-              </label>
-            </div>
 
-            <div className="flex items-start space-x-3 mb-4 p-4 bg-gray-50 rounded-lg">
-              <input
-                type="checkbox"
-                name="requireApprove"
-                checked={formData.requireApprove}
-                onChange={handleInputChange}
-                className="mt-1 h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
-                id="require-approval"
-              />
-              <label htmlFor="require-approval" className="text-sm text-gray-700">
-                {ct('เวิร์กชอปใหม่ต้องได้รับการอนุมัติก่อนเผยแพร่', 'Require approval before workshops go live')}
-              </label>
-            </div>
+
+
 
             {/* Admin List */}
             {formData.admins.length > 0 && (
@@ -605,6 +564,40 @@ const PlatformCreateCommunity = () => {
                 <span>{ct('เพิ่ม', 'Add')}</span>
               </button>
             </div>
+          </div>
+
+          {/* Workshop Approval Setting */}
+          <div className="mb-8 p-5 bg-orange-50 rounded-xl border border-orange-100">
+            <h3 className="text-sm font-bold text-gray-900 mb-3">
+              {ct('การอนุมัติ Workshop', 'Workshop Approval Setting')}
+            </h3>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  name="requireApprove"
+                  id="requireApprove"
+                  checked={!!formData.requireApprove}
+                  onChange={handleInputChange}
+                  className="sr-only"
+                />
+                <div className={`w-12 h-6 rounded-full transition-colors ${formData.requireApprove ? 'bg-orange-500' : 'bg-gray-300'}`}>
+                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${formData.requireApprove ? 'translate-x-6' : 'translate-x-0'}`} />
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-900">
+                  {formData.requireApprove
+                    ? ct('ต้องรอการอนุมัติจาก Community Admin', 'Require Community Admin Approval')
+                    : ct('อนุมัติ Workshop อัตโนมัติ (ไม่ต้องรออนุมัติ)', 'Auto-approve Workshops')}
+                </p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {formData.requireApprove
+                    ? ct('Workshop ที่ร้านค้าสร้างจะต้องถูกอนุมัติจาก Community Admin ก่อนแสดงในระบบ', 'Workshops created by shops must be approved by a Community Admin before becoming visible.')
+                    : ct('Workshop ที่ร้านค้าสร้างจะเปิดให้จองได้ทันที ไม่ต้องรอ Admin', 'Workshops created by shops are immediately open for booking without Admin review.')}
+                </p>
+              </div>
+            </label>
           </div>
 
           {/* Action Buttons */}

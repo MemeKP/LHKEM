@@ -30,6 +30,15 @@ const Register = () => {
     return ct(fallbackTH, fallbackEN);
   };
 
+  const safeTranslate = (key, fallbackTH, fallbackEN) => {
+    if (!key) return ct(fallbackTH, fallbackEN);
+    const translated = t(key);
+    if (translated && translated !== key) {
+      return translated;
+    }
+    return ct(fallbackTH, fallbackEN);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
@@ -53,11 +62,14 @@ const Register = () => {
     try {
       const res = await register(payload);
       if (res.success) {
+        const successTitle = safeTranslate('auth.registerSuccessTitle', 'สมัครสมาชิกสำเร็จ', 'Registration successful');
+        const successMessage = safeTranslate('auth.registerSuccessMessage', 'บัญชีของคุณพร้อมใช้งานแล้ว', 'Your account is ready to use.');
+        const continueLabel = safeTranslate('common.continue', 'ดำเนินการต่อ', 'Continue');
         await Swal.fire({
           icon: 'success',
-          title: t('auth.registerSuccessTitle') || ct('สมัครสมาชิกสำเร็จ', 'Registration successful'),
-          text: t('auth.registerSuccessMessage') || ct('บัญชีของคุณพร้อมใช้งานแล้ว', 'Your account is ready to use.'),
-          confirmButtonText: t('common.continue') || ct('ดำเนินการต่อ', 'Continue'),
+          title: successTitle,
+          text: successMessage,
+          confirmButtonText: continueLabel,
           confirmButtonColor: '#16a34a',
         });
 

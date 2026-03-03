@@ -61,7 +61,7 @@ const updateCommunity = async ({ id, formData, coverSlot, gallerySlots }) => {
   }
 
   formDataToSend.append('admin_permissions', JSON.stringify({
-    can_approve_workshop: formData.workshopApproval,
+    can_approve_workshop: true,
     require_workshop_approval: formData.requireApprove,
   }));
   
@@ -113,7 +113,6 @@ const PlatformEditCommunity = () => {
     images: null,
     admins: [],
     admin_email: '',
-    workshopApproval: true,
     requireApprove: false,
   });
   const API_URL = import.meta.env.VITE_API_URL
@@ -160,7 +159,6 @@ const PlatformEditCommunity = () => {
           facebook: community.contact_info?.facebook || '', 
         },
         admins: community.admins || [],
-        workshopApproval: community.admin_permissions?.can_approve_workshop ?? true,
         requireApprove: community.admin_permissions?.require_workshop_approval ?? false,
       });
 
@@ -526,33 +524,8 @@ const PlatformEditCommunity = () => {
               />
             </div>
 
-            <div className="flex items-start space-x-3 mb-4 p-4 bg-gray-50 rounded-lg">
-              <input
-                type="checkbox"
-                name="workshopApproval"
-                checked={formData.workshopApproval}
-                onChange={handleInputChange}
-                className="mt-1 h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
-                id="edit-workshop-approval"
-              />
-              <label htmlFor="edit-workshop-approval" className="text-sm text-gray-700">
-                {ct('ผู้ดูแลเป็นผู้ที่มีสิทธิ์อนุมัติการสร้าง workshop', 'This admin has permission to approve workshop creation')}
-              </label>
-            </div>
 
-            <div className="flex items-start space-x-3 mb-4 p-4 bg-gray-50 rounded-lg">
-              <input
-                type="checkbox"
-                name="requireApprove"
-                checked={formData.requireApprove}
-                onChange={handleInputChange}
-                className="mt-1 h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
-                id="edit-require-approval"
-              />
-              <label htmlFor="edit-require-approval" className="text-sm text-gray-700">
-                {ct('เวิร์กชอปใหม่ต้องได้รับการอนุมัติก่อนเผยแพร่', 'Require approval before workshops go live')}
-              </label>
-            </div>
+
           </div>
 
           {/* Community Map Upload */}
@@ -801,6 +774,40 @@ const PlatformEditCommunity = () => {
                 <span>{ct('เพิ่ม', 'Add')}</span>
               </button>
             </div>
+          </div>
+
+          {/* Workshop Approval Setting */}
+          <div className="mb-8 p-5 bg-orange-50 rounded-xl border border-orange-100">
+            <h3 className="text-sm font-bold text-gray-900 mb-3">
+              {ct('การอนุมัติ Workshop', 'Workshop Approval Setting')}
+            </h3>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  name="requireApprove"
+                  id="requireApprove"
+                  checked={!!formData.requireApprove}
+                  onChange={handleInputChange}
+                  className="sr-only"
+                />
+                <div className={`w-12 h-6 rounded-full transition-colors ${formData.requireApprove ? 'bg-orange-500' : 'bg-gray-300'}`}>
+                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${formData.requireApprove ? 'translate-x-6' : 'translate-x-0'}`} />
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-900">
+                  {formData.requireApprove
+                    ? ct('ต้องรอการอนุมัติจาก Community Admin', 'Require Community Admin Approval')
+                    : ct('อนุมัติ Workshop อัตโนมัติ (ไม่ต้องรออนุมัติ)', 'Auto-approve Workshops')}
+                </p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {formData.requireApprove
+                    ? ct('Workshop ที่ร้านค้าสร้างจะต้องถูกอนุมัติจาก Community Admin ก่อนแสดงในระบบ', 'Workshops created by shops must be approved by a Community Admin before becoming visible.')
+                    : ct('Workshop ที่ร้านค้าสร้างจะเปิดให้จองได้ทันที ไม่ต้องรอ Admin', 'Workshops created by shops are immediately open for booking without Admin review.')}
+                </p>
+              </div>
+            </label>
           </div>
 
           {/* Action Buttons */}

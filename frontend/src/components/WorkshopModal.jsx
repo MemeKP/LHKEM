@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../hooks/useTranslation';
 import { useAuth } from '../hooks/useAuth';
 import { useState, useEffect, useMemo } from 'react';
+import Swal from 'sweetalert2';
 
 import { workshopService } from '../services/workshopService';
 import { getShopById } from '../services/shopService';
@@ -164,12 +165,12 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
   const isTourist = normalizedUserRole === 'TOURIST';
   const isNonTouristAuthenticated = isAuthenticated && !isTourist;
 
-  // 1. Calculate seats first
+  // 1. Calculate seats
+  // ลูกค้ามองเห็นที่นั่งว่าง = capacity - confirmed (ไม่รวม pending เพราะยังไม่แน่ว่าจะ confirm)
   const capacity = workshop?.capacity || workshop?.seatLimit || 0;
   const confirmedSeats = workshop?.current_participants || workshop?.seatsBooked || 0;
   const pendingSeats = Math.max(0, workshop?.pendingRegistrationSeat || 0);
-  const booked = confirmedSeats + pendingSeats;
-  const availableSeats = Math.max(0, capacity - booked);
+  const availableSeats = Math.max(0, capacity - confirmedSeats);
 
   // 2. Registration status checks
   const isRegistrationStatusOpen = String(workshop?.registrationStatus || 'OPEN').toUpperCase() === 'OPEN';
@@ -226,6 +227,27 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
       setSubmitError(ct('มีที่นั่งไม่เพียงพอสำหรับจำนวนที่เลือก', 'Not enough seats are available for your selection.'));
       return;
     }
+
+    // SweetAlert ยืนยันก่อนจอง
+    const totalPrice = workshop.price === 0 ? ct('ฟรี', 'Free') : `฿${workshop.price * guestCount}`;
+    const confirm = await Swal.fire({
+      icon: 'question',
+      title: ct('ยืนยันการจอง', 'Confirm Booking'),
+      html: `
+        <div style="text-align:left; font-size:14px; line-height:1.7">
+          <p><b>${ct('Workshop:', 'Workshop:')}</b> ${workshop.title}</p>
+          <p><b>${ct('จำนวนที่นั่ง:', 'Seats:')}</b> ${guestCount} ${ct('ที่', 'seat(s)')}</p>
+          <p><b>${ct('ค่าใช้จ่ายรวม:', 'Total:')}</b> ${totalPrice}</p>
+          <p style="color:#f97316; font-size:12px; margin-top:8px">${ct('⚠️ การจองต้องรอการยืนยันจากทางร้านค้าก่อน', '⚠️ Booking requires shop owner confirmation.')}</p>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: ct('ยืนยันและจอง', 'Confirm & Book'),
+      cancelButtonText: ct('ยกเลิก', 'Cancel'),
+      confirmButtonColor: '#f97316',
+    });
+
+    if (!confirm.isConfirmed) return;
     
     setIsSubmitting(true);
     setSubmitError(null);
@@ -254,11 +276,18 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
       }
 
     } catch (error) {
-      const backendError = error.response?.data?.message || error.response?.data || error.message;
-      alert(`${ct('ระบบปฏิเสธข้อมูลเนื่องจาก:\n\n', 'Backend rejected the data because:\n\n')}${JSON.stringify(backendError, null, 2)}`);
+      const backendError = error.response?.data?.message || error.message || ct('เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ', 'An unknown error occurred');
       console.error('Registration error:', error.response?.data || error);
       
-      setSubmitError(ct('ไม่สามารถทำการจองได้ กรุณาลองใหม่อีกครั้ง', 'Could not complete booking. Please try again.'));
+      await Swal.fire({
+        icon: 'error',
+        title: ct('การจองไม่สำเร็จ', 'Booking Failed'),
+        text: typeof backendError === 'string'
+          ? backendError
+          : ct('ไม่สามารถทำการจองได้ กรุณาลองใหม่อีกครั้ง', 'Could not complete booking. Please try again.'),
+        confirmButtonColor: '#f97316',
+      });
+      setSubmitError(typeof backendError === 'string' ? backendError : ct('ไม่สามารถทำการจองได้', 'Booking failed.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -271,17 +300,17 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
   if (!isOpen || !workshop) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8 bg-black/60 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-white w-full max-w-2xl rounded-[32px] shadow-2xl overflow-hidden relative animate-slideUp">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 pt-20 sm:p-6 sm:pt-24 bg-black/60 backdrop-blur-sm animate-fadeIn overflow-y-auto">
+      <div className="bg-white w-full max-w-2xl max-h-[85vh] flex flex-col rounded-[32px] shadow-2xl relative animate-slideUp overflow-hidden my-auto">
         <button
-          className="absolute top-3 right-3 p-2 text-gray-400 hover:text-gray-600 transition"
+          className="absolute top-4 right-4 p-2 bg-gray-100 rounded-full text-gray-500 hover:text-gray-900 hover:bg-gray-200 transition-all z-10"
           onClick={onClose}
           aria-label={t('common.close') || ct('ปิด', 'Close')}
         >
           <X className="h-5 w-5" />
         </button>
 
-        <div className="p-6 space-y-5 max-h-[85vh] overflow-y-auto animate-stagger">
+        <div className="p-6 space-y-5 overflow-y-auto flex-1 animate-stagger scrollbar-hide">
           {/* Header */}
           <div className="rounded-[28px] border border-gray-100 bg-white shadow-sm p-5 space-y-4">
             {workshopImage && (
@@ -306,15 +335,17 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
                 <p className="text-xs text-gray-500">{ct('ต่อคน', 'per person')}</p>
               </div>
               <div className="text-right space-y-1">
-                {/* FIX: Actually use availableSeats here */}
-                <span className="text-xs font-medium text-orange-600 bg-orange-50 px-3 py-1 rounded-full inline-flex items-center gap-1">
-                  {ct('ที่นั่งคงเหลือ', 'Seats left')} {availableSeats}
-                  {pendingSeats > 0 && (
-                    <span className="text-orange-500 bg-white px-1.5 py-0.5 rounded text-[10px] shadow-sm ml-1">
-                      {ct('รอยืนยัน', 'Pending')} {pendingSeats}
-                    </span>
-                  )}
+                <span className={`text-xs font-medium px-3 py-1 rounded-full inline-flex items-center gap-1 ${
+                  availableSeats <= 0 ? 'bg-red-50 text-red-600' : 'bg-orange-50 text-orange-600'
+                }`}>
+                  {availableSeats <= 0 ? ct('ที่นั่งเต็มแล้ว', 'Fully Booked') : `${ct('ที่นั่งว่าง', 'Seats left')} ${availableSeats}`}
                 </span>
+                {pendingSeats > 0 && (
+                  <p className="text-xs text-yellow-600 flex items-center gap-1 justify-end">
+                    <AlertCircle className="h-3 w-3" />
+                    {ct('รอยืนยัน', 'Pending confirmation')}: {pendingSeats}
+                  </p>
+                )}
                 <p className="text-xs text-gray-500 flex items-center gap-1 justify-end">
                   <Clock className="h-3 w-3" /> {workshop.duration || workshop.time || `${workshop.startTime} - ${workshop.endTime}`}
                 </p>
@@ -364,7 +395,7 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
             icon={<BookOpen className="h-5 w-5 text-indigo-500" />}
             title={ct('เกี่ยวกับ Workshop', 'About this Workshop')}
           >
-            <p className="text-sm text-gray-700 leading-relaxed">
+            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line wrap-break-word max-h-48 overflow-y-auto scrollbar-thin w-full">
               {workshop.description || ct('กิจกรรมสนุกที่รอให้คุณมาสัมผัส', 'An immersive experience awaits you.')}
             </p>
             {Array.isArray(workshop.requirements) && workshop.requirements.length > 0 && (
@@ -401,7 +432,7 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
             icon={<MapPin className="h-5 w-5 text-red-500" />}
             title={ct('สถานที่', 'Location')}
           >
-            <p className="text-sm text-gray-700 mb-2">{workshop.customLocation || workshop.location?.address || workshop.location || ct('ใช้สถานที่ร้าน', 'Shop location')}</p>
+            <p className="text-sm text-gray-700 mb-2 whitespace-pre-line wrap-break-word max-h-24 overflow-y-auto scrollbar-thin w-full">{workshop.customLocation || workshop.location?.address || workshop.location || ct('ใช้สถานที่ร้าน', 'Shop location')}</p>
           </SectionCard>
           
           {/* Shop & Contact Info */}
@@ -415,10 +446,10 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
                 <p className="text-sm text-gray-500 mt-1">
                   {ct('เจ้าของร้าน', 'Shop owner')}: <span className="font-semibold text-gray-900">{ownerInfo.name || ct('ไม่ระบุ', 'N/A')}</span>
                 </p>
-                {derivedShop?.description && <p className="text-gray-600 mt-1">{derivedShop.description}</p>}
+                {derivedShop?.description && <p className="text-gray-600 mt-1 whitespace-pre-line wrap-break-word max-h-48 overflow-y-auto scrollbar-thin w-full">{derivedShop.description}</p>}
                 <div className="flex items-start gap-2 text-gray-600 mt-3">
                   <MapPin className="h-4 w-4 text-red-500 mt-0.5" />
-                  <span>
+                  <span className="whitespace-pre-line wrap-break-word max-h-24 overflow-y-auto scrollbar-thin w-full">
                     {derivedShop?.address ||
                       derivedShop?.location?.address ||
                       workshop.customLocation ||

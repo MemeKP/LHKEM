@@ -379,6 +379,10 @@ const PlatformOverview = () => {
               <div className="flex justify-center items-center h-[250px]">
               <div className="w-48 h-48 bg-gray-200 rounded-full animate-pulse"></div>
             </div>
+            ) : activityData.length === 0 || activityData[0]?.count === 0 ? (
+              <div className="flex justify-center items-center h-[250px] text-gray-400">
+                ไม่มีข้อมูล Event
+              </div>
             ) : (<ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie
@@ -388,21 +392,22 @@ const PlatformOverview = () => {
                   innerRadius={60}
                   outerRadius={90}
                   paddingAngle={5}
-                  dataKey="value"
+                  dataKey="count"
                 >
                   {activityData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => `${value}%`} />
+                <Tooltip formatter={(value, name, props) => [`${props.payload.count} งาน (${props.payload.percentage}%)`, props.payload.name]} />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>)}
             <div className="grid grid-cols-2 gap-3 mt-4">
-              {activityData.map((item, index) => (
+              {activityData.filter(item => item.count > 0).map((item, index) => (
                 <div key={index} className="text-center">
                   <p className="text-sm text-gray-600">{item.name}</p>
-                  <p className="text-lg font-bold" style={{ color: item.color }}>{item.value}%</p>
+                  <p className="text-lg font-bold" style={{ color: item.color }}>{item.percentage}%</p>
+                  <p className="text-xs text-gray-400">{item.count} งาน</p>
                 </div>
               ))}
             </div>

@@ -27,9 +27,9 @@ const statusStyles = {
 const formatStatus = (status = '') => status.toUpperCase();
 
 const InfoRow = ({ label, value }) => (
-  <div className="flex items-start justify-between py-3 border-b border-gray-100 last:border-0">
-    <span className="text-sm text-gray-500">{label}</span>
-    <span className="text-sm font-medium text-gray-900 text-right max-w-xs">{value || '-'}</span>
+  <div className="flex items-start justify-between py-3 border-b border-gray-100 last:border-0 gap-4">
+    <span className="text-sm text-gray-500 shrink-0">{label}</span>
+    <span className="text-sm font-medium text-gray-900 text-right wrap-break-word max-w-[200px] max-h-16 overflow-y-auto scrollbar-thin">{value || '-'}</span>
   </div>
 );
 
@@ -258,7 +258,7 @@ const AdminShopApproval = () => {
                   {ct('ร้านค้านี้ยังไม่ได้เพิ่มรูปปก', 'This shop has not provided a cover image.')}
                 </div>
               )}
-              <p className="text-gray-600 text-sm leading-relaxed mb-6">
+              <p className="text-gray-600 text-sm leading-relaxed mb-6 whitespace-pre-line wrap-break-word max-h-28 overflow-y-auto scrollbar-thin pr-1">
                 {shop.description || ct('ไม่มีคำอธิบายร้านค้า', 'No description provided.')}
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

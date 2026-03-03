@@ -260,8 +260,7 @@ const ShopWorkshopEdit = () => {
         categories: form.categories,
         activities: form.activities,
         
-        // CRITICAL REQUIREMENT: Reset status to PENDING on every edit
-        approvalStatus: 'PENDING',
+        // Let backend decide whether to set PENDING or ACTIVE based on community settings
         
         // Update the main date field used for listing
         date: eventDateIso
