@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CreateWorkshopregistrationDto } from './dto/create-workshopregistration.dto';
@@ -34,7 +34,23 @@ export class WorkshopregistrationsService {
   ) {}
 
   async create(createWorkshopregistrationDto: CreateWorkshopregistrationDto): Promise<Workshopregistration> {
-    /* Inserts a real entry into the database */
+    const workshopId = normalizeId(createWorkshopregistrationDto.workshopId);
+    const workshop = await this.workshopModel.findById(workshopId);
+    
+    if (workshop) {
+      const requestedSlots = createWorkshopregistrationDto.slots || 1;
+      const current = workshop.current_participants || 0;
+      const pending = Math.max(0, workshop.pendingRegistrationSeat || 0);
+      
+      if (current + pending + requestedSlots > workshop.capacity) {
+        throw new BadRequestException('Not enough available seats');
+      }
+
+      await this.workshopModel.findByIdAndUpdate(workshopId, {
+        $inc: { pendingRegistrationSeat: requestedSlots }
+      });
+    }
+
     const createdRegistration = new this.workshopregistrationModel(createWorkshopregistrationDto);
     return createdRegistration.save();
   }
@@ -182,9 +198,14 @@ export class WorkshopregistrationsService {
     }
 
     const reservedStatuses = ['CONFIRMED', 'ACTIVE', 'COMPLETED'];
+    const seatsToRelease = registration.slots || 1;
+
     if (reservedStatuses.includes(currentStatus)) {
-      const seatsToRelease = registration.slots || 1;
       await this.adjustWorkshopParticipants(registration.workshopId, -seatsToRelease);
+    } else if (currentStatus === 'PENDING') {
+      await this.workshopModel.findByIdAndUpdate(registration.workshopId, {
+        $inc: { pendingRegistrationSeat: -seatsToRelease }
+      });
     }
 
     return updated;

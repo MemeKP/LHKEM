@@ -4,9 +4,13 @@ export const getWorkshopRegistrationEndDate = (workshop) => {
 
 export const getWorkshopCapacityStats = (workshop) => {
   const capacity = Number(workshop?.capacity || workshop?.seatLimit || 0);
-  const booked = Number(workshop?.current_participants || workshop?.seatsBooked || 0);
+  const currentParticipants = Number(workshop?.current_participants || workshop?.seatsBooked || 0);
+  const pendingSeats = Math.max(0, Number(workshop?.pendingRegistrationSeat || 0));
+  
+  const booked = currentParticipants + pendingSeats;
   const seatsLeft = Math.max(0, capacity - booked);
-  return { capacity, booked, seatsLeft };
+  
+  return { capacity, booked, seatsLeft, currentParticipants, pendingSeats };
 };
 
 export const getWorkshopAvailabilityState = (workshop, now = Date.now()) => {
@@ -28,6 +32,9 @@ export const getWorkshopAvailabilityState = (workshop, now = Date.now()) => {
     isRegistrationClosed = now > endOfDay.getTime();
   }
 
+  // Force check the actual string status as well (case-insensitive)
+  const isStatusClosed = String(workshop?.registrationStatus || '').toUpperCase() !== 'OPEN';
+
   const isFull = seatsLeft <= 0;
 
   return {
@@ -35,7 +42,8 @@ export const getWorkshopAvailabilityState = (workshop, now = Date.now()) => {
     booked,
     seatsLeft,
     registrationEndDate,
-    isRegistrationClosed,
+    // It is closed if the date passed OR the status is not OPEN
+    isRegistrationClosed: isRegistrationClosed || isStatusClosed,
     isFull,
   };
 };
