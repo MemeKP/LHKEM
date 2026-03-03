@@ -104,9 +104,10 @@ const WorkshopDetail = () => {
     );
   }
 
-  // FIX: Properly calculate seats using real backend variables
-  const capacity = workshop.capacity || workshop.seatLimit || 0;
-  const booked = workshop.current_participants || workshop.seatsBooked || 0;
+  const capacity = workshop?.capacity || workshop?.seatLimit || 0;
+  const confirmedSeats = workshop?.current_participants || workshop?.seatsBooked || 0;
+  const pendingSeats = Math.max(0, workshop?.pendingRegistrationSeat || 0);
+  const booked = confirmedSeats + pendingSeats;
   const seatsAvailable = Math.max(0, capacity - booked);
   const isFull = seatsAvailable <= 0;
 
@@ -148,7 +149,12 @@ const WorkshopDetail = () => {
                   <span className="text-gray-400">•</span>
                   <div className="flex items-center gap-1 text-gray-600">
                     <Users className="h-5 w-5" />
-                    <span>{booked}/{capacity} {t('workshopDetail.enrolled') || ct('คนเข้าร่วม', 'enrolled')}</span>
+                    <span>{confirmedSeats}/{capacity} {t('workshopDetail.enrolled') || ct('คนเข้าร่วม', 'enrolled')}</span>
+                    {pendingSeats > 0 && (
+                      <span className="ml-2 text-xs font-medium text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">
+                        {ct('รอยืนยัน', 'Pending')} {pendingSeats}
+                      </span>
+                    )}
                   </div>
                 </div>
 

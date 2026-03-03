@@ -148,13 +148,6 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
     return parsed;
   }, [registrationEndDate]);
 
-  const isRegistrationClosed = useMemo(() => {
-    if (!registrationEndDateObj) return false;
-    const endOfDay = new Date(registrationEndDateObj);
-    endOfDay.setHours(23, 59, 59, 999);
-    return Date.now() > endOfDay.getTime();
-  }, [registrationEndDateObj]);
-
   const shopHoursInfo = useMemo(() => {
     const open = derivedShop?.openTime?.trim();
     const close = derivedShop?.closeTime?.trim();
@@ -171,10 +164,26 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
   const isTourist = normalizedUserRole === 'TOURIST';
   const isNonTouristAuthenticated = isAuthenticated && !isTourist;
 
+  // 1. Calculate seats first
   const capacity = workshop?.capacity || workshop?.seatLimit || 0;
-  const booked = workshop?.current_participants || workshop?.seatsBooked || 0;
+  const confirmedSeats = workshop?.current_participants || workshop?.seatsBooked || 0;
+  const pendingSeats = Math.max(0, workshop?.pendingRegistrationSeat || 0);
+  const booked = confirmedSeats + pendingSeats;
   const availableSeats = Math.max(0, capacity - booked);
 
+  // 2. Registration status checks
+  const isRegistrationStatusOpen = String(workshop?.registrationStatus || 'OPEN').toUpperCase() === 'OPEN';
+
+  const isRegistrationClosed = useMemo(() => {
+    if (!isRegistrationStatusOpen) return true; // If status is not OPEN, it is closed
+    if (!registrationEndDateObj) return false;  // If there's no end date, relies purely on status
+    
+    const endOfDay = new Date(registrationEndDateObj);
+    endOfDay.setHours(23, 59, 59, 999);
+    return Date.now() > endOfDay.getTime(); // If today is past the end date, it is closed
+  }, [registrationEndDateObj, isRegistrationStatusOpen]);
+
+  // 3. Functions that rely on availableSeats
   const handleIncrement = () => {
     if (guestCount < availableSeats) {
       setGuestCount(prev => prev + 1);
@@ -298,8 +307,13 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
               </div>
               <div className="text-right space-y-1">
                 {/* FIX: Actually use availableSeats here */}
-                <span className="text-xs font-medium text-orange-600 bg-orange-50 px-3 py-1 rounded-full inline-block">
+                <span className="text-xs font-medium text-orange-600 bg-orange-50 px-3 py-1 rounded-full inline-flex items-center gap-1">
                   {ct('ที่นั่งคงเหลือ', 'Seats left')} {availableSeats}
+                  {pendingSeats > 0 && (
+                    <span className="text-orange-500 bg-white px-1.5 py-0.5 rounded text-[10px] shadow-sm ml-1">
+                      {ct('รอยืนยัน', 'Pending')} {pendingSeats}
+                    </span>
+                  )}
                 </span>
                 <p className="text-xs text-gray-500 flex items-center gap-1 justify-end">
                   <Clock className="h-3 w-3" /> {workshop.duration || workshop.time || `${workshop.startTime} - ${workshop.endTime}`}
@@ -522,7 +536,7 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
             {isSubmitting 
               ? ct('กำลังดำเนินการ...', 'Processing...') 
               : isRegistrationClosed
-                ? ct('ปิดรับสมัครแล้ว', 'Registration closed')
+                ? (!isRegistrationStatusOpen ? ct('ปิดรับสมัคร', 'Closed') : ct('ปิดรับสมัครแล้ว (เลยกำหนดการ)', 'Registration closed (Past Date)'))
                 : isSeatRequestInvalid
                   ? (availableSeats <= 0
                       ? ct('เต็มแล้ว', 'Full')

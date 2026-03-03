@@ -59,7 +59,7 @@ export class Workshop {
   /* Admin approval status */
   approvalStatus: string;
 
-  // Add these inside your Workshop class:
+  // Additional Workshop Details
   @Prop() startDate: string;
   @Prop() endDate: string;
   @Prop() startTime: string;
@@ -81,8 +81,13 @@ export class Workshop {
   @Prop({ type: Types.ObjectId, ref: 'Community', required: true, index: true })
   communityId: Types.ObjectId;
 
+  /* Current CONFIRMED Participants */
   @Prop({ type: Number, default: 0 })
   current_participants: number;
+
+  /* Current PENDING Participants */
+  @Prop({ type: Number, default: 0 })
+  pendingRegistrationSeat: number;
 
   @Prop({
     type: String,

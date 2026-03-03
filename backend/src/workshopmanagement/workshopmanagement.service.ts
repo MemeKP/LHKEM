@@ -161,7 +161,6 @@ export class WorkshopManagementService {
   }
 
   async updateRegistrationStatus(registrationId: string, status: string) {
-    // 1. Find the registration using the direct DB connection
     const registration = await this.workshopModel.db.collection('workshopregistrations')
       .findOne({ _id: new Types.ObjectId(registrationId) });
 
@@ -169,17 +168,40 @@ export class WorkshopManagementService {
       throw new NotFoundException('Registration record not found');
     }
 
-    // 2. Update the status in the workshopregistrations collection
+    const currentStatus = registration.status;
+    const slots = registration.slots || 1;
+
+    // อัปเดตสถานะใน collection workshopregistrations
     await this.workshopModel.db.collection('workshopregistrations').updateOne(
       { _id: new Types.ObjectId(registrationId) },
       { $set: { status: status } }
     );
 
-    // 3. Logic for Issue #3: Only increase seats if the Shop Owner ACCEPTS
-    if (status === 'CONFIRMED') {
+    // ปรับลดยอดที่นั่งตามเงื่อนไขใหม่
+    let incQuery: any = {};
+    if (status === 'CONFIRMED' && currentStatus === 'PENDING') {
+      
+      // Add this capacity check before confirming
+      const ws = await this.workshopModel.findById(registration.workshopId);
+      if (ws) {
+        const current = ws.current_participants || 0;
+        if (current + slots > ws.capacity) {
+          throw new BadRequestException('Cannot confirm: exceeds workshop capacity');
+        }
+      }
+
+      incQuery = { 
+        current_participants: slots,
+        pendingRegistrationSeat: -slots 
+      };
+    } else if (status === 'REJECTED' && currentStatus === 'PENDING') {
+      incQuery = { pendingRegistrationSeat: -slots };
+    }
+
+    if (Object.keys(incQuery).length > 0) {
       await this.workshopModel.findByIdAndUpdate(
         registration.workshopId,
-        { $inc: { current_participants: registration.slots || 1 } }
+        { $inc: incQuery }
       );
     }
 

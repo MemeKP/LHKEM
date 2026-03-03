@@ -231,7 +231,7 @@ const Workshops = () => {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8 animate-stagger">
                   {paginatedWorkshops.map((workshop) => {
-                    const { seatsLeft, isFull, isRegistrationClosed } = getWorkshopAvailabilityState(workshop);
+                    const { seatsLeft, pendingSeats, isFull, isRegistrationClosed } = getWorkshopAvailabilityState(workshop);
                     const isRegistrationStatusOpen = workshop.registrationStatus === 'OPEN' || !workshop.registrationStatus;
                     const isRegistrationOpen = isRegistrationStatusOpen && !isRegistrationClosed;
 
@@ -299,7 +299,14 @@ const Workshops = () => {
                               </div>
                               <div>
                                 <p className="text-xs uppercase tracking-wide text-orange-600">{ct('ที่นั่งคงเหลือ', 'Seats left')}</p>
-                                <p className="text-sm font-semibold text-gray-900">{Math.max(0, seatsLeft)}</p>
+                                <div className="flex items-center gap-2">
+                                  <p className="text-sm font-semibold text-gray-900">{Math.max(0, seatsLeft)}</p>
+                                  {pendingSeats > 0 && (
+                                    <span className="text-[10px] font-medium text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded">
+                                      {ct('รอยืนยัน', 'Pending')} {pendingSeats}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
                             {workshop.location && (

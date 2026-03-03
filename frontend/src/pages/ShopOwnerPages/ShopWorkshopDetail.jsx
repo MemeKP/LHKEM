@@ -13,10 +13,10 @@ const ShopWorkshopDetail = () => {
   const navigate = useNavigate();
   const { t, ct } = useTranslation();
   const { data: shop, isLoading: shopLoading } = useMyShop();
-  
   const [workshop, setWorkshop] = useState(null);
   const [enrollments, setEnrollments] = useState([]); 
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Fetch Workshop Data & Enrollments
   useEffect(() => {
@@ -258,6 +258,89 @@ const ShopWorkshopDetail = () => {
     };
   };
 
+  const filteredEnrollments = enrollments.filter(e => {
+    if (!searchQuery) return true;
+    
+    const { name, email, phone } = getEnrollmentUserInfo(e);
+    const queryLower = searchQuery.toLowerCase();
+    
+    return (
+      (name && name.toLowerCase().includes(queryLower)) ||
+      (email && email.toLowerCase().includes(queryLower)) ||
+      (phone && phone.includes(queryLower))
+    );
+  });
+
+  const handleSendMassEmail = async () => {
+    // 1. Filter out users who don't have a valid email
+    const emails = enrollments
+      .map(e => getEnrollmentUserInfo(e).email)
+      .filter(email => email && email !== '-');
+
+    if (emails.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: ct('ไม่พบอีเมล', 'No Emails Found'),
+        text: ct('ไม่มีผู้ลงทะเบียนที่มีอีเมลในระบบ', 'No registered participants have an email address.'),
+      });
+      return;
+    }
+
+    // 2. Prompt the shop owner for a custom message
+    const { value: message } = await Swal.fire({
+      title: ct('ส่งอีเมลแจ้งเตือน', 'Send Email Notification'),
+      input: 'textarea',
+      inputLabel: ct('ข้อความของคุณ', 'Your Message'),
+      inputPlaceholder: ct('พิมพ์ข้อความที่ต้องการส่งถึงผู้ลงทะเบียนที่นี่...', 'Type your message here...'),
+      inputAttributes: {
+        'aria-label': 'Type your message here'
+      },
+      showCancelButton: true,
+      confirmButtonText: ct('ส่งอีเมล', 'Send Email'),
+      cancelButtonText: ct('ยกเลิก', 'Cancel'),
+      inputValidator: (value) => {
+        if (!value) {
+          return ct('กรุณากรอกข้อความก่อนส่ง', 'You need to write a message!');
+        }
+      }
+    });
+
+    // 3. If a message is typed, call the backend email API
+    if (message) {
+      Swal.fire({
+        title: ct('กำลังส่งอีเมล...', 'Sending emails...'),
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+      });
+
+      try {
+        // Added /api to match the backend controller route
+        await api.post('/api/email/notifications', {
+          recipients: emails,
+          type: 'WORKSHOP_ANNOUNCEMENT', // Using the type defined in your backend
+          payload: {
+            workshopTitle: workshop.title,
+            message: message,
+            shopName: shop?.shopName || workshop.shopName || 'LHKEM'
+          }
+        });
+
+        Swal.fire({
+          icon: 'success',
+          title: ct('ส่งอีเมลสำเร็จ', 'Emails Sent'),
+          text: ct(`ส่งอีเมลไปยัง ${emails.length} ผู้เข้าร่วมแล้ว`, `Successfully sent to ${emails.length} participants.`)
+        });
+      } catch (error) {
+        console.error('Failed to send mass email:', error);
+        Swal.fire({
+          icon: 'error',
+          title: ct('เกิดข้อผิดพลาด', 'Error'),
+          text: ct('ไม่สามารถส่งอีเมลได้ กรุณาลองใหม่อีกครั้ง', 'Failed to send emails. Please try again.')
+        });
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F5EFE7] py-12 animate-fadeIn">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -410,6 +493,13 @@ const ShopWorkshopDetail = () => {
 
         <div className="bg-white rounded-xl shadow-sm p-6 mb-6 animate-slideUp border border-gray-100">
           <h2 className="text-xl font-bold text-[#2F4F2F] mb-6">{ct('รายชื่อผู้ลงทะเบียน', 'Registered Participants')}</h2>
+          <input 
+            type="text"
+            placeholder={ct('ค้นหาชื่อ, อีเมล, เบอร์โทร...', 'Search name, email, phone...')}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full sm:w-64 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39]"
+          />
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -424,14 +514,16 @@ const ShopWorkshopDetail = () => {
                 </tr>
               </thead>
               <tbody>
-                {enrollments.length === 0 ? (
+                {filteredEnrollments.length === 0 ? (
                   <tr>
                     <td colSpan="7" className="px-4 py-8 text-center text-gray-500">
-                      {ct('ยังไม่มีผู้ลงทะเบียน', 'No participants registered yet')}
+                      {searchQuery 
+                        ? ct('ไม่พบข้อมูลที่ค้นหา', 'No results found for your search') 
+                        : ct('ยังไม่มีผู้ลงทะเบียน', 'No participants registered yet')}
                     </td>
                   </tr>
                 ) : (
-                  enrollments.map((e, idx) => {
+                  filteredEnrollments.map((e, idx) => {
                     const { name: userName, email: userEmail, phone: userPhone } = getEnrollmentUserInfo(e);
                     const bookedSeats = e.slots || e.guestCount || 1;
 
@@ -487,10 +579,14 @@ const ShopWorkshopDetail = () => {
             {ct('ใช้ปุ่มนี้เพื่อแจ้งเตือนผู้เข้าร่วมเกี่ยวกับข้อมูลสำคัญเพิ่มเติม', 'Use these buttons to notify participants about important updates.')}
           </p>
           <div className="flex flex-wrap gap-3">
-            <button className="flex items-center gap-2 px-6 py-3 border border-[#2E7D32] text-[#2E7D32] rounded-full font-semibold hover:bg-[#E8F5E9] transition-colors">
+            <button 
+              onClick={handleSendMassEmail} // <-- ADD THIS
+              className="flex items-center gap-2 px-6 py-3 border border-[#2E7D32] text-[#2E7D32] rounded-full font-semibold hover:bg-[#E8F5E9] transition-colors"
+            >
               <Mail className="h-4 w-4" />
               {ct('ส่งอีเมลถึงผู้ลงทะเบียนทั้งหมด', 'Send Email to All Registrants')}
             </button>
+            
             <button className="flex items-center gap-2 px-6 py-3 border border-[#D1D5DB] text-[#4B5563] rounded-full font-semibold hover:bg-gray-50 transition-colors">
               <Mail className="h-4 w-4" />
               {ct('ส่งข้อความถึงผู้ลงทะเบียนทั้งหมด', 'Send Message to All Registrants')}
