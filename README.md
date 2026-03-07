@@ -48,6 +48,6 @@ If you see the lhkem database, MongoDB is working correctly :)
 </div>
 
 
+
 FrontEnd Setup
 - frontend/README.md (for frontend development)
-- frontend/mocks/README.md (for mock data and API simulation)
