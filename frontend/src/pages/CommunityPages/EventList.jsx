@@ -195,29 +195,29 @@ const EventList = () => {
     }
   };
 
-  if (isLoading) return <div className="p-8 text-center text-gray-500 animate-fadeIn">กำลังโหลดข้อมูล...</div>;
-  if (isError) return <div className="p-8 text-center text-red-500">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>;
+  if (isLoading) return <div className="p-8 text-center text-lg font-bold text-gray-500 animate-fadeIn">กำลังโหลดข้อมูล...</div>;
+  if (isError) return <div className="p-8 text-center text-lg font-bold text-red-500">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>;
 
   return (
     <div className="min-h-screen bg-[#F5EFE7] py-8 animate-fadeIn">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8 animate-fadeIn">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
             <div>
-              <h1 className="text-3xl font-bold text-[#1A1A1A]">กิจกรรมของชุมชน</h1>
-              <p className="text-[#666666] mt-1">จัดการและดูรายละเอียด Event ทั้งหมด</p>
+              <h1 className="text-3xl lg:text-4xl xl:text-5xl font-extrabold text-[#1A1A1A]">กิจกรรมของชุมชน</h1>
+              <p className="text-base font-bold text-[#666666] mt-2">จัดการและดูรายละเอียด Event ทั้งหมด</p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row gap-3 shrink-0">
               <button
                 onClick={() => navigate('/community-admin/dashboard')}
-                className="px-6 py-3 bg-[#1E293B] hover:bg-[#0F172A] text-white font-semibold rounded-lg transition-colors"
+                className="px-5 py-3 bg-[#1E293B] hover:bg-[#0F172A] text-white text-base font-bold rounded-xl transition-colors text-center"
               >
                 กลับหน้าหลัก
               </button>
               <button
                 onClick={() => navigate('/community-admin/events/create')}
-                className="flex items-center gap-2 px-6 py-3 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] font-semibold rounded-lg transition-colors"
+                className="flex items-center justify-center gap-2 px-5 py-3 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-base font-bold rounded-xl transition-colors"
               >
                 <Plus className="h-5 w-5" />
                 สร้าง Event ใหม่
@@ -234,7 +234,7 @@ const EventList = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="ค้นหาชื่อ Event หรือสถานที่..."
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-base font-bold"
               />
             </div>
 
@@ -243,7 +243,7 @@ const EventList = () => {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="pl-10 pr-8 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent appearance-none bg-white"
+                className="pl-10 pr-8 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent appearance-none bg-white text-base font-bold"
               >
                 {statusOptions.map(option => (
                   <option key={option.value} value={option.value}>{option.label}</option>
@@ -257,8 +257,8 @@ const EventList = () => {
         {filteredEvents.length === 0 ? (
           <div className="bg-white rounded-lg shadow-sm p-12 text-center animate-fadeIn">
             <Calendar className="h-16 w-16 text-[#CCCCCC] mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-[#1A1A1A] mb-2">ไม่พบ Event</h3>
-            <p className="text-[#666666]">
+            <h3 className="text-2xl font-bold text-[#1A1A1A] mb-2">ไม่พบ Event</h3>
+            <p className="text-base font-bold text-[#666666]">
               {searchTerm || filterStatus !== 'all' 
                 ? 'ไม่พบ Event ที่ตรงกับเงื่อนไขการค้นหา'
                 : 'ยังไม่มี Event ในชุมชน'
@@ -317,20 +317,20 @@ const EventList = () => {
 
                 {/* Event Info */}
                 <div className="p-6">
-                  <h3 className="text-lg font-semibold text-[#1A1A1A] mb-2 line-clamp-2">{event.title}</h3>
-                  <p className="text-sm text-[#666666] mb-4 line-clamp-2">{event.description}</p>
+                  <h3 className="text-xl font-bold text-[#1A1A1A] mb-2 line-clamp-2">{event.title}</h3>
+                  <p className="text-base font-bold text-[#666666] mb-4 line-clamp-2">{event.description}</p>
 
                   {/* Event Details */}
-                  <div className="space-y-3 text-sm mb-5">
-                    <div className="flex items-start gap-2 text-[#666666]">
-                      <Calendar className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <div className="space-y-3 mb-5">
+                    <div className="flex items-start gap-2 text-base font-bold text-[#666666]">
+                      <Calendar className="h-4 w-4 mt-0.5 shrink-0" />
                       <div>
-                        <p className="font-medium">{new Date(event.start_at).toLocaleDateString('th-TH', { 
+                        <p>{new Date(event.start_at).toLocaleDateString('th-TH', { 
                           year: 'numeric', 
                           month: 'long', 
                           day: 'numeric' 
                         })}</p>
-                        <p className="text-xs">
+                        <p className="text-sm">
                           {new Date(event.start_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
                           {' - '}
                           {new Date(event.end_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
@@ -338,18 +338,18 @@ const EventList = () => {
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-2 text-[#666666]">
-                      <MapPin className="h-4 w-4 flex-shrink-0" />
+                    <div className="flex items-center gap-2 text-base font-bold text-[#666666]">
+                      <MapPin className="h-4 w-4 shrink-0" />
                       <span className="line-clamp-1">{getLocationName(event.location)}</span>
                     </div>
                     {event.contact?.phone && (
-                      <div className="flex items-center gap-2 text-[#666666]">
-                        <Phone className="h-4 w-4 flex-shrink-0" />
+                      <div className="flex items-center gap-2 text-base font-bold text-[#666666]">
+                        <Phone className="h-4 w-4 shrink-0" />
                         <span>{event.contact.phone}</span>
                       </div>
                     )}
                     {event.additional_info && (
-                      <p className="text-xs text-[#999999] line-clamp-2 bg-[#F9F2E7] px-3 py-2 rounded-lg">
+                      <p className="text-sm font-bold text-[#999999] line-clamp-2 bg-[#F9F2E7] px-3 py-2 rounded-lg">
                         {event.additional_info}
                       </p>
                     )}
@@ -359,20 +359,20 @@ const EventList = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={() => navigate(`/community-admin/events/${event._id}`)}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-[#666666] font-medium rounded-lg transition-colors"
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-[#666666] text-base font-bold rounded-lg transition-colors"
                     >
                       <Eye className="h-4 w-4" />
                       ดูรายละเอียด
                     </button>
                     <button
                       onClick={() => navigate(`/community-admin/events/${event._id}/edit`)}
-                      className="flex items-center justify-center gap-2 px-4 py-2 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] font-medium rounded-lg transition-colors"
+                      className="flex items-center justify-center gap-2 px-4 py-2 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-base font-bold rounded-lg transition-colors"
                     >
                       <Edit className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(event._id)}
-                      className="flex items-center justify-center gap-2 px-4 py-2 bg-[#E53935] hover:bg-[#D32F2F] text-white font-medium rounded-lg transition-colors"
+                      className="flex items-center justify-center gap-2 px-4 py-2 bg-[#E53935] hover:bg-[#D32F2F] text-white text-base font-bold rounded-lg transition-colors"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -385,7 +385,7 @@ const EventList = () => {
 
         {/* Summary */}
         {filteredEvents.length > 0 && (
-          <div className="mt-8 text-center text-[#666666]">
+          <div className="mt-8 text-center text-lg font-bold text-[#666666]">
             แสดง {filteredEvents.length} Event จากทั้งหมด {events.length} รายการ
           </div>
         )}

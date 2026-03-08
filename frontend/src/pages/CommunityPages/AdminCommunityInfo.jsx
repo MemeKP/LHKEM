@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { BarChart, Bar, PieChart as RechartsPie, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { TrendingUp, Users, Store, Calendar, Award } from 'lucide-react';
@@ -180,7 +180,7 @@ const AdminCommunityInfo = () => {
   if (statsLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#F5EFE7]">
-        <p className="text-gray-600">{ct('กำลังโหลดข้อมูล...', 'Loading data...')}</p>
+        <p className="text-lg font-bold text-gray-700">{ct('กำลังโหลดข้อมูล...', 'Loading data...')}</p>
       </div>
     );
   }
@@ -197,10 +197,10 @@ const AdminCommunityInfo = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-2">
             {ct('ภาพรวมของชุมชน', 'Community Dashboard')}
           </h1>
-          <p className="text-gray-600">
+          <p className="text-lg font-bold text-gray-700">
             {ct('สถิติและข้อมูลสำคัญของชุมชนโหล่งฮิมคาว', 'Statistics and key metrics for Loeng Him Kaw community')}
           </p>
         </div>
@@ -212,7 +212,7 @@ const AdminCommunityInfo = () => {
               <button
                 key={range}
                 onClick={() => setTimeRange(range)}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition ${timeRange === range
+                className={`px-6 py-2.5 text-lg font-bold rounded-md transition ${timeRange === range
                   ? 'bg-orange-500 text-white'
                   : 'text-gray-700 hover:bg-gray-100'
                   }`}
@@ -230,33 +230,33 @@ const AdminCommunityInfo = () => {
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-2">
               <Users className="h-8 w-8 text-blue-600" />
-              <span className="text-2xl font-bold text-gray-900">{stats.totalVisitors}</span>
+              <span className="text-2xl font-extrabold text-gray-900">{stats.totalVisitors}</span>
             </div>
-            <p className="text-sm text-gray-600">{ct('ผู้เข้าชม', 'Visitors')}</p>
+            <p className="text-lg font-bold text-gray-700">{ct('ผู้เข้าชม', 'Visitors')}</p>
           </div>
 
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-2">
               <Calendar className="h-8 w-8 text-green-600" />
-              <span className="text-2xl font-bold text-gray-900">{stats.totalWorkshops}</span>
+              <span className="text-2xl font-extrabold text-gray-900">{stats.totalWorkshops}</span>
             </div>
-            <p className="text-sm text-gray-600">Workshop</p>
+            <p className="text-lg font-bold text-gray-700">Workshop</p>
           </div>
 
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-2">
               <Calendar className="h-8 w-8 text-purple-600" />
-              <span className="text-2xl font-bold text-gray-900">{stats.totalEvents}</span>
+              <span className="text-2xl font-extrabold text-gray-900">{stats.totalEvents}</span>
             </div>
-            <p className="text-sm text-gray-600">{ct('กิจกรรม', 'Events')}</p>
+            <p className="text-lg font-bold text-gray-700">{ct('กิจกรรม', 'Events')}</p>
           </div>
 
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-2">
               <Store className="h-8 w-8 text-pink-600" />
-              <span className="text-2xl font-bold text-gray-900">{stats.totalShops}</span>
+              <span className="text-2xl font-extrabold text-gray-900">{stats.totalShops}</span>
             </div>
-            <p className="text-sm text-gray-600">{ct('ร้านค้า', 'Shops')}</p>
+            <p className="text-lg font-bold text-gray-700">{ct('ร้านค้า', 'Shops')}</p>
           </div>
         </div>
 
@@ -264,7 +264,7 @@ const AdminCommunityInfo = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* Workshop by Category - Bar Chart */}
           <div className="bg-white rounded-2xl p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
               {ct('จำนวน Workshop แยกตามประเภท', 'Workshops by Category')}
             </h3>
             <ResponsiveContainer width="100%" height={300}>
@@ -284,7 +284,7 @@ const AdminCommunityInfo = () => {
 
           {/* Top 5 Workshops */}
           <div className="bg-white rounded-2xl p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
               {ct('Workshop ยอดนิยม 5 อันดับแรก', 'Top 5 Workshops')}
             </h3>
             <div className="space-y-3">
@@ -298,13 +298,12 @@ const AdminCommunityInfo = () => {
                       {workshop.rank}
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900">{workshop.name}</p>
-                      <p className="text-xs text-gray-500">{workshop.participants} {ct('คน', 'participants')}</p>
+                      <p className="text-base font-bold text-gray-600">{workshop.participants} {ct('คน', 'participants')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Award className="h-4 w-4 text-yellow-500" />
-                    <span className="font-semibold text-gray-900">{workshop.rating}</span>
+                    <Award className="h-5 w-5 text-yellow-500" />
+                    <span className="text-lg font-bold text-gray-900">{workshop.rating}</span>
                   </div>
                 </div>
               ))}
@@ -316,7 +315,7 @@ const AdminCommunityInfo = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* Workshop Status - Pie Chart */}
           <div className="bg-white rounded-2xl p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
               {ct('สถานะ Workshop', 'Workshop Status')}
             </h3>
 
@@ -341,7 +340,7 @@ const AdminCommunityInfo = () => {
                 </RechartsPie>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-[300px] text-gray-400 text-sm">
+              <div className="flex items-center justify-center h-[300px] text-gray-400 text-lg font-bold">
                 {ct('ไม่มีข้อมูลในช่วงเวลานี้', 'No data for this period')}
               </div>
             )}
@@ -349,19 +348,19 @@ const AdminCommunityInfo = () => {
 
           {/* Engagement by Category */}
           <div className="bg-white rounded-2xl p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
               {ct('ความนิยมแต่ละประเภท', 'Engagement by Category')}
             </h3>
             <div className="space-y-4">
               {engagementData.map((item, index) => (
                 <div key={index}>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700">{item.category}</span>
-                    <span className="text-sm font-semibold text-gray-900">{item.value}%</span>
+                    <span className="text-base font-bold text-gray-800">{item.category}</span>
+                    <span className="text-base font-bold text-gray-900">{item.value}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-3">
                     <div
-                      className="bg-gradient-to-r from-orange-400 to-orange-600 h-3 rounded-full transition-all duration-500"
+                      className="bg-linear-to-r from-orange-400 to-orange-600 h-3 rounded-full transition-all duration-500"
                       style={{ width: `${item.value}%` }}
                     ></div>
                   </div>
@@ -372,18 +371,18 @@ const AdminCommunityInfo = () => {
         </div>
 
         {/* Growth Metrics */}
-        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-6 mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="bg-linear-to-br from-green-50 to-green-100 rounded-2xl p-6 mb-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">
             {ct('การเติบโตของชุมชนในรอบ 6 เดือน', 'Community Growth (Last 6 Months)')}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {growthMetrics.map((metric, index) => (
-              <div key={index} className="bg-white rounded-xl p-4">
-                <p className="text-sm text-gray-600 mb-1">{metric.label}</p>
-                <p className="text-2xl font-bold text-gray-900 mb-1">{metric.value}</p>
+              <div key={index} className="bg-white rounded-xl p-5">
+                <p className="text-base font-bold text-gray-700 mb-1">{metric.label}</p>
+                <p className="text-3xl font-extrabold text-gray-900 mb-1">{metric.value}</p>
                 <div className="flex items-center gap-1">
-                  <TrendingUp className="h-4 w-4 text-green-600" />
-                  <span className="text-sm font-semibold text-green-600">{metric.change}</span>
+                  <TrendingUp className="h-5 w-5 text-green-600" />
+                  <span className="text-lg font-bold text-green-600">{metric.change}</span>
                 </div>
               </div>
             ))}

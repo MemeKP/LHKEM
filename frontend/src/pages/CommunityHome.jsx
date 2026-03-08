@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+﻿import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useOutletContext, useParams } from 'react-router-dom';
 import { MapPin, Calendar, Heart, Leaf, Users, Palette, HomeIcon, List, BookXIcon, Box, BoxesIcon, Sparkle, SparklesIcon, Clock, Users as UsersIcon, Star, Store, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
@@ -254,31 +254,31 @@ const CommunityHome = () => {
             )}
             <div className="relative z-10">
               <div className="text-center max-w-3xl mx-auto">
-                <div className="inline-flex items-center space-x-2 bg-white/15 border border-white/20 px-4 py-1 rounded-full text-sm font-medium mb-6">
+                <div className="inline-flex items-center space-x-2 bg-white/15 border border-white/20 px-4 py-1 rounded-full text-lg font-bold mb-6">
                   <SparklesIcon className="h-4 w-4" />
                   <span>{t('hero.badge')}</span>
                 </div>
-                <h1 className="text-4xl md:text-5xl font-extrabold leading-tight mb-4 drop-shadow-md">
+                <h1 className="text-5xl md:text-7xl font-extrabold leading-tight mb-4 drop-shadow-md">
                   {ct(
                     community?.hero_section?.title || `${community?.name || ''} ชุมชนแห่งความสุข`,
                     community?.hero_section?.title_en || `${community?.name_en || ''} Community of Happiness`
                   )}
                 </h1>
-                <p className="text-lg text-white/90 mb-8 line-clamp-2 drop-shadow-sm">
+                <p className="text-xl font-bold text-white mb-8 line-clamp-2 drop-shadow-sm">
                   {ct(community?.hero_section?.description, community?.hero_section?.description_en)}
                 </p>
 
                 <div className="flex flex-col sm:flex-row justify-center gap-4">
                   <Link
                     to={`/${community?.slug || ''}/workshops`}
-                    className="inline-flex items-center justify-center gap-2 bg-orange-400 hover:bg-orange-500 text-white font-semibold px-8 py-3 rounded-full shadow-lg transition"
+                    className="inline-flex items-center justify-center gap-2 bg-orange-400 hover:bg-orange-500 text-white text-lg font-bold px-8 py-3 rounded-full shadow-lg transition"
                   >
                     <BoxesIcon className="h-5 w-5" />
                     {t('hero.viewWorkshops')}
                   </Link>
                   <Link
                     to={`/${community?.slug || ''}/map`}
-                    className="inline-flex items-center justify-center gap-2 border border-white/40 text-white px-8 py-3 rounded-full hover:bg-white/10 transition backdrop-blur-sm"
+                    className="inline-flex items-center justify-center gap-2 border border-white/40 text-white text-lg font-bold px-8 py-3 rounded-full hover:bg-white/10 transition backdrop-blur-sm"
                   >
                     <MapPin className="h-5 w-5" />
                     {t('hero.exploreMap')}
@@ -288,8 +288,8 @@ const CommunityHome = () => {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-10">
                 {stats.map((stat, index) => (
                   <div key={index} className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl px-6 py-4 text-center">
-                    <div className="text-3xl font-bold text-orange-300">{stat.number}</div>
-                    <p className="text-sm text-white/80">{stat.label}</p>
+                    <div className="text-4xl font-extrabold text-orange-300">{stat.number}</div>
+                    <p className="text-lg font-bold text-white">{stat.label}</p>
                   </div>
                 ))}
               </div>
@@ -302,10 +302,10 @@ const CommunityHome = () => {
       {community?.images && community.images.length >= 4 && <section className="px-4 py-16 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-8">
-            <span className="inline-block bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+            <span className="inline-block bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-lg font-bold mb-4">
               {ct('ภาพบรรยากาศ', 'Gallery')}
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
+            <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900">
               {ct('สัมผัสบรรยากาศชุมชน', 'Experience Our Community')}
             </h2>
           </div>
@@ -359,7 +359,7 @@ const CommunityHome = () => {
             <h2 className="text-3xl md:text-4xl font-extrabold text-[#0f2f3a] mb-4 leading-tight">
               {ct(community?.name || '', community?.name_en || '')}
             </h2>
-            <p className="text-gray-600 mb-8 text-lg leading-relaxed line-clamp-4">
+            <p className="text-gray-700 mb-8 text-lg font-semibold leading-relaxed line-clamp-4">
               {ct(community?.history || '', community?.history_en || '')}
             </p>
             <Link
@@ -373,7 +373,7 @@ const CommunityHome = () => {
 
           {highlights.length === 0 ?
             (
-              <p className="text-gray-500">ไม่มีข้อมูลจุดเด่น</p>
+              <p className="text-lg font-bold text-gray-700">ไม่มีข้อมูลจุดเด่น</p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {highlights.map((feature, index) => (
@@ -381,10 +381,10 @@ const CommunityHome = () => {
                     <div className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center mb-4">
                       {getIcon(feature.title)}
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    <h3 className="text-xl font-extrabold text-gray-900 mb-2">
                       {ct(feature.title, feature.title_en)}
                     </h3>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-lg font-bold text-gray-700">
                       {ct(feature.desc, feature.desc_en)}
                     </p>
                   </div>
@@ -397,18 +397,18 @@ const CommunityHome = () => {
       <section className="py-16 px-4 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-8">
-            <span className="inline-block bg-orange-50 text-orange-600 font-semibold text-sm px-4 py-2 rounded-full mb-4">
+            <span className="inline-block bg-orange-50 text-orange-600 text-lg font-bold px-4 py-2 rounded-full mb-4">
               {t('explore.badge')}
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">{t('explore.title')}</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto mb-8">{t('explore.description')}</p>
+            <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-3">{t('explore.title')}</h2>
+            <p className="text-lg font-bold text-gray-700 max-w-2xl mx-auto mb-8">{t('explore.description')}</p>
           </div>
 
           <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-gray-200">
             <div className="h-96 md:h-[500px]">
               {mapPreviewLoading ? (
                 <div className="w-full h-full bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 flex items-center justify-center">
-                  <div className="text-center space-y-3 text-gray-500">
+                  <div className="text-center space-y-3 text-lg font-bold text-gray-700">
                     <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin mx-auto"></div>
                     <p>{ct('กำลังโหลดแผนที่ชุมชน...', 'Loading community map...')}</p>
                   </div>
@@ -422,7 +422,7 @@ const CommunityHome = () => {
                 <div className="w-full h-full bg-gradient-to-br from-gray-100 via-gray-50 to-white flex items-center justify-center">
                   <div className="text-center">
                     <MapPin className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500 text-lg font-medium">
+                    <p className="text-xl font-bold text-gray-700">
                       {ct('ยังไม่มีแผนที่สำหรับชุมชนนี้', 'Community map is not available yet.')}
                     </p>
                   </div>
@@ -433,7 +433,7 @@ const CommunityHome = () => {
             <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
               <Link
                 to={`/${community?.slug || ''}/map`}
-                className="inline-flex items-center justify-center gap-2 bg-white text-gray-900 px-8 py-4 rounded-full font-semibold hover:bg-gray-100 transition shadow-xl border-2 border-gray-200"
+                className="inline-flex items-center justify-center gap-2 bg-white text-gray-900 text-lg font-bold px-8 py-4 rounded-full hover:bg-gray-100 transition shadow-xl border-2 border-gray-200"
               >
                 <MapPin className="h-5 w-5" />
                 {t('explore.viewMap')}
@@ -448,13 +448,13 @@ const CommunityHome = () => {
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12 text-center md:text-left">
             <div>
-              <span className="inline-block bg-orange-50 text-orange-600 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+              <span className="inline-block bg-orange-50 text-orange-600 px-4 py-2 rounded-full text-lg font-bold mb-4">
                 {ct('กิจกรรมในชุมชน', 'Community Events')}
               </span>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+              <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-3">
                 {ct('กำลังจะจัดขึ้น', 'Upcoming Events')}
               </h2>
-              <p className="text-gray-600 max-w-2xl">
+              <p className="text-lg font-bold text-gray-700 max-w-2xl">
                 {ct('ติดตามกิจกรรมพิเศษ เทศกาล และงานชุมชนที่กำลังจะเกิดขึ้น', 'See festivals and special events happening in the community')}
               </p>
             </div>
@@ -492,11 +492,11 @@ const CommunityHome = () => {
               ))}
             </div>
           ) : eventsError ? (
-            <div className="text-center text-red-500">{ct('ไม่สามารถโหลดกิจกรรมได้', 'Unable to load events')}</div>
+            <div className="text-center text-lg font-bold text-red-600">{ct('ไม่สามารถโหลดกิจกรรมได้', 'Unable to load events')}</div>
           ) : formattedEvents.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-2xl border border-gray-200">
               <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">{ct('ยังไม่มีกิจกรรมที่เปิดอยู่ในขณะนี้', 'No open events at the moment')}</p>
+              <p className="text-lg font-bold text-gray-700">{ct('ยังไม่มีกิจกรรมที่เปิดอยู่ในขณะนี้', 'No open events at the moment')}</p>
             </div>
           ) : (
             <div className="relative">
@@ -525,26 +525,26 @@ const CommunityHome = () => {
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
                       <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-white">
-                        <span className="px-3 py-1 bg-white/20 backdrop-blur rounded-full text-xs font-semibold">
+                        <span className="px-3 py-1 bg-white/20 backdrop-blur rounded-full text-base font-bold">
                           {event.dateLabel}
                         </span>
-                        <div className="flex items-center gap-2 text-sm font-semibold">
+                        <div className="flex items-center gap-2 text-base font-bold">
                           <Clock className="h-4 w-4" />
                           {event.startFullLabel.split('•')[1] || ''}
                         </div>
                       </div>
                     </div>
                     <div className="p-6 space-y-4">
-                      <h3 className="text-xl font-bold text-gray-900">{event.title}</h3>
-                      <p className="text-sm text-gray-600 line-clamp-3">{event.description}</p>
+                      <h3 className="text-2xl font-extrabold text-gray-900">{event.title}</h3>
+                      <p className="text-lg font-semibold text-gray-700 line-clamp-3">{event.description}</p>
                       <div className="grid grid-cols-1 gap-3 rounded-2xl border border-orange-100 bg-gradient-to-br from-orange-50/60 to-amber-50 p-4">
                         <div className="flex items-start gap-3">
                           <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
                             <Clock className="h-4 w-4 text-orange-500" />
                           </div>
                           <div>
-                            <p className="text-xs uppercase tracking-wide text-orange-600">{ct('เริ่ม', 'Starts')}</p>
-                            <p className="text-sm font-semibold text-gray-900">{event.startFullLabel}</p>
+                            <p className="text-sm uppercase tracking-wide font-bold text-orange-700">{ct('เริ่ม', 'Starts')}</p>
+                            <p className="text-lg font-bold text-gray-900">{event.startFullLabel}</p>
                           </div>
                         </div>
                         <div className="flex items-start gap-3">
@@ -552,16 +552,16 @@ const CommunityHome = () => {
                             <Clock className="h-4 w-4 text-orange-500" />
                           </div>
                           <div>
-                            <p className="text-xs uppercase tracking-wide text-orange-600">{ct('สิ้นสุด', 'Ends')}</p>
-                            <p className="text-sm font-semibold text-gray-900">{event.endFullLabel}</p>
+                            <p className="text-sm uppercase tracking-wide font-bold text-orange-700">{ct('สิ้นสุด', 'Ends')}</p>
+                            <p className="text-lg font-bold text-gray-900">{event.endFullLabel}</p>
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <div className="flex items-center gap-2 text-lg font-bold text-gray-700">
                         <MapPin className="h-4 w-4" />
                         <span className="line-clamp-1">{event.location}</span>
                       </div>
-                      <div className="flex items-center justify-between pt-2 text-sm font-semibold text-orange-600">
+                      <div className="flex items-center justify-between pt-2 text-lg font-bold text-orange-600">
                         <span>{ct('ดูรายละเอียด', 'View details')}</span>
                         <ArrowRight className="h-4 w-4" />
                       </div>
@@ -578,13 +578,13 @@ const CommunityHome = () => {
       <section className="py-20 px-4 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <span className="inline-block bg-green-50 text-green-600 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+            <span className="inline-block bg-green-50 text-green-600 px-4 py-2 rounded-full text-lg font-bold mb-4">
               {ct('ร้านค้าในชุมชน', 'Local Shops')}
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+            <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-3">
               {ct('ร้านค้าและผู้ให้บริการ', 'Shops & Service Providers')}
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl font-bold text-gray-700 max-w-2xl mx-auto">
               {ct('ร้านค้าท้องถิ่นที่เปิดให้บริการเวิร์กช็อปและประสบการณ์ทางวัฒนธรรม', 'Local shops offering workshops and cultural experiences')}
             </p>
           </div>
@@ -593,7 +593,7 @@ const CommunityHome = () => {
             {shops.length === 0 ? (
               <div className="text-center py-12 bg-white rounded-2xl border border-gray-200">
                 <Store className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">
+                <p className="text-lg font-bold text-gray-700">
                   {ct('ยังไม่มีร้านค้าในชุมชนนี้', 'No shops available yet')}
                 </p>
               </div>
@@ -630,10 +630,10 @@ const CommunityHome = () => {
                         )}
                       </div>
                       <div className="p-6">
-                        <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition">
+                        <h3 className="text-2xl font-extrabold text-gray-900 mb-2 group-hover:text-orange-600 transition">
                           {shop.shopName}
                         </h3>
-                        <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                        <p className="text-lg font-semibold text-gray-700 mb-4 line-clamp-2">
                           {shop.description || ct('ไม่มีคำอธิบาย', 'No description')}
                         </p>
                       </div>
@@ -650,13 +650,13 @@ const CommunityHome = () => {
       <section className="py-20 px-4 bg-[#fdf7ef]">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <span className="inline-block bg-orange-50 text-orange-600 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+            <span className="inline-block bg-orange-50 text-orange-600 px-4 py-2 rounded-full text-lg font-bold mb-4">
               {t('workshopSection.badge')}
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+            <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-3">
               {t('workshopSection.title')}
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <p className="text-xl font-bold text-gray-700 max-w-2xl mx-auto">
               {t('workshopSection.description')}
             </p>
           </div>
@@ -664,12 +664,12 @@ const CommunityHome = () => {
           {isLoading ? (
             <div className="text-center py-20">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-              <p className="text-gray-500 mt-4">{t('workshops.loading')}</p>
+              <p className="text-lg font-bold text-gray-700 mt-4">{t('workshops.loading')}</p>
             </div>
           ) : workshopCards.length === 0 ? (
             <div className="text-center py-20">
               <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 text-lg">{t('workshops.noData') || 'No workshops available'}</p>
+              <p className="text-lg font-bold text-gray-700">{t('workshops.noData') || 'No workshops available'}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -706,21 +706,21 @@ const CommunityHome = () => {
                       <div className={`w-full h-full bg-gradient-to-br ${cardGradient}`}></div>
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-                    <div className="absolute top-4 left-4 bg-white/85 text-xs font-semibold text-gray-700 px-3 py-1 rounded-full">
+                    <div className="absolute top-4 left-4 bg-white/85 text-base font-bold text-gray-700 px-3 py-1 rounded-full">
                       {card.category || 'Workshop'}
                     </div>
                     <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
-                      <span className="text-xs text-white/80">
+                      <span className="text-base font-bold text-white">
                         {isRegistrationOpen ? ct('เปิดรับสมัคร', 'Open') : ct('ปิดรับสมัคร', 'Closed')}
                       </span>
                     </div>
                   </div>
                   <div className="p-6 space-y-4">
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{card.title || 'Untitled'}</h3>
-                      <p className="text-sm text-gray-600 line-clamp-2">{card.description}</p>
+                      <h3 className="text-2xl font-extrabold text-gray-900">{card.title || 'Untitled'}</h3>
+                      <p className="text-lg font-semibold text-gray-700 line-clamp-2">{card.description}</p>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                    <div className="flex items-center gap-4 text-lg font-bold text-gray-700">
                       <div className="flex items-center gap-1">
                         <Clock className="h-4 w-4 text-gray-400" />
                         {card.date ? formatNumericDate(card.date) : 'ไม่ระบุ'}
@@ -731,15 +731,15 @@ const CommunityHome = () => {
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
-                      <p className="text-lg font-semibold text-gray-900">
+                      <p className="text-2xl font-extrabold text-gray-900">
                         {card.price === 0 ? t('workshops.free') : `฿${card.price}`}
-                        <span className="text-sm text-gray-500 ml-1">{t('workshops.perPerson')}</span>
+                        <span className="text-lg font-bold text-gray-600 ml-1">{t('workshops.perPerson')}</span>
                       </p>
                       <button
-                        className={`px-5 py-2 rounded-full text-sm font-semibold transition ${
+                        className={`px-5 py-2 rounded-full text-lg font-bold transition ${
                           canEnroll
                             ? 'bg-gray-900 text-white hover:bg-gray-800'
-                            : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                            : 'bg-gray-200 font-medium text-gray-500 cursor-not-allowed'
                         }`}
                         disabled={false}
                         onClick={() => handleOpenModal(card)}
@@ -760,7 +760,7 @@ const CommunityHome = () => {
           )}
 
           <div className="text-center mt-10">
-            <Link to={`/${community?.slug || ''}/workshops`} className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-gray-200 rounded-full text-gray-700 hover:border-gray-400 transition">
+            <Link to={`/${community?.slug || ''}/workshops`} className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-gray-200 rounded-full text-lg font-bold text-gray-700 hover:border-gray-400 transition">
               {t('workshopSection.viewAll')}
               <span>→</span>
             </Link>

@@ -128,13 +128,13 @@ const Map = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn">
-      <div className="flex flex-col lg:flex-row h-[calc(100vh-4rem)]">
-        <div ref={mapContainerRef} className="flex-1 relative overflow-hidden animate-slideUp">
+      <div className="flex flex-col lg:flex-row h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] min-h-[600px]">
+        <div ref={mapContainerRef} className="flex-1 relative overflow-hidden animate-slideUp min-h-[50vh] lg:min-h-0">
           {mapLoading ? (
             <div className="absolute inset-0 flex items-center justify-center bg-white/70">
               <div className="flex flex-col items-center text-gray-500">
                 <div className="w-10 h-10 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin mb-3"></div>
-                <p>{ct('กำลังโหลดแผนที่...', 'Loading community map...')}</p>
+                <p className="text-lg font-bold text-gray-700">{ct('กำลังโหลดแผนที่...', 'Loading community map...')}</p>
               </div>
             </div>
           ) : mapData?.map_image ? (
@@ -165,7 +165,7 @@ const Map = () => {
                     >
                       <Store className="h-6 w-6 text-white" />
                     </div>
-                    <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 whitespace-nowrap text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity" style={{ backgroundColor: '#111827' }}>
+                    <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 whitespace-nowrap text-white text-base font-bold px-3 py-2 rounded opacity-0 group-hover:opacity-100 transition-opacity" style={{ backgroundColor: '#111827' }}>
                       {location.ownerShop?.name || 'Shop'}
                     </div>
                   </div>
@@ -176,10 +176,10 @@ const Map = () => {
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100">
               <div className="text-center p-8">
                 <MapIcon className="h-24 w-24 text-orange-300 mx-auto mb-4" />
-                <h3 className="text-2xl font-bold text-gray-700 mb-2">
+                <h3 className="text-3xl font-extrabold text-gray-800 mb-2">
                   {ct('ยังไม่มีแผนที่สำหรับชุมชนนี้', 'No Map Available for This Community')}
                 </h3>
-                <p className="text-gray-500">
+                <p className="text-xl font-bold text-gray-700">
                   {ct('แผนที่จะพร้อมใช้งานเร็วๆ นี้', 'Map will be available soon')}
                 </p>
               </div>
@@ -188,12 +188,12 @@ const Map = () => {
           
         </div>
 
-        <div className="lg:w-96 bg-white shadow-lg overflow-y-auto animate-slideUp">
-          <div className="p-6">
-            <h2 className="text-2xl font-bold mb-2" style={{ color: '#111827' }}>
+        <div className="lg:w-96 bg-white shadow-lg overflow-y-auto animate-slideUp h-[50vh] lg:h-auto">
+          <div className="p-4 sm:p-6">
+            <h2 className="text-3xl font-extrabold mb-2" style={{ color: '#111827' }}>
               {t('map.title')}
             </h2>
-            <p className="text-sm mb-6" style={{ color: '#4b5563' }}>
+            <p className="text-lg font-bold mb-6" style={{ color: '#4b5563' }}>
               {t('map.discover')} ({locations.length})
             </p>
 
@@ -229,23 +229,22 @@ const Map = () => {
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <h3 className="font-semibold" style={{ color: '#111827' }}>
+                        <h3 className="text-lg font-bold" style={{ color: '#111827' }}>
                           {location.ownerShop?.name || ct('ร้านค้า', 'Shop')}
                         </h3>
-                        <span className="text-xs" style={{ color: '#6b7280' }}>
+                        <span className="text-sm font-bold" style={{ color: '#6b7280' }}>
                           {ct('ร้านค้า', 'Shop')}
                         </span>
                       </div>
                       {location.ownerShop?.status && (
-                        <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ backgroundColor: '#ffedd5', color: '#c2410c' }}>
+                        <span className="text-sm font-bold px-3 py-1.5 rounded-full" style={{ backgroundColor: '#ffedd5', color: '#c2410c' }}>
                           {location.ownerShop.status === 'ACTIVE' ? ct('แสดงบนแผนที่', 'Live') : location.ownerShop.status}
                         </span>
                       )}
                     </div>
                     
                     <p
-                      className="text-sm mb-3 whitespace-pre-line break-words max-h-16 overflow-hidden"
-                      style={{ color: '#4b5563' }}
+                      className="text-lg font-semibold mb-3 whitespace-pre-line break-words max-h-16 overflow-hidden text-gray-700"
                     >
                       {location.ownerShop?.description || ct('รายละเอียดร้านค้า', 'Shop details')}
                     </p>
@@ -257,7 +256,7 @@ const Map = () => {
                           navigate(`/${slug}/shops/${location.ownerShop._id}`);
                         }
                       }}
-                      className="w-full flex items-center justify-center space-x-2 bg-[#E07B39] hover:bg-[#D66B29] text-white font-medium text-sm py-2.5 px-4 rounded-full transition-all transform hover:scale-105 shadow-sm hover:shadow-md disabled:opacity-50"
+                      className="w-full flex items-center justify-center space-x-2 bg-[#E07B39] hover:bg-[#D66B29] text-white text-base font-bold py-3 px-6 rounded-full transition-all transform hover:scale-105 shadow-sm hover:shadow-md disabled:opacity-50"
                       disabled={!location.ownerShop?._id}
                     >
                       <Store className="h-4 w-4" />
@@ -268,7 +267,7 @@ const Map = () => {
               ) : (
                 <div className="text-center py-8 text-gray-500">
                   <Store className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                  <p>{ct('ยังไม่มีร้านค้าบนแผนที่', 'No shops on the map yet')}</p>
+                  <p className="text-lg font-bold text-gray-700">{ct('ยังไม่มีร้านค้าบนแผนที่', 'No shops on the map yet')}</p>
                 </div>
               )}
             </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   CheckCircle,
@@ -276,7 +276,7 @@ const AdminWorkshopConfirmation = () => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <button
           onClick={() => navigate('/community-admin/dashboard')}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-8 transition"
+          className="flex items-center gap-2 text-lg font-bold text-gray-600 hover:text-gray-900 mb-8 transition"
         >
           <ArrowLeft className="h-5 w-5" />
           {ct('กลับไปหน้า Dashboard', 'Back to Dashboard')}
@@ -289,31 +289,31 @@ const AdminWorkshopConfirmation = () => {
                 {coverImage ? (
                   <img src={coverImage} alt={workshopData.title} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="text-gray-400 text-sm">{ct('ไม่มีรูปภาพหน้าปก', 'No cover image')}</div>
+                  <div className="text-base font-bold text-gray-400">{ct('ไม่มีรูปภาพหน้าปก', 'No cover image')}</div>
                 )}
               </div>
             </div>
 
             <div className="lg:col-span-7 bg-white rounded-[32px] border border-[#F2E4D4] shadow-sm p-8 lg:p-10 flex flex-col gap-5">
               <div className="flex flex-wrap items-center gap-3">
-                <span className="px-4 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                <span className="px-4 py-1 text-sm font-bold rounded-full bg-yellow-100 text-yellow-800">
                   {workshopData.approvalStatus === 'PENDING' ? ct('รอการอนุมัติ', 'Pending Approval') : workshopData.approvalStatus}
                 </span>
-                <span className="px-3 py-1 text-xs font-semibold rounded-full bg-[#F5EFE7] text-gray-700 border border-[#F2E4D4]">
+                <span className="px-4 py-1 text-sm font-bold rounded-full bg-[#F5EFE7] text-gray-700 border border-[#F2E4D4]">
                   {shopInfo.name}
                 </span>
-                <span className="ml-auto px-3 py-1 text-xs font-semibold rounded-full bg-white border border-gray-200 text-gray-500">
+                <span className="ml-auto px-4 py-1 text-sm font-bold rounded-full bg-white border border-gray-200 text-gray-500">
                   {ct('คงเหลือ', 'Seats left')}: {capacity ? remainingSeats : ct('ไม่ระบุ', 'N/A')}
                 </span>
               </div>
               <div>
-                <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">{workshopData.title}</h1>
-                <p className="text-gray-600 max-w-3xl max-h-20 overflow-y-auto scrollbar-thin leading-relaxed whitespace-pre-line wrap-break-word">
+                <h1 className="text-4xl lg:text-5xl font-extrabold text-gray-900 mb-2">{workshopData.title}</h1>
+                <p className="text-lg font-bold text-gray-600 max-w-3xl max-h-20 overflow-y-auto scrollbar-thin leading-relaxed whitespace-pre-line wrap-break-word">
                   {workshopData.shortDescription || workshopData.description?.slice(0, 160) || ct('ไม่มีคำอธิบาย', 'No description')}
                 </p>
-                <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500 mt-3">
+                <div className="flex flex-wrap items-center gap-2 text-base font-bold text-gray-600 mt-3">
                   <MapPin className="h-4 w-4 text-[#B48433]" />
-                  <span className="font-medium text-gray-700">{locationText || ct('ไม่ระบุสถานที่', 'No venue specified')}</span>
+                  <span className="font-bold text-gray-700">{locationText || ct('ไม่ระบุสถานที่', 'No venue specified')}</span>
                 </div>
               </div>
               <div className="grid sm:grid-cols-3 gap-4">
@@ -323,8 +323,8 @@ const AdminWorkshopConfirmation = () => {
                       <metric.icon className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-gray-500">{metric.label}</p>
-                      <p className="text-base font-semibold text-gray-900">{metric.value}</p>
+                      <p className="text-sm font-bold uppercase tracking-wide text-gray-600">{metric.label}</p>
+                      <p className="text-base font-bold text-gray-900">{metric.value}</p>
                     </div>
                   </div>
                 ))}
@@ -335,18 +335,18 @@ const AdminWorkshopConfirmation = () => {
           <section className="grid lg:grid-cols-12 gap-6">
             <div className="lg:col-span-7 space-y-6">
               <div className="bg-white rounded-[28px] border border-[#F2E4D4] p-6 lg:p-7 shadow-sm">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">{ct('รายละเอียด Workshop', 'Workshop Details')}</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">{ct('รายละเอียด Workshop', 'Workshop Details')}</h3>
                 <div className="space-y-4">
                   <div className="p-5 rounded-2xl bg-[#FFF8EA] border border-[#F4E4C4] ">
-                    <p className="text-sm font-semibold text-[#B48433] mb-1">{ct('คำอธิบาย', 'Description')}</p>
-                    <p className="text-gray-700 leading-relaxed wrap-break-word whitespace-pre-wrap max-h-48 overflow-y-auto scrollbar-thin pr-1">{workshopData.description || ct('ไม่มีคำอธิบาย', 'No description')}</p>
+                    <p className="text-base font-bold text-[#B48433] mb-1">{ct('คำอธิบาย', 'Description')}</p>
+                    <p className="text-base font-bold text-gray-700 leading-relaxed wrap-break-word whitespace-pre-wrap max-h-48 overflow-y-auto scrollbar-thin pr-1">{workshopData.description || ct('ไม่มีคำอธิบาย', 'No description')}</p>
                   </div>
                   {requirements.length > 0 && (
                     <div className="p-5 rounded-2xl bg-[#FAF5EE] border border-[#E8DCCB]">
-                      <p className="text-sm font-semibold text-[#B48433] mb-3">{ct('สิ่งที่ต้องเตรียมมา', 'Requirements')}</p>
+                      <p className="text-base font-bold text-[#B48433] mb-3">{ct('สิ่งที่ต้องเตรียมมา', 'Requirements')}</p>
                       <ul className="space-y-2">
                         {requirements.map((req, index) => (
-                          <li key={index} className="flex items-center gap-2 text-gray-700">
+                          <li key={index} className="flex items-center gap-2 text-base font-bold text-gray-700">
                             <CheckCircle className="h-4 w-4 text-[#9CC47F]" />
                             {req}
                           </li>
@@ -358,7 +358,7 @@ const AdminWorkshopConfirmation = () => {
               </div>
 
               <div className="bg-white rounded-[28px] border border-[#F2E4D4] p-6 lg:p-7 shadow-sm">
-                <h3 className="text-xl font-semibold text-gray-900 mb-5">{ct('ข้อมูลการจัดเวิร์กช็อป', 'Workshop Logistics')}</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-5">{ct('ข้อมูลการจัดเวิร์กช็อป', 'Workshop Logistics')}</h3>
                 <div className="grid md:grid-cols-2 gap-4">
                   {scheduleDetails.map((item) => (
                     <div key={item.label} className="flex items-start gap-3 rounded-2xl border border-[#F2E4D4] bg-[#FFFCF6] p-4">
@@ -366,8 +366,8 @@ const AdminWorkshopConfirmation = () => {
                         <item.icon className="h-5 w-5" />
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500">{item.label}</p>
-                        <p className="text-sm font-semibold text-gray-900 whitespace-pre-line">{item.value}</p>
+                        <p className="text-sm font-bold text-gray-600">{item.label}</p>
+                        <p className="text-base font-bold text-gray-900 whitespace-pre-line">{item.value}</p>
                       </div>
                     </div>
                   ))}
@@ -384,34 +384,34 @@ const AdminWorkshopConfirmation = () => {
                 )}
                 <div className="p-6 space-y-4">
                   <div>
-                    <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold">{ct('ข้อมูลร้านค้า', 'Shop Information')}</p>
-                    <h3 className="text-2xl font-bold text-gray-900 mt-1">{shopInfo.name}</h3>
-                    <p className="text-sm text-gray-500 max-h-16 overflow-y-auto scrollbar-thin leading-relaxed whitespace-pre-line wrap-break-word">{shopInfo.description}</p>
+                    <p className="text-sm font-bold uppercase tracking-wide text-gray-600">{ct('ข้อมูลร้านค้า', 'Shop Information')}</p>
+                    <h3 className="text-2xl font-extrabold text-gray-900 mt-1">{shopInfo.name}</h3>
+                    <p className="text-base font-bold text-gray-600 max-h-16 overflow-y-auto scrollbar-thin leading-relaxed whitespace-pre-line wrap-break-word">{shopInfo.description}</p>
                   </div>
                   <div className="space-y-3">
                     <div className="flex items-center gap-3">
                       <Users className="h-4 w-4 text-[#B48433]" />
-                      <p className="text-sm text-gray-700">{ct('ผู้ติดต่อ', 'Contact')}: <span className="font-medium">{shopInfo.owner}</span></p>
+                      <p className="text-base font-bold text-gray-700">{ct('ผู้ติดต่อ', 'Contact')}: <span className="font-bold">{shopInfo.owner}</span></p>
                     </div>
                     <div className="flex items-center gap-3">
                       <Phone className="h-4 w-4 text-[#B48433]" />
-                      <p className="text-sm text-gray-700 break-all">{shopInfo.phone}</p>
+                      <p className="text-base font-bold text-gray-700 break-all">{shopInfo.phone}</p>
                     </div>
                     {shopInfo.line && shopInfo.line !== '-' && (
                       <div className="flex items-center gap-3">
                         <MessageCircle className="h-4 w-4 text-[#B48433]" />
-                        <p className="text-sm text-gray-700 break-all">Line: {shopInfo.line}</p>
+                        <p className="text-base font-bold text-gray-700 break-all">Line: {shopInfo.line}</p>
                       </div>
                     )}
                     {shopInfo.facebook && shopInfo.facebook !== '-' && (
                       <div className="flex items-center gap-3">
                         <Facebook className="h-4 w-4 text-[#B48433]" />
-                        <p className="text-sm text-gray-700 break-all">Facebook: {shopInfo.facebook}</p>
+                        <p className="text-base font-bold text-gray-700 break-all">Facebook: {shopInfo.facebook}</p>
                       </div>
                     )}
                     <div className="flex items-start gap-3">
                       <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-[#B48433]" />
-                      <p className="text-sm text-gray-700 wrap-break-word max-h-16 overflow-y-auto scrollbar-thin leading-relaxed">
+                      <p className="text-base font-bold text-gray-700 wrap-break-word max-h-16 overflow-y-auto scrollbar-thin leading-relaxed">
                         {shopInfo.address}
                       </p>
                     </div>
@@ -422,12 +422,12 @@ const AdminWorkshopConfirmation = () => {
           </section>
 
           <section className="bg-gradient-to-br from-[#FFF4DA] via-[#FFE7C1] to-[#FFDDB1] rounded-[28px] border border-[#F3C992] p-6 lg:p-8 shadow-sm">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">{ct('การดำเนินการโดยชุมชน', 'Community Admin Actions')}</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">{ct('การดำเนินการโดยชุมชน', 'Community Admin Actions')}</h3>
 
             <div className="grid md:grid-cols-3 gap-3">
               <button
                 onClick={handleApprove}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-[#2F7B4D] hover:bg-[#25633E] text-white font-semibold rounded-xl transition shadow-sm"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-[#2F7B4D] hover:bg-[#25633E] text-white text-lg font-bold rounded-xl transition shadow-sm"
               >
                 <CheckCircle className="h-5 w-5" />
                 {ct('อนุมัติ', 'Approve')}
@@ -435,7 +435,7 @@ const AdminWorkshopConfirmation = () => {
 
               <button
                 onClick={() => handleUpdateStatus('REVISION')}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-[#F4A236] hover:bg-[#E38E1D] text-white font-semibold rounded-xl transition shadow-sm"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-[#F4A236] hover:bg-[#E38E1D] text-white text-lg font-bold rounded-xl transition shadow-sm"
               >
                 <ClipboardList className="h-5 w-5" />
                 {ct('ขอแก้ไข', 'Request')}
@@ -443,7 +443,7 @@ const AdminWorkshopConfirmation = () => {
 
               <button
                 onClick={() => handleUpdateStatus('REJECT')}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-[#C14949] hover:bg-[#A63A3A] text-white font-semibold rounded-xl transition shadow-sm"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-[#C14949] hover:bg-[#A63A3A] text-white text-lg font-bold rounded-xl transition shadow-sm"
               >
                 <XCircle className="h-5 w-5" />
                 {ct('ปฏิเสธ', 'Reject')}

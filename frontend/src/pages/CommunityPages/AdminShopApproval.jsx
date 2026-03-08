@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+﻿import { useMemo } from 'react';
 import { useNavigate, useParams, useOutletContext } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -28,8 +28,8 @@ const formatStatus = (status = '') => status.toUpperCase();
 
 const InfoRow = ({ label, value }) => (
   <div className="flex items-start justify-between py-3 border-b border-gray-100 last:border-0 gap-4">
-    <span className="text-sm text-gray-500 shrink-0">{label}</span>
-    <span className="text-sm font-medium text-gray-900 text-right wrap-break-word max-w-[200px] max-h-16 overflow-y-auto scrollbar-thin">{value || '-'}</span>
+    <span className="text-base font-bold text-gray-600 shrink-0">{label}</span>
+    <span className="text-lg font-bold text-gray-900 text-right wrap-break-word max-w-[200px] max-h-16 overflow-y-auto scrollbar-thin">{value || '-'}</span>
   </div>
 );
 
@@ -148,7 +148,7 @@ const AdminShopApproval = () => {
       <div className="flex items-center justify-center min-h-screen bg-[#FAF8F3] animate-fadeIn">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent mb-4"></div>
-          <p className="text-gray-600">{ct('กำลังโหลดข้อมูลร้านค้า...', 'Loading shop data...')}</p>
+          <p className="text-lg font-bold text-gray-700">{ct('กำลังโหลดข้อมูลร้านค้า...', 'Loading shop data...')}</p>
         </div>
       </div>
     );
@@ -158,10 +158,10 @@ const AdminShopApproval = () => {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#FAF8F3] animate-fadeIn">
         <div className="text-center space-y-4">
-          <p className="text-gray-700">{ct('ไม่พบข้อมูลร้านค้านี้', 'Unable to load shop data.')}</p>
+          <p className="text-lg font-bold text-gray-700">{ct('ไม่พบข้อมูลร้านค้านี้', 'Unable to load shop data.')}</p>
           <button
             onClick={() => navigate('/community-admin/shops')}
-            className="px-4 py-2 text-sm font-semibold text-white bg-orange-500 rounded-lg transition-transform duration-300 hover:-translate-y-0.5"
+            className="px-6 py-2.5 text-base font-bold text-white bg-orange-500 rounded-lg transition-transform duration-300 hover:-translate-y-0.5"
           >
             {ct('กลับไปรายชื่อร้านค้า', 'Back to shop list')}
           </button>
@@ -185,27 +185,27 @@ const AdminShopApproval = () => {
           className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
-          <span className="font-medium">{ct('กลับไปหน้าร้านค้า', 'Back to shops')}</span>
+          <span className="text-lg font-bold">{ct('กลับไปหน้าร้านค้า', 'Back to shops')}</span>
         </button>
 
         <div className="bg-white rounded-2xl p-6 shadow-sm space-y-4 animate-slideUp">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <p className="text-sm uppercase tracking-wide text-orange-500 font-semibold mb-1">
+              <p className="text-sm font-bold uppercase tracking-wide text-orange-600 mb-1">
                 {ct('การอนุมัติร้านค้า', 'Shop Approval')}
               </p>
-              <h1 className="text-3xl font-bold text-gray-900">{shop.shopName}</h1>
-              <p className="text-sm text-gray-500 mt-2">
+              <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">{shop.shopName}</h1>
+              <p className="text-base font-bold text-gray-600 mt-2">
                 {ct('ชุมชน', 'Community')}: {ct(community?.name, community?.name_en)}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${statusStyles[shopStatus] || statusStyles.PENDING}`}>
+              <span className={`px-4 py-1.5 rounded-full text-sm font-bold ${statusStyles[shopStatus] || statusStyles.PENDING}`}>
                 {ct('สถานะร้าน', 'Shop Status')}: {formatStatus(shopStatus)}
               </span>
               {pin?.hasPin && (
                 <span
-                  className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                  className={`px-4 py-1.5 rounded-full text-sm font-bold ${
                     pinStatus === 'APPROVED'
                       ? 'bg-green-100 text-green-700 border border-green-200'
                       : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
@@ -230,7 +230,7 @@ const AdminShopApproval = () => {
             <button
               disabled={shopStatus === 'ACTIVE' || approveShopMutation.isLoading}
               onClick={() => approveShopMutation.mutate()}
-              className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-green-600 text-white font-semibold shadow-sm hover:bg-green-700 disabled:opacity-50 transition-transform duration-300 hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-green-600 text-white text-base font-bold shadow-sm hover:bg-green-700 disabled:opacity-50 transition-transform duration-300 hover:-translate-y-0.5"
             >
               {approveShopMutation.isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
               <CheckCircle className="h-4 w-4" />
@@ -239,7 +239,7 @@ const AdminShopApproval = () => {
             <button
               disabled={shopStatus === 'REJECTED' || rejectShopMutation.isLoading}
               onClick={() => rejectShopMutation.mutate()}
-              className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-red-500 text-white font-semibold shadow-sm hover:bg-red-600 disabled:opacity-50 transition-transform duration-300 hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-red-500 text-white text-base font-bold shadow-sm hover:bg-red-600 disabled:opacity-50 transition-transform duration-300 hover:-translate-y-0.5"
             >
               {rejectShopMutation.isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
               <XCircle className="h-4 w-4" />
@@ -251,14 +251,14 @@ const AdminShopApproval = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-stagger">
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-2xl p-6 shadow-sm animate-slideUp">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">{ct('ข้อมูลร้านค้า', 'Shop Information')}</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">{ct('ข้อมูลร้านค้า', 'Shop Information')}</h2>
               {!coverImage && (
-                <div className="rounded-xl border border-dashed border-gray-200 p-4 flex items-center gap-3 text-sm text-gray-500 mb-4">
+                <div className="rounded-xl border border-dashed border-gray-200 p-4 flex items-center gap-3 text-base font-bold text-gray-600 mb-4">
                   <Store className="h-5 w-5 text-gray-400" />
                   {ct('ร้านค้านี้ยังไม่ได้เพิ่มรูปปก', 'This shop has not provided a cover image.')}
                 </div>
               )}
-              <p className="text-gray-600 text-sm leading-relaxed mb-6 whitespace-pre-line wrap-break-word max-h-28 overflow-y-auto scrollbar-thin pr-1">
+              <p className="text-base font-bold text-gray-700 leading-relaxed mb-6 whitespace-pre-line wrap-break-word max-h-28 overflow-y-auto scrollbar-thin pr-1">
                 {shop.description || ct('ไม่มีคำอธิบายร้านค้า', 'No description provided.')}
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -270,27 +270,27 @@ const AdminShopApproval = () => {
             </div>
 
             <div className="bg-white rounded-2xl p-6 shadow-sm animate-slideUp">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">{ct('ช่องทางการติดต่อ', 'Contact')}</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">{ct('ช่องทางการติดต่อ', 'Contact')}</h2>
               <div className="space-y-4">
                 <div className="flex items-center gap-3 p-4 rounded-xl border border-gray-100">
                   <Phone className="h-5 w-5 text-orange-500" />
                   <div>
-                    <p className="text-xs uppercase tracking-wide text-gray-500">{ct('โทรศัพท์', 'Phone')}</p>
-                    <p className="text-sm font-medium text-gray-900">{contact.phone || '-'}</p>
+                    <p className="text-sm font-bold uppercase tracking-wide text-gray-600">{ct('โทรศัพท์', 'Phone')}</p>
+                    <p className="text-lg font-bold text-gray-900">{contact.phone || '-'}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-4 rounded-xl border border-gray-100">
                   <MessageSquare className="h-5 w-5 text-orange-500" />
                   <div>
-                    <p className="text-xs uppercase tracking-wide text-gray-500">LINE</p>
-                    <p className="text-sm font-medium text-gray-900">{contact.line || '-'}</p>
+                    <p className="text-sm font-bold uppercase tracking-wide text-gray-600">LINE</p>
+                    <p className="text-lg font-bold text-gray-900">{contact.line || '-'}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-4 rounded-xl border border-gray-100">
                   <Facebook className="h-5 w-5 text-orange-500" />
                   <div>
-                    <p className="text-xs uppercase tracking-wide text-gray-500">Facebook</p>
-                    <p className="text-sm font-medium text-gray-900">{contact.facebook || '-'}</p>
+                    <p className="text-sm font-bold uppercase tracking-wide text-gray-600">Facebook</p>
+                    <p className="text-lg font-bold text-gray-900">{contact.facebook || '-'}</p>
                   </div>
                 </div>
               </div>
@@ -300,9 +300,9 @@ const AdminShopApproval = () => {
           <div className="space-y-6">
             <div className="bg-white rounded-2xl p-6 shadow-sm animate-slideUp">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">{ct('หมุดบนแผนที่', 'Map Pin')}</h2>
+                <h2 className="text-2xl font-bold text-gray-900">{ct('หมุดบนแผนที่', 'Map Pin')}</h2>
                 {pin?.hasPin && (
-                  <span className="text-sm text-gray-500">
+                  <span className="text-base font-bold text-gray-600">
                     {ct('พิกัด', 'Coordinates')}: X {pin.position_x?.toFixed?.(2) ?? pin.position_x}, Y {pin.position_y?.toFixed?.(2) ?? pin.position_y}
                   </span>
                 )}
@@ -312,7 +312,7 @@ const AdminShopApproval = () => {
                   {mapLoading ? (
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 space-y-3 animate-fadeIn">
                       <Loader2 className="h-8 w-8 animate-spin" />
-                      <p>{ct('กำลังโหลดแผนที่...', 'Loading community map...')}</p>
+                      <p className="text-lg font-bold">{ct('กำลังโหลดแผนที่...', 'Loading community map...')}</p>
                     </div>
                   ) : mapData?.map_image ? (
                     <div
@@ -349,7 +349,7 @@ const AdminShopApproval = () => {
                   ) : (
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500">
                       <MapPin className="h-10 w-10 text-gray-400 mb-3" />
-                      <p>{ct('ยังไม่ได้อัปโหลดแผนที่ชุมชน', 'No community map uploaded yet.')}</p>
+                      <p className="text-lg font-bold">{ct('ยังไม่ได้อัปโหลดแผนที่ชุมชน', 'No community map uploaded yet.')}</p>
                     </div>
                   )}
                 </div>
@@ -358,13 +358,13 @@ const AdminShopApproval = () => {
               <div className="mt-4 space-y-3">
                 {pin?.hasPin ? (
                   <>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-base font-bold text-gray-700">
                       {ct('ตรวจสอบตำแหน่งหมุดก่อนทำการอนุมัติ หากถูกต้องให้กดปุ่มด้านล่าง', 'Review the pin location before approving.')}
                     </p>
                     <button
                       disabled={pinStatus === 'APPROVED' || approvePinMutation.isLoading}
                       onClick={() => approvePinMutation.mutate()}
-                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-orange-500 text-white font-semibold hover:bg-orange-600 disabled:opacity-50 transition-transform duration-300 hover:-translate-y-0.5"
+                      className="w-full inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-orange-500 text-white text-base font-bold hover:bg-orange-600 disabled:opacity-50 transition-transform duration-300 hover:-translate-y-0.5"
                     >
                       {approvePinMutation.isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
                       <CheckCircle className="h-4 w-4" />
@@ -377,7 +377,7 @@ const AdminShopApproval = () => {
                   </>
                 ) : (
                   <div className="rounded-2xl bg-gray-50 border border-dashed border-gray-200 p-4 text-center">
-                    <p className="text-sm text-gray-500">
+                    <p className="text-lg font-bold text-gray-600">
                       {ct('ร้านค้านี้ยังไม่ได้วางหมุดบนแผนที่', 'This shop has not placed a map pin yet.')}
                     </p>
                   </div>

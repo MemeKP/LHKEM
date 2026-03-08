@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, XCircle, Eye, Calendar, MapPin, Users, TrendingUp, DollarSign, Store } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -86,7 +86,7 @@ const CommunityAdminDashboard = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">{t('communityAdmin.title')}</h1>
+            <h1 className="text-3xl font-extrabold text-gray-900">{t('communityAdmin.title')}</h1>
             <p className="text-gray-600 mt-1">{t('communityAdmin.subtitle')}</p>
           </div>
           <button
@@ -103,8 +103,8 @@ const CommunityAdminDashboard = () => {
             <div className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">{t('communityAdmin.stats.totalShops')}</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalShops}</p>
+                  <p className="text-sm font-medium text-gray-700">{t('communityAdmin.stats.totalShops')}</p>
+                  <p className="text-3xl font-extrabold text-gray-900 mt-2">{stats.totalShops}</p>
                 </div>
                 <div className="p-3 bg-blue-100 rounded-lg">
                   <Store className="h-6 w-6 text-blue-600" />
@@ -115,8 +115,8 @@ const CommunityAdminDashboard = () => {
             <div className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">{t('communityAdmin.stats.totalWorkshops')}</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalWorkshops}</p>
+                  <p className="text-sm font-medium text-gray-700">{t('communityAdmin.stats.totalWorkshops')}</p>
+                  <p className="text-3xl font-extrabold text-gray-900 mt-2">{stats.totalWorkshops}</p>
                 </div>
                 <div className="p-3 bg-green-100 rounded-lg">
                   <MapPin className="h-6 w-6 text-green-600" />
@@ -127,8 +127,8 @@ const CommunityAdminDashboard = () => {
             <div className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">{t('communityAdmin.stats.pendingApprovals')}</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{stats.pendingApprovals}</p>
+                  <p className="text-sm font-medium text-gray-700">{t('communityAdmin.stats.pendingApprovals')}</p>
+                  <p className="text-3xl font-extrabold text-gray-900 mt-2">{stats.pendingApprovals}</p>
                 </div>
                 <div className="p-3 bg-yellow-100 rounded-lg">
                   <Users className="h-6 w-6 text-yellow-600" />
@@ -139,8 +139,8 @@ const CommunityAdminDashboard = () => {
             <div className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">{t('communityAdmin.stats.monthlyRevenue')}</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">฿{stats.monthlyRevenue.toLocaleString()}</p>
+                  <p className="text-sm font-medium text-gray-700">{t('communityAdmin.stats.monthlyRevenue')}</p>
+                  <p className="text-3xl font-extrabold text-gray-900 mt-2">฿{stats.monthlyRevenue.toLocaleString()}</p>
                 </div>
                 <div className="p-3 bg-orange-100 rounded-lg">
                   <DollarSign className="h-6 w-6 text-orange-600" />
@@ -170,14 +170,14 @@ const CommunityAdminDashboard = () => {
           </div>
 
           <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
               {t('communityAdmin.workshopApprovals')}
             </h2>
 
             {filteredWorkshops.length === 0 ? (
               <div className="text-center py-12">
                 <CheckCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">{t('communityAdmin.noWorkshops')}</p>
+                <p className="font-semibold text-gray-700">{t('communityAdmin.noWorkshops')}</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -188,25 +188,25 @@ const CommunityAdminDashboard = () => {
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">{workshop.title}</h3>
+                        <h3 className="text-lg font-bold text-gray-900 mb-2">{workshop.title}</h3>
                         <p className="text-gray-600 text-sm mb-4">{workshop.description}</p>
                         
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                           <div>
                             <p className="text-gray-500">{t('communityAdmin.host')}</p>
-                            <p className="font-semibold text-gray-900">{workshop.host}</p>
+                            <p className="font-bold text-gray-900">{workshop.host}</p>
                           </div>
                           <div>
                             <p className="text-gray-500">{t('communityAdmin.price')}</p>
-                            <p className="font-semibold text-gray-900">฿{workshop.price}</p>
+                            <p className="font-bold text-gray-900">฿{workshop.price}</p>
                           </div>
                           <div>
                             <p className="text-gray-500">{t('communityAdmin.seats')}</p>
-                            <p className="font-semibold text-gray-900">{workshop.seatLimit}</p>
+                            <p className="font-bold text-gray-900">{workshop.seatLimit}</p>
                           </div>
                           <div>
                             <p className="text-gray-500">{t('communityAdmin.category')}</p>
-                            <p className="font-semibold text-gray-900">{workshop.category}</p>
+                            <p className="font-bold text-gray-900">{workshop.category}</p>
                           </div>
                         </div>
                       </div>
@@ -249,7 +249,7 @@ const CommunityAdminDashboard = () => {
         <div className="bg-white rounded-lg shadow-sm">
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className="text-xl font-bold text-gray-900">
                 {t('communityAdmin.events')}
               </h2>
               <button
@@ -263,7 +263,7 @@ const CommunityAdminDashboard = () => {
             {events.length === 0 ? (
               <div className="text-center py-12">
                 <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">{t('communityAdmin.noEvents')}</p>
+                <p className="font-semibold text-gray-700">{t('communityAdmin.noEvents')}</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -273,7 +273,7 @@ const CommunityAdminDashboard = () => {
                     className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
                     onClick={() => navigate(`/events/${event.id}`)}
                   >
-                    <h3 className="font-semibold text-gray-900 mb-2">{event.title}</h3>
+                    <h3 className="font-bold text-gray-900 mb-2">{event.title}</h3>
                     <p className="text-sm text-gray-600 mb-3">{event.description}</p>
                     <div className="flex items-center text-sm text-gray-500">
                       <Calendar className="h-4 w-4 mr-1" />

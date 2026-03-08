@@ -1,4 +1,4 @@
-import { useOutletContext, Link } from 'react-router-dom';
+﻿import { useOutletContext, Link } from 'react-router-dom';
 import { useTranslation } from '../hooks/useTranslation';
 import { useEffect, useRef } from 'react';
 import { MapPin, Calendar, Heart, Leaf, Users, Palette, HomeIcon, List, BookXIcon, Box, BoxesIcon, Sparkle, SparklesIcon, Clock, Users as UsersIcon, Star, Store, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -86,21 +86,21 @@ const About = () => {
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-[#2d5a4d] via-[#3d6b5c] to-[#4d7c6b] text-white py-20 px-4 animate-fadeIn">
         <div className="max-w-4xl mx-auto text-center">
-          <p className="text-sm font-semibold text-green-200 mb-4 tracking-wide uppercase">
+          <p className="text-lg font-bold text-green-100 mb-4 tracking-wide uppercase">
             {/* {ct('รู้จัก "โหล่งฮิมคาว"', 'About "Loeng Him Kaw"')} */}
             {ct(
               `รู้จัก "${community.name}" `,
               `About "${community.name_en}"`
             )}
           </p>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 leading-tight">
             {ct(
               `บรรยากาศ ณ ${community.name} `,
               `${community.name_en} Atmosphere`
             )}
             {/* {ct('Loeng Him Kaw Atmosphere', 'Loeng Him Kaw Atmosphere')} */}
           </h1>
-          <p className="text-lg md:text-xl text-white/90 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl md:text-2xl font-bold text-white max-w-3xl mx-auto leading-relaxed">
             {/* {ct(
               'ชุมชนเล็กๆ ที่ซ่อนตัวอยู่อย่างเงียบสงบ ณ สันกำแพง เชียงใหม่',
               'A small peaceful community that was hidden in Chiang Mai'
@@ -116,10 +116,10 @@ const About = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Text Content */}
             <div className="animate-on-scroll opacity-0 translate-y-8 transition-all duration-700">
-              <span className="inline-block bg-orange-50 text-orange-600 px-4 py-2 rounded-full text-sm font-semibold mb-4 uppercase tracking-wide">
+              <span className="inline-block bg-orange-50 text-orange-600 px-4 py-2 rounded-full text-lg font-bold mb-4 uppercase tracking-wide">
                 {ct('HISTORY & ORIGIN', 'HISTORY & ORIGIN')}
               </span>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+              <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6">
                 {/* {ct('จากป่ารกร้าง สู่ชุมชนงานคราฟต์', 'From abandoned woods, to the community')} */}
                 {ct(
                   community.hero_section?.title || `รู้จัก "${community.name}" `,
@@ -127,7 +127,7 @@ const About = () => {
                 )}
               </h2>
               {/* <div className="space-y-4 text-gray-700 leading-relaxed">
-                <p className="font-semibold text-gray-900">
+                <p className="font-bold text-gray-900">
                   {ct(
                     '"โหล่งฮิมคาว" เป็นภาษาเหนือที่มีความหมายลึกซึ้ง',
                     '"Loeng Him Kaw" is a Northen Thai word that has a beautiful meaning."'
@@ -158,7 +158,7 @@ const About = () => {
                   )}
                 </p>
               </div> */}
-              <div className="space-y-4 text-gray-700 leading-relaxed whitespace-pre-line break-words max-h-80 overflow-y-auto pr-1">
+              <div className="space-y-4 text-lg font-bold text-gray-800 leading-relaxed whitespace-pre-line break-words max-h-80 overflow-y-auto pr-1">
                 {ct(community.history, community.history_en)
                   ?.split('\n')
                   .filter(Boolean)
@@ -199,14 +199,14 @@ const About = () => {
       <section className="py-20 px-4 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12 animate-on-scroll opacity-0 translate-y-8 transition-all duration-700">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
               {/* {ct('วิถีชีวิต "Slow Life"', 'The "Slow Life" Way')} */}
               {ct(
                   community.hero_section?.title,
                   community.hero_section?.title_en
                 )}
             </h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl font-bold text-gray-700 max-w-3xl mx-auto">
               {ct(
                 'ที่นี่เราไม่ได้ขายแค่สินค้า แต่เรามอบ "เวลา" ให้คุณได้เดินช้าลง สัมผัสธรรมชาติ และเรียนรู้งานฝีมือด้วยหัวใจ',
                 'Here, we don\'t just sell products, but we give you "time" to slow down, experience nature, and learn crafts with your heart'
@@ -225,10 +225,10 @@ const About = () => {
                   <div className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center mb-4">
                     {getIcon(feature.title)}
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  <h3 className="text-xl font-extrabold text-gray-900 mb-2">
                     {ct(feature.title, feature.title_en)}
                   </h3>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-lg font-bold text-gray-700">
                     {ct(feature.desc, feature.desc_en)}
                   </p>
                 </div>
@@ -242,10 +242,10 @@ const About = () => {
       <section className="py-20 px-4 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="mb-12 animate-on-scroll opacity-0 translate-y-8 transition-all duration-700">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
               {ct('การเดินทางมาชุมชน', 'Getting to the Community')}
             </h2>
-            <p className="text-gray-600">
+            <p className="text-xl font-bold text-gray-800">
               {ct(
                   community.location?.full_address,
                   community.location?.full_address_en
@@ -258,10 +258,10 @@ const About = () => {
             <div className="h-96 md:h-[500px] bg-gradient-to-br from-blue-100 via-green-50 to-yellow-50 flex items-center justify-center">
               <div className="text-center">
                 <MapPin className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 text-lg font-medium">
+                <p className="text-gray-700 text-xl font-bold">
                   {ct('แผนที่ Google Map (Embed)', 'Google Map Embed')}
                 </p>
-                <p className="text-gray-400 text-sm mt-2">
+                <p className="text-gray-600 text-lg font-bold mt-2">
                   {ct('พิกัด: 18.7903, 99.3661', 'Coordinates: 18.7903, 99.3661')}
                 </p>
               </div>
@@ -272,12 +272,12 @@ const About = () => {
           <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
             <Link
               to={`/${community.slug}/map`}
-              className="inline-flex items-center justify-center gap-2 bg-[#2d5a4d] hover:bg-[#3d6b5c] text-white px-8 py-4 rounded-full font-semibold transition shadow-lg"
+              className="inline-flex items-center justify-center gap-2 bg-[#2d5a4d] hover:bg-[#3d6b5c] text-white text-lg px-8 py-4 rounded-full font-bold transition shadow-lg"
             >
               <MapPin className="h-5 w-5" />
               {ct('เปิด Google Map', 'Open Google Map')}
             </Link>
-            <button className="inline-flex items-center justify-center gap-2 border-2 border-gray-300 hover:border-gray-400 text-gray-700 px-8 py-4 rounded-full font-semibold transition">
+            <button className="inline-flex items-center justify-center gap-2 border-2 border-gray-300 hover:border-gray-400 text-gray-700 text-lg px-8 py-4 rounded-full font-bold transition">
               {ct('ส่งตำแหน่งให้ฉัน', 'Send Location to Me')}
             </button>
           </div>

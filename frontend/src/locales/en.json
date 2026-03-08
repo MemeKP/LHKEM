@@ -109,7 +109,7 @@
   },
   "auth": {
     "welcomeTitle": "Welcome to",
-    "communityName": "Loang Him Kao",
+    "communityName": "The Community",
     "welcomeDescription": "Login to book workshops and discover various activities within the community",
     "loginTitle": "Login",
     "loginDescription": "Enter your email and password to login",
@@ -130,6 +130,7 @@
     "haveAccount": "Already have an account?",
     "loginButton": "Login",
     "registerButton": "Register",
+    "loginErrorMessage": "Invalid email or password",
     "verifyButton": "Verify Code",
     "resendOtp": "Resend?",
     "role": "Role",
@@ -224,7 +225,8 @@
     "loading": "Loading...",
     "error": "An error occurred",
     "success": "Success",
-    "close": "Close"
+    "close": "Close",
+    "ok": "OK"
   },
   "shopDashboard": {
     "title": "Shop Dashboard",

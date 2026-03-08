@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { Calendar, Store, FileText, Users, Eye, AlertCircle, CheckCircle, XCircle, Edit, Plus, List, MapPin, Clock } from 'lucide-react';
 
@@ -78,7 +78,7 @@ const AdminDashboard = () => {
     return <CommunityAssignmentNotice />;
   }
 
-  if (isLoading) return <div className="p-8 text-center">กำลังโหลดข้อมูล...</div>;
+  if (isLoading) return <div className="p-8 text-center text-lg font-bold text-gray-700">กำลังโหลดข้อมูล...</div>;
 
   const allEvents = eventsQuery.data || [];
   const normalizeEventStatus = (status) => (status || '').toUpperCase();
@@ -316,21 +316,21 @@ const AdminDashboard = () => {
         {/* Header with Action Buttons */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-[#1A1A1A] mb-1">
+            <h1 className="text-4xl md:text-5xl font-extrabold text-[#1A1A1A] mb-2">
               {ct(community?.name, community?.name_en)}
             </h1>
           </div>
           <div className="flex gap-3">
             <button
               onClick={() => navigate('/community-admin/settings')}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[#E53935] hover:bg-[#D32F2F] text-white font-semibold rounded-lg transition shadow-sm"
+              className="flex items-center gap-2 px-6 py-3 bg-[#E53935] hover:bg-[#D32F2F] text-white text-lg font-bold rounded-lg transition shadow-sm"
             >
               <Edit className="h-4 w-4" />
               {ct('แก้ไข', 'Edit')}
             </button>
             <button
               onClick={() => navigate('/community-admin/events/create')}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[#1E293B] hover:bg-[#0F172A] text-white font-semibold rounded-lg transition shadow-sm"
+              className="flex items-center gap-2 px-6 py-3 bg-[#1E293B] hover:bg-[#0F172A] text-white text-lg font-bold rounded-lg transition shadow-sm"
             >
               <Plus className="h-4 w-4" />
               {ct('สร้างอีเว้นท์', 'Create Event')}
@@ -345,9 +345,9 @@ const AdminDashboard = () => {
               <div className="w-10 h-10 bg-[#FFF3E0] rounded-lg flex items-center justify-center">
                 <AlertCircle className="h-5 w-5 text-[#F57C00]" />
               </div>
-              <span className="text-2xl font-bold text-[#1A1A1A]">{pendingCounts.workshops}</span>
+              <span className="text-3xl font-extrabold text-[#1A1A1A]">{pendingCounts.workshops}</span>
             </div>
-            <p className="text-sm font-medium text-[#666666]">{ct('Workshops รออนุมัติ', 'Workshops Pending')}</p>
+            <p className="text-lg font-bold text-[#666666]">{ct('Workshops รออนุมัติ', 'Workshops Pending')}</p>
           </div>
 
           <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
@@ -355,9 +355,9 @@ const AdminDashboard = () => {
               <div className="w-10 h-10 bg-[#FFF9C4] rounded-lg flex items-center justify-center">
                 <FileText className="h-5 w-5 text-[#F9A825]" />
               </div>
-              <span className="text-2xl font-bold text-[#1A1A1A]">{pendingCounts.revisionWorkshops}</span>
+              <span className="text-3xl font-extrabold text-[#1A1A1A]">{pendingCounts.revisionWorkshops}</span>
             </div>
-            <p className="text-sm font-medium text-[#666666]">{ct('Workshops รอการแก้ไข', 'Workshops Review')}</p>
+            <p className="text-lg font-bold text-[#666666]">{ct('Workshops รอการแก้ไข', 'Workshops Review')}</p>
           </div>
 
           <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
@@ -365,9 +365,9 @@ const AdminDashboard = () => {
               <div className="w-10 h-10 bg-[#E3F2FD] rounded-lg flex items-center justify-center">
                 <Calendar className="h-5 w-5 text-[#1976D2]" />
               </div>
-              <span className="text-2xl font-bold text-[#1A1A1A]">{pendingCounts.events}</span>
+              <span className="text-3xl font-extrabold text-[#1A1A1A]">{pendingCounts.events}</span>
             </div>
-            <p className="text-sm font-medium text-[#666666]">{ct('กิจกรรม', 'Events')}</p>
+            <p className="text-lg font-bold text-[#666666]">{ct('กิจกรรม', 'Events')}</p>
           </div>
 
           <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
@@ -375,9 +375,9 @@ const AdminDashboard = () => {
               <div className="w-10 h-10 bg-[#F3E5F5] rounded-lg flex items-center justify-center">
                 <Store className="h-5 w-5 text-[#8E24AA]" />
               </div>
-              <span className="text-2xl font-bold text-[#1A1A1A]">{pendingCounts.shops}</span>
+              <span className="text-3xl font-extrabold text-[#1A1A1A]">{pendingCounts.shops}</span>
             </div>
-            <p className="text-sm font-medium text-[#666666]">{ct('ร้านค้าที่รอการอนุมัติ', 'Shops Pending')}</p>
+            <p className="text-lg font-bold text-[#666666]">{ct('ร้านค้าที่รอการอนุมัติ', 'Shops Pending')}</p>
           </div>
         </div>
 
@@ -385,12 +385,12 @@ const AdminDashboard = () => {
         <div className="mb-10">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-xl font-bold text-[#1A1A1A]">{ct('ร้านค้าในชุมชน', 'Community Shop')}</h2>
+              <h2 className="text-2xl font-bold text-[#1A1A1A]">{ct('ร้านค้าในชุมชน', 'Community Shop')}</h2>
             </div>
             <div className="flex gap-2">
               <button
                 onClick={() => navigate('/community-admin/shops')}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-[#1A1A1A] text-sm font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-2 px-6 py-2.5 bg-white border border-gray-300 text-[#1A1A1A] text-base font-bold rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <List className="h-4 w-4" />
                 {ct('ดูร้านค้าทั้งหมด', 'View all shops')}
@@ -401,7 +401,7 @@ const AdminDashboard = () => {
           {communityShops.length === 0 ? (
             <div className="bg-white border border-dashed border-gray-300 rounded-2xl p-8 text-center">
               <Store className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-600">{ct('ยังไม่มีร้านค้าในชุมชนของคุณ', 'No shops have been created in this community yet.')}</p>
+              <p className="text-lg font-bold text-gray-700">{ct('ยังไม่มีร้านค้าในชุมชนของคุณ', 'No shops have been created in this community yet.')}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 animate-fadeIn">
@@ -413,19 +413,19 @@ const AdminDashboard = () => {
                   <div className="flex flex-col gap-2">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">{ct('ร้านค้า', 'Shop')}</p>
-                        <h3 className="text-lg font-semibold text-[#1A1A1A] truncate">{shop.shopName}</h3>
+                        <p className="text-sm font-bold uppercase tracking-wide text-gray-600 mb-1">{ct('ร้านค้า', 'Shop')}</p>
+                        <h3 className="text-xl font-bold text-[#1A1A1A] truncate">{shop.shopName}</h3>
                       </div>
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold shrink-0 ${getStatusColor(shop.status)}`}>
+                      <span className={`px-3 py-1 rounded-full text-sm font-bold shrink-0 ${getStatusColor(shop.status)}`}>
                         {statusLabel(shop.status)}
                       </span>
                     </div>
 
-                    <p className="text-sm text-[#666666] whitespace-pre-line wrap-break-word max-h-32 overflow-y-auto scrollbar-thin w-full">
+                    <p className="text-base font-bold text-[#666666] whitespace-pre-line wrap-break-word max-h-32 overflow-y-auto scrollbar-thin w-full">
                       {shop.description || ct('ยังไม่มีคำอธิบาย', 'No description')}
                     </p>
                   </div>
-                  <div className="text-sm text-[#666666] flex flex-col gap-1">
+                  <div className="text-base font-bold text-[#666666] flex flex-col gap-1">
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-[#8E24AA]" />
                       <span className="line-clamp-1">{shop.address || shop.location?.address || ct('ยังไม่ระบุที่อยู่', 'No address provided')}</span>
@@ -434,7 +434,7 @@ const AdminDashboard = () => {
                       <Users className="h-4 w-4 text-[#8E24AA]" />
                       <span>{shop.owner?.name || shop.ownerName || ct('ยังไม่ระบุเจ้าของร้าน', 'Owner not specified')}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <div className="flex items-center gap-2 text-sm font-bold text-gray-600">
                       <span>{ct('เปิด', 'Open')}: {shop.openTime || '-'}</span>
                       <span>•</span>
                       <span>{ct('ปิด', 'Close')}: {shop.closeTime || '-'}</span>
@@ -443,7 +443,7 @@ const AdminDashboard = () => {
                   <div className="flex justify-end">
                     <button
                       onClick={() => navigate(`/community-admin/shops/${shop._id}/approval`)}
-                      className="px-4 py-2 bg-[#1E293B] text-white rounded-full text-sm font-semibold hover:bg-[#0F172A] transition"
+                      className="px-6 py-2.5 bg-[#1E293B] text-white rounded-full text-base font-bold hover:bg-[#0F172A] transition"
                     >
                       {ct('ตรวจสอบ', 'Review')}
                     </button>
@@ -456,12 +456,12 @@ const AdminDashboard = () => {
 
         {/* Workshop Section Title with CTA */}
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-[#1A1A1A]">
+          <h2 className="text-2xl font-bold text-[#1A1A1A]">
             {ct('Workshop ที่ต้องจัดการ', 'Workshops to Manage')}
           </h2>
           <button
             onClick={() => navigate('/community-admin/workshops/pending')}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-[#1A1A1A] text-sm font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-2 px-6 py-2.5 bg-white border border-gray-300 text-[#1A1A1A] text-base font-bold rounded-lg hover:bg-gray-50 transition-colors"
           >
             <List className="h-4 w-4" />
             {ct('ดูทั้งหมด', 'View all')}
@@ -473,7 +473,7 @@ const AdminDashboard = () => {
           {pendingWorkshops.length === 0 ? (
             <div className="col-span-3 bg-white border border-dashed border-gray-300 rounded-2xl p-8 text-center">
               <CheckCircle className="h-12 w-12 text-green-300 mx-auto mb-4" />
-              <p className="text-gray-600">{ct('ไม่มี Workshop รออนุมัติในขณะนี้', 'No pending workshops.')}</p>
+              <p className="text-lg font-bold text-gray-700">{ct('ไม่มี Workshop รออนุมัติในขณะนี้', 'No pending workshops.')}</p>
             </div>
           ) : (
             pendingWorkshops.map((workshop) => (
@@ -489,7 +489,7 @@ const AdminDashboard = () => {
                   )}
                   {/* Pending Badge */}
                   <div className="absolute top-3 right-3">
-                    <span className="px-3 py-1 bg-[#E53935] text-white rounded-md text-xs font-semibold">
+                    <span className="px-3 py-1 bg-[#E53935] text-white rounded-md text-sm font-bold">
                       {ct('รออนุมัติ', 'Pending')}
                     </span>
                   </div>
@@ -497,18 +497,18 @@ const AdminDashboard = () => {
 
                 {/* Workshop Info */}
                 <div className="p-4">
-                  <span className="inline-block px-2 py-1 bg-[#FFF3E0] text-[#F57C00] rounded text-xs font-medium mb-2">
+                  <span className="inline-block px-3 py-1 bg-[#FFF3E0] text-[#F57C00] rounded text-sm font-bold mb-2">
                     {workshop.shop?.shopName || workshop.shopName || ct('ร้านค้า', 'Shop')}
                   </span>
-                  <h3 className="text-base font-bold text-[#1A1A1A] mb-2 line-clamp-2">
+                  <h3 className="text-xl font-bold text-[#1A1A1A] mb-2 line-clamp-2">
                     {workshop.title}
                   </h3>
-                  <p className="text-sm text-[#666666] mb-3 line-clamp-2">
+                  <p className="text-base font-bold text-[#666666] mb-3 line-clamp-2">
                     {workshop.description}
                   </p>
 
                   {/* Workshop Details */}
-                  <div className="flex items-center gap-3 text-sm text-[#666666] mb-4">
+                  <div className="flex items-center gap-3 text-base font-bold text-[#666666] mb-4">
                     <span className="flex items-center gap-1">
                       <span className="font-semibold text-[#1A1A1A]">฿{workshop.price}</span>
                     </span>
@@ -520,13 +520,13 @@ const AdminDashboard = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={() => navigate(`/community-admin/workshops/${workshop._id || workshop.id}/approve`)}
-                      className="flex-1 px-4 py-2 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-sm font-semibold rounded-lg transition-all"
+                      className="flex-1 px-4 py-2.5 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-base font-bold rounded-lg transition-all"
                     >
                       {ct('ตรวจสอบรายละเอียด', 'Review')}
                     </button>
                     <button
                       onClick={() => handleApproveWorkshop(workshop._id || workshop.id)}
-                      className="px-4 py-2 bg-[#1E293B] hover:bg-[#0F172A] text-white text-sm font-semibold rounded-lg transition-all"
+                      className="px-6 py-2.5 bg-[#1E293B] hover:bg-[#0F172A] text-white text-base font-bold rounded-lg transition-all"
                     >
                       {ct('อนุมัติ', 'Approve')}
                     </button>
@@ -557,7 +557,7 @@ const AdminDashboard = () => {
             <div className="flex space-x-1 px-2 py-2">
               <button
                 onClick={() => setTaskTab('events')}
-                className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-2 ${taskTab === 'events'
+                className={`px-6 py-2.5 rounded-lg text-base font-bold transition-colors flex items-center gap-2 ${taskTab === 'events'
                     ? 'bg-[#4CAF50] text-white'
                     : 'text-[#666666] hover:bg-gray-100'
                   }`}
@@ -567,7 +567,7 @@ const AdminDashboard = () => {
               </button>
               <button
                 onClick={() => setTaskTab('shops')}
-                className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-2 ${taskTab === 'shops'
+                className={`px-6 py-2.5 rounded-lg text-base font-bold transition-colors flex items-center gap-2 ${taskTab === 'shops'
                     ? 'bg-[#4CAF50] text-white'
                     : 'text-[#666666] hover:bg-gray-100'
                   }`}
@@ -588,13 +588,13 @@ const AdminDashboard = () => {
                     <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center mb-4">
                       <Calendar className="h-8 w-8 text-[#90CAF9]" />
                     </div>
-                    <span className="inline-block px-3 py-1 bg-[#E3F2FD] text-[#1976D2] rounded-md text-xs font-semibold mb-2">
+                    <span className="inline-block px-3 py-1 bg-[#E3F2FD] text-[#1976D2] rounded-md text-sm font-bold mb-2">
                       {ct('ไม่มี', 'None')}
                     </span>
-                    <h3 className="text-base font-bold text-[#1A1A1A] mb-2">
+                    <h3 className="text-xl font-bold text-[#1A1A1A] mb-2">
                       {ct('งานอีเว้นท์ที่ต้องจัดการ', 'Events to Manage')}
                     </h3>
-                    <p className="text-sm text-[#666666] text-center mb-4">
+                    <p className="text-base font-bold text-[#666666] text-center mb-4">
                       {ct('ยังไม่มีงานอีเว้นท์ที่ต้องจัดการในขณะนี้', 'No events to manage at the moment')}
                     </p>
                   </div>
@@ -609,20 +609,20 @@ const AdminDashboard = () => {
                         ) : null}
 
                         <div className="flex items-center justify-between">
-                          <span className="inline-flex items-center text-xs font-semibold px-3 py-1 bg-[#E3F2FD] text-[#1976D2] rounded-full">
+                          <span className="inline-flex items-center text-sm font-bold px-3 py-1 bg-[#E3F2FD] text-[#1976D2] rounded-full">
                             {ct('อีเว้นท์', 'Event')}
                           </span>
-                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${eventStatusStyles[normalizeEventStatus(event.status)] || 'bg-gray-100 text-gray-700'}`}>
+                          <span className={`px-3 py-1 rounded-full text-sm font-bold ${eventStatusStyles[normalizeEventStatus(event.status)] || 'bg-gray-100 text-gray-700'}`}>
                             {eventStatusLabel(event.status)}
                           </span>
                         </div>
 
                         <div>
-                          <h3 className="text-lg font-bold text-[#1A1A1A] mb-1 line-clamp-2">{event.title}</h3>
-                          <p className="text-sm text-[#666666] line-clamp-3">{event.description}</p>
+                          <h3 className="text-xl font-bold text-[#1A1A1A] mb-1 line-clamp-2">{event.title}</h3>
+                          <p className="text-base font-bold text-[#666666] line-clamp-3">{event.description}</p>
                         </div>
 
-                        <div className="space-y-2 text-sm text-[#4B5563]">
+                        <div className="space-y-2 text-base font-bold text-[#4B5563]">
                           <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4 text-[#4CAF50]" />
                             <span>{formatEventDateRange(event.start_at, event.end_at)}</span>
@@ -640,13 +640,13 @@ const AdminDashboard = () => {
                         <div className="flex gap-2">
                           <button
                             onClick={() => navigate(`/community-admin/events/${event._id || event.id}`)}
-                            className="flex-1 px-4 py-2 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-sm font-semibold rounded-lg transition-all"
+                            className="flex-1 px-4 py-2.5 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-base font-bold rounded-lg transition-all"
                           >
                             {ct('ดูรายละเอียด', 'View Details')}
                           </button>
                           <button
                             onClick={() => navigate(`/community-admin/events/${event._id || event.id}/edit`)}
-                            className="px-4 py-2 bg-[#1E293B] hover:bg-[#0F172A] text-white text-sm font-semibold rounded-lg transition-all"
+                            className="px-6 py-2.5 bg-[#1E293B] hover:bg-[#0F172A] text-white text-base font-bold rounded-lg transition-all"
                           >
                             {ct('แก้ไข', 'Edit')}
                           </button>
@@ -661,7 +661,7 @@ const AdminDashboard = () => {
             {/* Shops Tab */}
             {taskTab === 'shops' && (
               <div>
-                <p className="text-sm text-[#8E24AA] font-medium mb-4">
+                <p className="text-lg font-bold text-[#8E24AA] mb-4">
                   {ct('รายชื่อต่อไปนี้ยังไม่ผ่านการอนุมัติ โปรดตรวจสอบและดำเนินการ', 'These shops are still pending approval. Review the details and approve or reject each one.')}
                 </p>
                 {pendingShops.length === 0 ? (
@@ -669,13 +669,13 @@ const AdminDashboard = () => {
                     <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center mb-4">
                       <Store className="h-8 w-8 text-[#CE93D8]" />
                     </div>
-                    <span className="inline-block px-3 py-1 bg-[#F3E5F5] text-[#8E24AA] rounded-md text-xs font-semibold mb-2">
+                    <span className="inline-block px-3 py-1 bg-[#F3E5F5] text-[#8E24AA] rounded-md text-sm font-bold mb-2">
                       {ct('ไม่มี', 'None')}
                     </span>
-                    <h3 className="text-base font-bold text-[#1A1A1A] mb-2">
+                    <h3 className="text-xl font-bold text-[#1A1A1A] mb-2">
                       {ct('ร้านค้าที่ต้องจัดการ', 'Shops to Manage')}
                     </h3>
-                    <p className="text-sm text-[#666666] text-center mb-4">
+                    <p className="text-base font-bold text-[#666666] text-center mb-4">
                       {ct('ยังไม่มีร้านค้าที่ต้องจัดการในขณะนี้', 'No shops to manage at the moment')}
                     </p>
                   </div>
@@ -694,20 +694,20 @@ const AdminDashboard = () => {
                               />
                             </div>
                           )}
-                          <span className="inline-block px-3 py-1 bg-[#F3E5F5] text-[#8E24AA] rounded-md text-xs font-semibold mb-3">
+                          <span className="inline-block px-3 py-1 bg-[#F3E5F5] text-[#8E24AA] rounded-md text-sm font-bold mb-3">
                             {ct('ร้านค้า', 'Shop')}
                           </span>
                           <div className="flex items-center justify-between mb-2">
-                            <h3 className="text-base font-bold text-[#1A1A1A]">{shop.shopName}</h3>
-                            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getStatusColor(shop.status)}`}>
+                            <h3 className="text-xl font-bold text-[#1A1A1A]">{shop.shopName}</h3>
+                            <span className={`px-3 py-1 rounded-full text-sm font-bold ${getStatusColor(shop.status)}`}>
                               {statusLabel(shop.status)}
                             </span>
                           </div>
-                          <p className="text-xs text-orange-600 mb-2">
+                          <p className="text-sm font-bold text-orange-600 mb-2">
                             {ct('สถานะ: ต้องตรวจสอบและอนุมัติก่อนจะปรากฏในแผนที่และหน้า Workshop', 'Pending approval: approve to show this shop on the map and listings.')}
                           </p>
-                          <p className="text-sm text-[#666666] mb-4 line-clamp-2">{shop.description || ct('ยังไม่มีคำอธิบาย', 'No description')}</p>
-                          <div className="flex items-center gap-3 text-sm text-[#666666] mb-4">
+                          <p className="text-base font-bold text-[#666666] mb-4 line-clamp-2">{shop.description || ct('ยังไม่มีคำอธิบาย', 'No description')}</p>
+                          <div className="flex items-center gap-3 text-base font-bold text-[#666666] mb-4">
                             <span className="flex items-center gap-1">
                               <Users className="h-4 w-4" />
                               {shop.owner?.name || shop.ownerName || ct('ไม่ระบุ', 'Unknown')}
@@ -718,13 +718,13 @@ const AdminDashboard = () => {
                           <div className="flex gap-2">
                             <button
                               onClick={() => navigate(`/community-admin/shops/${shop._id}/approval`)}
-                              className="flex-1 px-4 py-2 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-sm font-semibold rounded-lg transition-all"
+                              className="flex-1 px-4 py-2.5 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-base font-bold rounded-lg transition-all"
                             >
                               {ct('ดูรายละเอียด', 'View Details')}
                             </button>
                             <button
                               onClick={() => handleApproveShop(shop._id || shop.id)}
-                              className="px-4 py-2 bg-[#1E293B] hover:bg-[#0F172A] text-white text-sm font-semibold rounded-lg transition-all"
+                              className="px-6 py-2.5 bg-[#1E293B] hover:bg-[#0F172A] text-white text-base font-bold rounded-lg transition-all"
                             >
                               {ct('อนุมัติ', 'Approve')}
                             </button>

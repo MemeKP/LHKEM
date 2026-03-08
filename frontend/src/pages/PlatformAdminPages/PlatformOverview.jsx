@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Users, Store, Calendar, TrendingUp, AlertCircle, CheckCircle, ChevronRight } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend, Tooltip } from 'recharts';
@@ -209,10 +209,10 @@ const PlatformOverview = () => {
     <div className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between">
         <div>
-          <p className={`text-3xl font-bold ${color === 'green' ? 'text-green-600' : 'text-orange-500'}`}>
+          <p className={`text-4xl font-extrabold ${color === 'green' ? 'text-green-600' : 'text-orange-500'}`}>
             {value}
           </p>
-          <p className="text-sm text-gray-600 mt-1">{label}</p>
+          <p className="text-lg font-bold text-gray-600 mt-1">{label}</p>
         </div>
         <div className={`p-3 rounded-lg ${color === 'green' ? 'bg-green-50' : 'bg-orange-50'}`}>
           <Icon className={`h-6 w-6 ${color === 'green' ? 'text-green-600' : 'text-orange-500'}`} />
@@ -226,10 +226,10 @@ const PlatformOverview = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-2">
             {ct('ภาพรวมแพลตฟอร์ม', 'Platform Overview')}
           </h1>
-          <p className="text-gray-600">
+          <p className="text-xl font-bold text-gray-700">
             {ct('ข้อมูลและสถิติของชุมชนทั้งหมดในระบบ', 'Data and statistics of all communities in the system')}
           </p>
         </div>
@@ -239,7 +239,7 @@ const PlatformOverview = () => {
           <select
             value={timeFilter}
             onChange={(e) => setTimeFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-lg font-bold">
             <option value="all">{ct('ทั้งหมด', 'All')}</option>
             <option value="month">{ct('เดือนนี้', 'This Month')}</option>
             <option value="year">{ct('ปีนี้', 'This Year')}</option>
@@ -247,7 +247,7 @@ const PlatformOverview = () => {
           <select
             value={communityFilter}
             onChange={(e) => setCommunityFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-lg font-bold">
             <option value="all">{ct('ทุกชุมชน', 'All Communities')}</option>
             <option value="new">{ct('ชุมชนใหม่', 'New Communities')}</option>
             <option value="active">{ct('ชุมชนที่ใช้งาน', 'Active Communities')}</option>
@@ -322,7 +322,7 @@ const PlatformOverview = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
           {/* Communities Table */}
           <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">{ct('ภาพรวมแต่ละ Community', 'Overview of Each Community')}</h2>
+            <h2 className="text-2xl font-extrabold text-gray-900 mb-4">{ct('ภาพรวมแต่ละ Community', 'Overview of Each Community')}</h2>
             
             {isCommunitiesLoading ? (
               <div className="space-y-4">
@@ -335,26 +335,26 @@ const PlatformOverview = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200">
-                    <th className="text-left text-sm font-semibold text-gray-900 pb-3">{ct('ชุมชน', 'Community')}</th>
-                    <th className="text-center text-sm font-semibold text-gray-900 pb-3">{ct('ที่ตั้ง', 'Location')}</th>
-                    <th className="text-center text-sm font-semibold text-gray-900 pb-3">{ct('Shop', 'Shop')}</th>
-                    <th className="text-center text-sm font-semibold text-gray-900 pb-3">{ct('กิจกรรม', 'Activities')}</th>
-                    <th className="text-center text-sm font-semibold text-gray-900 pb-3">{ct('ผู้เข้าร่วม', 'Members')}</th>
-                    <th className="text-center text-sm font-semibold text-gray-900 pb-3">{ct('แอคชั่น', 'Action')}</th>
+                    <th className="text-left text-lg font-bold text-gray-900 pb-3">{ct('ชุมชน', 'Community')}</th>
+                    <th className="text-center text-lg font-bold text-gray-900 pb-3">{ct('ที่ตั้ง', 'Location')}</th>
+                    <th className="text-center text-lg font-bold text-gray-900 pb-3">{ct('Shop', 'Shop')}</th>
+                    <th className="text-center text-lg font-bold text-gray-900 pb-3">{ct('กิจกรรม', 'Activities')}</th>
+                    <th className="text-center text-lg font-bold text-gray-900 pb-3">{ct('ผู้เข้าร่วม', 'Members')}</th>
+                    <th className="text-center text-lg font-bold text-gray-900 pb-3">{ct('แอคชั่น', 'Action')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {communities.map((community, index) => (
                     <tr key={index} className="border-b border-gray-100">
-                      <td className="py-3 text-sm text-gray-900">{community.name}</td>
-                      <td className="py-3 text-sm text-gray-600 text-center">{community.location}</td>
-                      <td className="py-3 text-sm text-gray-900 text-center">{community.shops}</td>
-                      <td className="py-3 text-sm text-gray-900 text-center">{community.workshops}</td>
-                      <td className="py-3 text-sm text-orange-600 text-center font-medium">{community.members}</td>
+                      <td className="py-3 text-lg font-bold text-gray-900">{community.name}</td>
+                      <td className="py-3 text-lg font-bold text-gray-600 text-center">{community.location}</td>
+                      <td className="py-3 text-lg font-bold text-gray-900 text-center">{community.shops}</td>
+                      <td className="py-3 text-lg font-bold text-gray-900 text-center">{community.workshops}</td>
+                      <td className="py-3 text-lg text-orange-600 text-center font-bold">{community.members}</td>
                       <td className="py-3 text-center">
                         <button
                           onClick={() => navigate(`/platform-admin/communities/${community.id}`)}
-                          className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-colors">
+                          className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-colors">
                           {ct('จัดการ', 'Manage')} →
                         </button>
                       </td>
@@ -362,7 +362,7 @@ const PlatformOverview = () => {
                   ))}
                   {communities.length === 0 && (
                     <tr>
-                      <td colSpan="6" className="py-6 text-center text-gray-500">
+                      <td colSpan="6" className="py-6 text-center text-lg font-bold text-gray-500">
                         ไม่มีข้อมูลชุมชน
                       </td>
                     </tr>
@@ -374,13 +374,13 @@ const PlatformOverview = () => {
 
           {/* Activity Type Pie Chart */}
           <div className="bg-white rounded-xl p-6 shadow-sm">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">{ct('ประเภทกิจกรรม', 'Activity Types')}</h2>
+            <h2 className="text-2xl font-extrabold text-gray-900 mb-4">{ct('ประเภทกิจกรรม', 'Activity Types')}</h2>
             {isActivitiesLoading ? (
               <div className="flex justify-center items-center h-[250px]">
               <div className="w-48 h-48 bg-gray-200 rounded-full animate-pulse"></div>
             </div>
             ) : activityData.length === 0 || activityData[0]?.count === 0 ? (
-              <div className="flex justify-center items-center h-[250px] text-gray-400">
+              <div className="flex justify-center items-center h-[250px] text-lg font-bold text-gray-400">
                 ไม่มีข้อมูล Event
               </div>
             ) : (<ResponsiveContainer width="100%" height={250}>
@@ -405,9 +405,9 @@ const PlatformOverview = () => {
             <div className="grid grid-cols-2 gap-3 mt-4">
               {activityData.filter(item => item.count > 0).map((item, index) => (
                 <div key={index} className="text-center">
-                  <p className="text-sm text-gray-600">{item.name}</p>
-                  <p className="text-lg font-bold" style={{ color: item.color }}>{item.percentage}%</p>
-                  <p className="text-xs text-gray-400">{item.count} งาน</p>
+                  <p className="text-base font-bold text-gray-700">{item.name}</p>
+                  <p className="text-2xl font-extrabold" style={{ color: item.color }}>{item.percentage}%</p>
+                  <p className="text-sm font-bold text-gray-400">{item.count} งาน</p>
                 </div>
               ))}
             </div>
@@ -419,7 +419,7 @@ const PlatformOverview = () => {
           <div className="bg-white rounded-xl p-6 shadow-sm">
             <div className="flex items-center space-x-2 mb-4">
               <Users className="h-5 w-5 text-orange-500" />
-              <h2 className="text-xl font-bold text-gray-900">{ct('ผู้เข้าร่วมมากที่สุด', 'Most Participants')}</h2>
+              <h2 className="text-2xl font-extrabold text-gray-900">{ct('ผู้เข้าร่วมมากที่สุด', 'Most Participants')}</h2>
             </div>
             {isTopParticipantsLoading ? (
               <div className="space-y-3">
@@ -431,14 +431,14 @@ const PlatformOverview = () => {
                 <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">{index + 1}</span>
+                      <span className="text-white font-bold text-base">{index + 1}</span>
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-gray-900">{item.name}</p>
-                      <p className="text-xs text-gray-500">{item.location}</p>
+                      <p className="text-lg font-bold text-gray-900">{item.name}</p>
+                      <p className="text-sm font-bold text-gray-500">{item.location}</p>
                     </div>
                   </div>
-                  <span className="text-lg font-bold text-orange-500">{item.count}</span>
+                  <span className="text-2xl font-extrabold text-orange-500">{item.count}</span>
                 </div>
               ))}
             </div>)}
@@ -448,7 +448,7 @@ const PlatformOverview = () => {
           <div className="bg-white rounded-xl p-6 shadow-sm">
             <div className="flex items-center space-x-2 mb-4">
               <Calendar className="h-5 w-5 text-orange-500" />
-              <h2 className="text-xl font-bold text-gray-900">{ct('กิจกรรมที่มีคนทำที่สุด', 'Most Active Communities')}</h2>
+              <h2 className="text-2xl font-extrabold text-gray-900">{ct('กิจกรรมที่มีคนทำที่สุด', 'Most Active Communities')}</h2>
             </div>
             {isMostActiveLoading ? (
               <div className="space-y-3">
@@ -460,14 +460,14 @@ const PlatformOverview = () => {
                 <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">{index + 1}</span>
+                      <span className="text-white font-bold text-base">{index + 1}</span>
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-gray-900">{item.name}</p>
-                      <p className="text-xs text-gray-500">{item.location}</p>
+                      <p className="text-lg font-bold text-gray-900">{item.name}</p>
+                      <p className="text-sm font-bold text-gray-500">{item.location}</p>
                     </div>
                   </div>
-                  <span className="text-lg font-bold text-orange-500">{item.count}</span>
+                  <span className="text-2xl font-extrabold text-orange-500">{item.count}</span>
                 </div>
               ))}
             </div>)}

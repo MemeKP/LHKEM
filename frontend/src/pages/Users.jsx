@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Plus, AlertCircle } from 'lucide-react';
 import { userService } from '../services/userService';
 import UserCard from '../components/UserCard';
@@ -88,7 +88,7 @@ const Users = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
+            <h1 className="text-3xl font-extrabold text-gray-900">User Management</h1>
             <p className="text-gray-600 mt-2">Manage your application users</p>
           </div>
           <button
@@ -112,7 +112,7 @@ const Users = () => {
             <div className="bg-gray-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4">
               <Plus className="h-12 w-12 text-gray-400" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No users yet</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">No users yet</h3>
             <p className="text-gray-600 mb-6">Get started by creating your first user</p>
             <button
               onClick={() => setShowForm(true)}

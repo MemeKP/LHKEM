@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Clock, Users, CheckCircle, Calendar, DollarSign, Edit, X, Pause, Eye, Mail, AlertCircle, Edit3 } from 'lucide-react';
 import Swal from 'sweetalert2';
@@ -362,7 +362,7 @@ const ShopWorkshopDetail = () => {
         
         <button
           onClick={() => navigate(`/${slug}/shop/dashboard`)}
-          className="mb-6 flex items-center gap-2 text-sm text-[#6B6B6B] hover:text-[#E07B39] transition-colors"
+          className="mb-6 flex items-center gap-2 text-lg font-bold text-[#6B6B6B] hover:text-[#E07B39] transition-colors"
         >
           <ArrowLeft className="h-4 w-4" /> {ct('กลับ', 'Back')}
         </button>
@@ -373,9 +373,9 @@ const ShopWorkshopDetail = () => {
               <Edit3 className="h-6 w-6" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-bold text-orange-900">{ct('ต้องแก้ไข', 'Revision Needed')}</h3>
-              <p className="text-sm text-orange-800 mt-1 whitespace-pre-wrap">
-                <span className="font-semibold">{ct('เหตุผล: ', 'Reason: ')}</span> 
+              <h3 className="text-xl font-bold text-orange-900">{ct('ต้องแก้ไข', 'Revision Needed')}</h3>
+              <p className="text-lg font-bold text-orange-800 mt-1 whitespace-pre-wrap">
+                <span className="font-bold">{ct('เหตุผล: ', 'Reason: ')}</span> 
                 {workshop.rejectReason || ct('ไม่มีการระบุเหตุผล', 'No reason provided.')}
               </p>
             </div>
@@ -388,9 +388,9 @@ const ShopWorkshopDetail = () => {
               <AlertCircle className="h-6 w-6" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-bold text-red-900">{ct('ไม่อนุมัติ', 'Workshop Rejected')}</h3>
-              <p className="text-sm text-red-800 mt-1 whitespace-pre-wrap">
-                <span className="font-semibold">{ct('เหตุผล: ', 'Reason: ')}</span> 
+              <h3 className="text-xl font-bold text-red-900">{ct('ไม่อนุมัติ', 'Workshop Rejected')}</h3>
+              <p className="text-lg font-bold text-red-800 mt-1 whitespace-pre-wrap">
+                <span className="font-bold">{ct('เหตุผล: ', 'Reason: ')}</span> 
                 {workshop.rejectReason || ct('ไม่มีการระบุเหตุผล', 'No reason provided.')}
               </p>
             </div>
@@ -399,7 +399,7 @@ const ShopWorkshopDetail = () => {
 
         <div className="bg-white rounded-2xl shadow-lg p-8 mb-6 animate-slideUp border border-gray-100">
           <div className="flex items-start justify-between mb-6">
-            <h1 className="text-3xl font-bold text-[#2F4F2F]">{workshop.title}</h1>
+            <h1 className="text-4xl md:text-5xl font-extrabold text-[#2F4F2F]">{workshop.title}</h1>
             <button onClick={() => navigate(`/${slug}/shop/dashboard`)} className="text-gray-400 hover:text-gray-600">
               <X className="h-6 w-6" />
             </button>
@@ -413,7 +413,7 @@ const ShopWorkshopDetail = () => {
                 <div className="w-full h-full flex items-center justify-center text-gray-400">
                   <div className="text-center">
                     <div className="text-6xl mb-2">📸</div>
-                    <p className="text-sm">{ct('ไม่มีรูปภาพ', 'No Image')}</p>
+                    <p className="text-lg font-bold">{ct('ไม่มีรูปภาพ', 'No Image')}</p>
                   </div>
                 </div>
               )}
@@ -421,49 +421,49 @@ const ShopWorkshopDetail = () => {
             
             <div className="space-y-4">
               <div className="flex flex-wrap gap-2">
-                {workshop.approvalStatus === 'PENDING' && <span className="px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">{ct('รออนุมัติ', 'Pending')}</span>}
-                {workshop.approvalStatus === 'CHANGE' && <span className="px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-800">{ct('ต้องแก้ไข', 'Needs Revision')}</span>}
-                {workshop.approvalStatus === 'REJECTED' && <span className="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">{ct('ไม่อนุมัติ', 'Rejected')}</span>}
-                {workshop.approvalStatus === 'ACTIVE' && <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700">{ct('อนุมัติแล้ว', 'Approved')}</span>}
+                {workshop.approvalStatus === 'PENDING' && <span className="px-3 py-1 rounded-full text-sm font-bold bg-yellow-100 text-yellow-700">{ct('รออนุมัติ', 'Pending')}</span>}
+                {workshop.approvalStatus === 'CHANGE' && <span className="px-3 py-1 rounded-full text-sm font-bold bg-orange-100 text-orange-800">{ct('ต้องแก้ไข', 'Needs Revision')}</span>}
+                {workshop.approvalStatus === 'REJECTED' && <span className="px-3 py-1 rounded-full text-sm font-bold bg-red-100 text-red-700">{ct('ไม่อนุมัติ', 'Rejected')}</span>}
+                {workshop.approvalStatus === 'ACTIVE' && <span className="px-3 py-1 rounded-full text-sm font-bold bg-blue-50 text-blue-700">{ct('อนุมัติแล้ว', 'Approved')}</span>}
 
                 {workshop.approvalStatus === 'ACTIVE' && (
                   workshop.registrationStatus === 'OPEN' 
-                    ? <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">{ct('เปิดรับสมัคร', 'Open')}</span>
-                    : <span className="px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700">{ct('ปิดรับสมัคร', 'Closed')}</span>
+                    ? <span className="px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-700">{ct('เปิดรับสมัคร', 'Open')}</span>
+                    : <span className="px-3 py-1 rounded-full text-sm font-bold bg-gray-100 text-gray-700">{ct('ปิดรับสมัคร', 'Closed')}</span>
                 )}
               </div>
               
               <div className="space-y-3 pt-2">
                 <div className="flex items-center gap-3 text-gray-700">
                   <Calendar className="h-5 w-5 text-gray-400" />
-                  <span className="text-sm">
+                  <span className="text-lg font-bold">
                     {formattedEventDate}
                   </span>
                 </div>
                 <div className="flex items-center gap-3 text-gray-700">
                   <Clock className="h-5 w-5 text-gray-400" />
-                  <span className="text-sm">
+                  <span className="text-lg font-bold">
                     {workshop.startTime && workshop.endTime ? `${workshop.startTime} - ${workshop.endTime}` : (workshop.time || ct('ไม่ระบุเวลา', 'Time not specified'))}
                   </span>
                 </div>
                 <div className="flex items-center gap-3 text-gray-700">
                   <MapPin className="h-5 w-5 text-gray-400" />
-                  <span className="text-sm whitespace-pre-line wrap-break-word max-h-24 overflow-y-auto scrollbar-thin w-full max-w-2xl">{resolvedLocation}</span>
+                  <span className="text-lg font-bold whitespace-pre-line wrap-break-word max-h-24 overflow-y-auto scrollbar-thin w-full max-w-2xl">{resolvedLocation}</span>
                 </div>
                 <div className="flex items-center gap-3 text-gray-700">
                   <Users className="h-5 w-5 text-gray-400" />
-                  <span className="text-sm">{participants} / {capacity} {ct('คน', 'people')}</span>
+                  <span className="text-lg font-bold">{participants} / {capacity} {ct('คน', 'people')}</span>
                 </div>
               </div>
               
               <button 
                 onClick={() => navigate(`/${slug}/shop/workshops/${id}/edit`)}
-                className="w-full mt-4 px-6 py-3 bg-[#E07B39] text-white rounded-full hover:bg-[#D66B29] font-semibold transition-all hover:scale-105 shadow-md"
+                className="w-full mt-4 px-6 py-3 bg-[#E07B39] text-white rounded-full hover:bg-[#D66B29] text-xl font-bold transition-all hover:scale-105 shadow-md"
               >
                 {ct('แก้ไขข้อมูล Workshop', 'Edit Workshop Details')}
               </button>
               
-              <p className="text-xs text-gray-500 text-center">{ct('สามารถแก้ไขข้อมูลก่อนอนุมัติ', 'Details can be edited before approval')}</p>
+              <p className="text-sm font-bold text-gray-500 text-center">{ct('สามารถแก้ไขข้อมูลก่อนอนุมัติ', 'Details can be edited before approval')}</p>
             </div>
           </div>
         </div>
@@ -472,8 +472,8 @@ const ShopWorkshopDetail = () => {
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-[#6B6B6B] mb-1">{ct('ยอดเข้าดู', 'Views')}</p>
-                <p className="text-3xl font-bold text-[#3D3D3D]">{totalViews} {ct('ครั้ง', 'times')}</p>
+                <p className="text-lg font-bold text-[#6B6B6B] mb-1">{ct('ยอดเข้าดู', 'Views')}</p>
+                <p className="text-4xl font-extrabold text-[#3D3D3D]">{totalViews} {ct('ครั้ง', 'times')}</p>
               </div>
               <div className="p-3 bg-[#FFF7ED] rounded-lg">
                 <Eye className="h-6 w-6 text-[#E07B39]" />
@@ -484,8 +484,8 @@ const ShopWorkshopDetail = () => {
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-[#6B6B6B] mb-1">{ct('ผู้เข้าร่วมที่ยืนยันแล้ว', 'Confirmed Participants')}</p>
-                <p className="text-3xl font-bold text-[#3D3D3D]">{participants} {ct('คน', 'people')}</p>
+                <p className="text-lg font-bold text-[#6B6B6B] mb-1">{ct('ผู้เข้าร่วมที่ยืนยันแล้ว', 'Confirmed Participants')}</p>
+                <p className="text-4xl font-extrabold text-[#3D3D3D]">{participants} {ct('คน', 'people')}</p>
               </div>
               <div className="p-3 bg-[#E8F5E9] rounded-lg">
                 <Users className="h-6 w-6 text-[#4CAF50]" />
@@ -496,8 +496,8 @@ const ShopWorkshopDetail = () => {
           <div className="bg-white rounded-xl shadow-sm p-6 border border-yellow-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-[#6B6B6B] mb-1">{ct('รอยืนยัน', 'Pending')}</p>
-                <p className="text-3xl font-bold text-yellow-600">{pendingParticipants} {ct('คน', 'people')}</p>
+                <p className="text-lg font-bold text-[#6B6B6B] mb-1">{ct('รอยืนยัน', 'Pending')}</p>
+                <p className="text-4xl font-extrabold text-yellow-600">{pendingParticipants} {ct('คน', 'people')}</p>
               </div>
               <div className="p-3 bg-yellow-50 rounded-lg">
                 <AlertCircle className="h-6 w-6 text-yellow-500" />
@@ -508,9 +508,9 @@ const ShopWorkshopDetail = () => {
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-[#6B6B6B] mb-1">{ct('ที่ว่างคงเหลือ', 'Seats Left')}</p>
-                <p className={`text-3xl font-bold ${seatsLeft === 0 ? 'text-red-600' : 'text-[#3D3D3D]'}`}>{ct('เหลือ', 'Left')} {seatsLeft} {ct('ที่นั่ง', 'seats')}</p>
-                <p className="text-xs text-gray-400 mt-1">{ct(`จาก ${capacity} ที่นั่ง`, `of ${capacity} seats`)}</p>
+                <p className="text-lg font-bold text-[#6B6B6B] mb-1">{ct('ที่ว่างคงเหลือ', 'Seats Left')}</p>
+                <p className={`text-4xl font-extrabold ${seatsLeft === 0 ? 'text-red-600' : 'text-[#3D3D3D]'}`}>{ct('เหลือ', 'Left')} {seatsLeft} {ct('ที่นั่ง', 'seats')}</p>
+                <p className="text-base font-bold text-gray-400 mt-1">{ct(`จาก ${capacity} ที่นั่ง`, `of ${capacity} seats`)}</p>
               </div>
               <div className="p-3 bg-[#FFF7ED] rounded-lg">
                 <Calendar className="h-6 w-6 text-[#E07B39]" />
@@ -520,31 +520,31 @@ const ShopWorkshopDetail = () => {
         </div>
 
         <div className="bg-white rounded-xl shadow-sm p-6 mb-6 animate-slideUp border border-gray-100">
-          <h2 className="text-xl font-bold text-[#2F4F2F] mb-6">{ct('รายชื่อผู้ลงทะเบียน', 'Registered Participants')}</h2>
+          <h2 className="text-2xl font-extrabold text-[#2F4F2F] mb-6">{ct('รายชื่อผู้ลงทะเบียน', 'Registered Participants')}</h2>
           <input 
             type="text"
             placeholder={ct('ค้นหาชื่อ, อีเมล, เบอร์โทร...', 'Search name, email, phone...')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full sm:w-64 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39]"
+            className="w-full sm:w-64 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] text-lg font-bold"
           />
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full mt-4">
               <thead>
                 <tr className="border-b border-gray-200">
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{ct('ลำดับ', 'No.')}</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{ct('ชื่อ', 'Name')}</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{ct('อีเมล', 'Email')}</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{ct('เบอร์โทร', 'Phone')}</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{ct('จำนวนที่จอง', 'Seats')}</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{ct('วันที่ลงทะเบียน', 'Registration Date')}</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{ct('สถานะ', 'Status')}</th>
+                  <th className="px-4 py-3 text-left text-lg font-bold text-gray-700">{ct('ลำดับ', 'No.')}</th>
+                  <th className="px-4 py-3 text-left text-lg font-bold text-gray-700">{ct('ชื่อ', 'Name')}</th>
+                  <th className="px-4 py-3 text-left text-lg font-bold text-gray-700">{ct('อีเมล', 'Email')}</th>
+                  <th className="px-4 py-3 text-left text-lg font-bold text-gray-700">{ct('เบอร์โทร', 'Phone')}</th>
+                  <th className="px-4 py-3 text-left text-lg font-bold text-gray-700">{ct('จำนวนที่จอง', 'Seats')}</th>
+                  <th className="px-4 py-3 text-left text-lg font-bold text-gray-700">{ct('วันที่ลงทะเบียน', 'Registration Date')}</th>
+                  <th className="px-4 py-3 text-left text-lg font-bold text-gray-700">{ct('สถานะ', 'Status')}</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredEnrollments.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan="7" className="px-4 py-8 text-center text-lg font-bold text-gray-500">
                       {searchQuery 
                         ? ct('ไม่พบข้อมูลที่ค้นหา', 'No results found for your search') 
                         : ct('ยังไม่มีผู้ลงทะเบียน', 'No participants registered yet')}
@@ -557,33 +557,33 @@ const ShopWorkshopDetail = () => {
 
                     return (
                       <tr key={e._id || idx} className="border-t border-gray-100 hover:bg-gray-50">
-                        <td className="px-4 py-4 text-sm text-gray-700">{idx + 1}</td>
-                        <td className="px-4 py-4 text-sm font-medium text-gray-900">{userName}</td>
+                        <td className="px-4 py-4 text-lg font-bold text-gray-700">{idx + 1}</td>
+                        <td className="px-4 py-4 text-lg font-bold text-gray-900">{userName}</td>
 
-                        <td className="px-4 py-4 text-sm text-gray-600">{userEmail}</td>
-                        <td className="px-4 py-4 text-sm text-gray-600">{userPhone}</td>
-                        <td className="px-4 py-4 text-sm text-gray-900 font-medium">{bookedSeats}</td>
-                        <td className="px-4 py-4 text-sm text-gray-600">
+                        <td className="px-4 py-4 text-lg font-bold text-gray-600">{userEmail}</td>
+                        <td className="px-4 py-4 text-lg font-bold text-gray-600">{userPhone}</td>
+                        <td className="px-4 py-4 text-lg font-bold text-gray-900">{bookedSeats}</td>
+                        <td className="px-4 py-4 text-lg font-bold text-gray-600">
                           {e.createdAt ? new Date(e.createdAt).toLocaleDateString('th-TH') : (e.date ? new Date(e.date).toLocaleDateString('th-TH') : '-')}
                         </td>
-                        <td className="px-4 py-4 text-sm">
+                        <td className="px-4 py-4 text-lg font-bold">
                           {e.status === 'PENDING' || e.status === 'รอตอบรับ' ? (
                             <div className="flex gap-2">
                               <button 
                                 onClick={() => handleUpdateEnrollmentStatus(e._id, 'CONFIRMED')}
-                                className="px-3 py-1 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 font-medium transition-colors"
+                                className="px-3 py-1 bg-green-600 text-white text-base font-bold rounded-lg hover:bg-green-700 transition-colors"
                               >
                                 {ct('ยืนยัน', 'Confirm')}
                               </button>
                               <button 
                                 onClick={() => handleUpdateEnrollmentStatus(e._id, 'REJECTED')}
-                                className="px-3 py-1 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 font-medium transition-colors"
+                                className="px-3 py-1 bg-red-600 text-white text-base font-bold rounded-lg hover:bg-red-700 transition-colors"
                               >
                                 {ct('ปฏิเสธ', 'Reject')}
                               </button>
                             </div>
                           ) : (
-                            <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
+                            <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold ${
                               e.status === 'CONFIRMED' || e.status === 'ยืนยันแล้ว' ? 'bg-green-50 text-green-700' : 
                               e.status === 'REJECTED' ? 'bg-red-50 text-red-700' : 'bg-gray-100 text-gray-700'
                             }`}>
@@ -602,20 +602,20 @@ const ShopWorkshopDetail = () => {
         </div>
 
         <div className="bg-white rounded-xl shadow-sm p-6 mb-6 animate-slideUp border border-gray-100">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">{ct('แจ้งข้อมูลผู้ลงทะเบียน', 'Notify Registrants')}</h2>
-          <p className="text-sm text-gray-600 mb-6">
+          <h2 className="text-2xl font-extrabold text-gray-900 mb-4">{ct('แจ้งข้อมูลผู้ลงทะเบียน', 'Notify Registrants')}</h2>
+          <p className="text-lg font-bold text-gray-600 mb-6">
             {ct('ใช้ปุ่มนี้เพื่อแจ้งเตือนผู้เข้าร่วมเกี่ยวกับข้อมูลสำคัญเพิ่มเติม', 'Use these buttons to notify participants about important updates.')}
           </p>
           <div className="flex flex-wrap gap-3">
             <button 
               onClick={handleSendMassEmail} // <-- ADD THIS
-              className="flex items-center gap-2 px-6 py-3 border border-[#2E7D32] text-[#2E7D32] rounded-full font-semibold hover:bg-[#E8F5E9] transition-colors"
+              className="flex items-center gap-2 px-6 py-3 border border-[#2E7D32] text-[#2E7D32] rounded-full text-lg font-bold hover:bg-[#E8F5E9] transition-colors"
             >
               <Mail className="h-4 w-4" />
               {ct('ส่งอีเมลถึงผู้ลงทะเบียนทั้งหมด', 'Send Email to All Registrants')}
             </button>
             
-            <button className="flex items-center gap-2 px-6 py-3 border border-[#D1D5DB] text-[#4B5563] rounded-full font-semibold hover:bg-gray-50 transition-colors">
+            <button className="flex items-center gap-2 px-6 py-3 border border-[#D1D5DB] text-[#4B5563] rounded-full text-lg font-bold hover:bg-gray-50 transition-colors">
               <Mail className="h-4 w-4" />
               {ct('ส่งข้อความถึงผู้ลงทะเบียนทั้งหมด', 'Send Message to All Registrants')}
             </button>
@@ -623,12 +623,12 @@ const ShopWorkshopDetail = () => {
         </div>
 
         <div className="bg-white rounded-xl shadow-sm p-6 animate-slideUp border border-gray-100">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">{ct('จัดการ Workshop', 'Manage Workshop')}</h2>
+          <h2 className="text-2xl font-extrabold text-gray-900 mb-4">{ct('จัดการ Workshop', 'Manage Workshop')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             
             <button 
               onClick={() => navigate(`/${slug}/shop/workshops/${id}/edit`)}
-              className="flex items-center justify-center gap-2 px-6 py-3 border border-[#2E7D32] text-[#2E7D32] rounded-full font-semibold hover:bg-[#E8F5E9] transition-colors"
+              className="flex items-center justify-center gap-2 px-6 py-3 border border-[#2E7D32] text-[#2E7D32] rounded-full text-lg font-bold hover:bg-[#E8F5E9] transition-colors"
             >
               <Edit className="h-4 w-4" />
               {ct('แก้ไข Workshop', 'Edit Workshop')}
@@ -636,7 +636,7 @@ const ShopWorkshopDetail = () => {
             
             <button 
               onClick={() => handleUpdateWorkshopStatus(workshop.registrationStatus === 'OPEN' ? 'CLOSED' : 'OPEN')}
-              className="flex items-center justify-center gap-2 px-6 py-3 border border-[#F57C00] text-[#F57C00] rounded-full font-semibold hover:bg-[#FFF3E0] transition-colors"
+              className="flex items-center justify-center gap-2 px-6 py-3 border border-[#F57C00] text-[#F57C00] rounded-full text-lg font-bold hover:bg-[#FFF3E0] transition-colors"
             >
               <Pause className="h-4 w-4" />
               {workshop.registrationStatus === 'OPEN' ? ct('พักกิจกรรม (ปิดรับสมัคร)', 'Pause (Close Registration)') : ct('เปิดรับสมัครใหม่', 'Re-open Registration')}
@@ -644,7 +644,7 @@ const ShopWorkshopDetail = () => {
 
             <button 
               onClick={() => handleUpdateWorkshopStatus('CLOSED', 'REJECTED')}
-              className="flex items-center justify-center gap-2 px-6 py-3 border border-[#D32F2F] text-[#D32F2F] rounded-full font-semibold hover:bg-[#FFEBEE] transition-colors"
+              className="flex items-center justify-center gap-2 px-6 py-3 border border-[#D32F2F] text-[#D32F2F] rounded-full text-lg font-bold hover:bg-[#FFEBEE] transition-colors"
             >
               <X className="h-4 w-4" />
               {ct('ยกเลิกกิจกรรมถาวร', 'Cancel Workshop Permanently')}

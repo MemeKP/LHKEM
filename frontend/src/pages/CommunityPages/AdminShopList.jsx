@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+﻿import { useMemo, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Store, MapPin, Users, Search, List, AlertCircle, Filter } from 'lucide-react';
@@ -144,19 +144,19 @@ const AdminShopList = () => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <div className="flex items-center justify-between animate-slideUp">
           <div>
-            <p className="text-sm uppercase tracking-wide text-[#8E24AA] font-semibold">
+            <p className="text-base font-bold uppercase tracking-wide text-[#8E24AA] mb-1">
               {ct('ร้านค้าในชุมชน', 'Community Shops')}
             </p>
-            <h1 className="text-3xl font-bold text-[#1A1A1A]">
+            <h1 className="text-4xl md:text-5xl font-extrabold text-[#1A1A1A] mb-2">
               {ct('จัดการร้านค้าทั้งหมด', 'Manage Community Shops')}
             </h1>
-            <p className="text-sm text-[#666666]">
+            <p className="text-lg font-bold text-[#666666]">
               {ct('ดูสถานะร้านค้าและดำเนินการอนุมัติจากหน้ารวมนี้', 'Review every shop status and approve directly from here.')}
             </p>
           </div>
           <button
             onClick={() => navigate('/community-admin/dashboard')}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-300 text-sm font-semibold text-gray-800 hover:bg-white shadow-sm"
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-gray-300 text-base font-bold text-gray-800 hover:bg-white shadow-sm"
           >
             <List className="h-4 w-4" />
             {ct('กลับแดชบอร์ด', 'Back to dashboard')}
@@ -170,7 +170,7 @@ const AdminShopList = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={ct('ค้นหาร้านค้า ชื่อ ที่อยู่ หรือเจ้าของ', 'Search by shop name, address, or owner')}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#8E24AA]/40"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#8E24AA]/40 text-base font-bold"
             />
           </div>
           <div className="flex items-center gap-2 overflow-x-auto">
@@ -179,7 +179,7 @@ const AdminShopList = () => {
               <button
                 key={filter.id}
                 onClick={() => setStatusFilter(filter.id)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border ${
+                className={`px-6 py-2.5 rounded-full text-base font-bold transition-colors border ${
                   statusFilter === filter.id
                     ? 'bg-[#8E24AA] text-white border-[#8E24AA]'
                     : 'bg-white text-gray-600 border-gray-200'
@@ -192,18 +192,18 @@ const AdminShopList = () => {
         </div>
 
         {isLoading ? (
-          <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center text-gray-500 animate-slideUp">
+          <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center text-lg font-bold text-gray-500 animate-slideUp">
             {ct('กำลังโหลดรายชื่อร้านค้า...', 'Loading shop list...')}
           </div>
         ) : isError ? (
-          <div className="bg-white rounded-2xl border border-red-200 p-10 text-center text-red-600 animate-slideUp">
+          <div className="bg-white rounded-2xl border border-red-200 p-10 text-center text-lg font-bold text-red-600 animate-slideUp">
             {ct('ไม่สามารถโหลดรายชื่อร้านค้าได้', 'Unable to load shop list.')}
           </div>
         ) : filteredShops.length === 0 ? (
           <div className="bg-white rounded-2xl border border-dashed border-gray-300 p-10 flex flex-col items-center text-center text-gray-500 animate-slideUp">
             <AlertCircle className="h-10 w-10 mb-3 text-gray-400" />
-            <p className="text-base font-medium">{ct('ไม่พบร้านค้าตามเงื่อนไขที่เลือก', 'No shops matched the selected filters.')}</p>
-            <p className="text-sm text-gray-400">{ct('ลองปรับสถานะหรือคำค้นหาใหม่', 'Try changing the status filter or search term')}</p>
+            <p className="text-lg font-bold">{ct('ไม่พบร้านค้าตามเงื่อนไขที่เลือก', 'No shops matched the selected filters.')}</p>
+            <p className="text-base font-bold text-gray-400">{ct('ลองปรับสถานะหรือคำค้นหาใหม่', 'Try changing the status filter or search term')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-stagger">
@@ -244,7 +244,7 @@ const AdminShopList = () => {
                     <Users className="h-4 w-4 text-[#8E24AA]" />
                     <span>{shop.owner?.name || shop.ownerName || ct('ยังไม่ระบุเจ้าของ', 'Owner not specified')}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <div className="flex items-center gap-2 text-xs font-medium text-gray-500">
                     <span>{ct('เปิด', 'Open')}: {shop.openTime || '-'}</span>
                     <span>•</span>
                     <span>{ct('ปิด', 'Close')}: {shop.closeTime || '-'}</span>
@@ -253,13 +253,13 @@ const AdminShopList = () => {
                 <div className="flex gap-2">
                   <button
                     onClick={() => navigate(`/community-admin/shops/${shop._id}/approval`)}
-                    className="flex-1 px-4 py-2 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-sm font-semibold rounded-lg transition-all transform hover:-translate-y-0.5"
+                    className="flex-1 px-6 py-2.5 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-base font-bold rounded-lg transition-all transform hover:-translate-y-0.5"
                   >
                     {ct('ดูรายละเอียด', 'View details')}
                   </button>
                   <button
                     onClick={() => handleSecondaryAction(shop)}
-                    className="px-4 py-2 bg-[#1E293B] hover:bg-[#0F172A] text-white text-sm font-semibold rounded-lg transition-all transform hover:-translate-y-0.5"
+                    className="px-6 py-2.5 bg-[#1E293B] hover:bg-[#0F172A] text-white text-base font-bold rounded-lg transition-all transform hover:-translate-y-0.5"
                   >
                     {resolveSecondaryCta(shop.status)}
                   </button>

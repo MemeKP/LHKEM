@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+﻿import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Image as ImageIcon, Plus, X } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -215,15 +215,15 @@ const PlatformCreateCommunity = () => {
           className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
-          <span className="font-medium">{ct('กลับไปหน้าแดชบอร์ด', 'Back to Dashboard')}</span>
+          <span className="text-lg font-bold">{ct('กลับไปหน้าแดชบอร์ด', 'Back to Dashboard')}</span>
         </button>
 
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-2">
             {ct('สร้าง Community ใหม่', 'Create New Community')}
           </h1>
-          <p className="text-gray-600">
+          <p className="text-lg font-bold text-gray-700">
             {ct('เพิ่มชุมชนใหม่เข้าสู่แพลตฟอร์ม LHKEM', 'Add a new community to the LHKEM platform')}
           </p>
         </div>
@@ -232,7 +232,7 @@ const PlatformCreateCommunity = () => {
         <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm p-8">
           {/* Community Name */}
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
+            <label className="block text-lg font-bold text-gray-900 mb-2">
               {ct('ชื่อชุมชน', 'Community Name')} <span className="text-red-500">*</span>
             </label>
             <input
@@ -241,14 +241,14 @@ const PlatformCreateCommunity = () => {
               value={formData.name}
               onChange={handleInputChange}
               placeholder={ct('เช่น หมู่บ้านเกษตรอินทรีย์บ้านสวนป่า', 'e.g., Organic Farm Village')}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-lg font-bold"
               required
             />
           </div>
 
           {/* Community Name (English) */}
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
+            <label className="block text-lg font-bold text-gray-900 mb-2">
               {ct('ชื่อชุมชนภาษาอังกฤษ', 'Community Name (English)')} <span className="text-red-500">*</span>
             </label>
             <input
@@ -257,14 +257,14 @@ const PlatformCreateCommunity = () => {
               value={formData.nameEn}
               onChange={handleInputChange}
               placeholder="e.g., Loeng Him Kaw"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-lg font-bold"
               required
             />
           </div>
 
           {/* Description */}
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
+            <label className="block text-lg font-bold text-gray-900 mb-2">
               {ct('ประวัติ / เรื่องราว', 'History / Story')}
             </label>
             <textarea
@@ -273,20 +273,20 @@ const PlatformCreateCommunity = () => {
               onChange={handleInputChange}
               placeholder={ct('เล่าเรื่องราวและเอกลักษณ์ของชุมชนของคุณ...', 'Tell the story and identity of your community...')}
               rows={5}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all resize-none"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all resize-none text-lg font-bold"
             />
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-sm font-bold text-gray-500 mt-2">
               {ct('บอกเล่าเรื่องราวและเอกลักษณ์ของชุมชน', 'Share the story and unique identity of your community')}
             </p>
           </div>
 
           {/* Location */}
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
+            <label className="block text-lg font-bold text-gray-900 mb-2">
               {ct('ที่ตั้ง', 'Location')} <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <MapPin className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+              <MapPin className="absolute left-3 top-3.5 h-6 w-6 text-gray-400" />
               <div className="mb-4">
                 <input
                   type="text"
@@ -302,13 +302,13 @@ const PlatformCreateCommunity = () => {
                     }))
                   }
                   placeholder="เช่น 123 หมู่ 4 ต.สุเทพ"
-                  className="w-full px-8 py-3 border rounded-lg "
+                  className="w-full px-10 py-3 border rounded-lg text-lg font-bold"
                   required
                 />
               </div>
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-semibold mb-2">
+                  <label className="block text-base font-bold mb-2 text-gray-700">
                     จังหวัด *
                   </label>
                   <input
@@ -325,11 +325,11 @@ const PlatformCreateCommunity = () => {
                       }))
                     }
                     required
-                    className="w-full px-4 py-3 border rounded-lg"
+                    className="w-full px-4 py-3 border rounded-lg text-lg font-bold"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold mb-2">
+                  <label className="block text-base font-bold mb-2 text-gray-700">
                     อำเภอ / เขต
                   </label>
                   <input
@@ -345,15 +345,15 @@ const PlatformCreateCommunity = () => {
                         }
                       }))
                     }
-                    className="w-full px-4 py-3 border rounded-lg"
+                    className="w-full px-4 py-3 border rounded-lg text-lg font-bold"
                   />
                 </div>
               </div>
               <div className="mb-6">
-                <label className="block text-sm font-semibold mb-2">
+                <label className="block text-base font-bold mb-2 text-gray-700">
                   รหัสไปรษณีย์
                 </label>
-                <input
+                  <input
                   type="text"
                   name="postalCode"
                   value={formData.location.postal_code}
@@ -366,7 +366,7 @@ const PlatformCreateCommunity = () => {
                       }
                     }))
                   }
-                  className="w-full px-4 py-3 border rounded-lg"
+                  className="w-full px-4 py-3 border rounded-lg text-lg font-bold"
                 />
               </div>
               <input
@@ -382,14 +382,14 @@ const PlatformCreateCommunity = () => {
 
           {/* Community Atmosphere Images */}
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
+            <label className="block text-lg font-bold text-gray-900 mb-2">
               {ct('รูปภาพบรรยากาศในชุมชน', 'Community Atmosphere Images')}
             </label>
             <CommunityImageUploader initialImages={initialGalleryImages} onChange={setGallerySlots} />
           </div>
           {/* Community Map Upload */}
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
+            <label className="block text-lg font-bold text-gray-900 mb-2">
               {ct('รูปแผนที่ชุมชน (Interactive Map)', 'Community Map Image')}
             </label>
             <div className="border-2 border-dashed border-orange-300 rounded-lg p-6 text-center bg-orange-50">
@@ -414,10 +414,10 @@ const PlatformCreateCommunity = () => {
               ) : (
                 <label className="cursor-pointer">
                   <MapPin className="h-12 w-12 text-orange-500 mx-auto mb-3" />
-                  <p className="text-sm font-medium text-gray-900 mb-1">
+                  <p className="text-base font-bold text-gray-900 mb-1">
                     {ct('อัปโหลดรูปแผนที่ชุมชน', 'Upload Community Map')}
                   </p>
-                  <p className="text-xs text-gray-600">
+                  <p className="text-sm font-bold text-gray-600">
                     {ct('คลิกเพื่อเลือกไฟล์รูปภาพ (PNG, JPG)', 'Click to select image file (PNG, JPG)')}
                   </p>
                   <input
@@ -429,14 +429,14 @@ const PlatformCreateCommunity = () => {
                 </label>
               )}
             </div>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-sm font-bold text-gray-500 mt-2">
               {ct('รูปแผนที่นี้จะใช้สำหรับปักหมุดร้านค้าและสถานที่ต่างๆ ในชุมชน', 'This map will be used for pinning shops and locations in the community')}
             </p>
           </div>
 
           {/* Additional Details */}
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
+            <label className="block text-lg font-bold text-gray-900 mb-2">
               {ct('คำอธิบาย', 'Description')}
             </label>
             <textarea
@@ -451,13 +451,13 @@ const PlatformCreateCommunity = () => {
               })}
               placeholder={ct('คำอธิบายสั้น ๆ เกี่ยวกับชุมชนและสิ่งที่ทำให้ชุมชนนี้พิเศษ...', 'A brief description of the community and what makes it special...')}
               rows={4}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all resize-none"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all resize-none text-lg font-bold"
             />
           </div>
 
           {/* Contact Email */}
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
+            <label className="block text-lg font-bold text-gray-900 mb-2">
               {ct('ข้อมูลติดต่อ', 'Contact Information')}
             </label>
             <input
@@ -466,13 +466,13 @@ const PlatformCreateCommunity = () => {
               value={formData.contactEmail}
               onChange={handleInputChange}
               placeholder="contact@community.com"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-lg font-bold"
             />
           </div>
 
           {/* Cover Image */}
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
+            <label className="block text-lg font-bold text-gray-900 mb-2">
               {ct('รูปภาพหน้าปก', 'Cover Image')}
             </label>
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-orange-500 transition-colors">
@@ -493,10 +493,10 @@ const PlatformCreateCommunity = () => {
               ) : (
                 <>
                   <ImageIcon className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-sm font-medium text-gray-900 mb-1">
+                  <p className="text-base font-bold text-gray-900 mb-1">
                     {ct('คลิกเพื่ออัปโหลดรูปภาพหรือลากไฟล์มาวาง', 'Click to upload or drag and drop')}
                   </p>
-                  <p className="text-xs text-gray-600">
+                  <p className="text-sm font-bold text-gray-600">
                     PNG, JPG or JPEG (MAX. 5MB)
                   </p>
                   <input
@@ -508,7 +508,7 @@ const PlatformCreateCommunity = () => {
                   />
                   <label
                     htmlFor="cover-image"
-                    className="inline-block mt-4 px-4 py-2 bg-orange-500 text-white rounded-lg cursor-pointer hover:bg-orange-600 transition-colors"
+                    className="inline-block mt-4 px-4 py-2 bg-orange-500 text-white font-bold text-lg rounded-lg cursor-pointer hover:bg-orange-600 transition-colors"
                   >
                     {ct('เลือกไฟล์', 'Choose File')}
                   </label>
@@ -519,7 +519,7 @@ const PlatformCreateCommunity = () => {
 
           {/* Community Admins */}
           <div className="mb-8">
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
+            <label className="block text-lg font-bold text-gray-900 mb-2">
               {ct('ผู้ดูแลชุมชน', 'Community Admins')}
             </label>
 
@@ -532,7 +532,7 @@ const PlatformCreateCommunity = () => {
               <div className="space-y-2 mb-4">
                 {formData.admins.map((email, index) => (
                   <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <span className="text-sm text-gray-900">{email}</span>
+                    <span className="text-lg font-bold text-gray-900">{email}</span>
                     <button
                       type="button"
                       onClick={() => handleRemoveAdmin(index)}
@@ -553,12 +553,12 @@ const PlatformCreateCommunity = () => {
                 value={formData.adminEmail}
                 onChange={handleInputChange}
                 placeholder="admin@example.com"
-                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-lg font-bold"
               />
               <button
                 type="button"
                 onClick={handleAddAdmin}
-                className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2.5 rounded-lg transition-colors"
+                className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white text-lg font-bold px-4 py-3 rounded-lg transition-colors"
               >
                 <Plus className="h-4 w-4" />
                 <span>{ct('เพิ่ม', 'Add')}</span>
@@ -568,7 +568,7 @@ const PlatformCreateCommunity = () => {
 
           {/* Workshop Approval Setting */}
           <div className="mb-8 p-5 bg-orange-50 rounded-xl border border-orange-100">
-            <h3 className="text-sm font-bold text-gray-900 mb-3">
+            <h3 className="text-lg font-bold text-gray-900 mb-3">
               {ct('การอนุมัติ Workshop', 'Workshop Approval Setting')}
             </h3>
             <label className="flex items-center gap-3 cursor-pointer">
@@ -586,12 +586,12 @@ const PlatformCreateCommunity = () => {
                 </div>
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-900">
+                <p className="text-base font-bold text-gray-900">
                   {formData.requireApprove
                     ? ct('ต้องรอการอนุมัติจาก Community Admin', 'Require Community Admin Approval')
                     : ct('อนุมัติ Workshop อัตโนมัติ (ไม่ต้องรออนุมัติ)', 'Auto-approve Workshops')}
                 </p>
-                <p className="text-xs text-gray-500 mt-0.5">
+                <p className="text-sm font-bold text-gray-500 mt-0.5">
                   {formData.requireApprove
                     ? ct('Workshop ที่ร้านค้าสร้างจะต้องถูกอนุมัติจาก Community Admin ก่อนแสดงในระบบ', 'Workshops created by shops must be approved by a Community Admin before becoming visible.')
                     : ct('Workshop ที่ร้านค้าสร้างจะเปิดให้จองได้ทันที ไม่ต้องรอ Admin', 'Workshops created by shops are immediately open for booking without Admin review.')}
@@ -605,13 +605,13 @@ const PlatformCreateCommunity = () => {
             <button
               type="button"
               onClick={() => navigate('/platform-admin/dashboard')}
-              className="px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-8 py-3.5 border border-gray-300 text-gray-700 text-lg font-bold rounded-lg hover:bg-gray-50 transition-colors"
             >
               {ct('ยกเลิก', 'Cancel')}
             </button>
             <button
               type="submit"
-              className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition-colors"
+              className="px-8 py-3.5 bg-orange-500 hover:bg-orange-600 text-white text-lg font-bold rounded-lg transition-colors"
             >
               {ct('สร้างชุมชน', 'Create Community')}
             </button>

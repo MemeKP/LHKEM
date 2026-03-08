@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Link, useParams, useOutletContext, useNavigate } from 'react-router-dom';
 import { MapPin, Clock, Phone, Facebook, Globe, ArrowLeft, Store, Calendar, Users, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
@@ -148,6 +148,7 @@ const ShopProfile = () => {
     return (
       <div className="min-h-screen bg-[#fdf7ef] flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+        <p className="ml-4 text-lg font-bold text-gray-700">{ct('กำลังโหลด...', 'Loading...')}</p>
       </div>
     );
   }
@@ -157,7 +158,7 @@ const ShopProfile = () => {
       <div className="min-h-screen bg-[#fdf7ef] flex items-center justify-center">
         <div className="text-center">
           <Store className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500 text-lg">{ct('ไม่พบข้อมูลร้านค้า', 'Shop not found')}</p>
+          <p className="text-xl font-bold text-gray-700">{ct('ไม่พบข้อมูลร้านค้า', 'Shop not found')}</p>
         </div>
       </div>
     );
@@ -198,16 +199,16 @@ const ShopProfile = () => {
         <div className="relative h-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-end pb-8">
           <Link
             to={`/${community.slug}/shops`}
-            className="absolute top-6 left-4 sm:left-6 lg:left-8 inline-flex items-center gap-2 text-white/90 hover:text-white bg-black/30 hover:bg-black/50 px-4 py-2 rounded-full transition backdrop-blur-sm"
+            className="absolute top-6 left-4 sm:left-6 lg:left-8 inline-flex items-center gap-2 text-white/90 hover:text-white bg-black/30 hover:bg-black/50 px-4 py-2 rounded-full text-lg font-bold transition backdrop-blur-sm"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>{ct('กลับไปหน้าร้านค้า', 'Back to Shops')}</span>
           </Link>
           <div>
-            <div className="inline-block bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold text-white mb-2">
+            <div className="inline-block bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-base font-bold text-white mb-2">
               {displayShop.status === 'ACTIVE' ? ct('เปิดให้บริการ', 'Active') : ct('รอการอนุมัติ', 'Pending')}
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white drop-shadow-lg">
+            <h1 className="text-5xl md:text-6xl font-extrabold text-white drop-shadow-lg">
               {displayShop.shopName}
             </h1>
           </div>
@@ -218,7 +219,7 @@ const ShopProfile = () => {
       <section className="bg-white border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <div className="mb-8">
-            <p className="text-xl md:text-2xl text-[#3D3D3D] leading-relaxed whitespace-pre-line break-words max-h-56 overflow-y-auto pr-1">
+            <p className="text-2xl md:text-3xl font-bold text-[#3D3D3D] leading-relaxed whitespace-pre-line break-words max-h-56 overflow-y-auto pr-1">
               {displayShop.description || ct('ไม่มีคำอธิบาย', 'No description available')}
             </p>
           </div>
@@ -229,10 +230,10 @@ const ShopProfile = () => {
                 <div className="flex items-start gap-3 p-5 bg-gray-50 rounded-2xl">
                   <MapPin className="h-6 w-6 text-orange-500 mt-0.5 flex-shrink-0" />
                   <div className="min-w-0">
-                    <p className="text-base font-semibold text-[#1F2F2F] mb-1">
+                    <p className="text-lg font-bold text-gray-900 mb-1">
                       {ct('ที่อยู่', 'Address')}
                     </p>
-                    <p className="text-base text-[#555555] whitespace-pre-line break-words max-h-32 overflow-y-auto pr-1">
+                    <p className="text-lg font-bold text-[#555555] whitespace-pre-line break-words max-h-32 overflow-y-auto pr-1">
                       {shopAddress || ct('ไม่ระบุที่อยู่', 'No address provided')}
                     </p>
                   </div>
@@ -241,10 +242,10 @@ const ShopProfile = () => {
                 <div className="flex items-start gap-3 p-5 bg-gray-50 rounded-2xl">
                   <Clock className="h-6 w-6 text-orange-500 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-base font-semibold text-[#1F2F2F] mb-1">
+                    <p className="text-lg font-bold text-gray-900 mb-1">
                       {ct('เวลาทำการ', 'Opening Hours')}
                     </p>
-                    <p className="text-base text-[#555555]">
+                    <p className="text-lg font-bold text-[#555555]">
                       {formattedHours}
                     </p>
                   </div>
@@ -253,10 +254,10 @@ const ShopProfile = () => {
                 <div className="flex items-start gap-3 p-5 bg-gray-50 rounded-2xl">
                   <Phone className="h-6 w-6 text-orange-500 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-base font-semibold text-[#1F2F2F] mb-1">
+                    <p className="text-lg font-bold text-gray-900 mb-1">
                       {ct('โทรศัพท์', 'Phone')}
                     </p>
-                    <a href={`tel:${contact.phone || ''}`} className="text-base text-[#E07B39] hover:text-[#D66B29]">
+                    <a href={`tel:${contact.phone || ''}`} className="text-lg font-bold text-[#E07B39] hover:text-[#D66B29]">
                       {contact.phone || ct('ไม่ระบุ', 'N/A')}
                     </a>
                   </div>
@@ -266,10 +267,10 @@ const ShopProfile = () => {
                   <div className="flex items-start gap-3 p-5 bg-gray-50 rounded-2xl">
                     <div className="h-6 w-6 text-green-500 mt-0.5 flex-shrink-0 font-bold">L</div>
                     <div>
-                      <p className="text-base font-semibold text-[#1F2F2F] mb-1">
+                      <p className="text-lg font-bold text-gray-900 mb-1">
                         {ct('LINE ID', 'LINE ID')}
                       </p>
-                      <p className="text-base text-[#555555]">
+                      <p className="text-lg font-bold text-[#555555]">
                         {contact.line}
                       </p>
                     </div>
@@ -280,10 +281,10 @@ const ShopProfile = () => {
                   <div className="flex items-start gap-3 p-5 bg-gray-50 rounded-2xl">
                     <Facebook className="h-6 w-6 text-blue-600 mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="text-base font-semibold text-[#1F2F2F] mb-1">
+                      <p className="text-lg font-bold text-gray-900 mb-1">
                         {ct('Facebook', 'Facebook')}
                       </p>
-                      <p className="text-base text-[#555555]">
+                      <p className="text-lg font-bold text-[#555555]">
                         {contact.facebook}
                       </p>
                     </div>
@@ -292,20 +293,20 @@ const ShopProfile = () => {
               </div>
 
               <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm mb-6">
-                <h3 className="text-xl font-semibold text-[#2F4F2F] mb-4 flex items-center gap-2">
+                <h3 className="text-2xl font-extrabold text-[#2F4F2F] mb-4 flex items-center gap-2">
                   <Clock className="h-6 w-6 text-orange-500" />
                   {ct('เวลาทำการของร้าน', 'Shop hours')}
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base text-[#3D3D3D]">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-lg font-bold text-[#3D3D3D]">
                   <div className="flex flex-col gap-1">
-                    <span className="text-xs uppercase tracking-wide text-gray-400">{ct('เปิดเวลา', 'Opens')}</span>
-                    <span className="font-semibold text-[#1F2937]">
+                    <span className="text-sm uppercase tracking-wide font-bold text-gray-600">{ct('เปิดเวลา', 'Opens')}</span>
+                    <span className="text-lg font-bold text-[#1F2937]">
                       {displayShop.openTime?.trim() || ct('ไม่ระบุ', 'Not specified')}
                     </span>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="text-xs uppercase tracking-wide text-gray-400">{ct('ปิดเวลา', 'Closes')}</span>
-                    <span className="font-semibold text-[#1F2937]">
+                    <span className="text-sm uppercase tracking-wide font-bold text-gray-600">{ct('ปิดเวลา', 'Closes')}</span>
+                    <span className="text-lg font-bold text-[#1F2937]">
                       {displayShop.closeTime?.trim() || ct('ไม่ระบุ', 'Not specified')}
                     </span>
                   </div>
@@ -324,16 +325,16 @@ const ShopProfile = () => {
       </section>
 
       {/* Workshops Section */}
-      <section className="py-16 px-4">
+      <section className="py-16 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
-            <span className="inline-block bg-[#FFF7ED] text-[#E07B39] px-4 py-2 rounded-full text-sm font-semibold mb-4">
+            <span className="inline-block bg-[#FFF7ED] text-[#E07B39] px-4 py-2 rounded-full text-lg font-bold mb-4">
               {ct('กิจกรรมเวิร์กช็อป', 'Workshops')}
             </span>
-            <h2 className="text-3xl font-bold text-[#2F4F2F] mb-3">
+            <h2 className="text-4xl font-extrabold text-[#2F4F2F] mb-3">
               {ct('กิจกรรมเวิร์กช็อปที่เปิดสอน', 'Workshops Offered')}
             </h2>
-            <p className="text-[#6B6B6B]">
+            <p className="text-xl font-bold text-[#4A4A4A]">
               {ct('เรียนรู้ทักษะใหม่ๆ จากผู้เชี่ยวชาญของร้าน', 'Learn new skills from our expert instructors')}
             </p>
           </div>
@@ -352,7 +353,7 @@ const ShopProfile = () => {
           ) : shopWorkshops.length === 0 ? (
             <div className="text-center py-20 bg-white rounded-2xl border border-gray-200">
               <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 text-lg">
+              <p className="text-xl font-bold text-gray-700">
                 {ct('ยังไม่มีเวิร์กช็อปในขณะนี้', 'No workshops available at the moment')}
               </p>
             </div>
@@ -394,12 +395,12 @@ const ShopProfile = () => {
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                         <div className="absolute top-4 left-4">
-                          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-white/90 text-gray-800">
+                          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-base font-bold bg-white/90 text-gray-800">
                             {workshop.category || ct('เวิร์กชอป', 'Workshop')}
                           </span>
                         </div>
-                        <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-white text-sm font-semibold">
-                          <span className="px-3 py-1 bg-white/20 backdrop-blur rounded-full text-xs">
+                        <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-white text-base font-bold">
+                          <span className="px-3 py-1 bg-white/20 backdrop-blur rounded-full text-base font-bold">
                             {formattedDate}
                           </span>
                           <div className="flex items-center gap-2">
@@ -410,15 +411,15 @@ const ShopProfile = () => {
                       </div>
 
                       <div className="p-6 space-y-4">
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <div className="flex items-center gap-2 text-lg font-bold text-gray-700">
                           <MapPin className="h-4 w-4 text-orange-500" />
                           <span className="line-clamp-1">{locationLabel}</span>
                         </div>
                         <div>
-                          <h3 className="text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
+                          <h3 className="text-2xl font-extrabold text-gray-900 mb-2 line-clamp-2">
                             {workshop.title || ct('ไม่มีชื่อ', 'Untitled')}
                           </h3>
-                          <p className="text-sm text-gray-600 line-clamp-2">
+                          <p className="text-lg font-bold text-gray-700 line-clamp-2">
                             {workshop.description || ct('ยังไม่มีคำอธิบาย', 'Description coming soon')}
                           </p>
                         </div>
@@ -428,8 +429,8 @@ const ShopProfile = () => {
                               <Clock className="h-4 w-4 text-orange-500" />
                             </div>
                             <div>
-                              <p className="text-xs uppercase tracking-wide text-orange-600">{ct('วันที่จัด', 'Date')}</p>
-                              <p className="text-sm font-semibold text-gray-900">{formattedDate}</p>
+                              <p className="text-sm uppercase tracking-wide font-bold text-orange-700">{ct('วันที่จัด', 'Date')}</p>
+                              <p className="text-lg font-bold text-gray-900">{formattedDate}</p>
                             </div>
                           </div>
                           <div className="flex items-start gap-3">
@@ -437,8 +438,8 @@ const ShopProfile = () => {
                               <Users className="h-4 w-4 text-orange-500" />
                             </div>
                             <div>
-                              <p className="text-xs uppercase tracking-wide text-orange-600">{ct('ที่นั่งคงเหลือ', 'Seats left')}</p>
-                              <p className="text-sm font-semibold text-gray-900">{Math.max(0, seatsLeft)}</p>
+                              <p className="text-sm uppercase tracking-wide font-bold text-orange-700">{ct('ที่นั่งคงเหลือ', 'Seats left')}</p>
+                              <p className="text-lg font-bold text-gray-900">{Math.max(0, seatsLeft)}</p>
                             </div>
                           </div>
                           <div className="flex items-start gap-3">
@@ -446,8 +447,8 @@ const ShopProfile = () => {
                               <Users className="h-4 w-4 text-blue-500" />
                             </div>
                             <div>
-                              <p className="text-xs uppercase tracking-wide text-orange-600">{ct('สถานะลงทะเบียน', 'Registration status')}</p>
-                              <p className="text-sm font-semibold text-gray-900">
+                              <p className="text-sm uppercase tracking-wide font-bold text-orange-700">{ct('สถานะลงทะเบียน', 'Registration status')}</p>
+                              <p className="text-lg font-bold text-gray-900">
                                 {isRegistrationClosed
                                   ? ct('ปิดรับสมัครแล้ว', 'Registration closed')
                                   : isFull
@@ -461,13 +462,13 @@ const ShopProfile = () => {
                         </div>
                         <div className="flex items-center justify-between pt-2">
                           <div>
-                            <p className="text-sm text-gray-400">{t('workshops.perPerson') || ct('/คน', '/person')}</p>
-                            <p className="text-2xl font-bold text-orange-500">
+                            <p className="text-lg font-bold text-gray-600">{t('workshops.perPerson') || ct('/คน', '/person')}</p>
+                            <p className="text-4xl font-extrabold text-orange-500">
                               {workshop.price === 0 ? (t('workshops.free') || ct('ฟรี', 'Free')) : `฿${workshop.price}`}
                             </p>
                           </div>
                           <button
-                            className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-semibold text-white transition shadow-lg ${
+                            className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-lg font-bold text-white transition shadow-lg ${
                               (isRegistrationClosed || isFull) ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-500'
                             }`}
                             onClick={() => handleOpenModal(workshop)}
@@ -495,7 +496,7 @@ const ShopProfile = () => {
                   >
                     <ChevronLeft className="h-5 w-5" />
                   </button>
-                  <span className="text-sm font-semibold text-gray-600">
+                  <span className="text-lg font-bold text-gray-700">
                     {ct('หน้า', 'Page')} {currentPage} / {totalPages}
                   </span>
                   <button

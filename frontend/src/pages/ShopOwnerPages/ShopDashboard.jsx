@@ -147,16 +147,16 @@ const ShopDashboard = () => {
 
     switch (approvalStatus) {
       case 'PENDING':
-        approvalBadge = <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 border border-yellow-200"><Clock className="h-3 w-3" /> {ct('รออนุมัติ', 'Pending Approval')}</span>;
+        approvalBadge = <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold bg-yellow-100 text-yellow-700 border border-yellow-200"><Clock className="h-3 w-3" /> {ct('รออนุมัติ', 'Pending Approval')}</span>;
         break;
       case 'CHANGE':
-        approvalBadge = <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200"><Edit3 className="h-3 w-3" /> {ct('ต้องแก้ไข', 'Revision Needed')}</span>;
+        approvalBadge = <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold bg-orange-100 text-orange-800 border border-orange-200"><Edit3 className="h-3 w-3" /> {ct('ต้องแก้ไข', 'Revision Needed')}</span>;
         break;
       case 'REJECTED':
-        approvalBadge = <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 border border-red-200"><AlertCircle className="h-3 w-3" /> {ct('ไม่อนุมัติ', 'Rejected')}</span>;
+        approvalBadge = <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold bg-red-100 text-red-700 border border-red-200"><AlertCircle className="h-3 w-3" /> {ct('ไม่อนุมัติ', 'Rejected')}</span>;
         break;
       case 'ACTIVE':
-        approvalBadge = <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200"><CheckCircle className="h-3 w-3" /> {ct('อนุมัติ', 'Approved')}</span>;
+        approvalBadge = <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold bg-blue-50 text-blue-700 border border-blue-200"><CheckCircle className="h-3 w-3" /> {ct('อนุมัติ', 'Approved')}</span>;
         break;
       default:
         approvalBadge = null;
@@ -164,14 +164,14 @@ const ShopDashboard = () => {
 
     if (approvalStatus === 'ACTIVE') {
        if (registrationStatus === 'OPEN') {
-          regBadge = <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700"><Users className="h-3 w-3" /> {ct('เปิดรับสมัคร', 'Open')}</span>;
+          regBadge = <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-700"><Users className="h-3 w-3" /> {ct('เปิดรับสมัคร', 'Open')}</span>;
        } else {
-          regBadge = <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700"><XCircle className="h-3 w-3" /> {ct('ปิดรับสมัคร', 'Closed')}</span>;
+          regBadge = <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold bg-gray-100 text-gray-700"><XCircle className="h-3 w-3" /> {ct('ปิดรับสมัคร', 'Closed')}</span>;
        }
     }
 
     return (
-      <div className="flex flex-col gap-2 items-end">
+      <div className="flex flex-wrap gap-2">
         {approvalBadge}
         {regBadge}
       </div>
@@ -220,18 +220,18 @@ const ShopDashboard = () => {
               )}
             </div>
           </div>
-          <div className="flex items-center justify-between mt-4 animate-slideUp">
-            <div>
-              <h1 className="text-3xl font-bold text-[#2F4F2F]">{profile.name || t('shopDashboard.title')}</h1>
-              <p className="text-[#6B6B6B] whitespace-pre-line wrap-break-word max-h-48 overflow-y-auto scrollbar-thin w-full max-w-2xl ">{profile.description}</p>
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mt-4 animate-slideUp">
+            <div className="min-w-0">
+              <h1 className="text-3xl lg:text-4xl font-extrabold text-[#2F4F2F] truncate">{profile.name || t('shopDashboard.title')}</h1>
+              <p className="text-lg font-bold text-[#6B6B6B] whitespace-pre-line wrap-break-word max-h-48 overflow-y-auto scrollbar-thin w-full max-w-2xl ">{profile.description}</p>
             </div>
-            <div className="flex flex-col sm:flex-row justify-end gap-3">
+            <div className="flex flex-col sm:flex-row gap-3 shrink-0">
               <button
                 onClick={() => navigate(`/${slug}/shop/profile`)}
-                className="flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-[#E07B39] text-[#E07B39] font-medium rounded-full hover:bg-[#E07B39] hover:text-white transition-all hover:scale-105 shadow-sm"
+                className="flex items-center justify-center gap-2 px-5 py-2.5 bg-white border-2 border-[#E07B39] text-[#E07B39] text-base font-bold rounded-full hover:bg-[#E07B39] hover:text-white transition-all hover:scale-105 shadow-sm"
               >
                 <SettingsIcon className="h-4 w-4" />
-                {ct('แก้ไขข้อมูลร้าน', 'Edit Shop Profile')}
+                {ct('แก้ไขข้อมูลร้าน', 'Edit Shop')}
               </button>
               <button
                 onClick={() => {
@@ -239,14 +239,14 @@ const ShopDashboard = () => {
                   navigate(`/${slug}/shop/workshops/create`);
                 }}
                 disabled={isPendingShop}
-                className={`flex items-center gap-2 px-5 py-2.5 font-medium rounded-full shadow-md transition-all hover:shadow-lg ${
+                className={`flex items-center justify-center gap-2 px-5 py-2.5 text-base font-bold rounded-full shadow-md transition-all hover:shadow-lg ${
                   isPendingShop
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     : 'bg-[#4CAF50] text-white hover:bg-[#45A049] hover:scale-105'
                 }`}
               >
                 <Plus className="h-4 w-4" />
-                {ct('สร้าง Workshop ใหม่', 'Create Workshop')}
+                {ct('สร้าง Workshop', 'New Workshop')}
               </button>
             </div>
           </div>
@@ -256,10 +256,10 @@ const ShopDashboard = () => {
           <div className="mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-4 flex gap-3 items-start">
             <AlertCircle className="h-6 w-6 text-amber-600 mt-0.5" />
             <div>
-              <p className="text-sm font-semibold text-amber-900">
+              <p className="text-lg font-bold text-amber-900">
                 {t('shopDashboard.pending.inlineTitle', 'ร้านค้าของคุณกำลังรอตรวจสอบ')}
               </p>
-              <p className="text-sm text-amber-800">
+              <p className="text-base font-bold text-amber-800">
                 {t(
                   'shopDashboard.pending.inlineDescription',
                   'คุณสามารถแก้ไขข้อมูลร้านได้ แต่การสร้าง/จัดการ Workshop จะเปิดให้ใช้งานหลังจากได้รับการอนุมัติ'
@@ -270,15 +270,15 @@ const ShopDashboard = () => {
         )}
 
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 animate-stagger">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 animate-stagger">
             <div className="bg-white rounded-xl shadow-sm p-5 animate-fadeIn border border-gray-100 hover:shadow-md transition-all hover:scale-[1.02]" style={{animationDelay: '0.1s'}}>
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-[#FFF7ED] rounded-lg">
                   <Calendar className="h-5 w-5 text-[#E07B39]" />
                 </div>
-                <p className="text-xs font-semibold text-[#6B6B6B]">{ct('Workshop ทั้งหมด', 'Total Workshops')}</p>
+                <p className="text-lg font-bold text-[#6B6B6B]">{ct('Workshop ทั้งหมด', 'Total Workshops')}</p>
               </div>
-              <p className="text-2xl font-bold text-[#3D3D3D]">{stats.totalWorkshops}</p>
+              <p className="text-4xl font-extrabold text-[#3D3D3D]">{stats.totalWorkshops}</p>
             </div>
 
             <div className="bg-white rounded-xl shadow-sm p-5 animate-fadeIn border border-gray-100 hover:shadow-md transition-all hover:scale-[1.02]" style={{animationDelay: '0.2s'}}>
@@ -286,25 +286,25 @@ const ShopDashboard = () => {
                 <div className="p-2 bg-[#E8F5E9] rounded-lg">
                   <Users className="h-5 w-5 text-[#4CAF50]" />
                 </div>
-                <p className="text-xs font-semibold text-[#6B6B6B]">{ct('ผู้เข้าร่วมทั้งหมด', 'Total Participants')}</p>
+                <p className="text-lg font-bold text-[#6B6B6B]">{ct('ผู้เข้าร่วมทั้งหมด', 'Total Participants')}</p>
               </div>
-              <p className="text-2xl font-bold text-[#3D3D3D]">{stats.totalBookings}</p>
+              <p className="text-4xl font-extrabold text-[#3D3D3D]">{stats.totalBookings}</p>
             </div>
             <div className="bg-white rounded-xl shadow-sm p-5 animate-fadeIn border border-gray-100 hover:shadow-md transition-all hover:scale-[1.02]" style={{animationDelay: '0.4s'}}>
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-[#E3F2FD] rounded-lg">
                   <TrendingUp className="h-5 w-5 text-[#2196F3]" />
                 </div>
-                <p className="text-xs font-semibold text-[#6B6B6B]">{ct('Workshop ที่รออนุมัติ', 'Pending Workshops')}</p>
+                <p className="text-lg font-bold text-[#6B6B6B]">{ct('Workshop ที่รออนุมัติ', 'Pending Workshops')}</p>
               </div>
-              <p className="text-2xl font-bold text-[#3D3D3D]">{stats.pendingApprovals}</p>
+              <p className="text-4xl font-extrabold text-[#3D3D3D]">{stats.pendingApprovals}</p>
             </div>
           </div>
         )}
 
         <div className="bg-white rounded-lg shadow-sm">
           <div className="px-6 pt-6 pb-4">
-            <h2 className="text-xl font-bold text-[#2F4F2F] mb-4">{ct('Workshop ของร้านคุณ', 'Your Workshops')}</h2>
+            <h2 className="text-2xl font-extrabold text-[#2F4F2F] mb-4">{ct('Workshop ของร้านคุณ', 'Your Workshops')}</h2>
           </div>
           <div className="border-b border-gray-200 overflow-x-auto">
             <div className="flex space-x-8 px-6 whitespace-nowrap min-w-max">
@@ -312,7 +312,7 @@ const ShopDashboard = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm transition-all ${
+                  className={`py-4 px-1 border-b-2 text-lg font-bold transition-all ${
                     activeTab === tab.id
                       ? 'border-[#E07B39] text-[#E07B39]'
                       : 'border-transparent text-[#6B6B6B] hover:text-[#3D3D3D] hover:border-gray-300'
@@ -332,7 +332,7 @@ const ShopDashboard = () => {
             ) : filteredWorkshops.length === 0 ? (
               <div className="text-center py-12">
                 <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-[#2F4F2F] mb-2">
+                <h3 className="text-2xl font-extrabold text-[#2F4F2F] mb-2">
                   {ct('ไม่มีข้อมูล Workshop ในหมวดหมู่นี้', 'No workshops in this category')}
                 </h3>
               </div>
@@ -340,8 +340,8 @@ const ShopDashboard = () => {
               <div className="space-y-4 animate-stagger">
                 {filteredWorkshops.map((workshop) => (
                   <div key={workshop._id} className="bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition-shadow animate-scaleIn">
-                    <div className="flex gap-4">
-                      <div className="relative w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <div className="relative w-full sm:w-32 h-40 sm:h-32 shrink-0 rounded-lg overflow-hidden bg-gray-100">
                         {(() => {
                           const imageSrc = getWorkshopImage(workshop);
                           if (imageSrc) {
@@ -356,28 +356,30 @@ const ShopDashboard = () => {
                           return (
                             <div className="flex h-full w-full flex-col items-center justify-center text-gray-400">
                               <Camera className="h-6 w-6" />
-                              <span className="mt-1 text-xs">{ct('ยังไม่มีรูป', 'No image')}</span>
+                              <span className="mt-1 text-sm font-bold">{ct('ยังไม่มีรูป', 'No image')}</span>
                             </div>
                           );
                         })()}
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-4 mb-2">
-                          <div className="flex-1 ">
-                            <h3 className="text-lg font-semibold text-[#2F4F2F] mb-1">{workshop.title}</h3>
-                            <p className="text-sm text-[#6B6B6B] whitespace-pre-line wrap-break-word max-h-48 overflow-y-auto scrollbar-thin w-full max-w-2xl">{workshop.description || ct('ไม่มีคำอธิบาย', 'No description')}</p>
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-xl sm:text-2xl font-extrabold text-[#2F4F2F] mb-1">{workshop.title}</h3>
+                            <p className="text-base font-bold text-[#6B6B6B] whitespace-pre-line wrap-break-word max-h-48 overflow-y-auto scrollbar-thin w-full max-w-2xl">{workshop.description || ct('ไม่มีคำอธิบาย', 'No description')}</p>
                           </div>
-                          {renderBadges(workshop.approvalStatus, workshop.registrationStatus)}
+                          <div className="shrink-0">
+                            {renderBadges(workshop.approvalStatus, workshop.registrationStatus)}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-6 text-sm text-gray-600 mt-3">
+                        <div className="flex items-center gap-6 text-base font-bold text-gray-600 mt-3">
                           <div className="flex items-center gap-1">
                             <Users className="h-4 w-4" />
                             <span>{workshop.current_participants || 0} / {workshop.capacity || 10} {ct('คน', 'people')}</span>
                           </div>
                         </div>
-                        <div className="flex items-center justify-between mt-4">
-                          <div className="text-xl font-bold text-[#E07B39]">฿{workshop.price || 0}</div>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-4">
+                          <div className="text-3xl font-extrabold text-[#E07B39]">฿{workshop.price || 0}</div>
                           <div className="flex gap-2">
                             <button
                               onClick={() => {
@@ -385,7 +387,7 @@ const ShopDashboard = () => {
                                 navigate(`/${slug}/shop/workshops/${workshop._id}`);
                               }}
                               disabled={isPendingShop}
-                              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                              className={`px-4 py-2 rounded-full text-lg font-bold transition-all ${
                                 isPendingShop
                                   ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                                   : 'bg-[#E07B39] text-white hover:bg-[#D66B29] hover:scale-105 shadow-sm'
@@ -399,7 +401,7 @@ const ShopDashboard = () => {
                                 handleDeleteWorkshop(workshop._id);
                               }}
                               disabled={isPendingShop}
-                              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                              className={`px-4 py-2 rounded-full text-lg font-bold transition-all ${
                                 isPendingShop
                                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                   : 'bg-red-50 text-red-600 hover:bg-red-100 hover:scale-105'

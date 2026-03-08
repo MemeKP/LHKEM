@@ -21,33 +21,33 @@ const Footer = ({ community }) => {
                   {getLogo(community)}
                 </span>
               </div>
-              <span className="text-gray-900 font-semibold">{ct(community.name, community.name_en)}</span>
+              <span className="text-gray-900 font-bold">{ct(community.name, community.name_en)}</span>
             </div>
-            <p className="text-gray-600 text-sm leading-relaxed line-clamp-2">
+            <p className="text-gray-700 text-base font-medium leading-relaxed line-clamp-2">
               {ct(community.hero_section.description, community.hero_section.description_en)}
             </p>
           </div>
 
           <div>
-            <h3 className="text-gray-900 font-semibold mb-4">{t('footer.menu')}</h3>
+            <h3 className="text-gray-900 font-bold mb-4">{t('footer.menu')}</h3>
             <ul className="space-y-2">
               <li>
-                <Link to={`/${community.slug}`} className="text-gray-600 hover:text-orange-600 text-sm transition-colors">
+                <Link to={`/${community.slug}`} className="text-gray-700 font-medium hover:text-orange-600 text-base transition-colors">
                   {t('footer.home')}
                 </Link>
               </li>
               <li>
-                <Link to={`/${community.slug}/workshops`} className="text-gray-600 hover:text-orange-600 text-sm transition-colors">
+                <Link to={`/${community.slug}/workshops`} className="text-gray-700 font-medium hover:text-orange-600 text-base transition-colors">
                   {t('footer.allWorkshops')}
                 </Link>
               </li>
               <li>
-                <Link to={`/${community.slug}/map`} className="text-gray-600 hover:text-orange-600 text-sm transition-colors">
+                <Link to={`/${community.slug}/map`} className="text-gray-700 font-medium hover:text-orange-600 text-base transition-colors">
                   {t('footer.communityMap')}
                 </Link>
               </li>
               <li>
-                <Link to={`/${community.slug}/about`} className="text-gray-600 hover:text-orange-600 text-sm transition-colors">
+                <Link to={`/${community.slug}/about`} className="text-gray-700 font-medium hover:text-orange-600 text-base transition-colors">
                   {t('footer.about')} {ct(community.name, community.name_en)}
                 </Link>
               </li>
@@ -79,13 +79,13 @@ const Footer = ({ community }) => {
             </ul>
           </div> */}
           <div>
-            <h3 className="text-gray-900 font-semibold mb-4">{t('footer.contact')}</h3>
+            <h3 className="text-gray-900 font-bold mb-4">{t('footer.contact')}</h3>
             <ul className="space-y-3">
 
               {community.location?.full_address && (
                 <li className="flex items-start space-x-2">
-                  <MapPin className="h-4 w-4 text-gray-600 mt-1 flex-shrink-0" />
-                  <span className="text-gray-600 text-sm break-words">
+                  <MapPin className="h-5 w-5 text-gray-700 mt-1 shrink-0" />
+                  <span className="text-gray-700 font-medium text-base break-words">
                     {ct(community.location.full_address, community.location.full_address_en)}
                   </span>
                 </li>
@@ -93,10 +93,10 @@ const Footer = ({ community }) => {
 
               {community.contact_info?.phone && (
                 <li className="flex items-center space-x-2">
-                  <Phone className="h-4 w-4 text-gray-600 flex-shrink-0" />
+                  <Phone className="h-5 w-5 text-gray-700 shrink-0" />
                   <a
                     href={`tel:${community.contact_info.phone}`}
-                    className="text-gray-600 hover:text-orange-600 text-sm transition-colors"
+                    className="text-gray-700 font-medium hover:text-orange-600 text-base transition-colors"
                   >
                     {community.contact_info.phone}
                   </a>
@@ -105,10 +105,10 @@ const Footer = ({ community }) => {
 
               {community.contact_info?.email && (
                 <li className="flex items-center space-x-2">
-                  <Mail className="h-4 w-4 text-gray-600 flex-shrink-0" />
+                  <Mail className="h-5 w-5 text-gray-700 shrink-0" />
                   <a
                     href={`mailto:${community.contact_info.email}`}
-                    className="text-gray-600 hover:text-orange-600 text-sm transition-colors"
+                    className="text-gray-700 font-medium hover:text-orange-600 text-base transition-colors"
                   >
                     {community.contact_info.email}
                   </a>
@@ -117,12 +117,12 @@ const Footer = ({ community }) => {
 
               {community.contact_info?.facebook?.link && (
                 <li className="flex items-center space-x-2">
-                  <Facebook className="h-4 w-4 text-gray-600 flex-shrink-0" />
+                  <Facebook className="h-5 w-5 text-gray-700 shrink-0" />
                   <a
                     href={community.contact_info.facebook.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-gray-600 hover:text-blue-600 text-sm transition-colors"
+                    className="text-gray-700 hover:text-blue-600 text-base transition-colors"
                   >
                     {community.contact_info.facebook.name || 'Facebook'}
                   </a>
@@ -131,12 +131,12 @@ const Footer = ({ community }) => {
 
               {community.contact_info?.line?.link && (
                 <li className="flex items-center space-x-2">
-                  <SiLine className="h-4 w-4 text-gray-600 flex-shrink-0" />
+                  <SiLine className="h-5 w-5 text-gray-700 shrink-0" />
                   <a
                     href={community.contact_info.line.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-gray-600 hover:text-blue-600 text-sm transition-colors"
+                    className="text-gray-700 hover:text-blue-600 text-base transition-colors"
                   >
                     {community.contact_info.line.name || 'Line'}
                   </a>
@@ -167,7 +167,7 @@ const Footer = ({ community }) => {
             </div>
           </div> */}
           <div>
-            <h3 className="text-gray-900 font-semibold mb-4">{t('footer.followUs')}</h3>
+            <h3 className="text-gray-900 font-bold mb-4">{t('footer.followUs')}</h3>
             <div className="flex space-x-4">
               {community.contact_info?.facebook?.link && (
                 <a
@@ -215,7 +215,7 @@ const Footer = ({ community }) => {
           </p>
         </div> */}
         <div className="border-t border-gray-200 mt-8 pt-8 text-center">
-          <p className="text-gray-500 text-sm">
+          <p className="text-gray-600 font-medium text-base">
             © {new Date().getFullYear()} {ct(community.name, community.name_en) || 'Community'}. All rights reserved.
           </p>
         </div>

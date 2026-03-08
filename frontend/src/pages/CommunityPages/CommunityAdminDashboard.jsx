@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, XCircle, Eye, Calendar, MapPin, Users, TrendingUp, DollarSign, Store, BarChart3, PieChart } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -154,7 +154,7 @@ const CommunityAdminDashboard = () => {
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">ภาพรวมของชุมชน</h1>
+            <h1 className="text-3xl font-extrabold text-gray-900">ภาพรวมของชุมชน</h1>
             <p className="text-gray-600 mt-1">จัดการ Workshop, Event และร้านค้าในชุมชนของคุณ</p>
           </div>
           <button
@@ -171,8 +171,8 @@ const CommunityAdminDashboard = () => {
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">จำนวนร้านค้า</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalShops}</p>
+                <p className="text-sm font-medium text-gray-700">จำนวนร้านค้า</p>
+                <p className="text-3xl font-extrabold text-gray-900 mt-2">{stats.totalShops}</p>
               </div>
               <div className="p-3 bg-blue-100 rounded-lg">
                 <Store className="h-6 w-6 text-blue-600" />
@@ -183,8 +183,8 @@ const CommunityAdminDashboard = () => {
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Workshop ทั้งหมด</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalWorkshops}</p>
+                <p className="text-sm font-medium text-gray-700">Workshop ทั้งหมด</p>
+                <p className="text-3xl font-extrabold text-gray-900 mt-2">{stats.totalWorkshops}</p>
               </div>
               <div className="p-3 bg-green-100 rounded-lg">
                 <MapPin className="h-6 w-6 text-green-600" />
@@ -195,8 +195,8 @@ const CommunityAdminDashboard = () => {
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">รออนุมัติ</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{stats.pendingApprovals}</p>
+                <p className="text-sm font-medium text-gray-700">รออนุมัติ</p>
+                <p className="text-3xl font-extrabold text-gray-900 mt-2">{stats.pendingApprovals}</p>
               </div>
               <div className="p-3 bg-yellow-100 rounded-lg">
                 <Users className="h-6 w-6 text-yellow-600" />
@@ -207,8 +207,8 @@ const CommunityAdminDashboard = () => {
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">ผู้เข้าร่วม</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalParticipants}</p>
+                <p className="text-sm font-medium text-gray-700">ผู้เข้าร่วม</p>
+                <p className="text-3xl font-extrabold text-gray-900 mt-2">{stats.totalParticipants}</p>
               </div>
               <div className="p-3 bg-purple-100 rounded-lg">
                 <Users className="h-6 w-6 text-purple-600" />
@@ -219,8 +219,8 @@ const CommunityAdminDashboard = () => {
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">รายได้เดือนนี้</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">฿{stats.monthlyRevenue.toLocaleString()}</p>
+                <p className="text-sm font-medium text-gray-700">รายได้เดือนนี้</p>
+                <p className="text-3xl font-extrabold text-gray-900 mt-2">฿{stats.monthlyRevenue.toLocaleString()}</p>
               </div>
               <div className="p-3 bg-orange-100 rounded-lg">
                 <DollarSign className="h-6 w-6 text-orange-600" />
@@ -233,7 +233,7 @@ const CommunityAdminDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Workshop by Category Chart */}
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-orange-500" />
               Workshop แยกตามประเภท
             </h3>
@@ -257,7 +257,7 @@ const CommunityAdminDashboard = () => {
 
           {/* Workshop Status Chart */}
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
               <PieChart className="h-5 w-5 text-orange-500" />
               สถานะ Workshop
             </h3>
@@ -292,7 +292,7 @@ const CommunityAdminDashboard = () => {
         {/* Shops Table - TODO: ข้อมูลจาก GET /api/communities/:id/shops */}
         <div className="bg-white rounded-lg shadow-sm mb-8">
           <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">ร้านค้าในชุมชน</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">ร้านค้าในชุมชน</h2>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead>
@@ -358,7 +358,7 @@ const CommunityAdminDashboard = () => {
         <div className="bg-white rounded-lg shadow-sm mb-8">
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-900">Workshop รออนุมัติ</h2>
+              <h2 className="text-xl font-bold text-gray-900">Workshop รออนุมัติ</h2>
               <button
                 onClick={() => navigate('/community-admin/workshops/pending')}
                 className="text-orange-600 hover:text-orange-700 font-medium text-sm"
@@ -370,7 +370,7 @@ const CommunityAdminDashboard = () => {
             {pendingWorkshops.length === 0 ? (
               <div className="text-center py-12 bg-gray-50 rounded-lg">
                 <CheckCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">ไม่มี Workshop รออนุมัติ</p>
+                <p className="font-semibold text-gray-700">ไม่มี Workshop รออนุมัติ</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -380,11 +380,11 @@ const CommunityAdminDashboard = () => {
                     className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
                   >
                     <div className="aspect-video bg-gray-200 rounded-lg mb-3"></div>
-                    <h3 className="font-semibold text-gray-900 mb-2">{workshop.title}</h3>
+                    <h3 className="font-bold text-gray-900 mb-2">{workshop.title}</h3>
                     <p className="text-sm text-gray-600 mb-3 line-clamp-2">{workshop.description}</p>
                     <div className="flex items-center justify-between text-sm mb-3">
-                      <span className="text-gray-600">฿{workshop.price}</span>
-                      <span className="text-gray-600">{workshop.seatLimit} ที่นั่ง</span>
+                      <span className="font-semibold text-gray-700">฿{workshop.price}</span>
+                      <span className="font-semibold text-gray-700">{workshop.seatLimit} ที่นั่ง</span>
                     </div>
                     <button
                       onClick={() => navigate(`/community-admin/workshops/${workshop.id}`)}
@@ -403,7 +403,7 @@ const CommunityAdminDashboard = () => {
         <div className="bg-white rounded-lg shadow-sm mb-8">
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-orange-500" />
                 กิจกรรมของชุมชน
               </h2>
@@ -418,7 +418,7 @@ const CommunityAdminDashboard = () => {
             {upcomingEvents.length === 0 ? (
               <div className="text-center py-12 bg-gray-50 rounded-lg">
                 <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">ยังไม่มีกิจกรรมที่กำลังจะมาถึง</p>
+                <p className="font-semibold text-gray-700">ยังไม่มีกิจกรรมที่กำลังจะมาถึง</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -470,7 +470,7 @@ const CommunityAdminDashboard = () => {
 
                     {/* Event Info */}
                     <div className="p-4">
-                      <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{event.title}</h3>
+                      <h3 className="font-bold text-gray-900 mb-2 line-clamp-2">{event.title}</h3>
                       <p className="text-sm text-gray-600 mb-3 line-clamp-2">{event.description}</p>
                       
                       {/* Event Details */}
@@ -520,7 +520,7 @@ const CommunityAdminDashboard = () => {
         {/* Trend Chart - TODO: ข้อมูลจาก GET /api/communities/:id/stats */}
         <div className="bg-white rounded-lg shadow-sm">
           <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-orange-500" />
               แนวโน้มการเข้าร่วม Workshop
             </h2>

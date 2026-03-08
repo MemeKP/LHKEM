@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { CheckCircle, XCircle, Edit, MapPin, Clock, Users, DollarSign, Calendar, ArrowLeft, MessageSquare } from 'lucide-react';
 import api from '../../services/api';
@@ -109,7 +109,7 @@ const WorkshopApprovalPage = () => {
           <div className="lg:col-span-2 space-y-6">
             {/* Basic Info */}
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">{workshop.title}</h1>
+              <h1 className="text-2xl font-extrabold text-gray-900 mb-4">{workshop.title}</h1>
               
               <div className="flex items-center gap-3 mb-6 pb-6 border-b">
                 <div className="w-12 h-12 bg-gray-200 rounded-full overflow-hidden">
@@ -117,7 +117,7 @@ const WorkshopApprovalPage = () => {
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">{workshop.shop?.name || workshop.ownerName}</p>
-                  <p className="text-sm text-gray-600">ผู้จัดเวิร์กชอป</p>
+                  <p className="text-sm font-medium text-gray-700">ผู้จัดเวิร์กชอป</p>
                 </div>
               </div>
 
@@ -131,7 +131,7 @@ const WorkshopApprovalPage = () => {
               </div>
 
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">คำอธิบาย</h3>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">คำอธิบาย</h3>
                 <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{workshop.description}</p>
               </div>
 
@@ -141,7 +141,7 @@ const WorkshopApprovalPage = () => {
                     <DollarSign className="h-4 w-4" />
                     <span className="text-sm">ราคา</span>
                   </div>
-                  <p className="text-lg font-semibold text-gray-900">฿{workshop.price?.toLocaleString()}</p>
+                  <p className="text-lg font-bold text-gray-900">฿{workshop.price?.toLocaleString()}</p>
                 </div>
 
                 <div className="bg-gray-50 rounded-lg p-4">
@@ -149,7 +149,7 @@ const WorkshopApprovalPage = () => {
                     <Users className="h-4 w-4" />
                     <span className="text-sm">ที่นั่ง</span>
                   </div>
-                  <p className="text-lg font-semibold text-gray-900">{workshop.seatLimit}</p>
+                  <p className="text-lg font-bold text-gray-900">{workshop.seatLimit}</p>
                 </div>
 
                 <div className="bg-gray-50 rounded-lg p-4">
@@ -157,7 +157,7 @@ const WorkshopApprovalPage = () => {
                     <Clock className="h-4 w-4" />
                     <span className="text-sm">ระยะเวลา</span>
                   </div>
-                  <p className="text-lg font-semibold text-gray-900">{workshop.duration}</p>
+                  <p className="text-lg font-bold text-gray-900">{workshop.duration}</p>
                 </div>
 
                 <div className="bg-gray-50 rounded-lg p-4">
@@ -165,14 +165,14 @@ const WorkshopApprovalPage = () => {
                     <MapPin className="h-4 w-4" />
                     <span className="text-sm">สถานที่</span>
                   </div>
-                  <p className="text-sm font-semibold text-gray-900 line-clamp-2">{workshop.location}</p>
+                  <p className="text-sm font-bold text-gray-900 line-clamp-2">{workshop.location}</p>
                 </div>
               </div>
 
               {/* Requirements */}
               {workshop.requirements?.length > 0 && (
                 <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3">อุปกรณ์ที่ต้องเตรียม</h3>
+                    <h3 className="text-lg font-bold text-gray-900 mb-3">อุปกรณ์ที่ต้องเตรียม</h3>
                     <ul className="space-y-2">
                     {workshop.requirements.map((req, index) => (
                         <li key={index} className="flex items-start gap-2">
@@ -187,7 +187,7 @@ const WorkshopApprovalPage = () => {
 
             {/* History - Mapping from Backend Activity Log */}
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">ประวัติการดำเนินการ</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">ประวัติการดำเนินการ</h3>
               <div className="space-y-4">
                 {workshop.history?.length > 0 ? (
                   workshop.history.map((item, index) => (
@@ -197,8 +197,8 @@ const WorkshopApprovalPage = () => {
                       </div>
                       <div className="flex-1">
                         <p className="font-medium text-gray-900">{item.action}</p>
-                        <p className="text-sm text-gray-600">{item.user}</p>
-                        <p className="text-xs text-gray-500">{new Date(item.timestamp).toLocaleString('th-TH')}</p>
+                        <p className="text-sm font-medium text-gray-700">{item.user}</p>
+                        <p className="text-xs font-medium text-gray-500">{new Date(item.timestamp).toLocaleString('th-TH')}</p>
                       </div>
                     </div>
                   ))
@@ -212,7 +212,7 @@ const WorkshopApprovalPage = () => {
           {/* Right Column - Actions */}
           <div className="space-y-6">
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <MessageSquare className="h-5 w-5 text-orange-500" />
                 ข้อความถึงผู้จัดงาน
               </h3>
@@ -226,7 +226,7 @@ const WorkshopApprovalPage = () => {
             </div>
 
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">การดำเนินการ</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">การดำเนินการ</h3>
               <div className="space-y-3">
                 <button
                   onClick={handleApprove}
@@ -263,7 +263,7 @@ const WorkshopApprovalPage = () => {
       {showRejectModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">ปฏิเสธ Workshop</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-4">ปฏิเสธ Workshop</h3>
             <p className="text-gray-600 mb-4">กรุณาระบุเหตุผลในการปฏิเสธ (เหตุผลนี้จะถูกส่งไปให้ผู้จัดงานแก้ไข)</p>
             
             <textarea

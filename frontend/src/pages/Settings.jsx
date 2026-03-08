@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Mail, Phone, MapPin, Lock, Save, AlertCircle, CheckCircle, Camera } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
@@ -136,7 +136,7 @@ const Settings = () => {
 
     const config = roleConfig[role] || roleConfig.TOURIST;
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-medium ${config.color}`}>
+      <span className={`px-3 py-1 rounded-full text-base font-bold ${config.color}`}>
         {config.label}
       </span>
     );
@@ -148,14 +148,14 @@ const Settings = () => {
         <div className="mb-8">
           <button
             onClick={() => navigate(-1)}
-            className="text-gray-600 hover:text-gray-900 mb-4 flex items-center gap-2"
+            className="text-gray-700 font-semibold hover:text-gray-900 mb-4 flex items-center gap-2"
           >
             ← {t('settings.back')}
           </button>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-4xl font-extrabold text-gray-900 mb-2">
             {t('settings.title')}
           </h1>
-          <p className="text-gray-600">{t('settings.description')}</p>
+          <p className="text-lg font-bold text-gray-700">{t('settings.description')}</p>
         </div>
 
         {message.text && (
@@ -167,7 +167,7 @@ const Settings = () => {
             ) : (
               <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
             )}
-            <p className={`text-sm ${message.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
+            <p className={`text-base font-bold ${message.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
               {message.text}
             </p>
           </div>
@@ -178,7 +178,7 @@ const Settings = () => {
             <div className="flex">
               <button
                 onClick={() => setActiveTab('profile')}
-                className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                className={`flex-1 px-6 py-4 text-lg font-bold transition-colors ${
                   activeTab === 'profile'
                     ? 'text-orange-600 border-b-2 border-orange-600 bg-orange-50'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -189,7 +189,7 @@ const Settings = () => {
               </button>
               <button
                 onClick={() => setActiveTab('password')}
-                className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                className={`flex-1 px-6 py-4 text-lg font-bold transition-colors ${
                   activeTab === 'password'
                     ? 'text-orange-600 border-b-2 border-orange-600 bg-orange-50'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -206,10 +206,10 @@ const Settings = () => {
               <div>
                 <div className="mb-8 flex items-center space-x-4 pb-6 border-b border-gray-200">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-2xl font-extrabold text-gray-900">
                       {user?.firstname} {user?.lastname}
                     </h3>
-                    <p className="text-sm text-gray-600">{user?.email}</p>
+                    <p className="text-lg font-bold text-gray-700">{user?.email}</p>
                     <div className="mt-2">
                       {getRoleBadge(user?.role)}
                     </div>
@@ -219,7 +219,7 @@ const Settings = () => {
                 <form onSubmit={handleProfileSubmit} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-lg font-bold text-gray-800 mb-2">
                         {t('settings.fields.firstName')}
                       </label>
                       <div className="relative">
@@ -236,7 +236,7 @@ const Settings = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-lg font-bold text-gray-800 mb-2">
                         {t('settings.fields.lastName')}
                       </label>
                       <div className="relative">
@@ -254,7 +254,7 @@ const Settings = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-lg font-bold text-gray-800 mb-2">
                       {t('settings.fields.email')}
                     </label>
                     <div className="relative">
@@ -268,11 +268,11 @@ const Settings = () => {
                         disabled
                       />
                     </div>
-                    <p className="mt-1 text-xs text-gray-500">{t('settings.fields.emailNote')}</p>
+                    <p className="mt-1 text-sm font-bold text-gray-600">{t('settings.fields.emailNote')}</p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-lg font-bold text-gray-800 mb-2">
                       {t('settings.fields.phone')}
                     </label>
                     <div className="relative">
@@ -292,7 +292,7 @@ const Settings = () => {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white text-lg font-bold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Save className="h-5 w-5" />
                       {loading ? t('common.loading') : t('settings.saveChanges')}
@@ -305,7 +305,7 @@ const Settings = () => {
             {activeTab === 'password' && (
               <form onSubmit={handlePasswordSubmit} className="space-y-6 max-w-md">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-lg font-bold text-gray-800 mb-2">
                     {t('settings.fields.currentPassword')}
                   </label>
                   <div className="relative">
@@ -323,7 +323,7 @@ const Settings = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-lg font-bold text-gray-800 mb-2">
                     {t('settings.fields.newPassword')}
                   </label>
                   <div className="relative">
@@ -338,11 +338,11 @@ const Settings = () => {
                       required
                     />
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">{t('settings.fields.passwordRequirement')}</p>
+                  <p className="mt-1 text-sm font-bold text-gray-600">{t('settings.fields.passwordRequirement')}</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-lg font-bold text-gray-800 mb-2">
                     {t('settings.fields.confirmPassword')}
                   </label>
                   <div className="relative">
@@ -363,7 +363,7 @@ const Settings = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Save className="h-5 w-5" />
                     {loading ? t('common.loading') : t('settings.updatePassword')}
