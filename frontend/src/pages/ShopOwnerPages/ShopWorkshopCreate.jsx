@@ -137,26 +137,6 @@ const ShopWorkshopCreate = () => {
     const start = new Date(registrationStartDate);
     const end = new Date(registrationEndDate);
     const workshop = new Date(workshopDate);
-    const minGap = 7 * 24 * 60 * 60 * 1000; // 7 days
-    const latestAllowedEnd = new Date(workshop.getTime() - minGap);
-
-    const toMinutes = (time) => {
-      const [h, m] = time.split(':').map(Number);
-      return h * 60 + m;
-    };
-
-    const startMinutes = toMinutes(workshopStartTime);
-    const endMinutes = toMinutes(workshopEndTime);
-
-    if (startMinutes >= endMinutes) {
-      Swal.fire({
-        icon: 'warning',
-        title: ct('เวลาเริ่มต้องอยู่ก่อนเวลาสิ้นสุด', 'Start time must be before end time'),
-        text: ct('กรุณาตรวจสอบช่วงเวลาให้ถูกต้องก่อนบันทึก', 'Please ensure the workshop start time occurs before the end time.'),
-        confirmButtonText: ct('เข้าใจแล้ว', 'Understood'),
-      });
-      return;
-    }
 
     if (end < start) {
       Swal.fire({
@@ -168,21 +148,11 @@ const ShopWorkshopCreate = () => {
       return;
     }
 
-    if (end > workshop) {
+    if (end >= workshop) {
       Swal.fire({
         icon: 'warning',
-        title: ct('วันปิดรับสมัครต้องไม่เกินวันจัดงาน', 'Deadline cannot exceed event date'),
-        text: ct('กรุณากำหนดวันปิดรับสมัครให้ก่อนหรือในวันจัดกิจกรรม', 'Please keep the registration cutoff on or before the workshop date.'),
-        confirmButtonText: ct('ตกลง', 'OK'),
-      });
-      return;
-    }
-
-    if (end > latestAllowedEnd) {
-      Swal.fire({
-        icon: 'warning',
-        title: ct('กรุณาปิดรับสมัครล่วงหน้า 7 วัน', 'Close registration at least 7 days early'),
-        text: ct('เพื่อเตรียมงานให้พร้อม กรุณากำหนดวันปิดรับสมัครอย่างน้อย 7 วันก่อนวันจัดกิจกรรม', 'Please set the registration deadline at least seven days before the workshop so the shop can prepare.'),
+        title: ct('วันปิดรับสมัครต้องอยู่ก่อนวันจัดงาน', 'Deadline must be before event date'),
+        text: ct('กรุณากำหนดวันปิดรับสมัครให้อย่างน้อย 1 วันก่อนวันจัดกิจกรรม', 'Please set the registration deadline at least 1 day before the workshop date.'),
         confirmButtonText: ct('เข้าใจแล้ว', 'Understood'),
       });
       return;
