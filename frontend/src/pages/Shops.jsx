@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { data, Link, useOutletContext, useParams } from 'react-router-dom';
 import { Store, MapPin, Clock, Phone, Search, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
@@ -80,18 +80,18 @@ const Shops = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         {/* Header */}
         <div className="mb-4 animate-slideUp" style={{ animationDelay: '0.05s' }}>
-          <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-            <Link to={`/${community.slug}`} className="hover:text-gray-700">
+          <div className="flex items-center gap-2 text-lg font-bold text-gray-700 mb-4">
+            <Link to={`/${community.slug}`} className="hover:text-gray-900">
               {ct(community.name, community.name_en)}
             </Link>
             <span>/</span>
-            <span className="text-gray-900 font-medium">{ct('ร้านค้า', 'Shops')}</span>
+            <span className="text-gray-900 font-bold">{ct('ร้านค้า', 'Shops')}</span>
           </div>
           
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">
+          <h1 className="text-5xl font-extrabold text-gray-900 mb-3">
             {ct('ร้านค้าในชุมชน', 'Community Shops')}
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-xl font-bold text-gray-800">
             {ct('ค้นพบร้านค้าท้องถิ่นที่เปิดให้บริการเวิร์กช็อปและประสบการณ์ทางวัฒนธรรม', 
                 'Discover local shops offering workshops and cultural experiences')}
           </p>
@@ -114,7 +114,7 @@ const Shops = () => {
 
         {/* Results Count */}
         <div className="mb-2 animate-fadeIn" style={{ animationDelay: '0.18s' }}>
-          <p className="text-gray-600">
+          <p className="text-lg font-bold text-gray-800">
             {ct(`พบ ${filteredShops.length} ร้านค้า`, `Found ${filteredShops.length} shops`)}
           </p>
         </div>
@@ -123,7 +123,7 @@ const Shops = () => {
         {filteredShops.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-2xl border border-gray-200">
             <Store className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg">
+            <p className="text-xl font-bold text-gray-700">
               {ct('ไม่พบร้านค้าที่ตรงกับการค้นหา', 'No shops found matching your search')}
             </p>
           </div>
@@ -170,50 +170,50 @@ const Shops = () => {
                   )}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300"></div>
                   
-                  <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 rounded-full text-xs font-semibold text-gray-700">
+                  <div className="absolute top-4 left-4 bg-white/90 px-3 py-1 rounded-full text-base font-bold text-gray-800">
                     {shop.status === 'ACTIVE' ? ct('เปิดให้บริการ', 'Active') : ct('รอการอนุมัติ', 'Pending')}
                   </div>
                 </div>
 
                 {/* Shop Info */}
                 <div className="p-6 transition-transform duration-300 group-hover:-translate-y-1">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors">
+                  <h3 className="text-2xl font-extrabold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors">
                     {shop.shopName}
                   </h3>
-                  <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                  <p className="text-lg font-bold text-gray-700 mb-4 line-clamp-2">
                     {shop.description || ct('ไม่มีคำอธิบาย', 'No description')}
                   </p>
 
                   {/* Location */}
                   {(shop.address || shop.location?.address) && (
-                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-3 line-clamp-2">
-                      <MapPin className="h-4 w-4" />
-                      <span>{shop.address || shop.location?.address}</span>
-                    </div>
-                  )}
+                    <div className="flex items-center gap-2 text-lg font-bold text-gray-700 mb-3 line-clamp-2">
+                       <MapPin className="h-4 w-4" />
+                       <span>{shop.address || shop.location?.address}</span>
+                     </div>
+                   )}
 
                   {/* Opening Hours */}
                   {(shop.openTime || shop.closeTime) && (
-                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
-                      <Clock className="h-4 w-4" />
-                      <span>
-                        {shop.openTime || ct('ไม่ระบุ', 'N/A')}
-                        {shop.closeTime ? ` - ${shop.closeTime}` : ''}
-                      </span>
-                    </div>
-                  )}
+                    <div className="flex items-center gap-2 text-lg font-bold text-gray-700 mb-3">
+                       <Clock className="h-4 w-4" />
+                       <span>
+                         {shop.openTime || ct('ไม่ระบุ', 'N/A')}
+                         {shop.closeTime ? ` - ${shop.closeTime}` : ''}
+                       </span>
+                     </div>
+                   )}
 
                   {/* Phone */}
                   {shop.contact?.phone && (
-                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-                      <Phone className="h-4 w-4" />
-                      <span>{shop.contact.phone}</span>
-                    </div>
-                  )}
+                    <div className="flex items-center gap-2 text-lg font-bold text-gray-700 mb-4">
+                       <Phone className="h-4 w-4" />
+                       <span>{shop.contact.phone}</span>
+                     </div>
+                   )}
 
                   {/* View Button */}
                   <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                    <span className="text-sm font-semibold text-orange-600">
+                    <span className="text-lg font-bold text-orange-600">
                       {ct('ดูรายละเอียด', 'View Details')}
                     </span>
                     <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-orange-600 group-hover:translate-x-1 transition-all duration-300" />
@@ -234,7 +234,7 @@ const Shops = () => {
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
-              <span className="text-sm font-semibold text-gray-600">
+              <span className="text-lg font-bold text-gray-700">
                 {ct('หน้า', 'Page')} {currentPage} / {totalPages}
               </span>
               <button

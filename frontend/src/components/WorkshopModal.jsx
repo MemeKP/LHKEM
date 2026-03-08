@@ -13,7 +13,7 @@ import { formatNumericDate } from '../utils/dateFormatter';
 
 const SectionCard = ({ icon, title, children }) => (
   <div className="rounded-3xl border border-gray-100 bg-white shadow-sm p-5 space-y-4 animate-scaleIn">
-    <div className="flex items-center gap-2 text-gray-900 font-semibold">
+    <div className="flex items-center gap-2 text-gray-900 text-lg font-bold">
       {icon}
       <span>{title}</span>
     </div>
@@ -300,17 +300,18 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
   if (!isOpen || !workshop) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 pt-20 sm:p-6 sm:pt-24 bg-black/60 backdrop-blur-sm animate-fadeIn overflow-y-auto">
-      <div className="bg-white w-full max-w-2xl max-h-[85vh] flex flex-col rounded-[32px] shadow-2xl relative animate-slideUp overflow-hidden my-auto">
-        <button
-          className="absolute top-4 right-4 p-2 bg-gray-100 rounded-full text-gray-500 hover:text-gray-900 hover:bg-gray-200 transition-all z-10"
-          onClick={onClose}
-          aria-label={t('common.close') || ct('ปิด', 'Close')}
-        >
-          <X className="h-5 w-5" />
-        </button>
+    <div className="fixed inset-0 z-[70] overflow-y-auto bg-black/60 backdrop-blur-sm animate-fadeIn">
+      <div className="flex min-h-full items-center justify-center p-4 pt-20 text-center sm:px-0 sm:pb-0">
+        <div className="relative w-full max-w-2xl transform overflow-hidden rounded-[32px] bg-white text-left shadow-2xl transition-all sm:my-10 animate-slideUp">
+          <button
+            className="absolute top-4 right-4 p-2 bg-gray-100 rounded-full text-gray-500 hover:text-gray-900 hover:bg-gray-200 transition-all z-10"
+            onClick={onClose}
+            aria-label={t('common.close') || ct('ปิด', 'Close')}
+          >
+            <X className="h-5 w-5" />
+          </button>
 
-        <div className="p-6 space-y-5 overflow-y-auto flex-1 animate-stagger scrollbar-hide">
+          <div className="p-6 space-y-5 flex-1 animate-stagger">
           {/* Header */}
           <div className="rounded-[28px] border border-gray-100 bg-white shadow-sm p-5 space-y-4">
             {workshopImage && (
@@ -320,9 +321,9 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
               </div>
             )}
             <div>
-              <h3 className="text-2xl font-bold text-gray-900 leading-snug mb-2">{workshop.title}</h3>
-              <p className="text-sm text-gray-500 flex items-center gap-2">
-                <Store className="h-4 w-4" />
+              <h3 className="text-2xl font-extrabold text-gray-900 leading-snug mb-2">{workshop.title}</h3>
+              <p className="text-lg font-bold text-gray-600 flex items-center gap-2">
+                <Store className="h-5 w-5" />
                 {ct('โดยร้าน', 'By')} {derivedShop?.shopName || workshop.host || workshop.shopName || ct('ไม่ระบุร้านค้า', 'Unknown Shop')}
               </p>
             </div>
@@ -332,21 +333,21 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
                 <p className="text-3xl font-bold text-orange-500">
                   {workshop.price === 0 ? (t('workshops.free') || ct('ฟรี', 'Free')) : `${workshop.price}.-`}
                 </p>
-                <p className="text-xs text-gray-500">{ct('ต่อคน', 'per person')}</p>
+                <p className="text-base font-bold text-gray-500">{ct('ต่อคน', 'per person')}</p>
               </div>
               <div className="text-right space-y-1">
-                <span className={`text-xs font-medium px-3 py-1 rounded-full inline-flex items-center gap-1 ${
+                <span className={`text-sm font-bold px-3 py-1.5 rounded-full inline-flex items-center gap-1 ${
                   availableSeats <= 0 ? 'bg-red-50 text-red-600' : 'bg-orange-50 text-orange-600'
                 }`}>
                   {availableSeats <= 0 ? ct('ที่นั่งเต็มแล้ว', 'Fully Booked') : `${ct('ที่นั่งว่าง', 'Seats left')} ${availableSeats}`}
                 </span>
                 {pendingSeats > 0 && (
-                  <p className="text-xs text-yellow-600 flex items-center gap-1 justify-end">
+                  <p className="text-sm font-bold text-yellow-600 flex items-center gap-1 justify-end">
                     <AlertCircle className="h-3 w-3" />
                     {ct('รอยืนยัน', 'Pending confirmation')}: {pendingSeats}
                   </p>
                 )}
-                <p className="text-xs text-gray-500 flex items-center gap-1 justify-end">
+                <p className="text-sm font-bold text-gray-500 flex items-center gap-1 justify-end">
                   <Clock className="h-3 w-3" /> {workshop.duration || workshop.time || `${workshop.startTime} - ${workshop.endTime}`}
                 </p>
               </div>
@@ -358,35 +359,35 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
             icon={<Calendar className="h-5 w-5 text-blue-600" />}
             title={ct('วันและเวลาที่จัดกิจกรรม', 'Workshop Schedule')}
           >
-            <div className="space-y-3 text-sm text-gray-700">
+            <div className="space-y-3 text-base font-bold text-gray-700">
               {workshop.sessions && workshop.sessions.length > 0 ? (
                 workshop.sessions.map((session, index) => (
                   <div
                     key={index}
                     className={`rounded-2xl border p-4 ${index === 0 ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-100'}`}
                   >
-                    <p className="font-semibold text-gray-900">{session.title}</p>
-                    <p className="text-gray-600">{session.detail}</p>
-                    <p className="text-gray-400 text-sm">{session.time}</p>
+                    <p className="text-lg font-bold text-gray-900">{session.title}</p>
+                    <p className="text-base font-bold text-gray-700">{session.detail}</p>
+                    <p className="text-base font-bold text-gray-600">{session.time}</p>
                   </div>
                 ))
               ) : (
                 <div className="rounded-2xl border p-4 bg-blue-50 border-blue-200">
-                  <p className="font-semibold text-gray-900">{ct('รอบที่จัดกิจกรรม (Workshop)', 'Workshop Session')}</p>
-                  <p className="text-gray-600">{formattedWorkshopDate}</p>
-                  <p className="text-gray-400 text-sm">{formattedTimeRange}</p>
+                  <p className="text-lg font-bold text-gray-900">{ct('รอบที่จัดกิจกรรม (Workshop)', 'Workshop Session')}</p>
+                  <p className="text-base font-bold text-gray-700">{formattedWorkshopDate}</p>
+                  <p className="text-base font-bold text-gray-600">{formattedTimeRange}</p>
                 </div>
               )}
 
               <div className="rounded-2xl border border-blue-100 bg-white p-4">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{ct('วันที่จัดกิจกรรม', 'Event date')}</p>
-                <p className="text-base font-semibold text-gray-900">{formattedWorkshopDate}</p>
-                <p className="text-xs text-gray-500 mt-1">{ct('ช่วงเวลา', 'Time')} : {formattedTimeRange}</p>
+                <p className="text-base font-bold text-gray-600 uppercase tracking-wide">{ct('วันที่จัดกิจกรรม', 'Event date')}</p>
+                <p className="text-lg font-bold text-gray-900">{formattedWorkshopDate}</p>
+                <p className="text-base font-bold text-gray-700 mt-1">{ct('ช่วงเวลา', 'Time')} : {formattedTimeRange}</p>
               </div>
 
               <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{ct('ช่วงรับสมัคร', 'Registration window')}</p>
-                <p className="text-base font-semibold text-gray-900">{formattedRegistrationWindow}</p>
+                <p className="text-base font-bold text-gray-600 uppercase tracking-wide">{ct('ช่วงรับสมัคร', 'Registration window')}</p>
+                <p className="text-lg font-bold text-gray-900">{formattedRegistrationWindow}</p>
               </div>
             </div>
           </SectionCard>
@@ -395,13 +396,13 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
             icon={<BookOpen className="h-5 w-5 text-indigo-500" />}
             title={ct('เกี่ยวกับ Workshop', 'About this Workshop')}
           >
-            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line wrap-break-word max-h-48 overflow-y-auto scrollbar-thin w-full">
+            <p className="text-lg font-bold text-gray-800 leading-relaxed whitespace-pre-line wrap-break-word max-h-48 overflow-y-auto scrollbar-thin w-full">
               {workshop.description || ct('กิจกรรมสนุกที่รอให้คุณมาสัมผัส', 'An immersive experience awaits you.')}
             </p>
             {Array.isArray(workshop.requirements) && workshop.requirements.length > 0 && (
               <div className="mt-3">
-                <p className="text-xs font-semibold text-gray-500 mb-2">{ct('สิ่งที่ควรเตรียมมา', 'Bring along')}</p>
-                <ul className="space-y-1 text-sm text-gray-700">
+                <p className="text-base font-bold text-gray-600 mb-2">{ct('สิ่งที่ควรเตรียมมา', 'Bring along')}</p>
+                <ul className="space-y-1 text-base font-bold text-gray-800">
                   {workshop.requirements.map((item, index) => (
                     <li key={index} className="flex items-start gap-2">
                       <span className="text-orange-500 mt-1">•</span>
@@ -419,10 +420,10 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
             title={ct('เวลาทำการของร้าน', 'Shop Opening Hours')}
           >
             <div className="rounded-2xl border p-4 bg-white border-gray-100">
-              <p className="text-sm font-semibold text-gray-900">{ct('เวลาเปิดทำการ', 'Opening hours')}</p>
-              <p className="text-gray-700 mt-1">{shopHoursInfo.label}</p>
+              <p className="text-base font-bold text-gray-900">{ct('เวลาเปิดทำการ', 'Opening hours')}</p>
+              <p className="text-base font-bold text-gray-800 mt-1">{shopHoursInfo.label}</p>
               {!shopHoursInfo.hasHours && (
-                <p className="text-xs text-gray-500 mt-2">{ct('ยังไม่มีข้อมูลเวลาเปิด-ปิด โปรดติดต่อร้านโดยตรง', 'No opening hours provided yet. Please contact the shop directly.')}</p>
+                <p className="text-base font-bold text-gray-600 mt-2">{ct('ยังไม่มีข้อมูลเวลาเปิด-ปิด โปรดติดต่อร้านโดยตรง', 'No opening hours provided yet. Please contact the shop directly.')}</p>
               )}
             </div>
           </SectionCard>
@@ -432,7 +433,7 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
             icon={<MapPin className="h-5 w-5 text-red-500" />}
             title={ct('สถานที่', 'Location')}
           >
-            <p className="text-sm text-gray-700 mb-2 whitespace-pre-line wrap-break-word max-h-24 overflow-y-auto scrollbar-thin w-full">{workshop.customLocation || workshop.location?.address || workshop.location || ct('ใช้สถานที่ร้าน', 'Shop location')}</p>
+            <p className="text-lg font-bold text-gray-800 mb-2 whitespace-pre-line wrap-break-word max-h-24 overflow-y-auto scrollbar-thin w-full">{workshop.customLocation || workshop.location?.address || workshop.location || ct('ใช้สถานที่ร้าน', 'Shop location')}</p>
           </SectionCard>
           
           {/* Shop & Contact Info */}
@@ -440,14 +441,14 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
             icon={<Info className="h-5 w-5 text-blue-500" />}
             title={ct('ช่องทางติดต่อ', 'Contact Information')}
           >
-            <div className="space-y-4 text-sm text-gray-700">
+            <div className="space-y-4 text-base font-bold text-gray-700">
               <div className="rounded-2xl border border-blue-100 bg-blue-50/40 p-4">
-                <p className="text-base font-semibold text-gray-900">{derivedShop?.shopName || ct('ไม่ระบุร้านค้า', 'Unknown Shop')}</p>
-                <p className="text-sm text-gray-500 mt-1">
-                  {ct('เจ้าของร้าน', 'Shop owner')}: <span className="font-semibold text-gray-900">{ownerInfo.name || ct('ไม่ระบุ', 'N/A')}</span>
+                <p className="text-lg font-bold text-gray-900">{derivedShop?.shopName || ct('ไม่ระบุร้านค้า', 'Unknown Shop')}</p>
+                <p className="text-base font-bold text-gray-600 mt-1">
+                  {ct('เจ้าของร้าน', 'Shop owner')}: <span className="font-bold text-gray-900">{ownerInfo.name || ct('ไม่ระบุ', 'N/A')}</span>
                 </p>
-                {derivedShop?.description && <p className="text-gray-600 mt-1 whitespace-pre-line wrap-break-word max-h-48 overflow-y-auto scrollbar-thin w-full">{derivedShop.description}</p>}
-                <div className="flex items-start gap-2 text-gray-600 mt-3">
+                {derivedShop?.description && <p className="text-base font-bold text-gray-700 mt-1 whitespace-pre-line wrap-break-word max-h-48 overflow-y-auto scrollbar-thin w-full">{derivedShop.description}</p>}
+                <div className="flex items-start gap-2 text-gray-700 mt-3">
                   <MapPin className="h-4 w-4 text-red-500 mt-0.5" />
                   <span className="whitespace-pre-line wrap-break-word max-h-24 overflow-y-auto scrollbar-thin w-full">
                     {derivedShop?.address ||
@@ -464,8 +465,8 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
                   <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-sm">
                     <Phone className="h-4 w-4 text-green-600" />
                     <div>
-                      <p className="text-xs uppercase text-gray-400">{ct('โทรศัพท์', 'Phone')}</p>
-                      <p className="font-semibold text-gray-900">{ownerInfo.phone}</p>
+                      <p className="text-base font-bold uppercase text-gray-500">{ct('โทรศัพท์', 'Phone')}</p>
+                      <p className="text-base font-bold text-gray-900">{ownerInfo.phone}</p>
                     </div>
                   </div>
                 )}
@@ -473,8 +474,8 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
                   <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-sm">
                     <MessageCircle className="h-4 w-4 text-green-600" />
                     <div>
-                      <p className="text-xs uppercase text-gray-400">Line</p>
-                      <p className="font-semibold text-gray-900">{ownerInfo.line}</p>
+                      <p className="text-base font-bold uppercase text-gray-500">Line</p>
+                      <p className="text-base font-bold text-gray-900">{ownerInfo.line}</p>
                     </div>
                   </div>
                 )}
@@ -482,8 +483,8 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
                   <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-sm">
                     <Facebook className="h-4 w-4 text-blue-600" />
                     <div>
-                      <p className="text-xs uppercase text-gray-400">Facebook</p>
-                      <p className="font-semibold text-gray-900 break-all">{ownerInfo.facebook}</p>
+                      <p className="text-base font-bold uppercase text-gray-500">Facebook</p>
+                      <p className="text-base font-bold text-gray-900 break-all">{ownerInfo.facebook}</p>
                     </div>
                   </div>
                 )}
@@ -491,8 +492,8 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
                   <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-sm">
                     <Mail className="h-4 w-4 text-gray-600" />
                     <div>
-                      <p className="text-xs uppercase text-gray-400">Email</p>
-                      <p className="font-semibold text-gray-900 break-all">{ownerInfo.email}</p>
+                      <p className="text-base font-bold uppercase text-gray-500">Email</p>
+                      <p className="text-base font-bold text-gray-900 break-all">{ownerInfo.email}</p>
                     </div>
                   </div>
                 )}
@@ -504,9 +505,9 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
           <div className="rounded-2xl border border-gray-200 bg-white p-5">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-sm font-semibold text-gray-900">{ct('จำนวนที่นั่ง', 'Guests')}</p>
+                <p className="text-base font-bold text-gray-900">{ct('จำนวนที่นั่ง', 'Guests')}</p>
                 {/* FIX: Actually use availableSeats here */}
-                <p className="text-xs text-gray-500">{ct('สูงสุดเท่ากับ', 'Max')} {availableSeats} {ct('คน', 'people')}</p>
+                <p className="text-base font-bold text-gray-600">{ct('สูงสุดเท่ากับ', 'Max')} {availableSeats} {ct('คน', 'people')}</p>
               </div>
               <div className="flex items-center gap-3">
                 <button
@@ -531,7 +532,7 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
               </div>
             </div>
             <div className="text-right">
-              <p className="text-sm text-gray-500">{ct('ค่าใช้จ่ายทั้งหมด', 'Total')}</p>
+              <p className="text-lg font-bold text-gray-600">{ct('ค่าใช้จ่ายทั้งหมด', 'Total')}</p>
               <p className="text-2xl font-bold text-orange-600">
                 {workshop.price === 0 ? (t('workshops.free') || ct('ฟรี', 'Free')) : `฿${workshop.price * guestCount}`}
               </p>
@@ -539,13 +540,13 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
           </div>
 
           {isNonTouristAuthenticated && (
-            <div className="mb-4 p-3 bg-yellow-50 text-yellow-800 rounded-xl text-sm border border-yellow-100">
+            <div className="mb-4 p-3 bg-yellow-50 text-yellow-800 rounded-xl text-base font-bold border border-yellow-100">
               {ct('บัญชีประเภทนี้มีไว้เพื่อจัดการระบบ จึงไม่สามารถจองกิจกรรมได้ กรุณาใช้บัญชีนักท่องเที่ยวเพื่อทำการจอง', 'This account type is for management only. Please use a tourist account to book workshops.')}
             </div>
           )}
 
           {submitError && (
-            <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm text-center">
+            <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-base font-bold text-center">
               {submitError}
             </div>
           )}
@@ -558,7 +559,7 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
               isNonTouristAuthenticated ||
               isRegistrationClosed
             } 
-            className={`w-full font-semibold py-4 rounded-2xl transition-all shadow-lg hover:shadow-xl ${
+            className={`w-full text-lg font-bold py-4 rounded-2xl transition-all shadow-lg hover:shadow-xl ${
               isSubmitting || isSeatRequestInvalid || isNonTouristAuthenticated || isRegistrationClosed
                 ? 'bg-gray-400 cursor-not-allowed text-white' 
                 : 'bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white'
@@ -580,7 +581,7 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
             }
           </button>
           {(isRegistrationClosed || isSeatRequestInvalid) && (
-            <p className="mt-2 text-center text-xs text-red-600">
+            <p className="mt-2 text-center text-base font-bold text-red-600">
               {isRegistrationClosed
                 ? ct('เกินวันปิดรับสมัครแล้ว ไม่สามารถจองได้', 'Bookings are closed because the registration deadline has passed.')
                 : ct('มีที่นั่งไม่เพียงพอสำหรับจำนวนที่เลือก', 'Not enough seats are available for the selected guest count.')}
@@ -588,6 +589,7 @@ const WorkshopModal = ({ workshop, isOpen, onClose, onBookingSuccess }) => {
           )}
         </div>
       </div>
+    </div>
     </div>
   );
 };

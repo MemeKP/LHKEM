@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, X, CheckCircle, AlertCircle } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
@@ -38,11 +38,11 @@ const ForgotPassword = () => {
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-12 text-white">
-            <h1 className="text-4xl font-bold mb-4">
+            <h1 className="text-5xl font-bold mb-4">
               {t('auth.welcomeTitle')}<br />
               {t('auth.communityName')}
             </h1>
-            <p className="text-lg opacity-90">
+            <p className="text-xl font-bold opacity-90">
               {t('auth.welcomeDescription')}
             </p>
           </div>
@@ -54,18 +54,18 @@ const ForgotPassword = () => {
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <h2 className="text-3xl font-extrabold text-gray-900 mb-2">
               ตรวจสอบอีเมลของคุณ
             </h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-lg font-bold text-gray-800 mb-6">
               เราได้ส่งลิงก์สำหรับรีเซ็ตรหัสผ่านไปยัง <strong>{email}</strong> แล้ว
             </p>
-            <p className="text-sm text-gray-500 mb-6">
+            <p className="text-lg font-semibold text-gray-700 mb-6">
               หากคุณไม่เห็นอีเมล กรุณาตรวจสอบในโฟลเดอร์สแปม
             </p>
             <button
               onClick={() => navigate('/login')}
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg transition-colors"
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white text-lg font-bold py-3 rounded-lg transition-colors"
             >
               กลับไปหน้าเข้าสู่ระบบ
             </button>
@@ -85,18 +85,18 @@ const ForgotPassword = () => {
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-12 text-white">
-          <h1 className="text-4xl font-bold mb-4">
+          <h1 className="text-5xl font-bold mb-4">
             {t('auth.welcomeTitle')}<br />
             {t('auth.communityName')}
           </h1>
-          <p className="text-lg opacity-90">
+          <p className="text-xl font-bold opacity-90">
             {t('auth.welcomeDescription')}
           </p>
         </div>
       </div>
 
       {/* Right Side - Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-white relative">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 bg-white relative">
         <button
           onClick={() => navigate('/login')}
           className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
@@ -106,10 +106,10 @@ const ForgotPassword = () => {
 
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            <h2 className="text-4xl font-extrabold text-gray-900 mb-2">
               ลืมรหัสผ่าน?
             </h2>
-            <p className="text-gray-600">
+            <p className="text-lg font-bold text-gray-800">
               กรอกอีเมลของคุณ เราจะส่งลิงก์สำหรับรีเซ็ตรหัสผ่านให้คุณ
             </p>
           </div>
@@ -117,13 +117,13 @@ const ForgotPassword = () => {
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start space-x-3">
               <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-800">{error}</p>
+              <p className="text-lg font-bold text-red-900">{error}</p>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-lg font-bold text-gray-800 mb-2">
                 {t('auth.email')}
               </label>
               <input
@@ -131,7 +131,7 @@ const ForgotPassword = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your@email.com"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 required
               />
             </div>
@@ -139,14 +139,14 @@ const ForgotPassword = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white text-lg font-bold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'กำลังส่ง...' : 'ส่งลิงก์รีเซ็ตรหัสผ่าน'}
             </button>
 
-            <p className="text-center text-sm text-gray-600">
+            <p className="text-center text-lg font-bold text-gray-800">
               จำรหัสผ่านได้แล้ว?{' '}
-              <Link to="/login" className="text-orange-600 hover:text-orange-700 font-medium">
+              <Link to="/login" className="text-orange-600 hover:text-orange-700 border-b-2 border-transparent hover:border-orange-600">
                 {t('auth.loginButton')}
               </Link>
             </p>

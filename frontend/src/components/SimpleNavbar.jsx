@@ -117,11 +117,11 @@ const SimpleNavbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <div className="bg-gray-900 p-2 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-sm">LHK</span>
+              <span className="text-white font-bold text-sm">TCM</span>
             </div>
             <div className="flex flex-col">
-              <span className="font-semibold text-sm" style={{ color: '#111827' }}>LHKEM Platform</span>
-              <span className="text-xs" style={{ color: '#6b7280' }}>Loang Him Kao</span>
+              <span className="font-bold text-base" style={{ color: '#111827' }}>The Community Platform</span>
+              <span className="text-sm font-medium" style={{ color: '#4b5563' }}>The Community</span>
             </div>
           </Link>
 
@@ -144,7 +144,7 @@ const SimpleNavbar = () => {
               }}
             >
               <Globe className="h-4 w-4" />
-              <span className="text-sm font-medium">{language} / {language === 'TH' ? 'EN' : 'TH'}</span>
+              <span className="text-sm font-semibold">{language} / {language === 'TH' ? 'EN' : 'TH'}</span>
             </button>
 
             {/* User Menu */}
@@ -152,7 +152,7 @@ const SimpleNavbar = () => {
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center space-x-2 font-medium transition-colors px-4 py-2 rounded-full"
+                  className="flex items-center space-x-2 font-semibold transition-colors px-4 py-2 rounded-full"
                   style={{ color: '#374151' }}
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
@@ -164,9 +164,9 @@ const SimpleNavbar = () => {
                 {isUserMenuOpen && (
                   <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                     <div className="px-4 py-2 border-b border-gray-200">
-                      <p className="text-xs text-gray-500">{t('nav.signedInAs')}</p>
-                      <p className="text-sm font-semibold text-gray-900 truncate">{user?.email}</p>
-                      <p className="text-xs text-orange-600 mt-0.5">
+                      <p className="text-sm font-medium text-gray-600">{t('nav.signedInAs')}</p>
+                      <p className="text-base font-semibold text-gray-900 truncate">{user?.email}</p>
+                      <p className="text-sm text-orange-600 mt-0.5">
                         {user?.role === 'SHOP_OWNER' && t('nav.roleShop')}
                         {user?.role === 'COMMUNITY_ADMIN' && t('nav.roleCommunityAdmin')}
                         {user?.role === 'PLATFORM_ADMIN' && t('nav.rolePlatformAdmin')}
@@ -191,7 +191,7 @@ const SimpleNavbar = () => {
                         }}
                       >
                         <item.icon className="h-4 w-4" />
-                        <span className="font-medium">{item.label}</span>
+                        <span className="font-semibold">{item.label}</span>
                       </Link>
                     ))}
 

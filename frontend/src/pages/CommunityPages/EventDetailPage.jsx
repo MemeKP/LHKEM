@@ -142,13 +142,13 @@ const EventDetailPage = () => {
     }
   };
 
-  if (isLoading) return <div className="p-10 text-center animate-fadeIn">กำลังโหลดข้อมูล...</div>;
-  if (isError || !event) return <div className="p-10 text-center text-red-500">ไม่พบข้อมูลกิจกรรม</div>;
+  if (isLoading) return <div className="p-10 text-center text-lg font-bold animate-fadeIn">กำลังโหลดข้อมูล...</div>;
+  if (isError || !event) return <div className="p-10 text-center text-lg font-bold text-red-500">ไม่พบข้อมูลกิจกรรม</div>;
 
   const API_URL = import.meta.env.VITE_API_URL;
 
   const renderContactItem = (icon, label, value) => (
-    <div className="flex items-center gap-2 text-[#666666]" key={label}>
+    <div className="flex items-center gap-2 text-base font-bold text-[#666666]" key={label}>
       {icon}
       <span>{value}</span>
     </div>
@@ -178,7 +178,7 @@ const EventDetailPage = () => {
         {/* Back Button */}
         <button
           onClick={() => navigate('/community-admin/events')}
-          className="flex items-center gap-2 text-[#666666] hover:text-[#1A1A1A] mb-6 transition-colors"
+          className="flex items-center gap-2 text-lg font-bold text-[#666666] hover:text-[#1A1A1A] mb-6 transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
           กลับไปรายการ Event
@@ -189,39 +189,39 @@ const EventDetailPage = () => {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2 mb-3">
-                <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(event.status)}`}>
+                <span className={`px-4 py-1.5 text-sm font-bold rounded-full ${getStatusColor(event.status)}`}>
                   {getStatusText(event.status)}
                 </span>
                 {event.is_pinned && (
-                  <span className="px-3 py-1 bg-red-500 text-white text-xs font-semibold rounded-full">
+                  <span className="px-4 py-1.5 bg-red-500 text-white text-sm font-bold rounded-full">
                     ปักหมุด
                   </span>
                 )}
                 {event.is_featured && (
-                  <span className="px-3 py-1 bg-yellow-500 text-white text-xs font-semibold rounded-full">
+                  <span className="px-4 py-1.5 bg-yellow-500 text-white text-sm font-bold rounded-full">
                     แนะนำ
                   </span>
                 )}
               </div>
-              <h1 className="text-3xl lg:text-4xl font-bold text-[#1A1A1A] mb-2">{event.title}</h1>
+              <h1 className="text-4xl lg:text-5xl font-extrabold text-[#1A1A1A] mb-2">{event.title}</h1>
               {event.title_en && (
-                <p className="text-lg text-[#8C8C8C] mb-2">{event.title_en}</p>
+                <p className="text-xl font-bold text-[#8C8C8C] mb-2">{event.title_en}</p>
               )}
-              <div className="flex flex-wrap gap-3 text-sm text-[#444444]">
-                <div className="flex items-center gap-2 px-3 py-1 bg-white/70 rounded-full border border-orange-100">
+              <div className="flex flex-wrap gap-3 text-base font-bold text-[#444444]">
+                <div className="flex items-center gap-2 px-4 py-1.5 bg-white/70 rounded-full border border-orange-100">
                   <Calendar className="h-4 w-4 text-[#FFA000]" />
                   <span>{formattedDate}</span>
                 </div>
-                <div className="flex items-center gap-2 px-3 py-1 bg-white/70 rounded-full border border-orange-100">
+                <div className="flex items-center gap-2 px-4 py-1.5 bg-white/70 rounded-full border border-orange-100">
                   <Clock className="h-4 w-4 text-[#FFA000]" />
                   <span>{formattedTimeRange}</span>
                 </div>
-                <div className="flex items-center gap-2 px-3 py-1 bg-white/70 rounded-full border border-orange-100">
+                <div className="flex items-center gap-2 px-4 py-1.5 bg-white/70 rounded-full border border-orange-100">
                   <MapPin className="h-4 w-4 text-[#FFA000]" />
                   <span className="line-clamp-1">{locationDisplay}</span>
                 </div>
               </div>
-              <p className="text-[#666666] text-sm mt-3">
+              <p className="text-base font-bold text-[#666666] mt-3">
                 {event.created_by?.firstname
                   ? `สร้างโดย ${event.created_by.firstname} ${event.created_by.lastname}`
                   : 'สร้างโดยไม่ระบุ'}
@@ -231,7 +231,7 @@ const EventDetailPage = () => {
               <button
                 onClick={handleToggleStatus}
                 disabled={isToggling}
-                className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold border transition-colors ${event.status === 'OPEN'
+                className={`flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-lg font-bold border transition-colors ${event.status === 'OPEN'
                     ? 'bg-white text-[#1A1A1A] border-gray-200 hover:bg-gray-50'
                     : 'bg-[#1E293B] text-white border-[#1E293B] hover:bg-[#0F172A]'} ${isToggling ? 'opacity-60 cursor-not-allowed' : ''}`}
               >
@@ -240,7 +240,7 @@ const EventDetailPage = () => {
               </button>
               <button
                 onClick={() => navigate(`/community-admin/events/${id}/edit`)}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] font-semibold rounded-lg transition-colors"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-lg font-bold rounded-xl transition-colors"
               >
                 <Edit className="h-5 w-5" />
                 แก้ไข Event
@@ -250,8 +250,8 @@ const EventDetailPage = () => {
           <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
             {highlightItems.map((item) => (
               <div key={item.label} className="bg-white/80 rounded-xl border border-white/60 px-4 py-3">
-                <p className="text-xs uppercase tracking-wide text-[#A07B4F] font-semibold">{item.label}</p>
-                <p className="text-sm text-[#1A1A1A] font-medium mt-1 line-clamp-2">{item.value}</p>
+                <p className="text-sm uppercase tracking-wide text-[#A07B4F] font-bold">{item.label}</p>
+                <p className="text-base text-[#1A1A1A] font-bold mt-1 line-clamp-2">{item.value}</p>
               </div>
             ))}
           </div>
@@ -276,27 +276,27 @@ const EventDetailPage = () => {
                   </div>
                 )}
                 <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/60 to-transparent text-white">
-                  <p className="text-sm font-semibold uppercase tracking-wide mb-1">สถานที่</p>
-                  <p className="text-lg font-medium leading-snug">{locationDisplay}</p>
+                  <p className="text-base font-bold uppercase tracking-wide mb-1">สถานที่</p>
+                  <p className="text-xl font-bold leading-snug">{locationDisplay}</p>
                 </div>
               </div>
             </div>
 
             {/* Description */}
             <div className="bg-white rounded-2xl shadow-sm p-6 lg:p-7 transition-all duration-300 hover:shadow-lg">
-              <h2 className="text-xl font-semibold text-[#1A1A1A] mb-4 flex items-center gap-2">
+              <h2 className="text-2xl font-bold text-[#1A1A1A] mb-4 flex items-center gap-2">
                 <Info className="h-5 w-5 text-[#FFC107]" />
                 รายละเอียด
               </h2>
               <div className="space-y-4">
                 <div>
-                  <p className="text-sm font-semibold text-[#555555] mb-1">ภาษาไทย</p>
-                  <p className="text-[#666666] leading-relaxed scrollbar-thin whitespace-pre-line wrap-break-word max-h-52 overflow-y-auto scrollbar-thin pr-1">{event.description}</p>
+                  <p className="text-base font-bold text-[#555555] mb-1">ภาษาไทย</p>
+                  <p className="text-base font-bold text-[#666666] leading-relaxed scrollbar-thin whitespace-pre-line wrap-break-word max-h-52 overflow-y-auto pr-1">{event.description}</p>
                 </div>
                 {event.description_en && (
                   <div className="pt-4 border-t border-gray-100">
-                    <p className="text-sm font-semibold text-[#555555] mb-1">English</p>
-                    <p className="text-[#666666] leading-relaxed scrollbar-thin whitespace-pre-line wrap-break-word max-h-52 overflow-y-auto scrollbar-thin pr-1">{event.description_en}</p>
+                    <p className="text-base font-bold text-[#555555] mb-1">English</p>
+                    <p className="text-base font-bold text-[#666666] leading-relaxed scrollbar-thin whitespace-pre-line wrap-break-word max-h-52 overflow-y-auto pr-1">{event.description_en}</p>
                   </div>
                 )}
               </div>
@@ -305,22 +305,22 @@ const EventDetailPage = () => {
             {/* Additional Information Sections */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-white rounded-2xl shadow-sm p-6 transition-all duration-300 hover:shadow-lg">
-                <h2 className="text-xl font-semibold text-[#1A1A1A] mb-4 flex items-center gap-2">
+                <h2 className="text-2xl font-bold text-[#1A1A1A] mb-4 flex items-center gap-2">
                   <Target className="h-5 w-5 text-[#FFC107]" />
                   ประเภท & กลุ่มเป้าหมาย
                 </h2>
-                <div className="space-y-3 text-sm text-[#555555]">
+                <div className="space-y-3 text-base font-bold text-[#555555]">
                   <div>
-                    <p className="font-semibold text-[#1A1A1A] mb-1">ประเภทกิจกรรม</p>
-                    <p className="text-[#666666]">{event.event_type || 'ไม่ระบุ'}</p>
+                    <p className="font-bold text-[#1A1A1A] mb-1">ประเภทกิจกรรม</p>
+                    <p className="font-bold text-[#666666]">{event.event_type || 'ไม่ระบุ'}</p>
                   </div>
                   <div>
-                    <p className="font-semibold text-[#1A1A1A] mb-1">กลุ่มเป้าหมาย</p>
-                    <p className="text-[#666666]">{event.target_audience || 'ไม่ระบุ'}</p>
+                    <p className="font-bold text-[#1A1A1A] mb-1">กลุ่มเป้าหมาย</p>
+                    <p className="font-bold text-[#666666]">{event.target_audience || 'ไม่ระบุ'}</p>
                   </div>
                   {event.workshops?.length > 0 && (
                     <div>
-                      <p className="font-semibold text-[#1A1A1A] mb-1">เชื่อมกับ Workshop</p>
+                      <p className="font-bold text-[#1A1A1A] mb-1">เชื่อมกับ Workshop</p>
                       <ul className="list-disc list-inside text-[#666666]">
                         {event.workshops.map((w) => (
                           <li key={w}>{w}</li>
@@ -331,39 +331,39 @@ const EventDetailPage = () => {
                 </div>
               </div>
               <div className="bg-white rounded-2xl shadow-sm p-6 transition-all duration-300 hover:shadow-lg">
-                <h2 className="text-xl font-semibold text-[#1A1A1A] mb-4 flex items-center gap-2">
+                <h2 className="text-2xl font-bold text-[#1A1A1A] mb-4 flex items-center gap-2">
                   <Globe className="h-5 w-5 text-[#FFC107]" />
                   ข้อมูลเพิ่มเติม
                 </h2>
-                <div className="space-y-3 text-sm text-[#555555]">
+                <div className="space-y-3 text-base font-bold text-[#555555]">
                   {/* Quick Meta Chips */}
                   <div className="flex flex-wrap gap-2 mb-4">
                     {event.event_type && (
-                      <div className="bg-[#FFF2CC] rounded-full px-3 py-1 text-xs font-semibold text-[#A06A00]">
+                      <div className="bg-[#FFF2CC] rounded-full px-4 py-1.5 text-sm font-bold text-[#A06A00]">
                         {event.event_type}
                       </div>
                     )}
                     {event.target_audience && (
-                      <div className="bg-[#FFE7D4] rounded-full px-3 py-1 text-xs font-semibold text-[#A04D00]">
+                      <div className="bg-[#FFE7D4] rounded-full px-4 py-1.5 text-sm font-bold text-[#A04D00]">
                         {event.target_audience}
                       </div>
                     )}
                     {event.cost_type === 'paid' && (
-                      <div className="bg-[#FFC107] rounded-full px-3 py-1 text-xs font-semibold text-[#1A1A1A]">
+                      <div className="bg-[#FFC107] rounded-full px-4 py-1.5 text-sm font-bold text-[#1A1A1A]">
                         มีค่าใช้จ่าย
                       </div>
                     )}
                   </div>
                   {event.description_en && (
                     <div>
-                      <p className="font-semibold text-[#1A1A1A] mb-1">คำอธิบายภาษาอังกฤษ</p>
-                      <p className="text-[#666666] whitespace-pre-line wrap-break-word max-h-36 overflow-y-auto scrollbar-thin pr-1">{event.description_en}</p>
+                      <p className="font-bold text-[#1A1A1A] mb-1">คำอธิบายภาษาอังกฤษ</p>
+                      <p className="font-bold text-[#666666] whitespace-pre-line wrap-break-word max-h-36 overflow-y-auto scrollbar-thin pr-1">{event.description_en}</p>
                     </div>
                   )}
                   {event.additional_info && (
                     <div>
-                      <p className="font-semibold text-[#1A1A1A] mb-1">ข้อมูลเพิ่มเติม</p>
-                      <p className="text-[#666666] whitespace-pre-line wrap-break-word max-h-36 overflow-y-auto scrollbar-thin pr-1">{event.additional_info}</p>
+                      <p className="font-bold text-[#1A1A1A] mb-1">ข้อมูลเพิ่มเติม</p>
+                      <p className="font-bold text-[#666666] whitespace-pre-line wrap-break-word max-h-36 overflow-y-auto scrollbar-thin pr-1">{event.additional_info}</p>
                     </div>
                   )}
                 </div>
@@ -372,19 +372,19 @@ const EventDetailPage = () => {
 
             {/* Contact Information */}
             <div className="bg-white rounded-2xl shadow-sm p-6 transition-all duration-300 hover:shadow-lg animate-fadeIn">
-              <h2 className="text-xl font-semibold text-[#1A1A1A] mb-4">ข้อมูลติดต่อ</h2>
+              <h2 className="text-2xl font-bold text-[#1A1A1A] mb-4">ข้อมูลติดต่อ</h2>
               <div className="space-y-3">
                 {event.contact?.phone && renderContactItem(<Phone className="h-4 w-4 text-[#999999]" />, 'phone', event.contact.phone)}
                 {event.contact?.line && renderContactItem(<MessageCircle className="h-4 w-4 text-[#999999]" />, 'line', `Line: ${event.contact.line}`)}
                 {event.contact?.facebook && renderContactItem(<Facebook className="h-4 w-4 text-[#999999]" />, 'facebook', `Facebook: ${event.contact.facebook}`)}
                 {event.contact?.coordinator_name && (
                   <div>
-                    <p className="text-sm font-semibold text-[#1A1A1A] mb-1">ผู้ประสานงาน</p>
-                    <p className="text-[#666666]">{event.contact.coordinator_name}</p>
+                    <p className="text-base font-bold text-[#1A1A1A] mb-1">ผู้ประสานงาน</p>
+                    <p className="text-base font-bold text-[#666666]">{event.contact.coordinator_name}</p>
                   </div>
                 )}
                 {!event.contact?.phone && !event.contact?.line && !event.contact?.facebook && !event.contact?.coordinator_name && (
-                  <p className="text-[#999999] text-sm">ไม่มีข้อมูลติดต่อ</p>
+                  <p className="text-[#999999] text-base font-bold">ไม่มีข้อมูลติดต่อ</p>
                 )}
               </div>
             </div>
@@ -394,32 +394,32 @@ const EventDetailPage = () => {
           <div className="space-y-6">
             {/* Timeline */}
             <div className="bg-white rounded-2xl shadow-sm p-6 transition-all duration-300 hover:shadow-lg">
-              <h3 className="text-lg font-semibold text-[#1A1A1A] mb-4 flex items-center gap-2">
+              <h3 className="text-xl font-bold text-[#1A1A1A] mb-4 flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-[#FFC107]" />
                 วันและเวลา
               </h3>
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#FFF2CC] flex items-center justify-center text-[#A06A00] font-semibold">เริ่ม</div>
+                  <div className="w-10 h-10 rounded-full bg-[#FFF2CC] flex items-center justify-center text-[#A06A00] font-bold">เริ่ม</div>
                   <div>
-                    <p className="text-sm text-[#666666]">{formattedDate}</p>
-                    <p className="text-base font-semibold text-[#1A1A1A]">{startAt.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</p>
+                    <p className="text-base font-bold text-[#666666]">{formattedDate}</p>
+                    <p className="text-lg font-bold text-[#1A1A1A]">{startAt.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#FFE7D4] flex items-center justify-center text-[#A04D00] font-semibold">จบ</div>
+                  <div className="w-10 h-10 rounded-full bg-[#FFE7D4] flex items-center justify-center text-[#A04D00] font-bold">จบ</div>
                   <div>
-                    <p className="text-sm text-[#666666]">{endAt.toLocaleDateString('th-TH', {
+                    <p className="text-base font-bold text-[#666666]">{endAt.toLocaleDateString('th-TH', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric',
                       weekday: 'long'
                     })}</p>
-                    <p className="text-base font-semibold text-[#1A1A1A]">{endAt.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</p>
+                    <p className="text-lg font-bold text-[#1A1A1A]">{endAt.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</p>
                   </div>
                 </div>
-                <div className="bg-[#FFF7ED] rounded-xl p-4 text-sm text-[#8C4A00]">
-                  <p className="font-semibold mb-1">ช่วงเวลารวม</p>
+                <div className="bg-[#FFF7ED] rounded-xl p-4 text-base font-bold text-[#8C4A00]">
+                  <p className="font-bold mb-1">ช่วงเวลารวม</p>
                   <p>{formattedTimeRange}</p>
                 </div>
               </div>
@@ -427,18 +427,18 @@ const EventDetailPage = () => {
 
             {/* Location */}
             <div className="bg-white rounded-2xl shadow-sm p-6 transition-all duration-300 hover:shadow-lg">
-              <h3 className="text-lg font-semibold text-[#1A1A1A] mb-4 flex items-center gap-2">
+              <h3 className="text-xl font-bold text-[#1A1A1A] mb-4 flex items-center gap-2">
                 <MapPin className="h-5 w-5 text-[#FFC107]" />
                 สถานที่
               </h3>
-              <p className="text-[#666666] leading-relaxed max-h-28 overflow-y-auto scrollbar-thin wrap-break-word">{locationDisplay}</p>
+              <p className="text-base font-bold text-[#666666] leading-relaxed max-h-28 overflow-y-auto scrollbar-thin wrap-break-word">{locationDisplay}</p>
             </div>
 
             {/* Metadata */}
-            <div className="bg-[#F5F5F5] rounded-2xl p-5 text-sm text-[#666666] transition-all duration-300 hover:shadow-inner">
+            <div className="bg-[#F5F5F5] rounded-2xl p-5 text-base font-bold text-[#666666] transition-all duration-300 hover:shadow-inner">
               <div className="space-y-2">
                 <div>
-                  <span className="font-medium">สร้างเมื่อ:</span>{' '}
+                  <span className="font-bold">สร้างเมื่อ:</span>{' '}
                   {event.createdAt
                     ? new Date(event.createdAt).toLocaleDateString('th-TH', {
                       year: 'numeric', month: 'long', day: 'numeric',
@@ -447,7 +447,7 @@ const EventDetailPage = () => {
                     : '-'}
                 </div>
                 <div>
-                  <span className="font-medium">แก้ไขล่าสุด:</span>{' '}
+                  <span className="font-bold">แก้ไขล่าสุด:</span>{' '}
                   {event.updatedAt
                     ? new Date(event.updatedAt).toLocaleDateString('th-TH', {
                       year: 'numeric', month: 'long', day: 'numeric',
@@ -456,7 +456,7 @@ const EventDetailPage = () => {
                     : '-'}
                 </div>
                 <div>
-                  <span className="font-medium">สร้างโดย:</span>{' '}
+                  <span className="font-bold">สร้างโดย:</span>{' '}
                   {event.created_by?.firstname
                     ? `${event.created_by.firstname} ${event.created_by.lastname}`
                     : 'ไม่ระบุ'}

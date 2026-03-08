@@ -101,7 +101,7 @@ const Login = () => {
         
         navigate(redirectPath, { replace: true });
       } else {
-        showErrorAlert(result.message || t('auth.loginErrorMessage') || 'กรุณาตรวจสอบอีเมลหรือรหัสผ่านอีกครั้ง');
+        showErrorAlert(t('auth.loginErrorMessage') || result.message || 'กรุณาตรวจสอบอีเมลหรือรหัสผ่านอีกครั้ง');
       }
     } catch (error) {
       const message = extractErrorMessage(t('auth.loginErrorMessage') || 'ไม่สามารถเข้าสู่ระบบได้', error);
@@ -128,18 +128,18 @@ const Login = () => {
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-12 text-white">
-          <h1 className="text-4xl font-bold mb-4">
+          <h1 className="text-5xl font-bold mb-4">
             {t('auth.welcomeTitle')}<br />
             {t('auth.communityName')}
           </h1>
-          <p className="text-lg opacity-90">
+          <p className="text-xl font-bold opacity-90">
             {t('auth.welcomeDescription')}
           </p>
         </div>
       </div>
 
       {/* Right Side - Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-white relative">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 bg-white relative">
         <button
           onClick={() => navigate('/')}
           className="absolute top-6 right-6 text-gray-400 hover:text-gray-600 transition-colors"
@@ -148,14 +148,14 @@ const Login = () => {
         </button>
 
         <div className="w-full max-w-md animate-slideUp">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('auth.loginTitle')}</h2>
-          <p className="text-gray-600 mb-8">
+          <h2 className="text-4xl font-extrabold text-gray-900 mb-2">{t('auth.loginTitle')}</h2>
+          <p className="text-lg font-bold text-gray-800 mb-8">
             {t('auth.loginDescription')}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-lg font-bold text-gray-800 mb-2">
                 {t('auth.email')}
               </label>
               <input
@@ -164,14 +164,14 @@ const Login = () => {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="tourist@test.com"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 required
                 disabled={loading}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-lg font-bold text-gray-800 mb-2">
                 {t('auth.password')}
               </label>
               <input
@@ -180,7 +180,7 @@ const Login = () => {
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="test123"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 required
                 disabled={loading}
               />
@@ -189,7 +189,7 @@ const Login = () => {
             <div className="flex justify-end">
               <Link
                 to="/forgot-password"
-                className="text-sm text-orange-600 hover:text-orange-700 font-medium"
+                className="text-lg text-orange-600 hover:text-orange-700 font-bold"
               >
                 {t('auth.forgotPassword')}
               </Link>
@@ -198,14 +198,14 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg py-3 rounded-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {loading ? t('common.loading') : t('auth.loginButton')}
             </button>
 
-            <p className="text-center text-sm text-gray-600">
+            <p className="text-center text-lg font-bold text-gray-800">
               {t('auth.noAccount')}{' '}
-              <Link to="/register" className="text-orange-600 hover:text-orange-700 font-medium">
+              <Link to="/register" className="text-orange-600 hover:text-orange-700 border-b-2 border-transparent hover:border-orange-600">
                 {t('auth.registerButton')}
               </Link>
             </p>

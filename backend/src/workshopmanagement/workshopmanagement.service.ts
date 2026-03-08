@@ -300,7 +300,8 @@ export class WorkshopManagementService {
       throw new NotFoundException(`Workshop with ID ${id} not found`);
     }
 
-    const shouldAutoApprove = await this.shouldAutoApprove(existingWorkshop.communityId || (existingWorkshop as any).community_id);
+    const commId = updateData.communityId || existingWorkshop.get('communityId') || existingWorkshop.get('community_id') || (existingWorkshop as any).communityId;
+    const shouldAutoApprove = await this.shouldAutoApprove(commId);
 
     // 1. Check if the incoming update already contains a status change
     // If it doesn't have an approvalStatus, it's a general edit, so we force PENDING.

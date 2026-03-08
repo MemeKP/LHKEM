@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useOutletContext } from 'react-router-dom';
 import { ArrowLeft, MapPin, Image as ImageIcon, Plus, X } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -318,7 +318,7 @@ const AdminCommunitySettings = () => {
     return <CommunityAssignmentNotice />;
   }
 
-  if (isLoading) return <div className="flex items-center justify-center min-h-screen bg-[#F5EFE7]">{ct('กำลังโหลดข้อมูล...', 'Loading data...')}</div>;
+  if (isLoading) return <div className="flex items-center justify-center min-h-screen bg-[#F5EFE7] text-lg font-bold text-gray-700">{ct('กำลังโหลดข้อมูล...', 'Loading data...')}</div>;
 
   return (
     <div className="min-h-screen bg-[#F5EFE7] animate-fadeIn py-8">
@@ -329,15 +329,15 @@ const AdminCommunitySettings = () => {
           className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
-          <span className="font-medium">{ct('กลับไปแดชบอร์ด', 'Back to Dashboard')}</span>
+          <span className="text-lg font-bold">{ct('กลับไปแดชบอร์ด', 'Back to Dashboard')}</span>
         </button>
 
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-2">
             {ct('แก้ไขรายละเอียดชุมชน', 'Edit Community Details')}
           </h1>
-          <p className="text-gray-600">
+          <p className="text-lg font-bold text-gray-700">
             {ct('อัพเดทข้อมูลชุมชนและผู้ดูแลของคุณได้ที่นี่', 'Update your community information and admins here')}
           </p>
         </div>
@@ -345,7 +345,7 @@ const AdminCommunitySettings = () => {
         <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm p-8 space-y-6">
           {/* Community Name */}
           <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
+            <label className="block text-lg font-bold text-gray-900 mb-2">
               {ct('ชื่อชุมชน', 'Community Name')} <span className="text-red-500">*</span>
             </label>
             <input
@@ -354,14 +354,14 @@ const AdminCommunitySettings = () => {
               value={formData.name}
               onChange={handleInputChange}
               placeholder={ct('เช่น โหล่งฮิมคาว', 'e.g., Loeng Him Kaw')}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-lg font-bold"
               required
             />
           </div>
 
           {/* Community Name (English) */}
           <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
+            <label className="block text-lg font-bold text-gray-900 mb-2">
               {ct('ชื่อชุมชนภาษาอังกฤษ', 'Community Name (English)')} <span className="text-red-500">*</span>
             </label>
             <input
@@ -370,14 +370,14 @@ const AdminCommunitySettings = () => {
               value={formData.name_en}
               onChange={handleInputChange}
               placeholder="Loeng Him Kaw"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-lg font-bold"
               required
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
+            <label className="block text-lg font-bold text-gray-900 mb-2">
               {ct('ประวัติ / เรื่องราว', 'History / Story')}
             </label>
             <textarea
@@ -386,27 +386,27 @@ const AdminCommunitySettings = () => {
               onChange={handleInputChange}
               placeholder={ct('เล่าเรื่องราวและเอกลักษณ์ของชุมชนของคุณ...', 'Tell the story and identity of your community...')}
               rows={5}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all resize-none"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all resize-none text-lg font-bold"
             />
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-base font-bold text-gray-500 mt-2">
               {ct('บอกเล่าเรื่องราวและเอกลักษณ์ของชุมชน', 'Share the story and unique identity of your community')}
             </p>
           </div>
 
           {/* Location */}
           <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
+            <label className="block text-lg font-bold text-gray-900 mb-2">
               {ct('ที่ตั้ง', 'Location')} <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <MapPin className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+              <MapPin className="absolute left-3 top-3.5 h-6 w-6 text-gray-400" />
               <input
                 type="text"
                 name="location.full_address"
                 value={formData.location.full_address}
                 onChange={handleInputChange}
                 placeholder={ct('เช่น เชียงใหม่, ประเทศไทย', 'e.g., Chiang Mai, Thailand')}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-lg font-bold"
                 required
               />
             </div>
@@ -414,7 +414,7 @@ const AdminCommunitySettings = () => {
 
           {/* Community Map Upload */}
           <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
+            <label className="block text-lg font-bold text-gray-900 mb-2">
               {ct('รูปแผนที่ชุมชน (Interactive Map)', 'Community Map Image')}
             </label>
             <div className="border-2 border-dashed border-orange-300 rounded-lg p-6 text-center bg-orange-50">
@@ -453,10 +453,10 @@ const AdminCommunitySettings = () => {
               ) : (
                 <label className="cursor-pointer">
                   <MapPin className="h-12 w-12 text-orange-500 mx-auto mb-3" />
-                  <p className="text-sm font-medium text-gray-900 mb-1">
+                  <p className="text-base font-bold text-gray-900 mb-1">
                     {ct('อัปโหลดรูปแผนที่ชุมชน', 'Upload Community Map')}
                   </p>
-                  <p className="text-xs text-gray-600">
+                  <p className="text-base font-bold text-gray-600">
                     {ct('คลิกเพื่อเลือกไฟล์รูปภาพ (PNG, JPG)', 'Click to select image file (PNG, JPG)')}
                   </p>
                   <input
@@ -468,14 +468,14 @@ const AdminCommunitySettings = () => {
                 </label>
               )}
             </div>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-base font-bold text-gray-500 mt-2">
               {ct('รูปแผนที่นี้จะใช้สำหรับปักหมุดร้านค้าและสถานที่ต่างๆ ในชุมชน', 'This map will be used for pinning shops and locations in the community')}
             </p>
           </div>
 
           {/* Additional Details */}
           <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
+            <label className="block text-lg font-bold text-gray-900 mb-2">
               {ct('คำอธิบาย', 'Description')}
             </label>
             <textarea
@@ -484,16 +484,16 @@ const AdminCommunitySettings = () => {
               onChange={handleInputChange}
               placeholder={ct('ทิศทาง เช่น เดินทางโดยรถยนต์หรือรถโดยสารจากเชียงใหม่...', 'Directions, e.g., Travel by car or bus from Chiang Mai...')}
               rows={4}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all resize-none"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all resize-none text-lg font-bold"
             />
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-base font-bold text-gray-500 mt-2">
               {ct('บอกเล่า ทิศทาง + ข้อมูลเพิ่มเติม', 'Share directions and additional information')}
             </p>
           </div>
 
           {/* Contact Email */}
           <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
+            <label className="block text-lg font-bold text-gray-900 mb-2">
               {ct('ข้อมูลติดต่อ', 'Contact Information')}
             </label>
             <input
@@ -502,13 +502,13 @@ const AdminCommunitySettings = () => {
               value={formData.contact_info.email}
               onChange={handleInputChange}
               placeholder="loenghimkaw@community.com"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-lg font-bold"
             />
           </div>
 
           {/* Cover Image */}
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
+            <label className="block text-lg font-bold text-gray-900 mb-2">
               {ct('รูปภาพหน้าปก', 'Cover Image')}
             </label>
             {(existingImage || imagePreview) ? (
@@ -529,14 +529,14 @@ const AdminCommunitySettings = () => {
                 <div className="absolute bottom-4 right-4 flex space-x-2">
                   <label
                     htmlFor="cover-image-edit"
-                    className="px-4 py-2 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                    className="px-6 py-2 bg-white border border-gray-300 text-gray-700 text-base font-bold rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
                   >
                     {ct('เปลี่ยนรูป', 'Change Image')}
                   </label>
                   <button
                     type="button"
                     onClick={handleRemoveImage}
-                    className="px-4 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors"
+                    className="px-6 py-2 bg-red-500 text-white text-base font-bold rounded-lg hover:bg-red-600 transition-colors"
                   >
                     {ct('ลบ', 'Delete')}
                   </button>
@@ -552,10 +552,10 @@ const AdminCommunitySettings = () => {
             ) : (
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-orange-500 transition-colors">
                 <ImageIcon className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-sm font-medium text-gray-900 mb-1">
+                <p className="text-base font-bold text-gray-900 mb-1">
                   {ct('คลิกเพื่ออัปโหลดรูปภาพหรือลากไฟล์มาวาง', 'Click to upload or drag and drop')}
                 </p>
-                <p className="text-xs text-gray-600">
+                <p className="text-base font-bold text-gray-600">
                   PNG, JPG or JPEG (MAX. 5MB)
                 </p>
                 <input
@@ -567,20 +567,20 @@ const AdminCommunitySettings = () => {
                 />
                 <label
                   htmlFor="cover-image-new"
-                  className="inline-block mt-4 px-4 py-2 bg-orange-500 text-white rounded-lg cursor-pointer hover:bg-orange-600 transition-colors"
+                  className="inline-block mt-4 px-6 py-2 bg-orange-500 text-white text-lg font-bold rounded-lg cursor-pointer hover:bg-orange-600 transition-colors"
                 >
                   {ct('เลือกไฟล์', 'Choose File')}
                 </label>
               </div>
             )}
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-base font-bold text-gray-500 mt-2">
               {ct('กำลังแสดงรูปปัจจุบัน', 'Currently showing existing image')}
             </p>
           </div>
 
           {/* Community Atmosphere Images */}
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
+            <label className="block text-lg font-bold text-gray-900 mb-2">
               {ct('รูปภาพบรรยากาศในชุมชน', 'Community Atmosphere Images')}
             </label>
             <CommunityImageUploader
@@ -591,7 +591,7 @@ const AdminCommunitySettings = () => {
 
           {/* Community Admins */}
           <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
+            <label className="block text-lg font-bold text-gray-900 mb-2">
               {ct('ผู้ดูแลชุมชน', 'Community Admins')}
             </label>
 
@@ -601,13 +601,13 @@ const AdminCommunitySettings = () => {
                   <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center">
-                        <span className="text-white font-semibold text-sm">
+                        <span className="text-white font-bold text-base">
                           {email.charAt(0).toUpperCase()}
                         </span>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{email}</p>
-                        <p className="text-xs text-gray-500">{ct('ผู้ดูแล', 'Admin')}</p>
+                        <p className="text-base font-bold text-gray-900">{email}</p>
+                        <p className="text-base font-bold text-gray-500">{ct('ผู้ดูแล', 'Admin')}</p>
                       </div>
                     </div>
                     <button
@@ -629,12 +629,12 @@ const AdminCommunitySettings = () => {
                 value={formData.admin_email}
                 onChange={handleInputChange}
                 placeholder="admin@example.com"
-                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all text-lg font-bold"
               />
               <button
                 type="button"
                 onClick={handleAddAdmin}
-                className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2.5 rounded-lg transition-colors"
+                className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white text-lg font-bold px-4 py-3 rounded-lg transition-colors"
               >
                 <Plus className="h-4 w-4" />
                 <span>{ct('เพิ่ม', 'Add')}</span>
@@ -647,13 +647,13 @@ const AdminCommunitySettings = () => {
             <button
               type="button"
               onClick={() => navigate('/community-admin/dashboard')}
-              className="px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-8 py-3.5 border border-gray-300 text-gray-700 text-lg font-bold rounded-lg hover:bg-gray-50 transition-colors"
             >
               {ct('ยกเลิก', 'Cancel')}
             </button>
             <button
               type="submit"
-              className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition-colors"
+              className="px-8 py-3.5 bg-orange-500 hover:bg-orange-600 text-white text-lg font-bold rounded-lg transition-colors"
             >
               {ct('บันทึกการเปลี่ยนแปลงและอัพเดท', 'Save Changes and Update')}
             </button>

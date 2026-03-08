@@ -312,14 +312,14 @@ const EventEditForm = () => {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-6 text-center animate-fadeIn">
-          <h1 className="text-2xl font-bold text-[#1A1A1A] mb-1">{ct('แก้ไขกิจกรรมของชุมชน', 'Edit Community Event')}</h1>
-          <p className="text-[#666666] text-sm">{ct('แก้ไขข้อมูลกิจกรรมพิเศษหรือเทศกาลของชุมชน', 'Edit information for special events or community festivals')}</p>
+          <h1 className="text-3xl font-bold text-[#1A1A1A] mb-2">{ct('แก้ไขกิจกรรมของชุมชน', 'Edit Community Event')}</h1>
+          <p className="text-base font-bold text-[#666666]">{ct('แก้ไขข้อมูลกิจกรรมพิเศษหรือเทศกาลของชุมชน', 'Edit information for special events or community festivals')}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
           {/* 1. ชื่องาน/กิจกรรม */}
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
+            <label className="block text-base font-bold text-[#1A1A1A] mb-2">
               ชื่องาน / กิจกรรม <span className="text-red-500">*</span>
             </label>
             <input
@@ -328,14 +328,14 @@ const EventEditForm = () => {
               value={formData.title}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A]"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A] text-lg font-bold"
               placeholder="ระบุชื่องาน / กิจกรรม"
             />
-            <p className="text-xs text-[#888888] mt-1">ภาษาไทย</p>
+            <p className="text-sm font-bold text-[#888888] mt-1">ภาษาไทย</p>
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
+            <label className="block text-base font-bold text-[#1A1A1A] mb-2">
               ชื่อภาษาอังกฤษ <span className="text-red-500">*</span>
             </label>
             <input
@@ -344,15 +344,15 @@ const EventEditForm = () => {
               value={formData.titleEn}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A]"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A] text-lg font-bold"
               placeholder="Enter event name in English"
             />
-            <p className="text-xs text-[#888888] mt-1">Event name (English)</p>
+            <p className="text-sm font-bold text-[#888888] mt-1">Event name (English)</p>
           </div>
 
           {/* 2. รูปภาพปกกิจกรรม */}
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
+            <label className="block text-base font-bold text-[#1A1A1A] mb-2">
               รูปภาพปกกิจกรรม
             </label>
             <div className="border-2 border-dashed border-[#E0E0E0] rounded-lg p-8 text-center bg-[#FAFAFA]">
@@ -372,9 +372,9 @@ const EventEditForm = () => {
                   <div className="w-12 h-12 bg-[#FFF3E0] rounded-lg flex items-center justify-center mx-auto mb-3">
                     <ImageIcon className="h-6 w-6 text-[#F57C00]" />
                   </div>
-                  <p className="text-sm text-[#666666] mb-1">อัพโหลดรูปภาพ</p>
-                  <p className="text-xs text-[#999999] mb-4">JPG, PNG ขนาดไม่เกิน 5MB</p>
-                  <label className="inline-block px-5 py-2 bg-white border border-gray-300 text-[#666666] text-sm font-medium rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                  <p className="text-base font-bold text-[#666666] mb-1">อัพโหลดรูปภาพ</p>
+                  <p className="text-sm font-bold text-[#999999] mb-4">JPG, PNG ขนาดไม่เกิน 5MB</p>
+                  <label className="inline-block px-6 py-2 bg-white border border-gray-300 text-[#666666] text-base font-bold rounded-lg cursor-pointer hover:bg-gray-50 transition">
                     เลือกไฟล์
                     <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                   </label>
@@ -385,7 +385,7 @@ const EventEditForm = () => {
 
           {/* 3. เล่าเกี่ยวกับกิจกรรม */}
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
+            <label className="block text-base font-bold text-[#1A1A1A] mb-2">
               เล่าเกี่ยวกับกิจกรรม ว่าทำอะไรบ้าง <span className="text-red-500">*</span>
             </label>
             <textarea
@@ -394,14 +394,14 @@ const EventEditForm = () => {
               onChange={handleChange}
               required
               rows={4}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A] resize-none"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A] text-base font-bold resize-none"
               placeholder="อธิบายรายละเอียดกิจกรรม..."
             />
-            <p className="text-xs text-[#888888] mt-1">ภาษาไทย</p>
+            <p className="text-sm font-bold text-[#888888] mt-1">ภาษาไทย</p>
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
+            <label className="block text-base font-bold text-[#1A1A1A] mb-2">
               คำอธิบายภาษาอังกฤษ <span className="text-red-500">*</span>
             </label>
             <textarea
@@ -410,21 +410,21 @@ const EventEditForm = () => {
               onChange={handleChange}
               required
               rows={4}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A] resize-none"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A] text-base font-bold resize-none"
               placeholder="Describe the event in English..."
             />
-            <p className="text-xs text-[#888888] mt-1">Description (English)</p>
+            <p className="text-sm font-bold text-[#888888] mt-1">Description (English)</p>
           </div>
 
           {/* 4. วันและเวลา */}
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-[#1A1A1A] mb-3">
+            <label className="block text-base font-bold text-[#1A1A1A] mb-3">
               วันและเวลา <span className="text-red-500">*</span>
             </label>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-[#666666] mb-1.5">
+                  <label className="block text-sm font-bold text-[#666666] mb-1.5">
                     วันที่จัดกิจกรรม
                   </label>
                   <input
@@ -433,11 +433,11 @@ const EventEditForm = () => {
                     value={formData.event_date}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A]"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A] text-base font-bold"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[#666666] mb-1.5">
+                  <label className="block text-sm font-bold text-[#666666] mb-1.5">
                     วันที่สิ้นสุดกิจกรรม
                   </label>
                   <input
@@ -446,13 +446,13 @@ const EventEditForm = () => {
                     value={formData.end_date}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A]"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A] text-base font-bold"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-[#666666] mb-1.5">
+                  <label className="block text-sm font-bold text-[#666666] mb-1.5">
                     เวลาเริ่ม
                   </label>
                   <input
@@ -461,11 +461,11 @@ const EventEditForm = () => {
                     value={formData.start_time}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A]"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A] text-base font-bold"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[#666666] mb-1.5">
+                  <label className="block text-sm font-bold text-[#666666] mb-1.5">
                     เวลาสิ้นสุด
                   </label>
                   <input
@@ -474,7 +474,7 @@ const EventEditForm = () => {
                     value={formData.end_time}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A]"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A] text-base font-bold"
                   />
                 </div>
               </div>
@@ -483,7 +483,7 @@ const EventEditForm = () => {
 
           {/* 5. สถานที่ */}
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
+            <label className="block text-base font-bold text-[#1A1A1A] mb-2">
               สถานที่ <span className="text-red-500">*</span>
             </label>
             <input
@@ -492,7 +492,7 @@ const EventEditForm = () => {
               value={formData.location}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A] mb-3"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A] text-base font-bold mb-3"
               placeholder="ระบุสถานที่"
             />
             
@@ -500,14 +500,14 @@ const EventEditForm = () => {
 
           {/* 6. ประเภทกิจกรรม */}
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
+            <label className="block text-base font-bold text-[#1A1A1A] mb-2">
               ประเภทกิจกรรม
             </label>
             <select
               name="event_type"
               value={formData.event_type}
               onChange={handleChange}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A]"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A] text-base font-bold"
             >
               <option value="">เลือกประเภทกิจกรรม</option>
               <option value="festival">เทศกาล</option>
@@ -520,7 +520,7 @@ const EventEditForm = () => {
 
           {/* 8. กลุ่มเป้าหมาย */}
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
+            <label className="block text-base font-bold text-[#1A1A1A] mb-2">
               กลุ่มเป้าหมาย
             </label>
             <input
@@ -528,14 +528,14 @@ const EventEditForm = () => {
               name="target_audience"
               value={formData.target_audience}
               onChange={handleChange}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A]"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A] text-base font-bold"
               placeholder="เช่น นักท่องเที่ยว, ครอบครัว, เยาวชน"
             />
           </div>
 
           {/* 9. ค่าใช้จ่าย */}
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-[#1A1A1A] mb-3">
+            <label className="block text-base font-bold text-[#1A1A1A] mb-3">
               ค่าใช้จ่าย
             </label>
             <div className="flex gap-4 mb-3">
@@ -548,7 +548,7 @@ const EventEditForm = () => {
                   onChange={handleChange}
                   className="w-4 h-4 text-[#FFC107] border-gray-300 focus:ring-[#FFC107]"
                 />
-                <span className="text-sm text-[#666666]">ฟรี</span>
+                <span className="text-base font-bold text-[#666666]">ฟรี</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -559,7 +559,7 @@ const EventEditForm = () => {
                   onChange={handleChange}
                   className="w-4 h-4 text-[#FFC107] border-gray-300 focus:ring-[#FFC107]"
                 />
-                <span className="text-sm text-[#666666]">มีค่าใช้จ่าย</span>
+                <span className="text-base font-bold text-[#666666]">มีค่าใช้จ่าย</span>
               </label>
             </div>
             {formData.cost_type === 'paid' && (
@@ -570,7 +570,7 @@ const EventEditForm = () => {
                 onChange={handleChange}
                 min="0"
                 step="0.01"
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A]"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A] text-base font-bold"
                 placeholder="ระบุจำนวนเงิน (บาท)"
               />
             )}
@@ -578,12 +578,12 @@ const EventEditForm = () => {
 
           {/* 10. ข้อมูลติดต่อ */}
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-[#1A1A1A] mb-3">
+            <label className="block text-base font-bold text-[#1A1A1A] mb-3">
               ข้อมูลติดต่อ
             </label>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-[#666666] mb-1.5">
+                <label className="block text-sm font-bold text-[#666666] mb-1.5">
                   เบอร์โทรศัพท์
                 </label>
                 <div className="relative">
@@ -593,13 +593,13 @@ const EventEditForm = () => {
                     name="contact_phone"
                     value={formData.contact_phone}
                     onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A]"
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A] text-base font-bold"
                     placeholder="0XX-XXX-XXXX"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#666666] mb-1.5">
+                <label className="block text-sm font-bold text-[#666666] mb-1.5">
                   Line / Facebook
                 </label>
                 <div className="grid grid-cols-2 gap-3">
@@ -610,7 +610,7 @@ const EventEditForm = () => {
                       name="contact_line"
                       value={formData.contact_line}
                       onChange={handleChange}
-                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A]"
+                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A] text-base font-bold"
                       placeholder="Line ID"
                     />
                   </div>
@@ -621,14 +621,14 @@ const EventEditForm = () => {
                       name="contact_facebook"
                       value={formData.contact_facebook}
                       onChange={handleChange}
-                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A]"
+                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A] text-base font-bold"
                       placeholder="Facebook"
                     />
                   </div>
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#666666] mb-1.5">
+                <label className="block text-sm font-bold text-[#666666] mb-1.5">
                   ชื่อผู้ประสานงาน
                 </label>
                 <input
@@ -636,7 +636,7 @@ const EventEditForm = () => {
                   name="coordinator_name"
                   value={formData.coordinator_name}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A]"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A] text-base font-bold"
                   placeholder="ระบุชื่อผู้ประสานงาน"
                 />
               </div>
@@ -645,7 +645,7 @@ const EventEditForm = () => {
 
           {/* 11. ข้อมูลเพิ่มเติม */}
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
+            <label className="block text-base font-bold text-[#1A1A1A] mb-2">
               ข้อมูลเพิ่มเติม
             </label>
             <textarea
@@ -653,7 +653,7 @@ const EventEditForm = () => {
               value={formData.additional_info}
               onChange={handleChange}
               rows={3}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A] resize-none"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC107] focus:border-transparent text-[#1A1A1A] text-base font-bold resize-none"
               placeholder="ข้อมูลเพิ่มเติม (ถ้ามี)"
             />
           </div>
@@ -663,14 +663,14 @@ const EventEditForm = () => {
             <button
               type="submit"
               disabled={loading}
-              className="px-8 py-2.5 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-8 py-2.5 bg-[#FFC107] hover:bg-[#FFB300] text-[#1A1A1A] text-lg font-bold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'กำลังบันทึก...' : 'บันทึกการแก้ไข'}
             </button>
             <button
               type="button"
               onClick={() => navigate(`/community-admin/events/${id}`)}
-              className="px-8 py-2.5 bg-white border border-gray-300 text-[#666666] font-medium rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-8 py-2.5 bg-white border border-gray-300 text-[#666666] text-lg font-bold rounded-lg hover:bg-gray-50 transition-colors"
             >
               ยกเลิก
             </button>

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+﻿import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
@@ -73,14 +73,14 @@ const VerifyOTP = () => {
         </button>
 
         <div className="w-full max-w-md animate-slideUp">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('auth.otpTitle')}</h2>
+          <h2 className="text-3xl font-extrabold text-gray-900 mb-2">{t('auth.otpTitle')}</h2>
           <p className="text-gray-600 mb-8">
             {t('auth.otpDescription')}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-4">
+              <label className="block text-sm font-bold text-gray-800 mb-4">
                 {t('auth.otp')}
               </label>
               <div className="flex gap-3 justify-center">
@@ -112,7 +112,7 @@ const VerifyOTP = () => {
 
             <button
               type="submit"
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg transition-all transform hover:scale-105"
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg transition-all transform hover:scale-105"
             >
               {t('auth.verifyButton')}
             </button>

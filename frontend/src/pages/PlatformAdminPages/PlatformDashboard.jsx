@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, TrendingUp, Heart, Calendar, Plus, MapPin, Store, User as UserIcon, ChevronRight, Image as ImageIcon } from 'lucide-react';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -35,10 +35,10 @@ const PlatformDashboard = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FAF8F3]">
         <div className="text-center text-red-500">
-          <p>เกิดข้อผิดพลาดในการโหลดข้อมูล</p>
+          <p className="text-xl font-bold">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-4 text-orange-500 underline"
+            className="mt-4 text-lg font-bold text-orange-500 underline"
           >
             ลองใหม่
           </button>
@@ -67,10 +67,10 @@ const PlatformDashboard = () => {
     <div className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between">
         <div>
-          <p className={`text-3xl font-bold ${color === 'green' ? 'text-green-600' : 'text-orange-500'}`}>
+          <p className={`text-4xl font-extrabold ${color === 'green' ? 'text-green-600' : 'text-orange-500'}`}>
             {value.toLocaleString()}
           </p>
-          <p className="text-sm text-gray-600 mt-1">{label}</p>
+          <p className="text-lg font-bold text-gray-600 mt-1">{label}</p>
         </div>
         <div className={`p-3 rounded-lg ${color === 'green' ? 'bg-green-50' : 'bg-orange-50'}`}>
           <Icon className={`h-6 w-6 ${color === 'green' ? 'text-green-600' : 'text-orange-500'}`} />
@@ -109,12 +109,12 @@ const PlatformDashboard = () => {
           )}
         </div>
         <div className="p-5">
-          <h3 className="text-lg font-bold text-gray-900 mb-2">{community.name}</h3>
-          <div className="flex items-center text-sm text-gray-600 mb-4">
+          <h3 className="text-2xl font-extrabold text-gray-900 mb-2">{community.name}</h3>
+          <div className="flex items-center text-lg font-bold text-gray-600 mb-4">
             <MapPin className="h-4 w-4 mr-1" />
             <span>{community.location}</span>
           </div>
-          <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
+          <div className="flex items-center justify-between text-lg font-bold text-gray-600 mb-4">
             <div className="flex items-center space-x-4">
               <div className="flex items-center">
                 <Store className="h-4 w-4 mr-1" />
@@ -128,7 +128,7 @@ const PlatformDashboard = () => {
           </div>
           <button
             onClick={() => navigate(`/platform-admin/communities/${community.id}`)}
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2.5 rounded-lg transition-colors flex items-center justify-center space-x-2"
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white text-lg font-bold py-3 rounded-lg transition-colors flex items-center justify-center space-x-2"
           >
 
             <span>{ct('จัดการ', 'Manage')}</span>
@@ -147,10 +147,10 @@ const PlatformDashboard = () => {
       <div className="bg-orange-50 p-4 rounded-full mb-4">
         <Plus className="h-8 w-8 text-orange-500" />
       </div>
-      <h3 className="text-lg font-bold text-gray-900 mb-2">
+      <h3 className="text-2xl font-extrabold text-gray-900 mb-2">
         {ct('สร้าง Community ใหม่', 'Create New Community')}
       </h3>
-      <p className="text-sm text-gray-600 text-center">
+      <p className="text-lg font-bold text-gray-600 text-center">
         {ct('เพิ่มชุมชนใหม่เข้าสู่ระบบ', 'Add a new community to the platform')}
       </p>
     </div>
@@ -165,7 +165,7 @@ const PlatformDashboard = () => {
         </div>
         <div className="flex-1">
           <p className="text-sm text-gray-900">{activity.message}</p>
-          <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
+          <p className="text-xs font-medium text-gray-500 mt-1">{activity.time}</p>
         </div>
       </div>
     );
@@ -175,18 +175,18 @@ const PlatformDashboard = () => {
     <div className="min-h-screen bg-[#F5EFE7] animate-fadeIn">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-2">
               {ct('Platform Overview', 'Platform Overview')}
             </h1>
-            <p className="text-gray-600">
+            <p className="text-lg font-bold text-gray-700">
               {ct('จัดการและดูภาพรวมของชุมชนทั้งหมดในระบบ', 'Manage and view all communities in the system')}
             </p>
           </div>
           <button
             onClick={() => navigate('/platform-admin/overview')}
-            className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+            className="bg-orange-500 hover:bg-orange-600 text-white text-base font-bold px-6 py-3 rounded-lg transition-colors shrink-0 self-start sm:self-auto"
           >
             {ct('ดูรายละเอียด', 'View Details')}
           </button>
@@ -221,10 +221,10 @@ const PlatformDashboard = () => {
         </div>
 
         <div className="mt-10">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">
             {ct('Community ทั้งหมด', 'All Communities')}
           </h2>
-          <p className="text-sm text-gray-600 mb-6">
+          <p className="text-xl font-bold text-gray-600 mb-6">
             {communities.length} {ct('ชุมชนในระบบ', 'communities in system')}
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">

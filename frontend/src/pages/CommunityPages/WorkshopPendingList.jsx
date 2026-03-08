@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 
 import { useQuery } from '@tanstack/react-query';
@@ -68,7 +68,7 @@ const WorkshopPendingList = () => {
         <div className="mb-8 animate-slideUp" style={{ animationDelay: '0.05s' }}>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">เวิร์กช็อปที่รออนุมัติ</h1>
+              <h1 className="text-3xl font-extrabold text-gray-900">เวิร์กช็อปที่รออนุมัติ</h1>
               <p className="text-gray-600 mt-1">ตรวจสอบและอนุมัติ Workshop จากร้านค้าในชุมชน</p>
             </div>
             <button
@@ -108,8 +108,8 @@ const WorkshopPendingList = () => {
 
         {(!community?._id && !isLoading) ? (
           <div className="bg-white rounded-lg shadow-sm p-12 text-center animate-slideUp">
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">ยังไม่ได้ระบุตัวตนชุมชน</h3>
-            <p className="text-gray-600">กรุณาเลือกหรือผูกชุมชนก่อนจึงจะเห็นรายการ Workshop</p>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">ยังไม่ได้ระบุตัวตนชุมชน</h3>
+            <p className="font-semibold text-gray-700">กรุณาเลือกหรือผูกชุมชนก่อนจึงจะเห็นรายการ Workshop</p>
           </div>
         ) : isLoading ? (
           <div className="flex justify-center py-20">
@@ -117,8 +117,8 @@ const WorkshopPendingList = () => {
           </div>
         ) : isError ? (
           <div className="bg-white rounded-lg shadow-sm p-12 text-center animate-slideUp">
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">เกิดข้อผิดพลาดในการโหลดข้อมูล</h3>
-            <p className="text-gray-600">กรุณารีเฟรชหน้าหรือกลับมาตรวจสอบใหม่อีกครั้ง</p>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">เกิดข้อผิดพลาดในการโหลดข้อมูล</h3>
+            <p className="font-semibold text-gray-700">กรุณารีเฟรชหน้าหรือกลับมาตรวจสอบใหม่อีกครั้ง</p>
           </div>
         ) : filteredWorkshops.length === 0 ? (
           <div className="bg-white rounded-lg shadow-sm p-12 text-center">
@@ -126,7 +126,7 @@ const WorkshopPendingList = () => {
               <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Eye className="h-12 w-12 text-gray-400" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">ไม่มี Workshop รออนุมัติ</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">ไม่มี Workshop รออนุมัติ</h3>
             </div>
           </div>
         ) : (
@@ -157,7 +157,7 @@ const WorkshopPendingList = () => {
                 </div>
 
                 <div className="p-5">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">{workshop.title}</h3>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">{workshop.title}</h3>
                   <p className="text-sm text-gray-600 mb-4 line-clamp-2">{workshop.description}</p>
 
                   <div className="grid grid-cols-3 gap-2 mb-4 text-sm">

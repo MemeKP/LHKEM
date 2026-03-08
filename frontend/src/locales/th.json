@@ -109,7 +109,7 @@
   },
   "auth": {
     "welcomeTitle": "ยินดีต้อนรับสู่",
-    "communityName": "โหล่งฮิมคาว",
+    "communityName": "The Community",
     "welcomeDescription": "เข้าสู่ระบบเพื่อจองเวิร์กช็อปและค้นหากิจกรรมต่างๆ ภายในชุมชน",
     "loginTitle": "เข้าสู่ระบบ",
     "loginDescription": "กรอกอีเมลและรหัสผ่านของคุณเพื่อเข้าสู่ระบบ",
@@ -130,6 +130,7 @@
     "haveAccount": "มีบัญชีอยู่แล้ว?",
     "loginButton": "เข้าสู่ระบบ",
     "registerButton": "ลงทะเบียน",
+    "loginErrorMessage": "อีเมลหรือรหัสผ่านไม่ถูกต้อง",
     "verifyButton": "ยืนยันรหัส",
     "resendOtp": "ส่งอีกครั้ง?",
     "role": "บทบาท",
@@ -151,7 +152,8 @@
     "loading": "กำลังโหลด...",
     "error": "เกิดข้อผิดพลาด",
     "success": "สำเร็จ",
-    "close": "ปิด"
+    "close": "ปิด",
+    "ok": "ตกลง"
   },
   "dashboard": {
     "title": "แดชบอร์ดของฉัน",

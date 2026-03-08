@@ -166,8 +166,8 @@ const Navbar = ({ community }) => {
               </span>
             </div>
             <div className="flex flex-col">
-              <span className="font-semibold text-sm" style={{ color: '#111827' }}>{ct(community.name, community.name_en)}</span>
-              <span className="text-xs" style={{ color: '#6b7280' }}>{ct(community.name, community.name_en)}</span>
+              <span className="font-bold text-base" style={{ color: '#111827' }}>{ct(community.name, community.name_en)}</span>
+              <span className="text-sm font-medium" style={{ color: '#4b5563' }}>{ct(community.name, community.name_en)}</span>
             </div>
           </Link>
 
@@ -176,7 +176,7 @@ const Navbar = ({ community }) => {
               <Link
                 key={key || 'home'}
                 to={getCommunityPath(key)}
-                className={`font-medium transition-colors border-b-2 pb-1 ${isActive(key) ? '' : 'border-transparent'}`}
+                className={`font-semibold transition-colors border-b-2 pb-1 ${isActive(key) ? '' : 'border-transparent'}`}
                 style={{
                   color: isActive(key) ? '#111827' : '#4b5563',
                   borderColor: isActive(key) ? '#ea580c' : 'transparent'
@@ -207,7 +207,7 @@ const Navbar = ({ community }) => {
               }}
             >
               <Globe className="h-4 w-4" />
-              <span className="text-sm font-medium">{language} / {language === 'TH' ? 'EN' : 'TH'}</span>
+              <span className="text-sm font-semibold">{language} / {language === 'TH' ? 'EN' : 'TH'}</span>
             </button>
 
             {/* User Menu */}
@@ -215,7 +215,7 @@ const Navbar = ({ community }) => {
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center space-x-2 font-medium transition-colors px-4 py-2 rounded-full"
+                  className="flex items-center space-x-2 font-semibold transition-colors px-4 py-2 rounded-full"
                   style={{ color: '#374151' }}
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
@@ -227,9 +227,9 @@ const Navbar = ({ community }) => {
                 {isUserMenuOpen && (
                   <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                     <div className="px-4 py-2 border-b border-gray-200">
-                      <p className="text-xs text-gray-500">{t('nav.signedInAs')}</p>
-                      <p className="text-sm font-semibold text-gray-900 truncate">{user?.email}</p>
-                      <p className="text-xs text-orange-600 mt-0.5">
+                      <p className="text-sm font-medium text-gray-600">{t('nav.signedInAs')}</p>
+                      <p className="text-base font-semibold text-gray-900 truncate">{user?.email}</p>
+                      <p className="text-sm text-orange-600 mt-0.5">
                         {user?.role === 'SHOP_OWNER' && t('nav.roleShop')}
                         {user?.role === 'COMMUNITY_ADMIN' && t('nav.roleCommunityAdmin')}
                         {user?.role === 'PLATFORM_ADMIN' && t('nav.rolePlatformAdmin')}
@@ -256,7 +256,7 @@ const Navbar = ({ community }) => {
                           onClick={() => setIsUserMenuOpen(false)}
                         >
                           <Icon className="h-4 w-4" />
-                          <span className="font-medium">{item.label}</span>
+                          <span className="font-semibold">{item.label}</span>
                         </Link>
                       );
                     })}
@@ -270,7 +270,7 @@ const Navbar = ({ community }) => {
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
                       <LogOut className="h-4 w-4" />
-                      <span className="font-medium">{t('nav.logout')}</span>
+                      <span className="font-semibold">{t('nav.logout')}</span>
                     </button>
                   </div>
                 )}
@@ -280,7 +280,7 @@ const Navbar = ({ community }) => {
                 <Link
                   to="/login"
                   state={{ from: location }}
-                  className="font-medium transition-colors px-4 py-2 rounded-full"
+                  className="font-semibold transition-colors px-4 py-2 rounded-full"
                   style={{ color: '#374151' }}
                   onMouseEnter={(e) => e.currentTarget.style.color = '#111827'}
                   onMouseLeave={(e) => e.currentTarget.style.color = '#374151'}
@@ -289,7 +289,7 @@ const Navbar = ({ community }) => {
                 </Link>
                 <Link
                   to="/register"
-                  className="text-white font-semibold px-6 py-2 rounded-full transition-colors"
+                  className="text-white font-bold px-6 py-2 rounded-full transition-colors"
                   style={{ backgroundColor: '#f97316' }}
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#ea580c'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f97316'}
@@ -315,7 +315,7 @@ const Navbar = ({ community }) => {
               <Link
                 key={key || 'home-mobile'}
                 to={getCommunityPath(key)}
-                className={`block font-medium transition-colors ${isActive(key) ? 'border-l-4 pl-3' : 'pl-4'}`}
+                className={`block font-semibold transition-colors ${isActive(key) ? 'border-l-4 pl-3' : 'pl-4'}`}
                 style={{
                   color: isActive(key) ? '#ea580c' : '#4b5563',
                   borderColor: isActive(key) ? '#ea580c' : 'transparent'
@@ -334,12 +334,12 @@ const Navbar = ({ community }) => {
                 style={{ color: '#4b5563' }}
               >
                 <Globe className="h-4 w-4" />
-                <span className="text-sm font-medium">{language} / {language === 'TH' ? 'EN' : 'TH'}</span>
+                <span className="text-sm font-semibold">{language} / {language === 'TH' ? 'EN' : 'TH'}</span>
               </button>
 
               {isAuthenticated ? (
                 <>
-                  <div className="pl-4 py-2 font-medium" style={{ color: '#111827' }}>
+                  <div className="pl-4 py-2 font-semibold" style={{ color: '#111827' }}>
                     <User className="h-4 w-4 inline mr-2" />
                     {getUserDisplayName()}
                   </div>
@@ -350,7 +350,7 @@ const Navbar = ({ community }) => {
                         <Link
                           key={`${item.to}-${index}`}
                           to={item.to}
-                          className="block font-medium pl-4 py-2"
+                          className="block font-semibold pl-4 py-2"
                           style={{ color: '#374151' }}
                           onClick={() => setIsMenuOpen(false)}
                         >
@@ -365,7 +365,7 @@ const Navbar = ({ community }) => {
                       handleLogout();
                       setIsMenuOpen(false);
                     }}
-                    className="block font-medium pl-4 py-2 w-full text-left"
+                    className="block font-semibold pl-4 py-2 w-full text-left"
                     style={{ color: '#dc2626' }}
                   >
                     <LogOut className="h-4 w-4 inline mr-2" />
@@ -376,7 +376,7 @@ const Navbar = ({ community }) => {
                 <>
                   <Link
                     to="/login"
-                    className="block font-medium pl-4"
+                    className="block font-semibold pl-4"
                     style={{ color: '#374151' }}
                     onClick={() => setIsMenuOpen(false)}
                   >
@@ -384,7 +384,7 @@ const Navbar = ({ community }) => {
                   </Link>
                   <Link
                     to="/register"
-                    className="block text-white font-semibold px-6 py-2 rounded-full text-center transition-colors ml-4 mr-4"
+                    className="block text-white font-bold px-6 py-2 rounded-full text-center transition-colors ml-4 mr-4"
                     style={{ backgroundColor: '#f97316' }}
                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#ea580c'}
                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f97316'}

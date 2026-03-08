@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+﻿import { useState, useEffect, useMemo } from 'react';
 import { useOutletContext, useParams } from 'react-router-dom';
 import { Search, MapPin, Clock, Users as UsersIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -145,21 +145,21 @@ const Workshops = () => {
   };
 
   if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">{ct('กำลังโหลดเวิร์กชอป...', 'Loading workshops...')}</div>;
+    return <div className="min-h-screen flex items-center justify-center text-lg font-bold text-gray-700">{ct('กำลังโหลดเวิร์กชอป...', 'Loading workshops...')}</div>;
   }
 
   if (error) {
-    return <div className="min-h-screen flex items-center justify-center text-red-500">{error}</div>;
+    return <div className="min-h-screen flex items-center justify-center text-lg font-bold text-red-600">{error}</div>;
   }
 
   return (
     <div className="min-h-screen bg-gray-50 animate-fadeIn">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-8 animate-slideUp">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: '#111827' }}>
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-4" style={{ color: '#111827' }}>
             {t('workshops.title') || ct('ค้นหาเวิร์กชอป', 'Discover Workshops')}
           </h1>
-          <p className="mb-6" style={{ color: '#4b5563' }}>
+          <p className="text-xl font-bold mb-6" style={{ color: '#4b5563' }}>
             {t('workshops.description') || ct('ค้นพบและเรียนรู้ทักษะใหม่ๆ จากเวิร์กชอปที่น่าสนใจ', 'Discover and learn new skills from engaging workshops')}
           </p>
 
@@ -187,7 +187,7 @@ const Workshops = () => {
         <div className="flex flex-col lg:flex-row gap-8">
           <aside className="lg:w-64 space-y-6 animate-slideUp">
             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-600">
-              <h3 className="font-semibold mb-4" style={{ color: '#111827' }}>
+              <h3 className="text-xl font-extrabold mb-4" style={{ color: '#111827' }}>
                 {t('workshops.categories') || ct('หมวดหมู่', 'Categories')}
               </h3>
               <div className="space-y-2">
@@ -195,7 +195,7 @@ const Workshops = () => {
                   <button
                     key={category.id}
                     onClick={() => setSelectedCategory(category.id)}
-                    className="w-full text-left px-4 py-2 rounded-lg transition-all transform hover:scale-105"
+                    className="w-full text-left px-4 py-2 rounded-lg text-lg font-bold transition-all transform hover:scale-105"
                     style={{
                       backgroundColor: selectedCategory === category.id ? '#ffedd5' : 'transparent',
                       color: selectedCategory === category.id ? '#ea580c' : '#374151',
@@ -223,7 +223,7 @@ const Workshops = () => {
           <main className="flex-1">
             {filteredWorkshops.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-center animate-fadeIn">
-                <p className="text-lg text-gray-500">
+                <p className="text-xl font-bold text-gray-700">
                   {ct('ขณะนี้ไม่มีเวิร์กชอปที่เปิดให้บริการ', 'There are no workshops available at this moment.')}
                 </p>
               </div>
@@ -258,12 +258,12 @@ const Workshops = () => {
                           )}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                           <div className="absolute top-4 left-4">
-                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-white/90 text-gray-800">
+                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-base font-bold bg-white/90 text-gray-800">
                               {workshop.category || ct('เวิร์กชอป', 'Workshop')}
                             </span>
                           </div>
-                          <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-white text-sm font-semibold drop-shadow">
-                            <span className={`px-3 py-1 rounded-full text-xs ${isRegistrationOpen ? 'bg-green-500/80' : 'bg-gray-500/80'}`}>
+                          <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-white text-base font-bold drop-shadow">
+                            <span className={`px-3 py-1 rounded-full text-base font-bold ${isRegistrationOpen ? 'bg-green-500/80' : 'bg-gray-500/80'}`}>
                               {isRegistrationClosed
                                 ? ct('ปิดรับสมัครแล้ว', 'Registration closed')
                                 : isRegistrationOpen
@@ -275,10 +275,10 @@ const Workshops = () => {
 
                         <div className="flex-1 p-6 space-y-5">
                           <div>
-                            <h3 className="text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
+                            <h3 className="text-2xl font-extrabold text-gray-900 mb-2 line-clamp-2">
                               {workshop.title || ct('ไม่มีชื่อ', 'Untitled')}
                             </h3>
-                            <p className="text-sm text-gray-500 line-clamp-2">
+                            <p className="text-lg font-bold text-gray-700 line-clamp-2">
                               {workshop.description || ct('ไม่มีคำอธิบาย', 'No description provided.')}
                             </p>
                           </div>
@@ -289,8 +289,8 @@ const Workshops = () => {
                                 <Clock className="h-4 w-4 text-orange-500" />
                               </div>
                               <div>
-                                <p className="text-xs uppercase tracking-wide text-orange-600">{ct('วันที่จัด', 'Date')}</p>
-                                <p className="text-sm font-semibold text-gray-900">{formattedDate}</p>
+                                <p className="text-sm uppercase tracking-wide font-bold text-orange-700">{ct('วันที่จัด', 'Date')}</p>
+                                <p className="text-lg font-bold text-gray-900">{formattedDate}</p>
                               </div>
                             </div>
                             <div className="flex items-center gap-3">
@@ -298,9 +298,9 @@ const Workshops = () => {
                                 <UsersIcon className="h-4 w-4 text-orange-500" />
                               </div>
                               <div>
-                                <p className="text-xs uppercase tracking-wide text-orange-600">{ct('ที่นั่งคงเหลือ', 'Seats left')}</p>
+                                <p className="text-sm uppercase tracking-wide font-bold text-orange-700">{ct('ที่นั่งคงเหลือ', 'Seats left')}</p>
                                 <div className="flex items-center gap-2">
-                                  <p className="text-sm font-semibold text-gray-900">{Math.max(0, seatsLeft)}</p>
+                                  <p className="text-lg font-bold text-gray-900">{Math.max(0, seatsLeft)}</p>
                                   {pendingSeats > 0 && (
                                     <span className="text-[10px] font-medium text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded">
                                       {ct('รอยืนยัน', 'Pending')} {pendingSeats}
@@ -315,8 +315,8 @@ const Workshops = () => {
                                   <MapPin className="h-4 w-4 text-orange-500" />
                                 </div>
                                 <div>
-                                  <p className="text-xs uppercase tracking-wide text-orange-600">{ct('สถานที่', 'Location')}</p>
-                                  <p className="text-sm font-semibold text-gray-900 line-clamp-1">{workshop.location?.address || workshop.location}</p>
+                                  <p className="text-sm uppercase tracking-wide font-bold text-orange-700">{ct('สถานที่', 'Location')}</p>
+                                  <p className="text-lg font-bold text-gray-900 line-clamp-1">{workshop.location?.address || workshop.location}</p>
                                 </div>
                               </div>
                             )}
@@ -324,13 +324,13 @@ const Workshops = () => {
 
                           <div className="flex items-center justify-between pt-2">
                             <div>
-                              <div className="text-sm text-gray-400">{t('workshops.perPerson') || ct('/คน', '/person')}</div>
-                              <div className="text-2xl font-bold text-orange-500">
+                              <div className="text-lg font-bold text-gray-600">{t('workshops.perPerson') || ct('/คน', '/person')}</div>
+                              <div className="text-4xl font-extrabold text-orange-500">
                                 {workshop.price === 0 ? (t('workshops.free') || ct('ฟรี', 'Free')) : `฿${workshop.price}`}
                               </div>
                             </div>
                             <button
-                              className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-semibold transition-all shadow-lg bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-500 ${
+                              className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-lg font-bold transition-all shadow-lg bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-500 ${
                                 (isRegistrationClosed || isFull) ? 'opacity-80' : ''
                               }`}
                               onClick={() => handleOpenModal(workshop)}
@@ -360,7 +360,7 @@ const Workshops = () => {
                     >
                       <ChevronLeft className="h-5 w-5" />
                     </button>
-                    <span className="text-sm font-semibold text-gray-600">
+                    <span className="text-lg font-bold text-gray-700">
                       {ct('หน้า', 'Page')} {currentPage} / {totalPages}
                     </span>
                     <button

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MapPin, Clock, Users, Calendar, Star, ArrowLeft, CheckCircle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
@@ -92,7 +92,7 @@ const WorkshopDetail = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('workshopDetail.notFound') || ct('ไม่พบเวิร์กชอป', 'Workshop Not Found')}</h2>
+          <h2 className="text-2xl font-extrabold text-gray-900 mb-2">{t('workshopDetail.notFound') || ct('ไม่พบเวิร์กชอป', 'Workshop Not Found')}</h2>
           <button
             onClick={() => navigate('/workshops')}
             className="text-orange-600 hover:text-orange-700"
@@ -167,7 +167,7 @@ const WorkshopDetail = () => {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">{t('workshopDetail.date') || ct('วันที่', 'Date')}</p>
-                      <p className="font-semibold text-gray-900">
+                      <p className="font-bold text-gray-900">
                         {workshop.date || workshop.startDate ? new Date(workshop.date || workshop.startDate).toLocaleDateString('th-TH', {
                           year: 'numeric',
                           month: 'long',
@@ -183,7 +183,7 @@ const WorkshopDetail = () => {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">{t('workshopDetail.duration') || ct('เวลา', 'Time')}</p>
-                      <p className="font-semibold text-gray-900">{workshop.time || `${workshop.startTime} - ${workshop.endTime}` || ct('ไม่ระบุเวลา', 'N/A')}</p>
+                      <p className="font-bold text-gray-900">{workshop.time || `${workshop.startTime} - ${workshop.endTime}` || ct('ไม่ระบุเวลา', 'N/A')}</p>
                     </div>
                   </div>
 
@@ -193,7 +193,7 @@ const WorkshopDetail = () => {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">{t('workshopDetail.location') || ct('สถานที่', 'Location')}</p>
-                      <p className="font-semibold text-gray-900">{workshop.customLocation || workshop.location?.address || workshop.location || ct('ใช้สถานที่ร้าน', 'Shop')}</p>
+                      <p className="font-bold text-gray-900">{workshop.customLocation || workshop.location?.address || workshop.location || ct('ใช้สถานที่ร้าน', 'Shop')}</p>
                     </div>
                   </div>
 
@@ -203,7 +203,7 @@ const WorkshopDetail = () => {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">{t('workshopDetail.host') || ct('ผู้จัด', 'Host')}</p>
-                      <p className="font-semibold text-gray-900">{workshop.host || workshop.shopName || ct('ไม่ระบุ', 'Unknown')}</p>
+                      <p className="font-bold text-gray-900">{workshop.host || workshop.shopName || ct('ไม่ระบุ', 'Unknown')}</p>
                     </div>
                   </div>
                 </div>
@@ -213,12 +213,12 @@ const WorkshopDetail = () => {
                 <div className="bg-gray-50 rounded-lg p-6 sticky top-8">
                   <div className="text-center mb-6">
                     <p className="text-4xl font-bold text-gray-900">{workshop.price === 0 ? (t('workshops.free') || ct('ฟรี', 'Free')) : `฿${workshop.price}`}</p>
-                    <p className="text-gray-600">{t('workshopDetail.perPerson') || ct('ต่อคน', 'per person')}</p>
+                    <p className="font-semibold text-gray-700">{t('workshopDetail.perPerson') || ct('ต่อคน', 'per person')}</p>
                   </div>
 
                   {!isFull && (
                     <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-bold text-gray-800 mb-2">
                         {t('workshopDetail.participants') || ct('จำนวนผู้เข้าร่วม', 'Participants')}
                       </label>
                       <input
@@ -258,7 +258,7 @@ const WorkshopDetail = () => {
 
             {(workshop.whatYouWillLearn && workshop.whatYouWillLearn.length > 0) && (
               <div className="border-t border-gray-200 pt-6 mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-extrabold text-gray-900 mb-4">
                   {t('workshopDetail.whatYouWillLearn') || ct('สิ่งที่คุณจะได้เรียนรู้', 'What You Will Learn')}
                 </h2>
                 <ul className="space-y-3">
@@ -274,7 +274,7 @@ const WorkshopDetail = () => {
 
             {(workshop.requirements && workshop.requirements.length > 0) && (
               <div className="border-t border-gray-200 pt-6 mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-extrabold text-gray-900 mb-4">
                   {t('workshopDetail.requirements') || ct('สิ่งที่ต้องเตรียมมา', 'Requirements')}
                 </h2>
                 <ul className="space-y-2">
@@ -290,7 +290,7 @@ const WorkshopDetail = () => {
 
             {reviews.length > 0 && (
               <div className="border-t border-gray-200 pt-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-extrabold text-gray-900 mb-4">
                   {t('workshopDetail.reviewsTitle') || ct('รีวิว', 'Reviews')} ({reviews.length})
                 </h2>
                 <div className="space-y-4">
@@ -302,7 +302,7 @@ const WorkshopDetail = () => {
                             {review.userName.charAt(0)}
                           </div>
                           <div>
-                            <p className="font-semibold text-gray-900">{review.userName}</p>
+                            <p className="font-bold text-gray-900">{review.userName}</p>
                             <div className="flex items-center gap-1">
                               {[...Array(5)].map((_, i) => (
                                 <Star

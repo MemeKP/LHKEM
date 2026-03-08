@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Clock, Users, Calendar, Plus, X, AlertCircle, Image as ImageIcon, Camera } from 'lucide-react';
 
@@ -178,26 +178,6 @@ const ShopWorkshopEdit = () => {
     const start = new Date(registrationStartDate);
     const end = new Date(registrationEndDate);
     const workshop = new Date(workshopDate);
-    const minGap = 7 * 24 * 60 * 60 * 1000;
-    const latestAllowedEnd = new Date(workshop.getTime() - minGap);
-
-    const toMinutes = (time) => {
-      const [h, m] = time.split(':').map(Number);
-      return h * 60 + m;
-    };
-
-    const startMinutes = toMinutes(workshopStartTime);
-    const endMinutes = toMinutes(workshopEndTime);
-
-    if (startMinutes >= endMinutes) {
-      Swal.fire({
-        icon: 'warning',
-        title: ct('เวลาเริ่มต้องอยู่ก่อนเวลาสิ้นสุด', 'Start time must be before end time'),
-        text: ct('กรุณาตรวจสอบช่วงเวลาให้ถูกต้องก่อนบันทึก', 'Please ensure the workshop start time occurs before the end time.'),
-        confirmButtonText: ct('เข้าใจแล้ว', 'Understood'),
-      });
-      return;
-    }
 
     if (end < start) {
       Swal.fire({
@@ -209,21 +189,11 @@ const ShopWorkshopEdit = () => {
       return;
     }
 
-    if (end > workshop) {
+    if (end >= workshop) {
       Swal.fire({
         icon: 'warning',
-        title: ct('วันปิดรับสมัครต้องไม่เกินวันจัดงาน', 'Deadline cannot exceed event date'),
-        text: ct('กรุณากำหนดวันปิดรับสมัครให้ก่อนหรือในวันจัดกิจกรรม', 'Please keep the registration cutoff on or before the workshop date.'),
-        confirmButtonText: ct('ตกลง', 'OK'),
-      });
-      return;
-    }
-
-    if (end > latestAllowedEnd) {
-      Swal.fire({
-        icon: 'warning',
-        title: ct('กรุณาปิดรับสมัครล่วงหน้า 7 วัน', 'Close registration at least 7 days early'),
-        text: ct('เพื่อเตรียมงานให้พร้อม กรุณากำหนดวันปิดรับสมัครอย่างน้อย 7 วันก่อนวันจัดกิจกรรม', 'Please set the registration deadline at least seven days before the workshop so the shop can prepare.'),
+        title: ct('วันปิดรับสมัครต้องอยู่ก่อนวันจัดงาน', 'Deadline must be before event date'),
+        text: ct('กรุณากำหนดวันปิดรับสมัครให้อย่างน้อย 1 วันก่อนวันจัดกิจกรรม', 'Please set the registration deadline at least 1 day before the workshop date.'),
         confirmButtonText: ct('เข้าใจแล้ว', 'Understood'),
       });
       return;
@@ -331,16 +301,16 @@ const ShopWorkshopEdit = () => {
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <button
           onClick={() => navigate(`/${slug}/shop/workshops/${id}`)}
-          className="mb-6 flex items-center gap-2 text-sm text-[#6B6B6B] hover:text-[#E07B39] transition-colors"
+          className="mb-6 flex items-center gap-2 text-lg font-bold text-[#6B6B6B] hover:text-[#E07B39] transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           กลับ
         </button>
         
         <div className="text-center mb-8 animate-fadeIn">
-          <h1 className="text-3xl md:text-4xl font-bold text-[#2F4F2F] mb-3">แก้ไขรายละเอียด Workshop</h1>
-          <p className="text-[#6B6B6B] text-base">คุณสามารถแก้ไขข้อมูล Workshop ของคุณได้ตามต้องการ</p>
-          <p className="text-sm text-red-500 font-medium mt-1">⚠️ เมื่อบันทึกแล้ว สถานะจะกลับเป็น "รออนุมัติ" เพื่อให้แอดมินตรวจสอบใหม่</p>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-[#2F4F2F] mb-3">แก้ไขรายละเอียด Workshop</h1>
+          <p className="text-[#6B6B6B] text-lg font-bold">คุณสามารถแก้ไขข้อมูล Workshop ของคุณได้ตามต้องการ</p>
+          <p className="text-base text-red-500 font-bold mt-1">⚠️ เมื่อบันทึกแล้ว สถานะจะกลับเป็น "รออนุมัติ" เพื่อให้แอดมินตรวจสอบใหม่</p>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm p-8 space-y-6 border border-gray-100 animate-slideUp">
@@ -348,31 +318,31 @@ const ShopWorkshopEdit = () => {
           {/* Form Fields - Same as Create but now wired to real state */}
           
           <div>
-            <label className="block text-sm font-semibold text-[#3D3D3D] mb-2">ชื่อ Workshop</label>
+            <label className="block text-lg font-bold text-[#3D3D3D] mb-2">ชื่อ Workshop</label>
             <input
               type="text"
               name="title"
               value={form.title}
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] transition-all"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] transition-all text-lg font-bold"
               required
             />
           </div>
 
           <div className="space-y-3">
-            <label className="block text-sm font-medium text-gray-700">รูปภาพ Workshop</label>
+            <label className="block text-lg font-bold text-gray-800">รูปภาพ Workshop</label>
             <div className="relative aspect-video w-full bg-orange-50 border-2 border-dashed border-orange-300 rounded-xl overflow-hidden flex items-center justify-center">
               {form.imageUrl ? (
                 <img src={form.imageUrl} alt="workshop" className="w-full h-full object-cover" />
               ) : (
                 <div className="text-center text-orange-600">
                   <Camera className="h-12 w-12 mx-auto mb-2" />
-                  <p className="text-sm">อัปโหลดรูปภาพ Workshop</p>
+                  <p className="text-base font-bold">อัปโหลดรูปภาพ Workshop</p>
                 </div>
               )}
             </div>
             <div className="flex gap-2">
-              <label className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg cursor-pointer hover:bg-orange-600 shadow-sm transition-colors">
+              <label className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg cursor-pointer hover:bg-orange-600 shadow-sm transition-colors text-lg font-bold">
                 <Camera className="h-4 w-4" />
                 เปลี่ยนรูปภาพ
                 <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImagePick(e.target.files?.[0])} />
@@ -381,7 +351,7 @@ const ShopWorkshopEdit = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-[#3D3D3D] mb-3">หมวดหมู่หลักของ Workshop</label>
+            <label className="block text-lg font-bold text-[#3D3D3D] mb-3">หมวดหมู่หลักของ Workshop</label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {WORKSHOP_CATEGORY_OPTIONS.map(option => (
                 <label
@@ -396,87 +366,87 @@ const ShopWorkshopEdit = () => {
                     onChange={handleChange}
                     className="w-4 h-4 text-[#E07B39] border-gray-300 focus:ring-[#E07B39]"
                   />
-                  <span className="text-sm text-gray-700">{option.label}</span>
+                  <span className="text-base font-bold text-gray-700">{option.label}</span>
                 </label>
               ))}
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-[#3D3D3D] mb-2">คำอธิบาย Workshop</label>
+            <label className="block text-lg font-bold text-[#3D3D3D] mb-2">คำอธิบาย Workshop</label>
             <textarea
               name="description"
               value={form.description}
               onChange={handleChange}
               rows={4}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] transition-all"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E07B39] transition-all text-lg font-bold"
               required
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-[#6B6B6B] mb-1.5">วันที่เปิดรับลงทะเบียน</label>
+                <label className="block text-base font-bold text-[#6B6B6B] mb-1.5">วันที่เปิดรับลงทะเบียน</label>
                 <input
                   type="date"
                   name="registrationStartDate"
                   value={form.registrationStartDate}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none text-lg font-bold"
                   required
                 />
               </div>
               <div>
-                <label className="block text-xs text-[#6B6B6B] mb-1.5">วันที่ปิดรับลงทะเบียน</label>
+                <label className="block text-base font-bold text-[#6B6B6B] mb-1.5">วันที่ปิดรับลงทะเบียน</label>
                 <input
                   type="date"
                   name="registrationEndDate"
                   value={form.registrationEndDate}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none text-lg font-bold"
                 />
               </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-[#6B6B6B] mb-1.5">เวลาเริ่มกิจกรรม</label>
+              <label className="block text-base font-bold text-[#6B6B6B] mb-1.5">เวลาเริ่มกิจกรรม</label>
               <input
                 type="time"
                 name="workshopStartTime"
                 value={form.workshopStartTime}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none text-lg font-bold"
                 required
               />
             </div>
             <div>
-              <label className="block text-xs text-[#6B6B6B] mb-1.5">เวลาสิ้นสุดกิจกรรม</label>
+              <label className="block text-base font-bold text-[#6B6B6B] mb-1.5">เวลาสิ้นสุดกิจกรรม</label>
               <input
                 type="time"
                 name="workshopEndTime"
                 value={form.workshopEndTime}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none text-lg font-bold"
                 required
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-[#3D3D3D] mb-3">📆 วันที่จัด Workshop</label>
+            <label className="block text-lg font-bold text-[#3D3D3D] mb-3">📆 วันที่จัด Workshop</label>
             <input
               type="date"
               name="workshopDate"
               value={form.workshopDate}
               onChange={handleChange}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none text-lg font-bold"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-[#3D3D3D] mb-3">📍 สถานที่</label>
+            <label className="block text-lg font-bold text-[#3D3D3D] mb-3">📍 สถานที่</label>
             <div className="space-y-3">
               <div className="flex gap-4 flex-wrap">
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -488,7 +458,7 @@ const ShopWorkshopEdit = () => {
                     onChange={() => handleLocationRadioChange('shop')}
                     className="w-4 h-4 text-[#E07B39] border-gray-300 focus:ring-[#E07B39]"
                   />
-                  <span className="text-sm text-[#3D3D3D]">ใช้สถานที่ร้าน</span>
+                  <span className="text-base font-bold text-[#3D3D3D]">ใช้สถานที่ร้าน</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -499,7 +469,7 @@ const ShopWorkshopEdit = () => {
                     onChange={() => handleLocationRadioChange('custom')}
                     className="w-4 h-4 text-[#E07B39] border-gray-300 focus:ring-[#E07B39]"
                   />
-                  <span className="text-sm text-[#3D3D3D]">ระบุสถานที่เอง</span>
+                  <span className="text-base font-bold text-[#3D3D3D]">ระบุสถานที่เอง</span>
                 </label>
               </div>
               {form.locationType === 'custom' && (
@@ -509,7 +479,7 @@ const ShopWorkshopEdit = () => {
                   value={form.customLocation}
                   onChange={handleChange}
                   placeholder="ระบุสถานที่จัด Workshop"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none text-lg font-bold"
                   required
                 />
               )}
@@ -518,26 +488,26 @@ const ShopWorkshopEdit = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-[#6B6B6B] mb-1.5">ราคา (บาท)</label>
+                <label className="block text-base font-bold text-[#6B6B6B] mb-1.5">ราคา (บาท)</label>
                 <input
                   type="number"
                   name="price"
                   value={form.price}
                   onChange={handleChange}
                   min="0"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none text-lg font-bold"
                   required
                 />
               </div>
               <div>
-                <label className="block text-xs text-[#6B6B6B] mb-1.5">จำนวนที่นั่ง</label>
+                <label className="block text-base font-bold text-[#6B6B6B] mb-1.5">จำนวนที่นั่ง</label>
                 <input
                   type="number"
                   name="seatLimit"
                   value={form.seatLimit}
                   onChange={handleChange}
                   min="1"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E07B39] outline-none text-lg font-bold"
                   required
                 />
               </div>
@@ -548,14 +518,14 @@ const ShopWorkshopEdit = () => {
             <button
               type="button"
               onClick={() => navigate(`/${slug}/shop/workshops/${id}`)}
-              className="px-8 py-3 border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-colors"
+              className="px-8 py-3 border border-gray-300 text-gray-700 text-xl font-bold rounded-xl hover:bg-gray-50 transition-colors"
             >
               ยกเลิก
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 py-3.5 bg-[#E07B39] hover:bg-[#D66B29] text-white font-semibold rounded-full transition-all disabled:opacity-60 shadow-md transform hover:scale-[1.01]"
+              className="flex-1 py-3.5 bg-[#E07B39] hover:bg-[#D66B29] text-white text-xl font-bold rounded-full transition-all disabled:opacity-60 shadow-md transform hover:scale-[1.01]"
             >
               {saving ? 'กำลังบันทึก...' : 'บันทึกการแก้ไข'}
             </button>

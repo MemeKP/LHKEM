@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+﻿import { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -26,8 +26,8 @@ const formatStatus = (status = '') => status.toUpperCase();
 
 const InfoRow = ({ label, value }) => (
   <div className="flex items-start justify-between py-3 border-b border-gray-100 last:border-0">
-    <span className="text-sm text-gray-500">{label}</span>
-    <span className="text-sm font-medium text-gray-900 text-right max-w-xs">{value || '-'}</span>
+    <span className="text-base font-bold text-gray-700">{label}</span>
+    <span className="text-lg font-bold text-gray-900 text-right max-w-xs">{value || '-'}</span>
   </div>
 );
 
@@ -85,7 +85,7 @@ const PlatformShopApproval = () => {
       <div className="flex items-center justify-center min-h-screen bg-[#FAF8F3]">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent mb-4"></div>
-          <p className="text-gray-600">{ct('กำลังโหลดข้อมูลร้านค้า...', 'Loading shop data...')}</p>
+          <p className="text-lg font-bold text-gray-700">{ct('กำลังโหลดข้อมูลร้านค้า...', 'Loading shop data...')}</p>
         </div>
       </div>
     );
@@ -95,10 +95,10 @@ const PlatformShopApproval = () => {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#FAF8F3]">
         <div className="text-center space-y-4">
-          <p className="text-gray-700">{ct('ไม่พบข้อมูลร้านค้านี้', 'Unable to load shop data.')}</p>
+          <p className="text-lg font-bold text-gray-700">{ct('ไม่พบข้อมูลร้านค้านี้', 'Unable to load shop data.')}</p>
           <button
             onClick={() => navigate(`/platform-admin/communities/${communityId}`)}
-            className="px-4 py-2 text-sm font-semibold text-white bg-orange-500 rounded-lg"
+            className="px-6 py-2.5 text-lg font-bold text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors"
           >
             {ct('กลับไปหน้าก่อนหน้า', 'Go back')}
           </button>
@@ -121,32 +121,32 @@ const PlatformShopApproval = () => {
           className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
-          <span className="font-medium">{ct('กลับไปหน้าชุมชน', 'Back to community')}</span>
+          <span className="text-lg font-bold">{ct('กลับไปหน้าชุมชน', 'Back to community')}</span>
         </button>
 
         <div className="bg-white rounded-2xl p-6 shadow-sm space-y-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <p className="text-sm uppercase tracking-wide text-orange-500 font-semibold mb-1">
+              <p className="text-base uppercase tracking-wide text-orange-600 font-bold mb-1">
                 {ct('การตรวจสอบข้อมูลร้านค้า', 'Shop Review')}
               </p>
-              <h1 className="text-3xl font-bold text-gray-900">{shop.shopName}</h1>
-              <p className="text-sm text-gray-500 mt-2">
+              <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">{shop.shopName}</h1>
+              <p className="text-base font-bold text-gray-600 mt-2">
                 {ct('ชุมชน', 'Community')}: {communityId}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${statusStyles[shopStatus] || statusStyles.PENDING}`}>
+              <span className={`px-4 py-1.5 rounded-full text-base font-bold ${statusStyles[shopStatus] || statusStyles.PENDING}`}>
                 {ct('สถานะร้าน', 'Shop Status')}: {formatStatus(shopStatus)}
               </span>
               {pin?.hasPin && (
-                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${pinStatus === 'APPROVED' ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-yellow-100 text-yellow-800 border border-yellow-200'}`}>
+                <span className={`px-4 py-1.5 rounded-full text-base font-bold ${pinStatus === 'APPROVED' ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-yellow-100 text-yellow-800 border border-yellow-200'}`}>
                   {ct('สถานะหมุด', 'Pin Status')}: {formatStatus(pinStatus)}
                 </span>
               )}
             </div>
           </div>
-          <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
+          <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-5 text-lg font-bold text-gray-700">
             {ct(
               'แพลตฟอร์มแอดมินสามารถตรวจสอบข้อมูลร้านและหมุดได้เท่านั้น การอนุมัติจะดำเนินการโดยผู้ดูแลชุมชน',
               'Platform admins can review shop and pin information here. Approvals are handled by the community admin.'
@@ -157,8 +157,8 @@ const PlatformShopApproval = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-2xl p-6 shadow-sm">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">{ct('ข้อมูลร้านค้า', 'Shop Information')}</h2>
-              <p className="text-gray-600 text-sm leading-relaxed mb-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">{ct('ข้อมูลร้านค้า', 'Shop Information')}</h2>
+              <p className="text-lg font-bold text-gray-700 leading-relaxed mb-6">
                 {shop.description || ct('ไม่มีคำอธิบายร้านค้า', 'No description provided.')}
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -170,27 +170,27 @@ const PlatformShopApproval = () => {
             </div>
 
             <div className="bg-white rounded-2xl p-6 shadow-sm">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">{ct('ช่องทางการติดต่อ', 'Contact')}</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-4">{ct('ช่องทางการติดต่อ', 'Contact')}</h2>
               <div className="space-y-4">
-                <div className="flex items-center gap-3 p-4 rounded-xl border border-gray-100">
-                  <Phone className="h-5 w-5 text-orange-500" />
+                <div className="flex items-center gap-4 p-5 rounded-xl border border-gray-100">
+                  <Phone className="h-6 w-6 text-orange-500" />
                   <div>
-                    <p className="text-xs uppercase tracking-wide text-gray-500">{ct('โทรศัพท์', 'Phone')}</p>
-                    <p className="text-sm font-medium text-gray-900">{contact.phone || '-'}</p>
+                    <p className="text-sm uppercase tracking-wide font-bold text-gray-600">{ct('โทรศัพท์', 'Phone')}</p>
+                    <p className="text-lg font-bold text-gray-900">{contact.phone || '-'}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 p-4 rounded-xl border border-gray-100">
-                  <MessageSquare className="h-5 w-5 text-orange-500" />
+                <div className="flex items-center gap-4 p-5 rounded-xl border border-gray-100">
+                  <MessageSquare className="h-6 w-6 text-orange-500" />
                   <div>
-                    <p className="text-xs uppercase tracking-wide text-gray-500">LINE</p>
-                    <p className="text-sm font-medium text-gray-900">{contact.line || '-'}</p>
+                    <p className="text-sm uppercase tracking-wide font-bold text-gray-600">LINE</p>
+                    <p className="text-lg font-bold text-gray-900">{contact.line || '-'}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 p-4 rounded-xl border border-gray-100">
-                  <Facebook className="h-5 w-5 text-orange-500" />
+                <div className="flex items-center gap-4 p-5 rounded-xl border border-gray-100">
+                  <Facebook className="h-6 w-6 text-orange-500" />
                   <div>
-                    <p className="text-xs uppercase tracking-wide text-gray-500">Facebook</p>
-                    <p className="text-sm font-medium text-gray-900">{contact.facebook || '-'}</p>
+                    <p className="text-sm uppercase tracking-wide font-bold text-gray-600">Facebook</p>
+                    <p className="text-lg font-bold text-gray-900">{contact.facebook || '-'}</p>
                   </div>
                 </div>
               </div>
@@ -200,9 +200,9 @@ const PlatformShopApproval = () => {
           <div className="space-y-6">
             <div className="bg-white rounded-2xl p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">{ct('หมุดบนแผนที่', 'Map Pin')}</h2>
+                <h2 className="text-xl font-bold text-gray-900">{ct('หมุดบนแผนที่', 'Map Pin')}</h2>
                 {pin?.hasPin && (
-                  <span className="text-sm text-gray-500">{ct('พิกัด', 'Coordinates')}: X {pin.position_x?.toFixed?.(2) ?? pin.position_x}, Y {pin.position_y?.toFixed?.(2) ?? pin.position_y}</span>
+                  <span className="text-base font-bold text-gray-600">{ct('พิกัด', 'Coordinates')}: X {pin.position_x?.toFixed?.(2) ?? pin.position_x}, Y {pin.position_y?.toFixed?.(2) ?? pin.position_y}</span>
                 )}
               </div>
               <div className="rounded-2xl border border-gray-100 overflow-hidden">
@@ -210,7 +210,7 @@ const PlatformShopApproval = () => {
                   {mapLoading ? (
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 space-y-3">
                       <Loader2 className="h-8 w-8 animate-spin" />
-                      <p>{ct('กำลังโหลดแผนที่...', 'Loading community map...')}</p>
+                      <p className="text-lg font-bold text-gray-700">{ct('กำลังโหลดแผนที่...', 'Loading community map...')}</p>
                     </div>
                   ) : mapData?.map_image ? (
                     <div
@@ -245,7 +245,7 @@ const PlatformShopApproval = () => {
                   ) : (
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500">
                       <MapPin className="h-10 w-10 text-gray-400 mb-3" />
-                      <p>{ct('ยังไม่ได้อัปโหลดแผนที่ชุมชน', 'No community map uploaded yet.')}</p>
+                      <p className="text-lg font-bold text-gray-700">{ct('ยังไม่ได้อัปโหลดแผนที่ชุมชน', 'No community map uploaded yet.')}</p>
                     </div>
                   )}
                 </div>
@@ -253,15 +253,15 @@ const PlatformShopApproval = () => {
 
               <div className="mt-4 space-y-3">
                 {pin?.hasPin ? (
-                  <p className="text-sm text-gray-600">
+                  <p className="text-lg font-bold text-gray-700">
                     {ct(
                       'การอนุมัติหมุดจะถูกจัดการโดยผู้ดูแลชุมชน หากต้องการแก้ไขหรืออนุมัติ โปรดติดต่อผู้ดูแลชุมชน',
                       'Map pin approvals are handled by community admins. Contact them if updates or approval are needed.'
                     )}
                   </p>
                 ) : (
-                  <div className="rounded-2xl bg-gray-50 border border-dashed border-gray-200 p-4 text-center">
-                    <p className="text-sm text-gray-500">
+                  <div className="rounded-2xl bg-gray-50 border border-dashed border-gray-200 p-5 text-center">
+                    <p className="text-lg font-bold text-gray-700">
                       {ct('ร้านค้านี้ยังไม่ได้วางหมุดบนแผนที่', 'This shop has not placed a map pin yet.')}
                     </p>
                   </div>

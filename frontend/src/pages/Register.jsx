@@ -127,18 +127,18 @@ const Register = () => {
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-12 text-white">
-          <h1 className="text-4xl font-bold mb-4">
+          <h1 className="text-5xl font-bold mb-4">
             {t('auth.welcomeTitle')}<br />
             {t('auth.communityName')}
           </h1>
-          <p className="text-lg opacity-90">
+          <p className="text-xl font-bold opacity-90">
             {t('auth.welcomeDescription')}
           </p>
         </div>
       </div>
 
       {/* Right Side - Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-white relative">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 bg-white relative">
         <button
           onClick={() => navigate('/')}
           className="absolute top-6 right-6 text-gray-400 hover:text-gray-600 transition-colors"
@@ -147,22 +147,22 @@ const Register = () => {
         </button>
 
         <div className="w-full max-w-md animate-slideUp">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('auth.registerTitle')}</h2>
-          <p className="text-gray-600 mb-8">
+          <h2 className="text-4xl font-extrabold text-gray-900 mb-2">{t('auth.registerTitle')}</h2>
+          <p className="text-lg font-bold text-gray-800 mb-8">
             {t('auth.registerDescription')}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Role Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label className="block text-lg font-bold text-gray-800 mb-3">
                 {t('auth.role') || 'บทบาท'}
               </label>
               <div className="grid grid-cols-3 gap-3">
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, role: 'TOURIST' })}
-                  className={`px-4 py-3 rounded-lg border-2 font-medium transition-all duration-200 ${
+                  className={`px-4 py-3 rounded-lg border-2 text-lg font-bold transition-all duration-200 ${
                     formData.role === 'TOURIST'
                       ? 'border-orange-500 bg-orange-50 text-orange-700'
                       : 'border-gray-300 bg-white text-gray-700 hover:border-orange-300'
@@ -173,7 +173,7 @@ const Register = () => {
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, role: 'SHOP_OWNER' })}
-                  className={`px-4 py-3 rounded-lg border-2 font-medium transition-all duration-200 ${
+                  className={`px-4 py-3 rounded-lg border-2 text-lg font-bold transition-all duration-200 ${
                     formData.role === 'SHOP_OWNER'
                       ? 'border-orange-500 bg-orange-50 text-orange-700'
                       : 'border-gray-300 bg-white text-gray-700 hover:border-orange-300'
@@ -184,7 +184,7 @@ const Register = () => {
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, role: 'COMMUNITY_ADMIN' })}
-                  className={`px-4 py-3 rounded-lg border-2 font-medium transition-all duration-200 ${
+                  className={`px-4 py-3 rounded-lg border-2 text-lg font-bold transition-all duration-200 ${
                     formData.role === 'COMMUNITY_ADMIN'
                       ? 'border-orange-500 bg-orange-50 text-orange-700'
                       : 'border-gray-300 bg-white text-gray-700 hover:border-orange-300'
@@ -196,7 +196,7 @@ const Register = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-lg font-bold text-gray-800 mb-2">
                 {t('auth.email')}
               </label>
               <input
@@ -205,14 +205,14 @@ const Register = () => {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="tourist@email.com"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 required
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-lg font-bold text-gray-800 mb-2">
                   {t('auth.firstName')}
                 </label>
                 <input
@@ -221,12 +221,12 @@ const Register = () => {
                   value={formData.firstname}
                   onChange={handleChange}
                   placeholder="นิรันดร์"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-lg font-bold text-gray-800 mb-2">
                   {t('auth.lastName')}
                 </label>
                 <input
@@ -235,14 +235,14 @@ const Register = () => {
                   value={formData.lastname}
                   onChange={handleChange}
                   placeholder="แม่ศรี"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-lg font-bold text-gray-800 mb-2">
                 {t('auth.phone')}
               </label>
               <input
@@ -251,13 +251,13 @@ const Register = () => {
                 value={formData.phone}
                 onChange={handleChange}
                 placeholder="0812345678"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-lg font-bold text-gray-800 mb-2">
                 {t('auth.password')}
               </label>
               <input
@@ -266,13 +266,13 @@ const Register = () => {
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="••••••••"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-lg font-bold text-gray-800 mb-2">
                 {t('auth.confirmPassword')}
               </label>
               <input
@@ -281,21 +281,21 @@ const Register = () => {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 placeholder="••••••••"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 required
               />
             </div>
 
             <button
               type="submit"
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg transition-all transform hover:scale-105"
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white text-lg font-bold py-3 rounded-lg transition-all transform hover:scale-105"
             >
               {t('auth.registerButton')}
             </button>
 
-            <p className="text-center text-sm text-gray-600">
+            <p className="text-center text-lg font-bold text-gray-800">
               {t('auth.haveAccount')}{' '}
-              <Link to="/login" className="text-orange-600 hover:text-orange-700 font-medium">
+              <Link to="/login" className="text-orange-600 hover:text-orange-700 border-b-2 border-transparent hover:border-orange-600">
                 {t('auth.loginButton')}
               </Link>
             </p>

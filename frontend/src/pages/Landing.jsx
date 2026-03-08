@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Users, Calendar, ArrowRight, StoreIcon } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -118,26 +118,26 @@ const Landing = () => {
       <section className="relative py-16 px-4">
         <div className="max-w-6xl mx-auto text-center">
           {/* Main Heading */}
-          <h1 className="text-4xl md:text-5xl font-bold text-[#2F4F2F] mb-3 tracking-wide animate-fadeIn">
+          <h1 className="text-5xl md:text-6xl font-extrabold text-[#2F4F2F] mb-3 tracking-wide animate-fadeIn">
             THE COMMUNITY
           </h1>
-          <p className="text-sm text-[#6B6B6B] mb-8 animate-fadeIn" style={{ animationDelay: '0.1s' }}>
-            {ct('ยินดีต้อนรับสู่ โหล่งฮิมคาว', 'Welcome to Loeng Him Kaw')}
+          <p className="text-lg font-bold text-gray-700 mb-8 animate-fadeIn" style={{ animationDelay: '0.1s' }}>
+            {ct('ยินดีต้อนรับสู่ The Community', 'Welcome to The Community')}
           </p>
 
           {/* Thai Description */}
-          <h2 className="text-2xl md:text-3xl font-bold text-[#2F4F2F] mb-2 animate-fadeIn" style={{ animationDelay: '0.2s' }}>
+          <h2 className="text-3xl md:text-4xl font-extrabold text-[#2F4F2F] mb-2 animate-fadeIn" style={{ animationDelay: '0.2s' }}>
             {ct('สำรวจชุมชนท้องถิ่น', 'Explore Local Communities')}
           </h2>
-          <h3 className="text-xl text-[#E07B39] md:text-2xl font-semibold mb-6 animate-fadeIn" style={{ animationDelay: '0.3s' }}>
+          <h3 className="text-2xl md:text-3xl font-extrabold text-[#E07B39] mb-6 animate-fadeIn" style={{ animationDelay: '0.3s' }}>
             {ct('และ ', 'and ')}
-            <span className="text-[#6B6B6B]">
+            <span className="text-xl font-bold text-gray-700">
               {ct('ประสบการณ์วัฒนธรรม', 'Cultural Experiences')}
             </span>
           </h3>
 
           {/* Description */}
-          <p className="text-base font-semibold max-w-2xl mx-auto mb-8 leading-relaxed animate-fadeIn" style={{ animationDelay: '0.4s' }}>
+          <p className="text-lg font-bold max-w-2xl mx-auto mb-8 leading-relaxed animate-fadeIn" style={{ animationDelay: '0.4s' }}>
             {ct(
               'แพลตฟอร์มที่รวมชมชนท้องถิ่นต่างๆไว้ในที่เดียว เพื่อให้คุณสัมผัส วิถึชีวิต วัฒนธรรม และภูมิปัญญาท้องถิ่น',
               'A platform that brings together local communities in one place, allowing you to experience the local way of life, culture, and traditional knowledge.'
@@ -150,7 +150,7 @@ const Landing = () => {
               const element = document.getElementById('communities-section');
               element?.scrollIntoView({ behavior: 'smooth' });
             }}
-            className="inline-flex items-center gap-2 bg-[#E07B39] hover:bg-[#D66B29] text-white font-semibold px-8 py-3 rounded-full shadow-md transition-all hover:scale-105 hover:shadow-lg mb-12 animate-fadeIn"
+            className="inline-flex items-center gap-2 bg-[#E07B39] hover:bg-[#D66B29] text-white text-lg font-bold px-8 py-3 rounded-full shadow-md transition-all hover:scale-105 hover:shadow-lg mb-12 animate-fadeIn"
             style={{ animationDelay: '0.5s' }}
           >
             {ct('เริ่มสำรวจชุมชน', 'Start Exploring')}
@@ -160,8 +160,8 @@ const Landing = () => {
           <div className="grid grid-cols-3 gap-8 max-w-md mx-auto">
             {platformStats.map((stat, index) => (
               <div key={index} className="text-center animate-fadeIn" style={{ animationDelay: `${0.6 + index * 0.1}s` }}>
-                <div className="text-3xl font-bold text-[#E07B39] mb-1 hover:scale-110 transition-transform">{stat.number}</div>
-                <div className="text-sm text-[#6B6B6B]">{stat.label}</div>
+                <div className="text-4xl font-extrabold text-[#E07B39] mb-1 hover:scale-110 transition-transform">{stat.number}</div>
+                <div className="text-lg font-bold text-gray-700">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -173,10 +173,10 @@ const Landing = () => {
         <div className="max-w-6xl mx-auto">
           {/* Section Header */}
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-[#2F4F2F] mb-2">
+            <h2 className="text-4xl font-extrabold text-[#2F4F2F] mb-2">
               {ct('ชุมชนของเรา', 'Our Communities')}
             </h2>
-            <p className="text-[#6B6B6B] font-semibold mb-6">
+            <p className="text-lg font-bold text-gray-700 mb-6">
               {ct(
                 'เลือกชุมชนที่คุณสนใจ เพื่อค้นพบกิจกรรมและประสบการณ์ที่น่าสนใจ',
                 'Choose your community to discover exciting activities and experiences'
@@ -188,7 +188,7 @@ const Landing = () => {
           {isLoading && (
             <div className="text-center py-20">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent"></div>
-              <p className="mt-4 text-gray-600">
+              <p className="mt-4 text-lg font-bold text-gray-700">
                 {ct('กำลังโหลดชุมชน...', 'Loading communities...')}
               </p>
             </div>
@@ -197,7 +197,7 @@ const Landing = () => {
           {/* No Communities */}
           {!isLoading && communities.length === 0 && (
             <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300">
-              <p className="text-gray-600 text-lg">
+              <p className="text-xl font-bold text-gray-700">
                 {ct('ยังไม่มีชุมชนในระบบ', 'No communities available yet')}
               </p>
             </div>
@@ -238,12 +238,12 @@ const Landing = () => {
                     {/* Community Info */}
                     <div className="p-5">
                       {/* Community Name */}
-                      <h3 className="text-xl font-bold text-[#3D3D3D] mb-2 group-hover:text-[#E07B39] transition-colors">
+                      <h3 className="text-2xl font-extrabold text-[#3D3D3D] mb-2 group-hover:text-[#E07B39] transition-colors">
                         {ct(community.name, community.name_en || community.name)}
                       </h3>
 
                       {/* Description */}
-                      <p className="text-sm text-[#6B6B6B] mb-4 line-clamp-2">
+                      <p className="text-lg font-semibold text-gray-700 mb-4 line-clamp-2">
                         {ct(
                           community.hero_section?.description || community.history,
                           community.hero_section?.description_en || community.history_en || community.hero_section?.description
@@ -251,13 +251,13 @@ const Landing = () => {
                       </p>
 
                       {/* Stats */}
-                      <div className="flex items-center gap-4 text-xs text-[#6B6B6B] mb-4">
+                      <div className="flex items-center gap-4 text-lg font-bold text-gray-700 mb-4">
                         <div className="flex items-center gap-1">
-                          <StoreIcon className="h-3.5 w-3.5" />
+                          <StoreIcon className="h-5 w-5" />
                           <span>{shopCounts[community._id] ?? 0}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Calendar className="h-3.5 w-3.5" />
+                          <Calendar className="h-5 w-5" />
                           <span>{community.events?.length || 0}</span>
                         </div>
                       </div>
@@ -265,7 +265,7 @@ const Landing = () => {
                       {/* CTA Button */}
                       <button
                         onClick={() => handleCommunityClick(community.slug)}
-                        className="w-full bg-[#E07B39] hover:bg-[#D66B29] text-white font-medium py-2.5 rounded-full transition-all duration-300 shadow-sm hover:shadow-md hover:scale-105"
+                        className="w-full bg-[#E07B39] hover:bg-[#D66B29] text-white text-lg font-bold py-2.5 rounded-full transition-all duration-300 shadow-sm hover:shadow-md hover:scale-105"
                       >
                         {ct('เข้าชมชุมชน', 'Visit Community')}
                       </button>
@@ -281,10 +281,10 @@ const Landing = () => {
       {/* Call to Action Section */}
       <section className="py-16 px-4 bg-[#F5EFE7]">
         <div className="max-w-2xl mx-auto bg-white rounded-2xl p-10 text-center shadow-md hover:shadow-xl transition-all duration-300 animate-fadeIn">
-          <h2 className="text-2xl md:text-3xl font-bold text-[#2F4F2F] mb-3">
+          <h2 className="text-3xl md:text-4xl font-extrabold text-[#2F4F2F] mb-3">
             {ct('พร้อมที่จะ เริ่มต้น แล้วหรือยัง?', 'Ready to Get Started?')}
           </h2>
-          <p className="text-base text-[#6B6B6B] font-semibold mb-6">
+          <p className="text-xl font-bold text-gray-700 mb-6">
             {ct(
               'สำรวจชุมชนท้องถิ่นและค้นพบกิจกรรมที่น่าสนใจรอคุณอยู่',
               'Explore local communities and discover exciting activities waiting for you'
@@ -295,7 +295,7 @@ const Landing = () => {
               const element = document.getElementById('communities-section');
               element?.scrollIntoView({ behavior: 'smooth' });
             }}
-            className="inline-flex items-center gap-2 bg-[#E07B39] hover:bg-[#D66B29] text-white font-semibold px-8 py-3 rounded-full shadow-md transition-all hover:scale-105 hover:shadow-lg"
+            className="inline-flex items-center gap-2 bg-[#E07B39] hover:bg-[#D66B29] text-white text-lg font-bold px-8 py-3 rounded-full shadow-md transition-all hover:scale-105 hover:shadow-lg"
           >
             {ct('สำรวจชุมชน', 'Explore Communities')}
           </button>

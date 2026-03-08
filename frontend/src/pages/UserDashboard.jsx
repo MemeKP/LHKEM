@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+﻿import { useState, useEffect, useMemo } from 'react';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, MapPin, Users, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, Ticket, Store, Trash2 } from 'lucide-react';
@@ -270,7 +270,7 @@ const UserDashboard = () => {
     const label = config.label || (s === 'cancel' ? ct('ยกเลิกการจองร้านค้า', 'Cancelled by you') : s);
 
     return (
-      <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium" style={{ backgroundColor: config.bg, color: config.text }}>
+      <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-base font-bold" style={{ backgroundColor: config.bg, color: config.text }}>
         <Icon className="h-4 w-4" />
         <span>{label}</span>
       </span>
@@ -527,7 +527,7 @@ const UserDashboard = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">{t('dashboard.loading')}</p>
+          <p className="mt-4 text-lg font-bold text-gray-700">{t('dashboard.loading')}</p>
         </div>
       </div>
     );
@@ -537,8 +537,8 @@ const UserDashboard = () => {
     <div className="min-h-screen bg-gray-50 py-8 animate-fadeIn">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8 animate-slideUp">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('dashboard.title')}</h1>
-          <p className="text-gray-600">
+          <h1 className="text-4xl font-extrabold text-gray-900 mb-2">{t('dashboard.title')}</h1>
+          <p className="text-xl font-bold text-gray-800">
             {t('dashboard.welcome')}, {user?.firstName || user?.firstname || user?.email}
           </p>
         </div>
@@ -549,15 +549,15 @@ const UserDashboard = () => {
             <div className="flex items-center space-x-4 transition-all duration-300 hover:-translate-y-1">
               <div className="p-3 bg-blue-100 rounded-lg"><Calendar className="h-6 w-6 text-blue-600" /></div>
               <div>
-                <p className="text-sm text-gray-600">{t('dashboard.stats.total')}</p>
-                <p className="text-2xl font-bold text-gray-900">{enrollments.length}</p>
+                <p className="text-lg font-bold text-gray-800">{t('dashboard.stats.total')}</p>
+                <p className="text-4xl font-extrabold text-gray-900">{enrollments.length}</p>
               </div>
             </div>
             <div className="flex items-center space-x-4 transition-all duration-300 hover:-translate-y-1">
               <div className="p-3 bg-green-100 rounded-lg"><CheckCircle className="h-6 w-6 text-green-600" /></div>
               <div>
-                <p className="text-sm text-gray-600">{t('dashboard.stats.upcoming')}</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-lg font-bold text-gray-800">{t('dashboard.stats.upcoming')}</p>
+                <p className="text-4xl font-extrabold text-gray-900">
                   {enrollments.filter(e => new Date(e.workshopId?.date || e.date) > new Date() && e.status !== 'cancelled').length}
                 </p>
               </div>
@@ -565,8 +565,8 @@ const UserDashboard = () => {
             <div className="flex items-center space-x-4 transition-all duration-300 hover:-translate-y-1">
               <div className="p-3 bg-purple-100 rounded-lg"><Users className="h-6 w-6 text-purple-600" /></div>
               <div>
-                <p className="text-sm text-gray-600">{t('dashboard.stats.completed')}</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-lg font-bold text-gray-800">{t('dashboard.stats.completed')}</p>
+                <p className="text-4xl font-extrabold text-gray-900">
                   {enrollments.filter(e => e.status === 'completed' || new Date(e.workshopId?.date || e.date) < new Date()).length}
                 </p>
               </div>
@@ -576,17 +576,17 @@ const UserDashboard = () => {
 
         <div className="bg-white rounded-lg shadow-sm animate-slideUp delay-100">
           {fetchError && (
-            <div className="mx-6 mt-6 mb-2 rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-700">
+            <div className="mx-6 mt-6 mb-2 rounded-2xl border border-red-100 bg-red-50 p-4 text-lg font-bold text-red-800">
               {ct('ไม่สามารถโหลดรายการจองได้ โปรดลองใหม่อีกครั้ง', 'Unable to load your bookings right now. Please try again.')}
-              <div className="text-xs text-red-500 mt-1 break-all">{fetchError}</div>
+              <div className="text-base font-bold text-red-600 mt-1 break-all">{fetchError}</div>
             </div>
           )}
           {actionFeedback && (
             <div
-              className={`mx-6 mt-4 mb-2 rounded-2xl border p-4 text-sm ${
+              className={`mx-6 mt-4 mb-2 rounded-2xl border p-4 text-lg font-bold ${
                 actionFeedback.type === 'success'
-                  ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
-                  : 'border-red-100 bg-red-50 text-red-700'
+                  ? 'border-emerald-100 bg-emerald-50 text-emerald-800'
+                  : 'border-red-100 bg-red-50 text-red-800'
               }`}
             >
               {actionFeedback.message}
@@ -598,7 +598,7 @@ const UserDashboard = () => {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${activeTab === tab ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+                  className={`py-4 px-1 border-b-2 font-bold text-lg transition-colors duration-200 ${activeTab === tab ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-400'}`}
                 >
                   {t(`dashboard.tabs.${tab}`)}
                 </button>
@@ -610,11 +610,11 @@ const UserDashboard = () => {
             {sortedEnrollments.length === 0 ? (
               <div className="text-center py-12 animate-fadeIn">
                 <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">{t('dashboard.noEnrollments.title')}</h3>
-                <p className="text-gray-600 mb-6">{t('dashboard.noEnrollments.description')}</p>
+                <h3 className="text-2xl font-extrabold text-gray-900 mb-2">{t('dashboard.noEnrollments.title')}</h3>
+                <p className="text-lg font-bold text-gray-700 mb-6">{t('dashboard.noEnrollments.description')}</p>
                 <button
                   onClick={() => navigate(getExplorePath())} // UPDATED: Now uses the helper
-                  className="inline-flex items-center px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors"
+                  className="inline-flex items-center px-6 py-3 bg-orange-500 text-white text-lg font-bold rounded-lg hover:bg-orange-600 transition-colors"
                 >
                   {t('dashboard.noEnrollments.button')}
                   <ChevronRight className="ml-2 h-5 w-5" />
@@ -645,14 +645,14 @@ const UserDashboard = () => {
                         {getStatusBadge(enrollment.status)}
                       </div>
                       <div className="absolute bottom-4 left-4 right-4">
-                        <p className="text-xs text-white/80 mb-1">
+                        <p className="text-base font-bold text-white/90 mb-1 drop-shadow">
                           {formatDateOnly(getWorkshopDateValue(enrollment))}
                         </p>
-                        <h3 className="text-xl font-semibold text-white leading-tight line-clamp-2">
+                        <h3 className="text-2xl font-extrabold text-white leading-tight line-clamp-2 drop-shadow">
                           {getWorkshopTitle(enrollment)}
                         </h3>
-                        <div className="mt-1 text-[13px] text-white/80 flex items-center gap-2">
-                          <Store className="h-4 w-4 text-white/80" />
+                        <div className="mt-1 text-base font-bold text-white/90 flex items-center gap-2 drop-shadow">
+                          <Store className="h-4 w-4 text-white/90" />
                           <span className="line-clamp-1">{getWorkshopHost(enrollment)}</span>
                         </div>
                       </div>
@@ -660,17 +660,16 @@ const UserDashboard = () => {
 
                     <div className="flex flex-col flex-1 p-5 gap-5">
                       <div className="space-y-2">
-                        <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
+                        <h3 className="text-2xl font-extrabold text-gray-900 line-clamp-2">
                           {getWorkshopTitle(enrollment)}
                         </h3>
-                        <p className="text-sm text-gray-500 flex items-center gap-2">
+                        <p className="text-lg font-bold text-gray-700 flex items-center gap-2">
                           <Store className="h-4 w-4 text-amber-500" />
-
                           {getWorkshopHost(enrollment)}
                         </p>
                       </div>
 
-                      <div className="space-y-3 text-sm text-gray-600">
+                      <div className="space-y-3 text-lg font-bold text-gray-700">
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-orange-500" />
                           <span>{formatDateOnly(getWorkshopDateValue(enrollment))}</span>
@@ -698,7 +697,7 @@ const UserDashboard = () => {
                       <div className="mt-auto pt-3 border-t border-gray-100 flex flex-col gap-4">
                         <div className="flex items-baseline justify-between">
                           <div>
-                            <p className="text-xs text-gray-500">{t('dashboard.totalPrice')}</p>
+                            <p className="text-sm uppercase font-bold text-gray-600">{t('dashboard.totalPrice')}</p>
                             {(() => {
                               const workshop = getWorkshop(enrollment);
                               const slots = getReservedSeats(enrollment);
@@ -706,11 +705,11 @@ const UserDashboard = () => {
                               const totalPrice = Number(enrollment.totalPrice) || (pricePerPerson * slots);
                               return (
                                 <>
-                                  <p className="text-2xl font-bold text-gray-900">
+                                  <p className="text-3xl font-extrabold text-gray-900">
                                     {totalPrice === 0 ? ct('ฟรี', 'Free') : `฿${totalPrice.toLocaleString()}`}
                                   </p>
                                   {totalPrice > 0 && (
-                                    <p className="text-xs text-gray-400">
+                                    <p className="text-sm font-bold text-gray-600">
                                       ฿{pricePerPerson.toLocaleString()} × {slots} {ct('ที่นั่ง', 'seat(s)')}
                                     </p>
                                   )}
@@ -718,7 +717,7 @@ const UserDashboard = () => {
                               );
                             })()}
                           </div>
-                          <div className="text-right text-sm text-gray-500">
+                          <div className="text-right text-lg font-bold text-gray-700">
                             <div>{getStatusBadge(enrollment.status)}</div>
                           </div>
                         </div>
@@ -726,7 +725,7 @@ const UserDashboard = () => {
                         <div className="flex flex-col sm:flex-row flex-wrap gap-3">
                           <button
                             onClick={() => handleViewETicket(enrollment)}
-                            className={`px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 ${
+                            className={`px-4 py-2.5 text-lg font-bold rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 ${
                               ['confirmed', 'active'].includes((enrollment.status || '').toLowerCase())
                                 ? 'text-white bg-orange-500 hover:bg-orange-600'
                                 : 'text-orange-600 border border-orange-200 bg-white hover:bg-orange-50'
@@ -740,7 +739,7 @@ const UserDashboard = () => {
                           </button>
                           <button
                             onClick={() => handleOpenBookingDetail(enrollment)}
-                            className="px-4 py-2.5 text-sm font-semibold text-orange-600 border border-orange-200 rounded-2xl hover:bg-orange-50 transition-all duration-200"
+                            className="px-4 py-2.5 text-lg font-bold text-orange-600 border border-orange-200 rounded-2xl hover:bg-orange-50 transition-all duration-200"
                           >
                             {t('dashboard.viewDetails')}
                           </button>
@@ -748,7 +747,7 @@ const UserDashboard = () => {
                             <button
                               onClick={() => handleCancelEnrollment(enrollment)}
                               disabled={cancellingEnrollmentId === (enrollment._id || enrollment.id)}
-                              className={`px-4 py-2.5 text-sm font-semibold rounded-2xl border flex items-center justify-center gap-2 transition-all duration-200 ${
+                              className={`px-4 py-2.5 text-lg font-bold rounded-2xl border flex items-center justify-center gap-2 transition-all duration-200 ${
                                 cancellingEnrollmentId === (enrollment._id || enrollment.id)
                                   ? 'text-gray-400 border-gray-200 bg-gray-50 cursor-not-allowed'
                                   : 'text-amber-700 border-amber-200 bg-white hover:bg-amber-50'
@@ -764,7 +763,7 @@ const UserDashboard = () => {
                             <button
                               onClick={() => handleRemoveEnrollment(enrollment)}
                               disabled={removingEnrollmentId === (enrollment._id || enrollment.id)}
-                              className={`px-4 py-2.5 text-sm font-semibold rounded-2xl border flex items-center justify-center gap-2 transition-all duration-200 ${
+                              className={`px-4 py-2.5 text-lg font-bold rounded-2xl border flex items-center justify-center gap-2 transition-all duration-200 ${
                                 removingEnrollmentId === (enrollment._id || enrollment.id)
                                   ? 'text-gray-400 border-gray-200 bg-gray-50 cursor-not-allowed'
                                   : 'text-rose-600 border-rose-200 bg-white hover:bg-rose-50'
@@ -784,29 +783,29 @@ const UserDashboard = () => {
               </div>
               {totalPages > 1 && (
                 <div className="mt-8 flex flex-col gap-4 animate-fadeIn">
-                  <div className="text-sm text-gray-500 text-center">
+                  <div className="text-lg font-bold text-gray-700 text-center">
                     {ct('แสดง', 'Showing')} {startEntry}-{endEntry} {ct('จากทั้งหมด', 'of')} {sortedEnrollments.length} {ct('การจอง', 'bookings')}
                   </div>
                   <div className="flex items-center justify-center gap-3">
                     <button
                       onClick={handlePrevPage}
                       disabled={currentPage === 1}
-                      className={`px-4 py-2 rounded-2xl border text-sm font-semibold flex items-center gap-2 transition ${currentPage === 1 ? 'border-gray-200 text-gray-400 cursor-not-allowed' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                      className={`px-4 py-2 rounded-2xl border text-lg font-bold flex items-center gap-2 transition ${currentPage === 1 ? 'border-gray-200 text-gray-400 cursor-not-allowed' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
                       aria-label={ct('หน้าก่อนหน้า', 'Previous page')}
                     >
                       {ct('ก่อนหน้า', 'Prev')}
                     </button>
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="px-3 py-1 rounded-xl bg-orange-50 text-orange-600 font-semibold">
+                    <div className="flex items-center gap-2 text-base font-bold">
+                      <span className="px-3 py-1 rounded-xl bg-orange-50 text-orange-600 font-bold">
                         {currentPage}
                       </span>
-                      <span className="text-gray-400">/</span>
-                      <span className="text-gray-600">{totalPages}</span>
+                      <span className="font-bold text-gray-500">/</span>
+                      <span className="font-bold text-gray-700">{totalPages}</span>
                     </div>
                     <button
                       onClick={handleNextPage}
                       disabled={currentPage === totalPages}
-                      className={`px-4 py-2 rounded-2xl border text-sm font-semibold flex items-center gap-2 transition ${currentPage === totalPages ? 'border-gray-200 text-gray-400 cursor-not-allowed' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                      className={`px-4 py-2 rounded-2xl border text-lg font-bold flex items-center gap-2 transition ${currentPage === totalPages ? 'border-gray-200 text-gray-400 cursor-not-allowed' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
                       aria-label={ct('หน้าถัดไป', 'Next page')}
                     >
                       {ct('ถัดไป', 'Next')}

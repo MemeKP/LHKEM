@@ -167,9 +167,10 @@ const BookingDetailModal = ({
   const canViewTicket = ['confirmed', 'active'].includes(statusKey);
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 pt-20 sm:p-6 sm:pt-24 bg-black/60 backdrop-blur-sm animate-fadeIn overflow-y-auto">
-      <div className="bg-white w-full max-w-3xl max-h-[85vh] flex flex-col rounded-[32px] shadow-2xl relative animate-slideUp overflow-hidden my-auto">
-        <button
+    <div className="fixed inset-0 z-[60] overflow-y-auto bg-black/60 backdrop-blur-sm animate-fadeIn">
+      <div className="flex min-h-full items-center justify-center p-4 pt-20 text-center sm:px-0 sm:pb-0">
+        <div className="relative w-full max-w-3xl transform overflow-hidden rounded-[32px] bg-white text-left shadow-2xl transition-all sm:my-10 flex flex-col animate-slideUp">
+          <button
           className="absolute top-4 right-4 p-2 bg-white/80 backdrop-blur-sm rounded-full text-gray-700 hover:text-gray-900 hover:bg-white transition-all z-10"
           onClick={onClose}
           aria-label={t('common.close') || ct('ปิด', 'Close')}
@@ -182,13 +183,13 @@ const BookingDetailModal = ({
             <img src={workshopImage} alt={workshop?.title || 'Workshop cover'} className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
             <div className="absolute bottom-5 left-6 right-6 flex flex-col gap-2 text-white">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium bg-white/20 backdrop-blur">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-base font-bold bg-white/20 backdrop-blur">
                 <StatusIcon className="h-4 w-4" />
                 <span>{statusDisplayLabel}</span>
               </div>
-              <h2 className="text-2xl font-semibold leading-snug">{workshop?.title || enrollment?.workshopTitle || ct('ไม่มีชื่อเวิร์กช็อป', 'Untitled Workshop')}</h2>
-              <p className="text-sm text-white/80 flex items-center gap-2">
-                <Store className="h-4 w-4" />
+              <h2 className="text-3xl font-extrabold leading-snug">{workshop?.title || enrollment?.workshopTitle || ct('ไม่มีชื่อเวิร์กช็อป', 'Untitled Workshop')}</h2>
+              <p className="text-base font-bold text-white/80 flex items-center gap-2">
+                <Store className="h-5 w-5" />
                 {workshop?.shop?.shopName || workshop?.shopName || ct('ไม่ทราบผู้จัด', 'Unknown host')}
               </p>
             </div>
@@ -197,18 +198,18 @@ const BookingDetailModal = ({
           <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="rounded-3xl border border-gray-100 bg-gray-50 p-4 space-y-2">
-                <p className="text-xs uppercase text-gray-500 tracking-wide">{ct('วันที่จัดกิจกรรม', 'Event date')}</p>
-                <p className="text-base font-semibold text-gray-900">{formatNumericDate(dateValue)}</p>
-                <p className="text-sm text-gray-600 flex items-center gap-2">
+                <p className="text-base font-bold uppercase text-gray-600 tracking-wide">{ct('วันที่จัดกิจกรรม', 'Event date')}</p>
+                <p className="text-lg font-bold text-gray-900">{formatNumericDate(dateValue)}</p>
+                <p className="text-lg font-bold text-gray-700 flex items-center gap-2">
                   <Clock className="h-4 w-4 text-green-600" />
                   <span>{timeRange}</span>
                 </p>
               </div>
               <div className="rounded-3xl border border-gray-100 bg-white p-4 space-y-2">
-                <p className="text-xs uppercase text-gray-500 tracking-wide">{ct('สถานที่', 'Location')}</p>
-                <p className="text-sm text-gray-900 flex items-center gap-2">
+                <p className="text-base font-bold uppercase text-gray-600 tracking-wide">{ct('สถานที่', 'Location')}</p>
+                <p className="text-lg font-bold text-gray-900 flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-rose-600" />
-                  <span className="line-clamp-2 whitespace-pre-line wrap-break-word max-h-24 overflow-y-auto scrollbar-thin w-full">
+                  <span className="line-clamp-2 whitespace-pre-line break-words max-h-24 overflow-y-auto overflow-x-hidden scrollbar-thin w-full">
                     {workshop?.location?.customLocation ||
                       workshop?.location?.address ||
                       workshop?.customLocation ||
@@ -221,37 +222,37 @@ const BookingDetailModal = ({
             </div>
 
             <div className="rounded-3xl border border-gray-100 bg-white p-5 space-y-4">
-              <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                <Users className="h-4 w-4 text-blue-600" />
+              <p className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <Users className="h-5 w-5 text-blue-600" />
                 {ct('รายละเอียดการจอง', 'Booking details')}
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-600">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base font-bold text-gray-700">
                 <div>
-                  <p className="text-xs uppercase text-gray-400">{ct('จำนวนที่จอง', 'Seats booked')}</p>
-                  <p className="text-base font-semibold text-gray-900">
+                  <p className="text-base font-bold uppercase text-gray-500">{ct('จำนวนที่จอง', 'Seats booked')}</p>
+                  <p className="text-lg font-bold text-gray-900">
                     {reservedSeats}
                     {capacity ? ` / ${capacity}` : ''}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs uppercase text-gray-400">{ct('วันที่จอง', 'Booked on')}</p>
-                  <p className="text-base font-semibold text-gray-900">{formatNumericDateTime(enrollment?.createdAt || enrollment?.enrollmentDate)}</p>
+                  <p className="text-base font-bold uppercase text-gray-500">{ct('วันที่จอง', 'Booked on')}</p>
+                  <p className="text-lg font-bold text-gray-900">{formatNumericDateTime(enrollment?.createdAt || enrollment?.enrollmentDate)}</p>
                 </div>
                 <div>
-                  <p className="text-xs uppercase text-gray-400">{ct('ราคารวม', 'Total price')}</p>
-                  <p className="text-base font-semibold text-gray-900">฿{(enrollment?.totalPrice || 0).toLocaleString()}</p>
+                  <p className="text-base font-bold uppercase text-gray-500">{ct('ราคารวม', 'Total price')}</p>
+                  <p className="text-lg font-bold text-gray-900">฿{(enrollment?.totalPrice || 0).toLocaleString()}</p>
                 </div>
                 <div>
-                  <p className="text-xs uppercase text-gray-400">{ct('รหัสการจอง', 'Booking ID')}</p>
-                  <p className="text-base font-semibold text-gray-900">{enrollment?._id || enrollment?.id || '-'}</p>
+                  <p className="text-base font-bold uppercase text-gray-500">{ct('รหัสการจอง', 'Booking ID')}</p>
+                  <p className="text-lg font-bold text-gray-900">{enrollment?._id || enrollment?.id || '-'}</p>
                 </div>
               </div>
             </div>
 
             {statusKey === 'cancel' && (
               <div className="rounded-3xl border border-amber-200 bg-amber-50 p-4 flex gap-3 items-start">
-                <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0" />
-                <div className="text-sm text-amber-900">
+                <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
+                <div className="text-base font-bold text-amber-900">
                   {ct('คุณได้ยกเลิกการเข้าร่วมแล้ว กรุณาติดต่อร้านค้าเพื่อยืนยันการคืนเงิน', 'You have cancelled this booking. Please contact the shop to confirm refunds.')}
                 </div>
               </div>
@@ -259,28 +260,28 @@ const BookingDetailModal = ({
 
             {workshop?.description && (
               <div className="rounded-3xl border border-gray-100 bg-gray-50 p-5">
-                <p className="text-sm font-semibold text-gray-900 mb-2">{ct('รายละเอียดเวิร์กช็อป', 'Workshop description')}</p>
-                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line wrap-break-word max-h-48 overflow-y-auto scrollbar-thin w-full">{workshop.description}</p>
+                <p className="text-lg font-bold text-gray-900 mb-2">{ct('รายละเอียดเวิร์กช็อป', 'Workshop description')}</p>
+                <p className="text-base font-bold text-gray-800 leading-relaxed whitespace-pre-line break-words max-h-48 overflow-y-auto overflow-x-hidden scrollbar-thin w-full">{workshop.description}</p>
               </div>
             )}
           </div>
         </div>
 
         <div className="border-t border-gray-100 bg-white px-6 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${status.bg} ${status.text}`}>
+          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-base font-bold ${status.bg} ${status.text}`}>
             <StatusIcon className="h-4 w-4" />
             <span>{statusDisplayLabel}</span>
           </div>
           <div className="flex flex-col sm:flex-row flex-wrap gap-3">
             <button
               onClick={onClose}
-              className="px-4 py-2.5 rounded-2xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50"
+              className="px-5 py-2.5 rounded-2xl border border-gray-200 text-base font-bold text-gray-600 hover:bg-gray-50"
             >
               {ct('ปิดหน้าต่าง', 'Close')}
             </button>
             <button
               onClick={onViewETicket}
-              className={`px-4 py-2.5 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${
+              className={`px-5 py-2.5 rounded-2xl text-base font-bold flex items-center justify-center gap-2 transition-colors ${
                 canViewTicket
                   ? 'bg-orange-500 text-white hover:bg-orange-600'
                   : 'bg-white text-orange-600 border border-orange-200 hover:bg-orange-50'
@@ -294,7 +295,7 @@ const BookingDetailModal = ({
               <button
                 onClick={handleModalCancel}
                 disabled={isCancellingEnrollment}
-                className={`px-4 py-2.5 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 transition-colors border ${
+                className={`px-5 py-2.5 rounded-2xl text-base font-bold flex items-center justify-center gap-2 transition-colors border ${
                   isCancellingEnrollment
                     ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                     : 'bg-white text-amber-700 border-amber-200 hover:bg-amber-50'
@@ -308,7 +309,7 @@ const BookingDetailModal = ({
               <button
                 onClick={handleModalRemove}
                 disabled={isRemovingEnrollment}
-                className={`px-4 py-2.5 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 transition-colors border ${
+                className={`px-5 py-2.5 rounded-2xl text-base font-bold flex items-center justify-center gap-2 transition-colors border ${
                   isRemovingEnrollment
                     ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                     : 'bg-white text-rose-600 border-rose-200 hover:bg-rose-50'
@@ -321,6 +322,7 @@ const BookingDetailModal = ({
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 };
