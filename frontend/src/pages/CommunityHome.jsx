@@ -321,8 +321,8 @@ const CommunityHome = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[700px] md:h-[850px]">
               <div className="h-full rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow relative">
                 <img
-                  //src={`${API_URL}${community.images?.[0]}`}
-                  src={resolveImageUrl(community.images?.[2])}
+                  src={`${API_URL}${community.images?.[0]}`}
+                  // src={resolveImageUrl(community.images?.[2])}
                   alt={ct('รูปภาพหลัก 2', 'Main Image 2')}
                   className="w-full h-full object-cover"
                 />
@@ -330,16 +330,16 @@ const CommunityHome = () => {
               <div className="grid grid-rows-2 gap-4 h-full">
                 <div className="rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow relative">
                   <img
-                    // src={`${API_URL}${community.images?.[2]}`}
-                    src={resolveImageUrl(community.images?.[3])}
+                    src={`${API_URL}${community.images?.[2]}`}
+                    // src={resolveImageUrl(community.images?.[3])}
                     alt={ct('รูปภาพ 2', 'Image 2')}
                     className="w-full h-full object-cover"
                   />
                 </div>
                 <div className="rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow relative">
                   <img
-                    // src={`${API_URL}${community.images?.[3]}`}
-                    src={resolveImageUrl(community.images?.[4])}
+                    src={`${API_URL}${community.images?.[3]}`}
+                    // src={resolveImageUrl(community.images?.[4])}
                     alt={ct('รูปภาพ 3', 'Image 3')}
                     className="w-full h-full object-cover"
                   />
